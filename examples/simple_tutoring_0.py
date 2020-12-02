@@ -30,7 +30,7 @@ intelligence.specifyData(dtype="numeric") # IQ score
 tutoring.specifyData(dtype="nominal", categories=["afterschool", "none"])
 
 # STUDY DESIGN -- inspiration from TSL
-analysis.between(tutoring)
+analysis.between(tutoring) # TODO: START HERE: What if we skip this for now? 
 
 # TODO: Do we need a notion of a "unit"?? like a participant? Trial? 
 """
@@ -41,6 +41,8 @@ cross
 concatenate 
 replicate
 """
+# DATA SCHEMA (to use to verify assumptions, test hypotheses) --- and how this connects to study design 
+# Not required though if don't have data
 
 # LANG REQ: Type of relationship
 # LANG REQ: Clear assignment of X and Y (TODO: verify with the study design)
@@ -68,7 +70,9 @@ Data:
 assert (population) | assume (exploratory, based on sample) | ask (??)
 """
 
-# Hypothesis 
+# What is the query?????
+
+# Hypothesis as query.
 
 
 # WOULD BE NICE: 
