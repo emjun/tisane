@@ -1,5 +1,5 @@
 from tisane.concept import Concept
-from tisane.conceptual_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
+from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 
 from enum import Enum 
 from typing import Union
