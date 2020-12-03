@@ -4,6 +4,7 @@ from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 from enum import Enum 
 from typing import Union
 import copy 
+import itertools
 import pandas as pd
 import networkx as nx
 
@@ -141,10 +142,55 @@ class Tisane(object):
     """
     Explanation: Use sets of variables that have ONLY causal relationships with DV
     """
+    # @param set_tc is a set of edges from the transitive closure of self.graph
+    def infer_main_effects(self, dv: Concept, set_tc: set): 
+        # Infer main effects from conceptual graph 
+
+        # Filter the transitive closure to only include those that end in @param dv
+        main_effects = list()
+        for relat in set_tc:     
+            # Check that @param dv is the "receiving" edge
+            if dv.name == relat[1]: 
+                # add relationship/edge into list of possible main effects
+                main_effects.append(relat)
+        
+        return main_effects
+
+    # @param set_tc is a set of edges from the transitive closure of self.graph
+    def infer_interaction_effects(self, dv: Concept, set_tc: set): 
+        # Infer interaction effects based on conceptual graph 
+        interaction_effects = list()
+        for relat in set_tc: 
+            # Check that @param dv is not in the edge at all 
+            # Would not make sense for @param dv to be in the "sending" edge for an interaction effect
+            if not dv.name in relat: 
+                interaction_effects.append(relat)
+        
+        # Get effects based on study design
+
+        return interaction_effects
+
     def explain(self, dv: Concept): 
-        self.graph.getRelationships(dv=dv, relationship_type=CONCEPTUAL_RELATIONSHIP.CAUSE)
+        # Get the transitive closure of the graph (all edges)
+        tc = self.graph.getRelationships(dv=dv, relationship_type=CONCEPTUAL_RELATIONSHIP.CAUSE)
+        set_tc = set(tc.edges()) # do not get multiples, only get set of edges in the transitive closure
 
+        main_effects = self.infer_main_effects(dv, set_tc)
+        interaction_effects = self.infer_interaction_effects(dv, set_tc)
 
+        m = len(main_effects)
+        comb_main = list()
+        for i in range(1, m+1): 
+            comb_main += list(itertools.combinations(main_effects, i))
+
+        collect_models = list() # TODO: likely want a better data structure for storing valid models. 
+        for m in comb_main: 
+            model = create_model(m)
+            if check_model(model): # check that model satisfy model requirements
+                collect_models.append(model)
+        
+        return collect_models
+    
     def explainWith(self, dv: Concept, ivs_to_include: list): 
         pass
 

@@ -174,21 +174,24 @@ class AnalysisTests(unittest.TestCase):
         self.assertIsNone(analysis.relationship)
         self.assertIsNone(analysis.data)
 
-    # def test_explain(self): 
-    #     analysis = ts.Tisane(task="prediction") # analysis has one task
+    def test_explain_tc(self): 
+        pass
 
-    #     test_score = ts.Concept("Test Score")
-    #     intelligence = ts.Concept("Intelligence")
-    #     tutoring = ts.Concept("Tutoring")
-    #     concepts = [test_score, intelligence, tutoring]
+    def test_explain(self): 
+        analysis = ts.Tisane(task="prediction") # analysis has one task
 
-    #     analysis.addRelationship(intelligence, test_score, "cause")
-    #     analysis.addRelationship(tutoring, test_score, "cause")
-    #     # analysis.addRelationship(intelligence, tutoring, "correlate")
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        concepts = [test_score, intelligence, tutoring]
 
-    #     analysis.explain(test_score)
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+        analysis.addRelationship(intelligence, tutoring, "correlate")
+
+        analysis.explain(test_score)
         
-    #     self.assertEqual(analysis.graph._graph.number_of_nodes(), 3)
+        self.assertEqual(analysis.graph._graph.number_of_nodes(), 3)
 
 class DataForTests:
     concepts_to_define = [

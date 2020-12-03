@@ -70,13 +70,13 @@ class ConceptGraph(object):
         return None
 
     def getRelationships(self, dv: Concept, relationship_type: CONCEPTUAL_RELATIONSHIP): 
-        G = self._graph
-        TC = copy.deepcopy(G)
-        for v in G:
-            edges = ((v, w) for u, w in nx.edge_dfs(G, v))
-            import pdb; pdb.set_trace()
-            TC.add_edges_from(edges)
-        import pdb; pdb.set_trace()
-        tc = nx.transitive_closure(self._graph)
-        import pdb; pdb.set_trace()
+        # G = self._graph
+        # TC = copy.deepcopy(G)
+        # for v in G:
+        #     import pdb; pdb.set_trace()
+        #     edges = ((v, w) for u, w in nx.edge_dfs(G, v))
+        #     TC.add_edges_from(edges)
+        # import pdb; pdb.set_trace()
+        tc = nx.transitive_closure(self._graph, reflexive=None) # do not create any self loops
+        return tc
         
