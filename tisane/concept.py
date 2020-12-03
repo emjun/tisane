@@ -1,4 +1,5 @@
 from tisane.variable import AbstractVariable
+# from tisane.main import Tisane
 
 import pandas as pd 
 

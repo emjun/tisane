@@ -1,4 +1,5 @@
 from tisane.concept import Concept
+from tisane.conceptual_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 
 from enum import Enum 
 from typing import Union
@@ -37,33 +38,7 @@ class RELATIONSHIP(Enum):
         elif type_str.upper() == 'EXPONENTIAL': 
             return RELATIONSHIP.EXPONENTIAL
         else: 
-            raise ValueError(f"Relationship type {type_str} not supported! Try LINEAR, QUADRATIC, or EXPONENTIAL")
-
-class ConceptGraph(object): 
-    elts : nx.MultiDiGraph
-    
-
-    def __init__(self): 
-        self.elts = nx.MultiDiGraph()
-
-    def __repr__(self): 
-        return str(self.elts.__dict__)
-    def __str__(self): 
-        list_elts = [n.__hash__() for n in self.elts]
-        return f"{str(list_elts)} has {len(list_elts)} elts"
-
-    def addNode(self, con: Concept): 
-        if not self.elts: 
-            self.elts = nx.MultiDiGraph()
-        self.elts.add_node(con.name, concept=con)
-    
-    # May want a different signature...
-    def addEdge(self, edge_type: str, start_con: Concept, end_con: Concept): 
-        raise NotImplementedError 
-
-    def hasConcept(self, con: Concept): 
-        return self.elts.has_node(con.name)
-    
+            raise ValueError(f"Relationship type {type_str} not supported! Try LINEAR, QUADRATIC, or EXPONENTIAL")    
 
 class Data(object): 
     pass
@@ -129,3 +104,8 @@ class Tisane(object):
     
     def between(self, con:Concept): 
         pass
+
+    def addRelationship(self, lhs_con: Concept, rhs_con: Concept, relationship_type: str): 
+        cr = CONCEPTUAL_RELATIONSHIP.cast(relationship_type)        
+        self.graph.addEdge(lhs_con, rhs_con, cr)
+

@@ -16,7 +16,7 @@ class AnalysisTests(unittest.TestCase):
 
         # ASSERT
         self.assertEqual(analysis.task,TASK.cast("prediction"))
-        self.assertTrue(nx.is_empty(analysis.graph.elts))
+        self.assertTrue(nx.is_empty(analysis.graph._graph))
         self.assertIsNone(analysis.relationship)
         self.assertIsNone(analysis.data)
         
@@ -52,7 +52,7 @@ class AnalysisTests(unittest.TestCase):
         concepts = [test_score, intelligence, tutoring]
 
         # ASSERT 
-        self.assertTrue(nx.is_empty(analysis.graph.elts))
+        self.assertTrue(nx.is_empty(analysis.graph._graph))
 
         # Implicitly add concepts    
         analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], relationship="linear")
@@ -64,6 +64,30 @@ class AnalysisTests(unittest.TestCase):
         self.assertEqual(analysis.relationship, RELATIONSHIP.cast("linear"))
         self.assertIsNone(analysis.data)
 
+    def test_addRelationships(self): 
+        analysis = ts.Tisane(task="prediction") # analysis has one task
+
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        concepts = [test_score, intelligence, tutoring]
+
+        # ASSERT 
+        self.assertTrue(nx.is_empty(analysis.graph._graph))
+
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+
+        # ASSERT
+        self.assertEqual(analysis.task,TASK.cast("prediction"))
+        for con in concepts: 
+            if not analysis.graph.hasConcept(con): 
+                import pdb; pdb.set_trace()
+            self.assertTrue(analysis.graph.hasConcept(con))
+        self.assertTrue(analysis.graph._graph.has_edge(intelligence, test_score))
+        self.assertTrue(analysis.graph._graph.has_edge(tutoring, test_score))
+        self.assertIsNone(analysis.relationship)
+        self.assertIsNone(analysis.data)
 
 class DataForTests:
     concepts_to_define = [

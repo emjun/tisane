@@ -29,6 +29,30 @@ test_score.specifyData(dtype="numeric") # Score 0 - 100
 intelligence.specifyData(dtype="numeric") # IQ score 
 tutoring.specifyData(dtype="nominal", categories=["afterschool", "none"])
 
+# LANG REQ: Type of relationship
+# LANG REQ: Clear assignment of X and Y (TODO: verify with the study design)
+analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="linear")
+analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="quadratic")
+analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="exponential")
+# ... could be other different types of relationships
+
+
+# CONCEPTUAL RELATIONSHIPS
+# KNOW IVS and DV are related in THEORY vs. exploratory
+intelligence.causes(test_score, "assert") # know this from theory
+tutoring.causes(test_score, "ask") # asking about this relationship
+# assert intelligence.causes(score)
+# assume intelligence.causes(score)
+
+intelligence.causes(test_score, analysis)
+analysis.relate(intelligence, test_score, "cause")
+analysis.addRelationship(inteligence, test_score, "cause")
+ts.causes(intelligence, test_score, analysis)
+"""
+Relationships:
+assert (theory) | assume (exploratory) | ask (hypothesis testing)
+"""
+
 # STUDY DESIGN -- inspiration from TSL
 analysis.between(tutoring) # TODO: START HERE: What if we skip this for now? 
 
@@ -44,24 +68,6 @@ replicate
 # DATA SCHEMA (to use to verify assumptions, test hypotheses) --- and how this connects to study design 
 # Not required though if don't have data
 
-# LANG REQ: Type of relationship
-# LANG REQ: Clear assignment of X and Y (TODO: verify with the study design)
-analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="linear")
-analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="quadratic")
-analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="exponential")
-# ... could be other different types of relationships
-
-
-# CONCEPTUAL RELATIONSHIPS
-# KNOW IVS and DV are related in THEORY vs. exploratory
-intelligence.causes(test_score, "assert") # know this from theory
-tutoring.causes(test_score, "ask") # asking about this relationship
-# assert intelligence.causes(score)
-# assume intelligence.causes(score)
-"""
-Relationships:
-assert (theory) | assume (exploratory) | ask (hypothesis testing)
-"""
 
 # DATA ASSUMPTIONS
 # Data assumptions are about the POPULATION, not SAMPLE (???) -- start here: Read 480 - 481 in CCWA
@@ -71,6 +77,7 @@ assert (population) | assume (exploratory, based on sample) | ask (??)
 """
 
 # What is the query?????
+analysis.predict(ivs=[], dvs=[])
 
 # Hypothesis as query.
 
