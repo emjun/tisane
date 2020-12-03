@@ -84,6 +84,7 @@ class AnalysisTests(unittest.TestCase):
         for con in concepts: 
             self.assertTrue(analysis.graph.hasConcept(con))
 
+        self.assertEqual(len(analysis.graph._graph.edges()), 2)
         self.assertTrue(analysis.graph._graph.has_edge(intelligence, test_score))
         edge_info = analysis.graph._graph.get_edge_data(intelligence, test_score)
         edge_type = edge_info[0]['edge_type']
@@ -116,6 +117,7 @@ class AnalysisTests(unittest.TestCase):
         for con in concepts: 
             self.assertTrue(analysis.graph.hasConcept(con))
 
+        self.assertEqual(len(analysis.graph._graph.edges()), 2)
         self.assertTrue(analysis.graph._graph.has_edge(intelligence, test_score))
         edge_info = analysis.graph._graph.get_edge_data(intelligence, test_score)
         edge_type = edge_info[0]['edge_type']
@@ -123,6 +125,45 @@ class AnalysisTests(unittest.TestCase):
         
         self.assertTrue(analysis.graph._graph.has_edge(tutoring, test_score))
         edge_info = analysis.graph._graph.get_edge_data(tutoring, test_score)
+        edge_type = edge_info[0]['edge_type']
+        self.assertEqual(edge_type, CONCEPTUAL_RELATIONSHIP.CORRELATION)
+        
+        self.assertIsNone(analysis.relationship)
+        self.assertIsNone(analysis.data)
+
+    def test_addRelationships_mixed(self): 
+        analysis = ts.Tisane(task="prediction") # analysis has one task
+
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        concepts = [test_score, intelligence, tutoring]
+
+        # ASSERT 
+        self.assertTrue(nx.is_empty(analysis.graph._graph))
+
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+        analysis.addRelationship(intelligence, tutoring, "correlate")
+
+        # ASSERT
+        self.assertEqual(analysis.task,TASK.cast("prediction"))
+        for con in concepts: 
+            self.assertTrue(analysis.graph.hasConcept(con))
+        
+        self.assertEqual(len(analysis.graph._graph.edges()), 3)
+        self.assertTrue(analysis.graph._graph.has_edge(intelligence, test_score))
+        edge_info = analysis.graph._graph.get_edge_data(intelligence, test_score)
+        edge_type = edge_info[0]['edge_type']
+        self.assertEqual(edge_type, CONCEPTUAL_RELATIONSHIP.CAUSE)
+        
+        self.assertTrue(analysis.graph._graph.has_edge(tutoring, test_score))
+        edge_info = analysis.graph._graph.get_edge_data(tutoring, test_score)
+        edge_type = edge_info[0]['edge_type']
+        self.assertEqual(edge_type, CONCEPTUAL_RELATIONSHIP.CAUSE)
+
+        self.assertTrue(analysis.graph._graph.has_edge(intelligence, tutoring))
+        edge_info = analysis.graph._graph.get_edge_data(intelligence, tutoring)
         edge_type = edge_info[0]['edge_type']
         self.assertEqual(edge_type, CONCEPTUAL_RELATIONSHIP.CORRELATION)
         
