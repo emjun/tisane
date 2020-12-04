@@ -1,6 +1,6 @@
 import pandas as pd
 
-# from enum import Enum 
+from enum import Enum 
 # class DTYPE(Enum): 
 #     NOMINAL = 1
 #     ORDINAL = 2

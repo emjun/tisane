@@ -170,6 +170,10 @@ class Tisane(object):
 
         return interaction_effects
 
+    # @param effects is a set of variables to include the linear model
+    def create_model(effects: tuple):
+        pass
+
     def explain(self, dv: Concept): 
         # Get the transitive closure of the graph (all edges)
         tc = self.graph.getRelationships(dv=dv, relationship_type=CONCEPTUAL_RELATIONSHIP.CAUSE)
@@ -184,10 +188,10 @@ class Tisane(object):
             comb_main += list(itertools.combinations(main_effects, i))
 
         collect_models = list() # TODO: likely want a better data structure for storing valid models. 
-        for m in comb_main: 
-            model = create_model(m)
-            if check_model(model): # check that model satisfy model requirements
-                collect_models.append(model)
+        # for m in comb_main: 
+        #     model = create_model(m)
+        #     if check_model(model): # check that model satisfy model requirements
+        #         collect_models.append(model)
         
         return collect_models
     
