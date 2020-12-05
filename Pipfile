@@ -11,6 +11,7 @@ pandas = "*"
 networkx = "*"
 pytest = "*"
 z3-solver = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.7"

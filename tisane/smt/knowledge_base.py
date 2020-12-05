@@ -22,10 +22,21 @@ class KnowledgeBase(object):
         
         self.all_stat_models.append(
             StatisticalModel(
-                name='Multiple Linear Regression', 
+                name='Linear Regression', 
                 properties=[
-                    self.all_properties['numeric_dv']
+                    self.all_properties['numeric_dv'],
+                    self.all_properties['residual_normal_distribution']
                 ]))
+
+        self.all_stat_models.append(
+            StatisticalModel(
+                name='Logistic Regression',
+                properties=[
+                    # TODO: create binary_dv
+                    # self.all_properties['binary_dv']
+                ]
+            )
+        )
 
     # Instantiate models with specific @param ivs and @param dvs
     def apply_vars(self, ivs: list, dvs: list):
@@ -33,9 +44,49 @@ class KnowledgeBase(object):
         for m in self.all_stat_models: 
             m.__apply(ivs=ivs, dvs=dvs)
 
-    # Look up something in the knowledge base (should support dual sided reasoning eventually)
-    def query(self): 
+    # Adds assertions to the knowledge base that are used for solving for a query
+    def add_assertions(self, assertions: list): 
+        raise NotImplementedError
+
+    # Generic for looking up something in the knowledge base (should support dual sided reasoning eventually)
+    def query(self, ivs: list, dvs: list): 
         pass
+
+    # Concepts -> Models
+    # Look up statistical models 
+    def find_statistical_models(self, ivs: list, dvs: list, **kwargs) -> List[StatisticalModel]: 
+        # TODO what happens if kwargs does not have an 'assertions' keyword?
+        assertions = kwargs['assertions']
+        self.add_assertions(assertions)
+
+        # TODO: SOLVE
+
+        return 99
+
+    # Models -> Concepts
+    def find_conceptual_models(self, stat_models: list):
+        # TODO: Translate stat_models into (set of) assertions
+        assertions = None
+
+        self.add_assertions(assertions)
+
+        # TODO: SOLVE 
+
+        return -99 
+
+# Concepts -> Models
+# Look up statistical models 
+def find_statistical_models(ivs: list, dvs: list, **kwargs): 
+    kb = KnowledgeBase(ivs=ivs, dvs=dvs)
+
+    return kb.find_statistical_models(ivs=ivs, dvs=dvs, **kwargs)
+
+# Models -> Concepts
+def find_conceptual_models(self, stat_models: list):
+    # TODO what do we pass to the KnowledgeBase in the case where we have stats models to solve for...
+    kb = KnowledgeBase()
+
+    return kb.find_conceptual_models(stat_models)
 
 """
 pearson_corr = StatisticalTest('pearson_corr', [x0, x1],

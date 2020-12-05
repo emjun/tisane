@@ -1,5 +1,5 @@
 import tisane as ts
-from tisane.smt.knowledge_base import KnowledgeBase
+from tisane.smt.knowledge_base import KnowledgeBase, find_statistical_models
 
 import unittest
 
@@ -12,7 +12,9 @@ class KnowledgeBaseTests(unittest.TestCase):
         intelligence = ts.Concept("Intelligence")
         tutoring = ts.Concept("Tutoring")
 
-        # CHECK THAT THE VARIABLES FOR EACH CONCEPT HAVE DTYPES, etc. 
+        test_score.specifyData(dtype="numeric") # Score 0 - 100 
+        intelligence.specifyData(dtype="numeric") # IQ score 
+        tutoring.specifyData(dtype="nominal", categories=["afterschool", "none"])
 
         ivs = [intelligence, tutoring]
         dvs = [test_score]
@@ -20,11 +22,32 @@ class KnowledgeBaseTests(unittest.TestCase):
         kb = KnowledgeBase(ivs, dvs)
 
         # ASSERT
-        self.assertEqual(len(kb.all_stat_models), 1)
-        self.assertEqual(kb.all_stat_models[0].name, 'Multiple Linear Regression')
-        self.assertEqual(len(kb.all_stat_models[0].properties), 1)
+        self.assertEqual(len(kb.all_stat_models), 2)
+        self.assertEqual(kb.all_stat_models[0].name, 'Linear Regression')
+        self.assertEqual(len(kb.all_stat_models[0].properties), 2)
         self.assertEqual(kb.all_stat_models[0].properties[0], kb.all_properties['numeric_dv'])
+        self.assertEqual(kb.all_stat_models[0].properties[1], kb.all_properties['residual_normal_distribution'])
+        # self.assertEqual(kb.all_stat_models[0].properties[1], kb.all_properties['residual_normal_distribution'])
 
+    def test_pick_linear_regression(self): 
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+
+        test_score.specifyData(dtype="numeric") # Score 0 - 100 
+        intelligence.specifyData(dtype="numeric") # IQ score 
+        tutoring.specifyData(dtype="nominal", categories=["afterschool", "none"])
+
+        ivs = [intelligence, tutoring]
+        dvs = [test_score]
+        
+        valid_models = find_statistical_models(ivs=ivs, dvs=dvs)
+
+        self.assertEqual(valid_models, 1)
+        self.assertEqual(valid_models[0].name, 'Linear Regression')
+
+# TODO: solve for statistical models and get them back
+# TODO connect to the main file, test model selection (esp for all possible model variations)
 
     def test_dtor(self): 
         # Test resetting or nulling out all the properties and tests! 
