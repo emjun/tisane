@@ -41,6 +41,11 @@ class AbstractVariable(object):
                 
         else: 
             raise ValueError(f"Please specify a data type for the Concept! Try NOMINAL, ORDINAL, or NUMERIC")
+    
+    def getData(self): 
+        ls = list()
+
+        return ls
 
 class NominalVariable(AbstractVariable): 
     # categories = list

@@ -1,5 +1,6 @@
 from tisane.concept import Concept
 from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
+from tisane.smt.results import AllStatisticalResults
 
 from enum import Enum 
 from typing import Union
@@ -187,13 +188,15 @@ class Tisane(object):
         for i in range(1, m+1): 
             comb_main += list(itertools.combinations(main_effects, i))
 
-        collect_models = list() # TODO: likely want a better data structure for storing valid models. 
+        all_valid_stat_models = AllStatisticalResults()
+
+
         # for m in comb_main: 
         #     model = create_model(m)
         #     if check_model(model): # check that model satisfy model requirements
         #         collect_models.append(model)
         
-        return collect_models
+        return all_valid_stat_models
     
     def explainWith(self, dv: Concept, ivs_to_include: list): 
         pass
