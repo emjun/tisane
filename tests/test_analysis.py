@@ -175,7 +175,22 @@ class AnalysisTests(unittest.TestCase):
         self.assertIsNone(analysis.data)
 
     def test_explain_tc(self): 
-        pass
+        analysis = ts.Tisane(task="explanation") # analysis has one task
+
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        concepts = [test_score, intelligence, tutoring]
+
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+        analysis.addRelationship(intelligence, tutoring, "correlate")
+
+        analysis.generate_effects_sets(dv=test_score)
+
+        # Main effects = 3
+
+        # Interaction effects = 1
 
     def test_explain(self): 
         analysis = ts.Tisane(task="prediction") # analysis has one task
