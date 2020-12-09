@@ -186,7 +186,9 @@ class AnalysisTests(unittest.TestCase):
         analysis.addRelationship(tutoring, test_score, "cause")
         analysis.addRelationship(intelligence, tutoring, "correlate")
 
-        analysis.generate_effects_sets(dv=test_score)
+        effects_sets = analysis.generate_effects_sets(dv=test_score)
+        self.assertEqual(len(effects_sets), 7)
+
 
         # Main effects = 3
 

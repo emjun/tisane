@@ -127,8 +127,11 @@ class ConceptGraph(object):
 
         for m in main_effects:
             for i in interaction_effects:
-                set_effects = frozenset({m, i})
-                all_effects_set.add(set_effects)
+                if not m and not i:
+                    pass
+                else:
+                    set_effects = frozenset({m, i})
+                    all_effects_set.add(set_effects)
 
 
         # TODO: check length, ALSO add as a test case
@@ -148,6 +151,6 @@ class ConceptGraph(object):
         main_powerset = powerset(main_effects)
         interaction_powerset = powerset(interaction_effects)
         all_effects_set = self.get_all_effects_combinations({'main': list(main_powerset), 'interaction': list(interaction_powerset)})
-        
+
         return all_effects_set
         
