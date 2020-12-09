@@ -6,7 +6,6 @@ from enum import Enum
 from typing import Union
 import copy 
 from itertools import chain, combinations
-from more_itertools import powerset
 import pandas as pd
 import networkx as nx
 
@@ -144,100 +143,13 @@ class Tisane(object):
     """
     Explanation: Use sets of variables that have ONLY causal relationships with DV
     """
-    # @param set_tc is a set of edges from the transitive closure of self.graph
-    def infer_main_effects(self, dv: Concept, set_tc: set): 
-        # Infer main effects from conceptual graph 
-
-        # Filter the transitive closure to only include those that end in @param dv
-        main_effects = list()
-        for relat in set_tc:     
-            # Check that each edge has only 2 nodes
-            assert(len(relat) == 2)
-            # Check that @param dv is the "receiving" edge
-            if dv.name == relat[1]: 
-                # add relationship/edge into list of possible main effects
-                m_e = relat[0]
-                main_effects.append(m_e)
-
-        return main_effects
-
-    # @param set_tc is a set of edges from the transitive closure of self.graph
-    def infer_interaction_effects(self, dv: Concept, set_tc: set): 
-        # Infer interaction effects based on conceptual graph 
-        interaction_effects = list()
-        for relat in set_tc: 
-            # Check that each edge has only 2 nodes
-            assert(len(relat) == 2)
-            # Check that @param dv is not in the edge at all 
-            # Would not make sense for @param dv to be in the "sending" edge for an interaction effect
-            if not dv.name in relat: 
-                interaction_effects.append(relat)
-        
-        # TODO Get effects based on study design
-
-        return interaction_effects
-
-    # @param effects is a set of variables to include the linear model
-    def create_model(self, effects: tuple):
-        pass
-
-
-    # @param effects is a list of effects lists 
-    def get_all_effects_combinations(self, powerset_lists: dict): 
-        
-        def sanitize_powerset(powerset_list: list): 
-            clean_list = list()
-
-            for e in powerset_list: 
-                if len(e) > 0: 
-                    # if len(e) == 1:
-                    #     clean_list.append((e[0]))
-                    # else:
-                    #     clean_list.append(e)
-                    clean_list.append(e)
-            return clean_list
-
-        all_effects_set = set()
-
-        # clean_powersets = dict()
-        # for k,v in powerset_lists.items(): 
-        #     clean_powersets[k] = sanitize_powerset(v)
-
-        if len(powerset_lists) != 2: 
-            raise NotImplementedError
-        
-        main_effects = powerset_lists['main']
-        interaction_effects = powerset_lists['interaction']
-
-        for m in main_effects:
-            for i in interaction_effects:
-                set_effects = frozenset({m, i})
-                all_effects_set.add(set_effects)
-
-
-        # TODO: check length, ALSO add as a test case
-        return all_effects_set
-        
-
-    def generate_effects_sets(self, dv: Concept): 
-        # Get the transitive closure of the graph (all edges)
-        tc = self.graph.getRelationships(dv=dv, relationship_type=CONCEPTUAL_RELATIONSHIP.CAUSE)
-        set_tc = set(tc.edges()) # do not get multiples, only get set of edges in the transitive closure
-
-        # Get the main and interaction effects
-        main_effects = self.infer_main_effects(dv, set_tc)
-        interaction_effects = self.infer_interaction_effects(dv, set_tc)
-
-        # Create sets of main and interaction effects
-        main_powerset = powerset(main_effects)
-        interaction_powerset = powerset(interaction_effects)
-        all_effects_set = self.get_all_effects_combinations({'main': list(main_powerset), 'interaction': list(interaction_powerset)})
-        
-        return all_effects_set
+    # FOR DEBUGGING
+    def generate_effects_sets(self, dv: Concept):
+        return self.graph.generate_effects_sets(dv=dv)
 
     def explain(self, dv: Concept): 
 
-        effects_sets = self.generate_effects_sets(dv=dv)
+        effects_sets = self.graph.generate_effects_sets(dv=dv)
 
         all_valid_stat_models = AllStatisticalResults()
 
