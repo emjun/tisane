@@ -63,6 +63,9 @@ class Tisane(object):
     def __str__(self):
         pass
 
+    def getGraph(self):
+        return self.graph
+
     # atomic add of a single Concept
     def addConcept(self, con: Concept): 
         if not self.graph: 
@@ -144,8 +147,25 @@ class Tisane(object):
     Explanation: Use sets of variables that have ONLY causal relationships with DV
     """
     # FOR DEBUGGING
+    # def generate_main_effects(self, dv: Concept):
+    #     pass
+
+    # def generate_main_effects(self, dv: Concept):
+    #     pass
+
     def generate_effects_sets(self, dv: Concept):
         return self.graph.generate_effects_sets(dv=dv)
+    
+    def pretty_print_effects_sets(self, dv: Concept):
+        effects_sets = self.generate_effects_sets(dv=dv)
+
+        import pdb; pdb.set_trace()
+
+        for es in effects_sets:
+            for effect in es:
+                if len(effect) > 1:
+                    import pdb; pdb.set_trace()
+                assert(len(effect) <= 1)
 
     def explain(self, dv: Concept): 
 
@@ -169,3 +189,21 @@ class Tisane(object):
 
     def explainWithout(self, dv: Concept, ivs_to_exclude: list): 
         pass
+
+    def model(self):
+        raise NotImplementedError
+        
+        # TODO: Start up editor if not already open or move model to the Editor (latter is probably better)
+        model = InteractiveTisaneEditor(self)
+
+    # @param property is used to parse/generate the constraints
+    def assume_property(self, property: str): 
+        raise NotImplementedError
+
+    # @param property is used to parse/generate the constraints
+    def assert_property(self, property: str): 
+        # TODO: Should we have a distinction between assumed and asserted? 
+        # assumed: still check (including visually)
+        # asserted: stop modeling if data does not fit this property
+        
+        raise NotImplementedError

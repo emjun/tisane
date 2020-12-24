@@ -189,6 +189,8 @@ class AnalysisTests(unittest.TestCase):
         effects_sets = analysis.generate_effects_sets(dv=test_score)
         self.assertEqual(len(effects_sets), 7)
 
+        analysis.pretty_print_effects_sets(dv=test_score)
+
 
         # Main effects = 3
 

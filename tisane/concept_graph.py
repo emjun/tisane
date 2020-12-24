@@ -3,6 +3,7 @@ from tisane.concept import Concept
 from enum import Enum 
 from typing import Union
 from more_itertools import powerset
+from collections import namedtuple
 import copy 
 import pandas as pd
 import networkx as nx
@@ -30,9 +31,11 @@ class ConceptGraph(object):
 
     def __repr__(self): 
         return str(self._graph.__dict__)
+        
     def __str__(self): 
-        list_elts = [n.__hash__() for n in self._graph]
-        return f"{str(list_elts)} has {len(list_elts)} elts"
+        nodes = [n for n in self._graph.nodes()]
+        edges = [e for e in self._graph.edges()]
+        return f"Nodes: {str(nodes)} has {len(nodes)} concepts. Edges: {str(edges)} has {len(edges)} relationships."
 
     def addNode(self, con: Concept):  # concepts are indexed by their names. Concepts must have unique names.
         if not self._graph: 
@@ -138,6 +141,20 @@ class ConceptGraph(object):
         return all_effects_set
         
 
+    def cast(self, effect_type: str, effect_powerset: tuple):
+        MainEffect = namedtuple('MainEffect', 'effect')
+        InteractionEffect = namedtuple('InteractionEffect', 'effect')
+        
+        cast_effect_list = list()
+        for eff in list(effect_powerset):
+            if effect_type.upper() == 'MAIN':
+                cast_effect_list.append(MainEffect(eff)) 
+            elif effect_type.upper() == 'INTERACTION':
+                cast_effect_list.append(InteractionEffect(eff)) 
+            else:
+                raise ValueError(f"Effect type {effect_type} not supported! Try MAIN or INTERACTION")
+        return cast_effect_list
+
     def generate_effects_sets(self, dv: Concept): 
         # Get the transitive closure of the graph (all edges)
         tc = self.getRelationships(dv=dv, relationship_type=CONCEPTUAL_RELATIONSHIP.CAUSE)
@@ -150,7 +167,9 @@ class ConceptGraph(object):
         # Create sets of main and interaction effects
         main_powerset = powerset(main_effects)
         interaction_powerset = powerset(interaction_effects)
-        all_effects_set = self.get_all_effects_combinations({'main': list(main_powerset), 'interaction': list(interaction_powerset)})
+        main_cast = self.cast(effect_type='main', effect_powerset=main_powerset)
+        interaction_cast = self.cast(effect_type='interaction', effect_powerset=interaction_powerset)
+        all_effects_set = self.get_all_effects_combinations({'main': main_cast, 'interaction': interaction_cast})
 
         return all_effects_set
         
