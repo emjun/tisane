@@ -82,28 +82,30 @@ class KnowledgeBase(object):
                             # Update the rules
                             rule_list = rules.split("),")
                             for r in rule_list:
+                                r_cleaned = r.strip()
                                 # Only process non-new line characters
-                                if len(r.strip()) >= 1:
+                                if len(r_cleaned) >= 1:
                                     r_cleaned = r.strip()
-                                    if "." not in line:
+                                    
+                                    if "." not in r_cleaned:
                                         r_cleaned += ")"
                                     
                                     # Add single-arity rules for all IVs
                                     if r_cleaned in single_arity:
                                         for i in range(len(main_effects_list)):
                                             new_rules += r_cleaned.replace("X", main_effects_list[i])
-                                            
-                                            # Keep track of if we processed the entire logical rule    
-                                            if "." in r_cleaned:
-                                                rule_completed = True
-                                            # Add a comma if not the end of the rule (designated by a period)
-                                            else:
-                                                assert("." not in r_cleaned)
+                                            if i+1 < len(main_effects_list):
                                                 new_rules += ", "
 
                                     # If not single-arity, replace Xs with new IVs
                                     else:
                                         new_rules += r_cleaned.replace("X", main_effects_str)
+                                else:
+                                    new_rules += r_cleaned + ", "
+                                # Keep track of if we processed the entire logical rule    
+                                if "." in r_cleaned:
+                                    rule_completed = True
+
                             new_line = new_head + ":- " + new_rules
                         
                         # This is a continuation of a constraint
@@ -116,27 +118,28 @@ class KnowledgeBase(object):
                             rule_list = line.split("),")
 
                             for r in rule_list:
+                                r_cleaned = r.strip()
                                 # Only process non-new line characters
-                                if len(r.strip()) >= 1:
-                                    r_cleaned = r.strip()
-                                    if "." not in line:
+                                if len(r_cleaned) >= 1:
+                                    if "." not in r_cleaned:
                                         r_cleaned += ")"
                                     
                                     # Add single-arity rules for all IVs
                                     if r_cleaned in single_arity:
                                         for i in range(len(main_effects_list)):
                                             new_rules += r_cleaned.replace("X", main_effects_list[i])
+                                            
                                             if i+1 < len(main_effects_list):
                                                 new_rules += ", "
             
                                     # If not single-arity, replace Xs with new IVs
                                     else:
                                         new_rules += r_cleaned.replace("X", main_effects_str)
-                            # Keep track of if we processed the entire logical rule    
-                            if "." in line:
-                                rule_completed = True
-                            else:
-                                new_rules += ", "
+                                else:
+                                    new_rules += r_cleaned + ", "
+                                # Keep track of if we processed the entire logical rule    
+                                if "." in r_cleaned:
+                                    rule_completed = True
 
                             new_line = new_rules
 

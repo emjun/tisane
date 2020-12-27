@@ -1,4 +1,9 @@
-
+% normal_residuals(X, Y) :- variable(X), variable(Y), numeric_or_categorical(X), numeric_or_categorical(Y).
+% numeric(V) :- variable(V), not categorical(V).
+% two_categories(V) :- variable(V), categorical(V).
+% transformed(V) :- variable(V).
+% multicollinear(X, Y) :- variable(X), variable(Y), not tolerate_correlation(X).
+% 
 linear_regression(X, Y) :-  variable(X),
                             variable(Y), 
                             normal_residuals(X, Y), 
