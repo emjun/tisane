@@ -47,14 +47,24 @@ class KnowledgeBase(object):
                     # Copy comments without modification
                     if "%" in line: 
                         new_line = line
-
-                    # Copy #const, #show without modification
-                    elif "#" in line:
-                        new_line = line
                     
                     # Copy empty
                     elif len(line.strip()) == 0:
                         new_line = line
+                    
+                    # Copy #const without modification
+                    elif "#const" in line:
+                        new_line = line
+                    
+                    # Update show arity
+                    elif "#show" in line: 
+                        # Are there any digits in the line indicating arity?
+                        if re.search(r'[1-9]\D', line):
+                            clauses = line.split("/")
+                            import pdb; pdb.set_trace()
+                            new_line = clauses[0] + "/" + str(len(ivs) + len(dv)) + ".\n"
+                        else: 
+                            new_line = line
 
                     # Parse and modify logical constraint
                     elif not rule_completed:
@@ -89,21 +99,23 @@ class KnowledgeBase(object):
                                     
                                     if "." not in r_cleaned:
                                         r_cleaned += ")"
-                                    
+
                                     # Add single-arity rules for all IVs
                                     if r_cleaned in single_arity:
                                         for i in range(len(main_effects_list)):
                                             new_rules += r_cleaned.replace("X", main_effects_list[i])
-                                            if i+1 < len(main_effects_list):
-                                                new_rules += ", "
-
+                                            # if i+1 < len(main_effects_list):
+                                            new_rules += ", "
+                                    
                                     # If not single-arity, replace Xs with new IVs
                                     else:
                                         new_rules += r_cleaned.replace("X", main_effects_str)
-                                else:
-                                    new_rules += r_cleaned + ", "
+                                        if "." not in r_cleaned: 
+                                            new_rules += ", "
+                                
                                 # Keep track of if we processed the entire logical rule    
                                 if "." in r_cleaned:
+                                    new_rules += "\n"
                                     rule_completed = True
 
                             new_line = new_head + ":- " + new_rules
@@ -128,17 +140,20 @@ class KnowledgeBase(object):
                                     if r_cleaned in single_arity:
                                         for i in range(len(main_effects_list)):
                                             new_rules += r_cleaned.replace("X", main_effects_list[i])
-                                            
-                                            if i+1 < len(main_effects_list):
-                                                new_rules += ", "
+                                            # if i+1 < len(main_effects_list):
+                                            new_rules += ", "
             
                                     # If not single-arity, replace Xs with new IVs
                                     else:
                                         new_rules += r_cleaned.replace("X", main_effects_str)
-                                else:
-                                    new_rules += r_cleaned + ", "
+                                        if "." not in r_cleaned: 
+                                            new_rules += ", "
+                                # else:
+                                #     new_rules += r_cleaned + ", "
+
                                 # Keep track of if we processed the entire logical rule    
                                 if "." in r_cleaned:
+                                    new_rules += "\n"
                                     rule_completed = True
 
                             new_line = new_rules
