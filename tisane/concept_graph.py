@@ -170,14 +170,8 @@ class ConceptGraph(object):
 
         return all_effects_set
 
-    def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
-
-        # def in_list_effects(concept_name: str, concepts: List[Concept]):
-        #     for c in concepts:
-        #         return c.name == concept_name
-            
-        #     return False
-
+    # @returns a subgraph (type ConceptGraph) of this ConceptGraph that treats the dv as the final "sinking" node
+    def _prune_graph_for_effects_sets_generation(self, dv: Concept): 
         # Create sub-graph such that dv does not have any outgoing edges
         sub_graph = self._graph.__class__()
         outer_nodes = set() # should not exist in the subgraph
@@ -213,6 +207,18 @@ class ConceptGraph(object):
         # Get the transitive closure of the sub_graph
         sub = ConceptGraph()
         sub._updateGraph(sub_graph)
+        
+        return sub
+
+    def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
+
+        # Prune graph/Take subgraph from which to generate possible sets of effects
+        sub = self._prune_graph_for_effects_sets_generation(dv=dv)
+        
+        # Generate effects sets
+        sub.generate_effects_sets(dv=dv)
+
+        # Filter effects sets to only include those that involve the IVs
         
         return sub.generate_effects_sets(dv=dv)
         # TODO: What ahppens if the ivs contain variables that receive edges from DV?  --> should check that the model is possible, raise error if not (this is in the interaction and checking layer?)

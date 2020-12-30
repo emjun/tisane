@@ -221,6 +221,49 @@ class AnalysisTests(unittest.TestCase):
 
         analysis.pretty_print_effects_sets(dv=test_score)
 
+    def test_explain_tc_cut_filter_noop(self): 
+        analysis = ts.Tisane(task="explanation") # analysis has one task
+
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        income = ts.Concept("Income")
+        sex = ts.Concept("Sex")
+        concepts = [test_score, intelligence, tutoring, income, sex]
+
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+        analysis.addRelationship(intelligence, tutoring, "correlate")
+        analysis.addRelationship(test_score, income, "cause")
+        analysis.addRelationship(intelligence, income, "correlate")
+        analysis.addRelationship(sex, income, "correlate") 
+
+        # TODO should not see sex in sets of effects
+        effects_sets = analysis.generate_effects_sets_with_ivs(ivs=[intelligence, tutoring], dv=test_score)
+
+    def test_explain_tc_cut_filter(self):
+        analysis = ts.Tisane(task="explanation") # analysis has one task
+
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        income = ts.Concept("Income")
+        sex = ts.Concept("Sex")
+        concepts = [test_score, intelligence, tutoring, income, sex]
+
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+        analysis.addRelationship(intelligence, tutoring, "correlate")
+        analysis.addRelationship(test_score, income, "cause")
+        analysis.addRelationship(intelligence, income, "correlate")
+        
+        # HOWEVER, if add this: 
+        analysis.addRelationship(sex, intelligence, "correlate")
+        # TODO: should see sex in sets of effects
+        effects_sets = analysis.generate_effects_sets_with_ivs(ivs=[intelligence, tutoring], dv=test_score)
+        
+        pass
+
     def test_explain(self): 
         analysis = ts.Tisane(task="prediction") # analysis has one task
 
