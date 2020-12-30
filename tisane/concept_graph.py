@@ -1,7 +1,7 @@
 from tisane.concept import Concept
 
 from enum import Enum 
-from typing import Union
+from typing import List, Union
 from more_itertools import powerset
 from collections import namedtuple
 import copy 
@@ -36,6 +36,10 @@ class ConceptGraph(object):
         nodes = [n for n in self._graph.nodes()]
         edges = [e for e in self._graph.edges()]
         return f"Nodes: {str(nodes)} has {len(nodes)} concepts. Edges: {str(edges)} has {len(edges)} relationships."
+
+    # @param gr is a MultiDiGraph to replace the underlying _graph
+    def _updateGraph(self, gr: nx.MultiDiGraph): 
+        self._graph = gr
 
     def addNode(self, con: Concept):  # concepts are indexed by their names. Concepts must have unique names.
         if not self._graph: 
@@ -74,13 +78,6 @@ class ConceptGraph(object):
         return None
 
     def getRelationships(self, dv: Concept, relationship_type: CONCEPTUAL_RELATIONSHIP): 
-        # G = self._graph
-        # TC = copy.deepcopy(G)
-        # for v in G:
-        #     import pdb; pdb.set_trace()
-        #     edges = ((v, w) for u, w in nx.edge_dfs(G, v))
-        #     TC.add_edges_from(edges)
-        # import pdb; pdb.set_trace()
         tc = nx.transitive_closure(self._graph, reflexive=None) # do not create any self loops
         return tc
 
@@ -172,4 +169,56 @@ class ConceptGraph(object):
         all_effects_set = self.get_all_effects_combinations({'main': main_cast, 'interaction': interaction_cast})
 
         return all_effects_set
+
+    def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
+
+        # def in_list_effects(concept_name: str, concepts: List[Concept]):
+        #     for c in concepts:
+        #         return c.name == concept_name
+            
+        #     return False
+
+        # Create sub-graph such that dv does not have any outgoing edges
+        sub_graph = self._graph.__class__()
+        outer_nodes = set() # should not exist in the subgraph
+        # TODO: There might a name for this: a type of cut??
+        for edge in self._graph.edges(data="edge_type"):
+            out_node, in_node, edge_type = edge
+            # Is it a causal relationship? 
+            if edge_type == CONCEPTUAL_RELATIONSHIP.CAUSE: 
+                # If so, exclude any edges where the DV is the cause/exogenous variable
+                if dv.name == out_node: 
+                    # Keep track of the nodes that the DV reaches so we can remove them at a later step
+                    outer_nodes.add(in_node)
+                # If the DV is the receiving variable or the edge involves other causes, include
+                # We will do a nother pass over the subgraph to remove any edges that involve variables the DV could cause 
+                else: 
+                    sub_graph.add_edge(out_node, in_node, edge_type=edge_type)
+            else: 
+                assert(edge_type == CONCEPTUAL_RELATIONSHIP.CORRELATION)
+                sub_graph.add_edge(out_node, in_node, edge_type=edge_type)
+
+        # Do another pass to get rid of any edges that involve the DV as the cause
+        edges_to_remove = list()
+        for edge in sub_graph.edges(data="edge_type"): 
+            out_node, in_node, edge_type = edge
+
+            # Does this edge involve nodes that should be outside the scope of this subgraph?
+            if out_node in outer_nodes or in_node in outer_nodes: 
+                edges_to_remove.append((out_node, in_node))
+        sub_graph.remove_edges_from(edges_to_remove)
+        assert(len(list(sub_graph.out_edges(dv.name))) == 0)
+        assert(len(list(self._graph.out_edges(dv.name))) >= 0)
+
+        # Get the transitive closure of the sub_graph
+        sub = ConceptGraph()
+        sub._updateGraph(sub_graph)
+        
+        return sub.generate_effects_sets(dv=dv)
+        # TODO: What ahppens if the ivs contain variables that receive edges from DV?  --> should check that the model is possible, raise error if not (this is in the interaction and checking layer?)
+
+
+
+
+        
         

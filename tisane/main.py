@@ -1,9 +1,10 @@
 from tisane.concept import Concept
 from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 from tisane.smt.results import AllStatisticalResults
+from tisane.asp.knowledge_base import KnowledgeBase
 
 from enum import Enum 
-from typing import Union
+from typing import List, Union
 import copy 
 from itertools import chain, combinations
 import pandas as pd
@@ -153,9 +154,35 @@ class Tisane(object):
     # def generate_main_effects(self, dv: Concept):
     #     pass
 
-    def generate_effects_sets(self, dv: Concept):
+    def generate_effects_sets(self, ivs: List[Concept], dv: Concept):
         return self.graph.generate_effects_sets(dv=dv)
     
+    def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
+        return self.graph.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)
+
+    def get_valid_models(self, ivs: List[Concept], dv: Concept): 
+        kb = KnowledgeBase(ivs, dvs)
+
+        effects_sets = self.generate_effects_sets(ivs=ivs, dv=dv)    
+        
+        for es in effects_sets: 
+            es_name = str() # TODO come up with some name for the effects (maybe just list them all out)
+            kb.generate_constraints(name=es_name, ivs=es.ivs, dv=es.dv)
+            
+        """
+        # TODO: KB should keep track of all the sets of constraints for each effects set as well as any "GLOBAL" constraints that are true/false
+
+        - keep a dict or something of all sets of constraints
+        - keep a list/dict of all constraints or something 
+        # TODO: Update all the files with asserted constraints
+        - this may require coming up with a set of checks to do on the variables for all effects sets
+        # TODO: Find answer sets (valid models) for each file with asserted constraints
+
+        # TODO: Generate outputs for valid models for each effects sets
+        
+        # Question: Do we have to check all the properties? What if there are some properties that we would not have to check if some are already invalid?  
+        """
+
     def pretty_print_effects_sets(self, dv: Concept):
         effects_sets = self.generate_effects_sets(dv=dv)
 

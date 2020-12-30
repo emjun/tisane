@@ -174,27 +174,52 @@ class AnalysisTests(unittest.TestCase):
         self.assertIsNone(analysis.relationship)
         self.assertIsNone(analysis.data)
 
-    def test_explain_tc(self): 
+    # def test_explain_tc_simple(self): 
+    #     analysis = ts.Tisane(task="explanation") # analysis has one task
+
+    #     test_score = ts.Concept("Test Score")
+    #     intelligence = ts.Concept("Intelligence")
+    #     tutoring = ts.Concept("Tutoring")
+    #     concepts = [test_score, intelligence, tutoring]
+
+    #     analysis.addRelationship(intelligence, test_score, "cause")
+    #     analysis.addRelationship(tutoring, test_score, "cause")
+    #     analysis.addRelationship(intelligence, tutoring, "correlate")
+
+    #     effects_sets = analysis.generate_effects_sets_with_ivs(ivs=[intelligence, tutoring], dv=test_score)
+    #     self.assertEqual(len(effects_sets), 7)
+
+    #     analysis.pretty_print_effects_sets(dv=test_score)
+
+
+    #     # Main effects = 3
+
+    #     # Interaction effects = 1
+
+    def test_explain_tc_cut(self): 
         analysis = ts.Tisane(task="explanation") # analysis has one task
 
         test_score = ts.Concept("Test Score")
         intelligence = ts.Concept("Intelligence")
         tutoring = ts.Concept("Tutoring")
-        concepts = [test_score, intelligence, tutoring]
+        income = ts.Concept("Income")
+        concepts = [test_score, intelligence, tutoring, income]
 
         analysis.addRelationship(intelligence, test_score, "cause")
         analysis.addRelationship(tutoring, test_score, "cause")
         analysis.addRelationship(intelligence, tutoring, "correlate")
+        analysis.addRelationship(test_score, income, "cause")
+        analysis.addRelationship(intelligence, income, "correlate")
+    
+        # TODO: Check that test_score ->cause income is not in effects set/subgraph
+        # TODO: Check that the edges we expect are in the subgraph?
 
-        effects_sets = analysis.generate_effects_sets(dv=test_score)
+
+        effects_sets = analysis.generate_effects_sets_with_ivs(ivs=[intelligence, tutoring], dv=test_score)
+        import pdb; pdb.set_trace()
         self.assertEqual(len(effects_sets), 7)
 
         analysis.pretty_print_effects_sets(dv=test_score)
-
-
-        # Main effects = 3
-
-        # Interaction effects = 1
 
     def test_explain(self): 
         analysis = ts.Tisane(task="prediction") # analysis has one task
