@@ -160,14 +160,14 @@ class Tisane(object):
     def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
         return self.graph.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)
 
-    def get_valid_models(self, ivs: List[Concept], dv: Concept): 
-        kb = KnowledgeBase(ivs, dvs)
-
-        effects_sets = self.generate_effects_sets(ivs=ivs, dv=dv)    
+    def model(self): 
+        effects_sets = self.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)    
         
         for es in effects_sets: 
             es_name = str() # TODO come up with some name for the effects (maybe just list them all out)
-            kb.generate_constraints(name=es_name, ivs=es.ivs, dv=es.dv)
+            # kb.generate_constraints(name=es_name, ivs=es.ivs, dv=es.dv)
+
+            get_valid_statistical_models(self, es)
             
         """
         # TODO: KB should keep track of all the sets of constraints for each effects set as well as any "GLOBAL" constraints that are true/false
@@ -182,6 +182,27 @@ class Tisane(object):
         
         # Question: Do we have to check all the properties? What if there are some properties that we would not have to check if some are already invalid?  
         """
+
+    def get_valid_statistical_models(self, effects_sets): 
+        kb = KnowledgeBase()
+
+        # Step: Interactions for getting all the properties for the Concepts/Variables (using data if there is data)
+        # Collect assertions
+        
+        # TODO: Start up editor if not already open or move model to the Editor (latter is probably better)
+        model = InteractiveTisaneEditor(self)
+
+        # Step: Dynamically generate constriants for KB with assertions about the properties from Interactions (Step above)
+        # Could probably call KB function? 
+        valid_statistical_models = list()
+
+        # Step: Get valid tests and then 
+        models = self.construct_statistical_models(effects_sets=effects_sets, valid_statistical_models=valid_statistical_models)
+
+        return (kb, models) # may not want to return KnowledgeBase
+
+    def construct_statistical_models(self, effects_sets, valid_statistical_models): 
+        pass
 
     def pretty_print_effects_sets(self, dv: Concept):
         effects_sets = self.generate_effects_sets(dv=dv)
@@ -217,20 +238,15 @@ class Tisane(object):
     def explainWithout(self, dv: Concept, ivs_to_exclude: list): 
         pass
 
-    def model(self):
-        raise NotImplementedError
-        
-        # TODO: Start up editor if not already open or move model to the Editor (latter is probably better)
-        model = InteractiveTisaneEditor(self)
-
     # @param property is used to parse/generate the constraints
     def assume_property(self, property: str): 
         raise NotImplementedError
 
-    # @param property is used to parse/generate the constraints
-    def assert_property(self, property: str): 
+    # Asserts the @param prop in the knowledge base
+    # @param prop is used to parse/generate the constraints
+    def assert_property(self, prop: str): 
         # TODO: Should we have a distinction between assumed and asserted? 
         # assumed: still check (including visually)
         # asserted: stop modeling if data does not fit this property
         
-        raise NotImplementedError
+        kb.assert_property(property=prop)

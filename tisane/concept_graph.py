@@ -1,4 +1,6 @@
 from tisane.concept import Concept
+from tisane.statistical_model import StatisticalModel
+from tisane.asp.knowledge_base import KnowledgeBase
 
 from enum import Enum 
 from typing import List, Union
@@ -81,10 +83,9 @@ class ConceptGraph(object):
         tc = nx.transitive_closure(self._graph, reflexive=None) # do not create any self loops
         return tc
 
+    # Infer main effects from conceptual graph 
     # @param set_tc is a set of edges from the transitive closure of self.graph
     def infer_main_effects(self, dv: Concept, set_tc: set): 
-        # Infer main effects from conceptual graph 
-
         # Filter the transitive closure to only include those that end in @param dv
         main_effects = list()
         for relat in set_tc:     
@@ -92,15 +93,15 @@ class ConceptGraph(object):
             assert(len(relat) == 2)
             # Check that @param dv is the "receiving" edge
             if dv.name == relat[1]: 
-                # add relationship/edge into list of possible main effects
+                # Add relationship/edge into list of possible main effects
                 m_e = relat[0]
                 main_effects.append(m_e)
 
         return main_effects
 
+    # Infer interaction effects based on conceptual graph 
     # @param set_tc is a set of edges from the transitive closure of self.graph
     def infer_interaction_effects(self, dv: Concept, set_tc: set): 
-        # Infer interaction effects based on conceptual graph 
         interaction_effects = list()
         for relat in set_tc: 
             # Check that each edge has only 2 nodes
@@ -122,6 +123,8 @@ class ConceptGraph(object):
         if len(powerset_lists) != 2: 
             raise NotImplementedError
         
+        assert('main' in powerset_lists.keys())
+        assert('interaction' in powerset_lists.keys())
         main_effects = powerset_lists['main']
         interaction_effects = powerset_lists['interaction']
 
@@ -219,12 +222,8 @@ class ConceptGraph(object):
         sub.generate_effects_sets(dv=dv)
 
         # Filter effects sets to only include those that involve the IVs
-        
+
         return sub.generate_effects_sets(dv=dv)
         # TODO: What ahppens if the ivs contain variables that receive edges from DV?  --> should check that the model is possible, raise error if not (this is in the interaction and checking layer?)
-
-
-
-
         
         

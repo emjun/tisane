@@ -164,7 +164,7 @@ def find_statistical_models(ivs: list, dvs: list, **kwargs):
 def find_conceptual_models(self, stat_models: list):
     # TODO what do we pass to the KnowledgeBase in the case where we have stats models to solve for...
     kb = KnowledgeBase()
-    kb.
+    # kb.
 
     return kb.find_conceptual_models(stat_models)
 

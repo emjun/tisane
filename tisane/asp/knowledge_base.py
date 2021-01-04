@@ -1,6 +1,7 @@
 from tisane.concept import Concept
 
 import os 
+import subprocess
 import re 
 from typing import List
 
@@ -9,6 +10,8 @@ single_arity = [    'variable(X)',
                     'numeric_or_categorical(X)',
                     'transformed(X)'
                 ]
+
+_effects_sets_to_constraints_files = dict()
 
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
@@ -21,7 +24,7 @@ class KnowledgeBase(object):
     # TODO: Change @param effects into a set????
     # TODO: change name/automatically change
     def generate_constraints(self, name: str, ivs: List[Concept], dv: List[Concept]): 
-        global single_arity
+        global single_arity, _effects_sets_to_constraints_files
 
         assert(len(dv) == 1)
 
@@ -160,13 +163,52 @@ class KnowledgeBase(object):
 
                     specific_constraints.write(new_line)
                     rule_completed = False
-                    # import pdb; pdb.set_trace()
-                    # TODO: START HERE: Debug dynamic generation (then commit/push)
-                    # TODO: Verify the sat/results are correct
-                    # TODO: Connect the effects generation and knowledge base
 
-                    # Add assertions for solving!!
+        _effects_sets_to_constraints_files[f'(ivs={ivs}, dv={dv})'] = specific_abs_path
+    
+    # Add assertions for solving!!
+    # These assertions are "global" in the sense that they will apply to all sets of constraints in _effects_sets_to_constraints_files
+    def assert_property(self, prop:str): 
+        raise NotImplementedError
 
-                    # Add more statistical tests!
+    # TODO: Add all the assertions into a list
+    # TODO: Return String instead of List of assertions?
+    # TODO: Need a set of effects rather than return all assertions? -- maybe split into multiple functions?
+    def get_assertions(self) -> list: 
+        all_assertions = list()
 
+        return all_assertions
 
+    # @param file is a .lp file containing ASP constraints
+    def query(self, file_name: str): 
+        assert(".lp" in file_name)
+
+        # Read file in as a string
+        constraints = None
+        with open(file_name, 'r') as f:
+            constraints = f.read()
+        
+        # Add assertions to read-in file
+        all_assertions = self.get_assertions()
+        formatted_all_assertions = '\n'.join(str(a) for a in all_assertions)
+        
+        # Concatenate constraints with assertions
+        query = constraints + formatted_all_assertions
+        query = stquery.encode("utf8") # Add encoding
+
+        # Run clingo 
+        clingo_command = ["clingo"]
+        proc = subprocess.Popen(args=clingo_command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        stdout, stderr = proc.communicate(query)    
+        
+        return (stdout, stderr)
+    
+    def get_query_result(self):
+        raise NotImplementedError
+        # Parse output 
+        
+        # Return output
+
+    # TODO: May want to refactor and make more generic KnowledgeBase querying interface?
+    # TODO: KB wrapper for running query, adding assertions, getting results, etc?
