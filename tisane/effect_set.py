@@ -1,7 +1,7 @@
 from tisane.concept import Concept
 
 from collections import namedtuple
-from typing import List
+from typing import Any, List
 
 
 MainEffect = namedtuple('MainEffect', 'effect')
@@ -13,7 +13,7 @@ class EffectSet(object):
     main: MainEffect
     interaction: InteractionEffect
     mixed: MixedEffect
-    properties: List
+    properties: dict
 
     def __init__(self, dv: Concept, main: MainEffect, interaction: InteractionEffect, mixed: MixedEffect=None): 
         self.dv = dv
@@ -21,14 +21,15 @@ class EffectSet(object):
         self.interaction = interaction
         self.mixed = mixed
 
-        self.properties = list() # start empty
+        self.properties = dict() # start empty
 
     # def __repr__(self):
     #     return f"DV: {self.dv}, Main: {self.main}, Interaction: {self.interaction}, Mixed: {self.mixed}, properties: {self.properties}"
     
     def __str__(self):
         return str(f"DV: {self.dv}, Main: {self.main}, Interaction: {self.interaction}, Mixed: {self.mixed}, properties: {self.properties}")
-
+    
+    """
     def has_dv(self, dv_name: str):
         return self.dv.name == dv_name
 
@@ -46,7 +47,20 @@ class EffectSet(object):
         if self.mixed.effect is None:
             return mixed_name is None
         return mixed_name in self.mixed.effect
+    """
     
+    def get_dv(self): 
+        return self.dv
+    
+    def get_main_effects(self): 
+        return self.main
+
+    def get_interaction_effects(self): 
+        return self.interaction
+
+    def get_mixed_effects(self): 
+        return self.mixed
+
     # @returns dictionary with all effects and properties
     def to_dict(self): 
         main_set = None
@@ -82,5 +96,6 @@ class EffectSet(object):
 
         return dict_rep
 
-    def assert_property(self, prop: str):
-        pass
+    def assert_property(self, prop: str, val: Any) -> None:
+        key = prop.upper()
+        self.properties[key] = val

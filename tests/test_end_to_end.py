@@ -1,6 +1,6 @@
 import tisane as ts
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
-# from tisane.smt.knowledge_base import KnowledgeBase, find_statistical_models
+from tisane.statistical_model import StatisticalModel
 
 import unittest
 
@@ -49,19 +49,40 @@ class EndToEndTests(unittest.TestCase):
         # tutoring.specifyData(dtype="nominal", categories=["After school", "Before school", "None"])
 
         # Get valid statistical models
+        # Assert statistical properties needed for linear regression
         # Generate effects sets
         effects = analysis.generate_effects_sets(ivs=[intelligence, tutoring], dv=test_score)
 
+        # Add individual variable assertions
+        # Some assertions are inferred from data schema, see above
+        self.assertTrue(test_score.getVariable().has_property_value(prop="dtype", val="numeric"))
+        self.assertTrue(intelligence.getVariable().has_property_value(prop="dtype", val="numeric"))
+        self.assertTrue(tutoring.getVariable().has_property_value(prop="dtype", val="nominal"))
+        
+        self.assertFalse(test_score.getVariable().has_property(prop="cardinality"))
+        self.assertFalse(intelligence.getVariable().has_property(prop="cardinality"))
+        self.assertTrue(tutoring.getVariable().has_property_value(prop="cardinality", val="binary"))
 
-        # Add assertions
-        test_score.assert_property(prop="")
-        intelligence.assert_property(prop="")
-        tutoring.assert_property(prop="")
-
-        # Effects Sets as a class that have residual properties?
-
-        # Could we set up one end-to-end with all assertions and then figure out from there?
-
+        # Add assertions that pertain to effects sets
+        linear_reg_es = None
+        for es in effects: 
+            if es.to_dict() == DataForTests.expected_effects_set[2]: 
+                linear_reg_es = es
+                break
+        linear_reg_es.assert_property(prop="tolerate_correlation", val=True)
+        
+        # Convert linear regression model EffectSet to statistical model
+        linear_reg_sm = StatisticalModel.create(model_type='linear_regression', effect_set=linear_reg_es)
+        
+        # Add assertions that pertain to the models
+        # Note: Make assertions that will involve interaction (interactions compile to these statements)
+        # Note: These assertions should be made on the *MODEL* not the *Effect Set*
+        linear_reg_sm.get_residuals().assert_property(prop="distribution", val="normal")
+        linear_reg_sm.get_residuals().assert_property(prop="homoscedastic", val=True)
+        
+        # TODO: Compile all these assertions into constraints
+        # Should be in KnowledgeBase class or main Tisane class?
+        
         # Query KB for statistical models
 
 
