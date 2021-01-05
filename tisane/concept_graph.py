@@ -1,6 +1,7 @@
 from tisane.concept import Concept
 from tisane.statistical_model import StatisticalModel
 from tisane.asp.knowledge_base import KnowledgeBase
+from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 
 from enum import Enum 
 from typing import List, Union
@@ -52,7 +53,6 @@ class ConceptGraph(object):
         start_node = None
         end_node = None 
 
-        # import pdb; pdb.set_trace()
         if not self.hasConcept(start_con): 
             self.addNode(start_con)
         start_node = self.getConcept(start_con)
@@ -116,7 +116,7 @@ class ConceptGraph(object):
         return interaction_effects
 
     # @param effects is a list of effects lists 
-    def get_all_effects_combinations(self, powerset_lists: dict): 
+    def get_all_effects_combinations(self, dv: Concept, powerset_lists: dict): 
     
         all_effects_set = set()
 
@@ -130,10 +130,11 @@ class ConceptGraph(object):
 
         for m in main_effects:
             for i in interaction_effects:
-                if not m and not i:
+                if not m.effect and not i.effect:
                     pass
                 else:
-                    set_effects = frozenset({m, i})
+                    # set_effects = frozenset({m, i})
+                    set_effects = EffectSet(dv=dv, main=m, interaction=i)
                     all_effects_set.add(set_effects)
 
 
@@ -142,15 +143,21 @@ class ConceptGraph(object):
         
 
     def cast(self, effect_type: str, effect_powerset: tuple):
-        MainEffect = namedtuple('MainEffect', 'effect')
-        InteractionEffect = namedtuple('InteractionEffect', 'effect')
+        # MainEffect = namedtuple('MainEffect', 'effect')
+        # InteractionEffect = namedtuple('InteractionEffect', 'effect')
         
         cast_effect_list = list()
         for eff in list(effect_powerset):
             if effect_type.upper() == 'MAIN':
-                cast_effect_list.append(MainEffect(eff)) 
+                if not eff: 
+                    cast_effect_list.append(MainEffect(None))     
+                else: 
+                    cast_effect_list.append(MainEffect(eff)) 
             elif effect_type.upper() == 'INTERACTION':
-                cast_effect_list.append(InteractionEffect(eff)) 
+                if not eff: 
+                    cast_effect_list.append(InteractionEffect(None))     
+                else: 
+                    cast_effect_list.append(InteractionEffect(eff)) 
             else:
                 raise ValueError(f"Effect type {effect_type} not supported! Try MAIN or INTERACTION")
         return cast_effect_list
@@ -169,7 +176,7 @@ class ConceptGraph(object):
         interaction_powerset = powerset(interaction_effects)
         main_cast = self.cast(effect_type='main', effect_powerset=main_powerset)
         interaction_cast = self.cast(effect_type='interaction', effect_powerset=interaction_powerset)
-        all_effects_set = self.get_all_effects_combinations({'main': main_cast, 'interaction': interaction_cast})
+        all_effects_set = self.get_all_effects_combinations(dv=dv, powerset_lists={'main': main_cast, 'interaction': interaction_cast})
 
         return all_effects_set
 

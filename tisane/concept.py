@@ -8,11 +8,11 @@ class Concept(object):
         self.name = name
         self.variable = None
     
-    def __repr__(self):
-        return f"Concept: name:{self.name}, variable:<{self.variable.__repr__()}>"
+    # def __repr__(self):
+    #     return f"Concept: name:{self.name}, variable:<{self.variable.__repr__()}>"
     
     def __str__(self):
-        pass
+        return f"Concept: name:{self.name}, variable:<{self.variable.__repr__()}>"
     
     def specifyData(self, dtype:str, categories=None, order=None, data=None): 
         self.variable = AbstractVariable.create(dtype=dtype, categories=categories, order=order, data=data)
@@ -33,3 +33,6 @@ class Concept(object):
 
     def data(self): 
         return self.variable.data
+
+    def assert_property(self, prop: str): 
+        pass
