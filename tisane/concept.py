@@ -31,6 +31,16 @@ class Concept(object):
     def getVariable(self): 
         return self.variable
 
+    # Get variable name
+    def getVariableName(self):
+        # If this variable has data associated with it
+        var = self.getVariable()
+        if var.hasData():
+            return var.getName()
+        else: 
+            # For the Knowledge Base/ASP, replace spaces with underscores
+            return self.name.lower().replace(' ', '_')
+
     def data(self): 
         return self.variable.data
 

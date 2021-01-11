@@ -26,6 +26,7 @@ class EffectSet(object):
     # def __repr__(self):
     #     return f"DV: {self.dv}, Main: {self.main}, Interaction: {self.interaction}, Mixed: {self.mixed}, properties: {self.properties}"
     
+    # TODO: Maybe the Effect Set should have a mathematical representation (not the StatisticalModel?)
     def __str__(self):
         return str(f"DV: {self.dv}, Main: {self.main}, Interaction: {self.interaction}, Mixed: {self.mixed}, properties: {self.properties}")
     
@@ -48,7 +49,36 @@ class EffectSet(object):
             return mixed_name is None
         return mixed_name in self.mixed.effect
     """
+    def has_dv(self): 
+        if not self.dv: 
+            return True
+        
+        return False
+
+    def has_main_effects(self): 
+        if not self.main: 
+            return False
+        if self.main:  # because there's a bug
+            if not self.main.effect: 
+                return False
+        return True
+        
+    def has_interaction_effects(self): 
+        if not self.interaction: 
+            return False
+        if self.interaction:  # because there's a bug
+            if not self.interaction.effect: 
+                return False
+        return True
     
+    def has_mixed_effects(self): 
+        if not self.mixed: 
+            return False
+        if self.mixed:  # because there's a bug
+            if not self.mixed.effect: 
+                return False
+        return True
+
     def get_dv(self): 
         return self.dv
     
@@ -60,6 +90,10 @@ class EffectSet(object):
 
     def get_mixed_effects(self): 
         return self.mixed
+    
+    # def get_all_iv_effects(self):
+    #     for m in self.get_main_effects().effect:
+    #         import pdb; pdb.set_trace()
 
     # @returns dictionary with all effects and properties
     def to_dict(self): 
@@ -96,6 +130,16 @@ class EffectSet(object):
 
         return dict_rep
 
+    
     def assert_property(self, prop: str, val: Any) -> None:
         key = prop.upper()
         self.properties[key] = val
+    
+    # @returns if effect set has properties to assert
+    def has_assertions(self) -> bool: 
+        return bool(self.properties)
+
+    # @returns effect set properties
+    def get_assertions(self) -> dict: 
+        return self.properties
+    

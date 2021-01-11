@@ -65,6 +65,14 @@ class AbstractVariable(object):
 
         return ls
     
+    def hasData(self):
+        return bool(self.data)
+
+    def getName(self):
+        if self.data: 
+            return self.data.name
+        return None
+
     def assert_property(self, prop: str, val: Any) -> None: 
         key = prop.upper()
         self.properties[key] = val
@@ -80,6 +88,14 @@ class AbstractVariable(object):
             return self.properties[key] == val
         
         return False
+    
+    # @returns if variable has properties to assert
+    def has_assertions(self) -> bool: 
+        return bool(self.properties)
+
+    # @returns variable properties
+    def get_assertions(self) -> dict: 
+        return self.properties
 
 class NominalVariable(AbstractVariable): 
     # categories = list

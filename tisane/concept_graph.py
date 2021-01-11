@@ -55,11 +55,11 @@ class ConceptGraph(object):
 
         if not self.hasConcept(start_con): 
             self.addNode(start_con)
-        start_node = self.getConcept(start_con)
+        start_node = self.getConceptNode(start_con)
 
         if not self.hasConcept(end_con): 
             self.addNode(end_con)
-        end_node = self.getConcept(end_con)
+        end_node = self.getConceptNode(end_con)
             
         # Assert the start and end nodes are not None            
         assert(start_node)
@@ -73,11 +73,21 @@ class ConceptGraph(object):
 
     # @returns handle to Node that represents the @param con Concept
     # @returns None if @param con Concept is not found in the graph 
-    def getConcept(self, con: Concept): 
+    def getConceptNode(self, con: Concept): 
         for n in self._graph.nodes('concept'): 
             if n[0] == con.name:
                 return n
         return None
+    
+    # @returns Concept with concept_name in this conceptual graph
+    def getConcept(self, concept_name: str) -> Concept: 
+        for n in self._graph.nodes('concept'): 
+            if n[0] == concept_name: 
+                assert(isinstance(n[1], Concept))
+                return n[1]
+        
+        return None
+
 
     def getRelationships(self, dv: Concept, relationship_type: CONCEPTUAL_RELATIONSHIP): 
         tc = nx.transitive_closure(self._graph, reflexive=None) # do not create any self loops

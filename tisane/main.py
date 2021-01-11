@@ -1,5 +1,6 @@
 from tisane.concept import Concept
 from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
+from tisane.effect_set import EffectSet
 from tisane.smt.results import AllStatisticalResults
 from tisane.asp.knowledge_base import KnowledgeBase
 
@@ -46,17 +47,23 @@ class RELATIONSHIP(Enum):
 class Data(object): 
     pass
 
+kb = KnowledgeBase()
+
 class Tisane(object):
     task : TASK
     graph : ConceptGraph # Not clear this is necessary at the moment
     relationship: RELATIONSHIP
     data : Data
+    knowledge_base : KnowledgeBase # optional
 
-    def __init__(self, task:str):
+    def __init__(self, task:str, knowledge_base: KnowledgeBase=None):
+        global kb # use global KnowledgeBase by default
+
         self.task = TASK.cast(task)
         self.graph = ConceptGraph() # TODO: graph structure might not be the right one?
         self.relationship = None # TODO: Not sure we want to default to none? 
         self.data = None
+        self.knowledge_base = kb
     
     def __repr__(self):
         pass
@@ -128,6 +135,11 @@ class Tisane(object):
         # add Relationship (edge)
         cr = CONCEPTUAL_RELATIONSHIP.cast(relationship_type)
         self.graph.addEdge(lhs_con, rhs_con, cr)
+    
+    # @returns Concept that has @param concept_name
+    def get_concept(self, concept_name: str) -> Concept:  
+        pass
+            
         
     """
     Prediction: Use sets of variables that have BOTH causal and correlational relationships with DV
@@ -160,7 +172,74 @@ class Tisane(object):
     def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
         return self.graph.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)
 
-    def model(self): 
+    # @param effect_set to use in order to model
+    # @returns a set/list? of valid StatisticalModels for the @param effect_set
+    def start_model(self, effect_set: EffectSet): 
+        
+        # get Concepts for all corresponding effects in @param effect_set
+        dv_concept = [effect_set.get_dv()]
+        ivs_concepts = list()
+        
+        main_concepts = list()
+        if effect_set.has_main_effects():
+            main_effects = effect_set.get_main_effects().effect
+            for m in main_effects: 
+                assert(isinstance(m, str))
+                main_concepts.append(self.graph.getConcept(m))
+            ivs_concepts += main_concepts
+        
+        ivs_concepts = main_concepts
+
+        interaction_concepts = list()
+        if effect_set.has_interaction_effects():
+            interaction_effects = effect_set.get_interaction_effects().effect
+            for i in interaction_effects: 
+                assert(isinstance(i, str))
+                interaction_concepts.append(self.graph.getConcept(i))
+            ivs_concepts += interaction_concepts
+
+        mixed_concepts = list()
+        if effect_set.has_mixed_effects():
+            mixed_effects = effect_set.get_mixed_effects().effect
+            for mi in mixed_effects: 
+                assert(isinstance(mi, str))
+                mixed_concepts.append(self.graph.getConcept(mi))
+            ivs_concepts += mixed_concepts    
+
+        # dyamically generate constraints based on @param effect_set arity and variables
+        self.knowledge_base.generate_constraints(name='test0', ivs=ivs_concepts, dv=dv_concept)
+
+        """
+        # collect assertions 
+        # from variables
+        assertions = set(dv.get_assertions())
+        for iv in iv_sconcepts: 
+            ass = iv.get_assertions()
+            assertions.add(ass)
+        
+        # from effect set (set of variables)
+        assertions.add(effect_set.get_assertions())
+        """
+        
+        # query knowledge base
+        # knowledge base will take care of adding assertions
+        res = self.knowledge_base.query(file_name='specific_constraints_test0.lp', assertions=assertions)
+
+        # if there's an error
+        if res[1]: 
+            # Interactive loop: dynamically, interactively figure out and get user input for additional constraints that underspecifed in current assertions. 
+            return self.continue_model(file_name='specific_constraints_test0.lp', assertions=assertions)
+        
+        else: 
+            return self.finish_model(res)
+
+    def continue_model(self, file_name, assertions): 
+        raise NotImplementedError
+
+    def finish_model(self, result): 
+        raise NotImplementedError
+
+    def model_idea0(self): 
         effects_sets = self.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)    
         
         for es in effects_sets: 

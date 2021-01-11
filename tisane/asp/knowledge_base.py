@@ -1,4 +1,5 @@
 from tisane.concept import Concept
+from tisane.effect_set import EffectSet
 
 import os 
 import subprocess
@@ -179,9 +180,70 @@ class KnowledgeBase(object):
 
         return all_assertions
 
+
+    def get_concept_variable_constraint(self, concept: Concept, key: str, val: str): 
+        c_name = concept.getVariableName()
+        
+        ## Variable constraints
+        if key == 'dtype': 
+            if val == 'numeric': 
+                return f'numeric({c_name}).'
+            elif val =='nominal': 
+                return f'nominal({c_name}).'
+            else: 
+                raise NotImplementedError
+        elif key == 'cardinality': 
+            return f'binary({c_name}).'
+        else: 
+            return NotImplementedError
+    
+    def get_effect_set_constraint(self, effect_set: EffectSet, key: str, val: str): 
+        ivs = list()
+        for e in effect_set.get_main_effects().effect:
+            e_name = e.lower().replace(' ', '_') 
+            ivs.append(e_name)
+        ivs_names = ','.join(ivs)
+
+        ## Effect set constraints
+        if key == 'tolerate_correlation': 
+            if val: 
+                return f'tolerate_correlation({ivs_names}).'
+            else: 
+                return f'not_tolerate_correlation({ivs_names}).'
+        elif key == 'distribution': 
+            if val == 'normal': 
+                return f'normal({ivs_names}).'
+            else: 
+                raise NotImplementedError
+        elif key == 'homoscedastic': 
+            if val: 
+                return f'homoscedastic({ivs_names}).'
+
+    # collect and format assertions to include in query
+    def collect_assertions(self, ivs: List[Concept], dv: Concept): 
+        assertions_list = list() # List[str]
+
+        # add constraints that ground the variables
+        # add IVs
+        for i in ivs: 
+            assertions_list.append(f'variable({i.name}).')
+        # add DV
+        assertions_list.append(f'variable({dv.name}).')
+        
+        #  add constraints based on properties of variables, effect set (set of variables)
+        for i in ivs: 
+            # the IV has assertions
+            if i.has_assertions(): 
+                assertions_list.append(get_constraint(v=i, key=k, val=v))
+                
+
+
     # @param file is a .lp file containing ASP constraints
-    def query(self, file_name: str): 
+    def query(self, file_name: str, ivs: List[Concept], dv: Concept): 
         assert(".lp" in file_name)
+
+        # collect assertions before querying
+        self.collect_assertions(ivs=ivs, dv=dv)
 
         # Read file in as a string
         constraints = None

@@ -84,8 +84,7 @@ class EndToEndTests(unittest.TestCase):
         # Should be in KnowledgeBase class or main Tisane class?
         
         # Query KB for statistical models
-
-
+        analysis.start_model(linear_reg_es) 
         
 class DataForTests: 
     test_score = ts.Concept("Test Score")
