@@ -46,3 +46,14 @@ class Concept(object):
 
     def assert_property(self, prop: str): 
         pass
+
+    def has_assertions(self): 
+        if self.variable: 
+            return self.variable.has_assertions()
+
+        return False
+    
+    def get_assertions(self): 
+        if self.has_assertions(): 
+            return self.variable.get_assertions()
+        return None

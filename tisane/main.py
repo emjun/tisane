@@ -97,6 +97,7 @@ class Tisane(object):
             self.graph = ConceptGraph()
         gr = self.graph
 
+        # import pdb; pdb.set_trace()
         # add the ivs if they are already not part of the graph 
         for c in con_list:
             if gr.hasConcept(c): 
@@ -104,8 +105,10 @@ class Tisane(object):
             else: 
                 # copy elts already in graph
                 gr = copy.deepcopy(gr)
+                # import pdb; pdb.set_trace()
                 # add new elt to graph
                 gr.addNode(c)
+                # import pdb; pdb.set_trace()
         
         self.graph = gr
     
@@ -172,6 +175,57 @@ class Tisane(object):
     def generate_effects_sets_with_ivs(self, ivs: List[Concept], dv: Concept): 
         return self.graph.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)
 
+    # @param effect_set is an EffectSet
+    # @returns a list of assertions to use when querying the knowledge base
+    def collect_assertions(self, effect_set) -> list: 
+        # TODO: Probably can get rid of this if have Concepts in EffectSet (instead of str names)
+        # TODO: At very least, could make this a helper function?
+        # get Concepts for all corresponding effects in @param effect_set
+        dv_concept = [effect_set.get_dv()]
+        ivs_concepts = list()
+        
+        main_concepts = list()
+        if effect_set.has_main_effects():
+            main_effects = effect_set.get_main_effects().effect
+            for m in main_effects: 
+                assert(isinstance(m, str))
+                main_concepts.append(self.graph.getConcept(m))
+            ivs_concepts += main_concepts
+        
+        ivs_concepts = main_concepts
+
+        interaction_concepts = list()
+        if effect_set.has_interaction_effects():
+            interaction_effects = effect_set.get_interaction_effects().effect
+            for i in interaction_effects: 
+                assert(isinstance(i, str))
+                interaction_concepts.append(self.graph.getConcept(i))
+            ivs_concepts += interaction_concepts
+
+        mixed_concepts = list()
+        if effect_set.has_mixed_effects():
+            mixed_effects = effect_set.get_mixed_effects().effect
+            for mi in mixed_effects: 
+                assert(isinstance(mi, str))
+                mixed_concepts.append(self.graph.getConcept(mi))
+            ivs_concepts += mixed_concepts    
+
+        # Collect assertions from Concepts
+        all_assertions = list()
+        # IVs
+        for c in ivs_concepts: 
+            c_assert = self.knowledge_base.get_concept_constraints(concept=c)
+            all_assertions += c_assert
+
+        # DV
+        all_assertions += self.knowledge_base.get_concept_constraints(concept=dv_concept[0])
+
+        # Collect assertions from Effect Set
+        es_assert = self.knowledge_base.get_effect_set_constraints(effect_set=effect_set)
+        all_assertions += es_assert
+    
+        return all_assertions
+
     # @param effect_set to use in order to model
     # @returns a set/list? of valid StatisticalModels for the @param effect_set
     def start_model(self, effect_set: EffectSet): 
@@ -206,23 +260,14 @@ class Tisane(object):
                 mixed_concepts.append(self.graph.getConcept(mi))
             ivs_concepts += mixed_concepts    
 
+
         # dyamically generate constraints based on @param effect_set arity and variables
         self.knowledge_base.generate_constraints(name='test0', ivs=ivs_concepts, dv=dv_concept)
 
-        """
-        # collect assertions 
-        # from variables
-        assertions = set(dv.get_assertions())
-        for iv in iv_sconcepts: 
-            ass = iv.get_assertions()
-            assertions.add(ass)
-        
-        # from effect set (set of variables)
-        assertions.add(effect_set.get_assertions())
-        """
-        
+        # collect assertions (variable and effect set)
+        assertions = self.collect_assertions(effect_set=effect_set)
+
         # query knowledge base
-        # knowledge base will take care of adding assertions
         res = self.knowledge_base.query(file_name='specific_constraints_test0.lp', assertions=assertions)
 
         # if there's an error

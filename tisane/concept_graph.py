@@ -4,7 +4,7 @@ from tisane.asp.knowledge_base import KnowledgeBase
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 
 from enum import Enum 
-from typing import List, Union
+from typing import List, Union, Dict
 from more_itertools import powerset
 from collections import namedtuple
 import copy 
@@ -27,6 +27,10 @@ class CONCEPTUAL_RELATIONSHIP(Enum):
 
 class ConceptGraph(object): 
     _graph : nx.MultiDiGraph
+    # dict of concepts in the _graph.
+    # We use this rather than store concepts directly in the graph because Python passes-by-object-reference.
+    # This means that the Concepts in ConceptGraph will reflect changes made to the Concept objects externally
+    # _concepts : Dict[Concept]
     
 
     def __init__(self): 

@@ -17,6 +17,52 @@ _effects_sets_to_constraints_files = dict()
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
 
+def format_concept_variable_constraint(concept: Concept, key: str, val: str): 
+            c_name = concept.getVariableName()
+            
+            ## Variable constraints
+            if key.upper() == 'DTYPE': 
+                if val == 'numeric': 
+                    return f'numeric({c_name}).'
+                elif val =='nominal': 
+                    return f'nominal({c_name}).'
+                else: 
+                    # import pdb; pdb.set_trace()
+                    raise NotImplementedError
+            elif key.upper() == 'CARDINALITY': 
+                return f'binary({c_name}).'
+            else:
+                # import pdb; pdb.set_trace()
+                return NotImplementedError
+
+def format_effect_set_constraint(effect_set: EffectSet, key: str, val: str): 
+            ivs = list()
+            for e in effect_set.get_main_effects().effect:
+                e_name = e.lower().replace(' ', '_') 
+                ivs.append(e_name)
+            ivs_names = ','.join(ivs)
+
+            dv_name = effect_set.get_dv().name.lower().replace(' ', '_') 
+            all_names = ','.join(ivs) + f',{dv_name}'
+
+            ## Effect set constraints
+            if key.upper() == 'TOLERATE_CORRELATION': 
+                if val: 
+                    return f'tolerate_correlation({ivs_names}).'
+                else: 
+                    return f'not_tolerate_correlation({ivs_names}).'
+            elif key.upper() == 'DISTRIBUTION': 
+                if val == 'normal': 
+                    return f'normal({ivs_names}).'
+                else: 
+                    raise NotImplementedError
+            elif key.upper() == 'HOMOSCEDASTIC_RESIDUALS': 
+                if val: 
+                    return f'homoscedastic_residuals({all_names}).'
+            elif key.upper() == 'NORMAL_RESIDUALS': 
+                if val: 
+                    return f'normal_residuals({all_names}).'
+
 class KnowledgeBase(object):
     
     # @param name is string for set of variables that are supported/instantiate the constraints
@@ -181,65 +227,37 @@ class KnowledgeBase(object):
         return all_assertions
 
 
-    def get_concept_variable_constraint(self, concept: Concept, key: str, val: str): 
-        c_name = concept.getVariableName()
+    def get_concept_constraints(self, concept: Concept): 
+        assertions = list() 
         
-        ## Variable constraints
-        if key == 'dtype': 
-            if val == 'numeric': 
-                return f'numeric({c_name}).'
-            elif val =='nominal': 
-                return f'nominal({c_name}).'
-            else: 
-                raise NotImplementedError
-        elif key == 'cardinality': 
-            return f'binary({c_name}).'
-        else: 
-            return NotImplementedError
-    
-    def get_effect_set_constraint(self, effect_set: EffectSet, key: str, val: str): 
-        ivs = list()
-        for e in effect_set.get_main_effects().effect:
-            e_name = e.lower().replace(' ', '_') 
-            ivs.append(e_name)
-        ivs_names = ','.join(ivs)
-
-        ## Effect set constraints
-        if key == 'tolerate_correlation': 
-            if val: 
-                return f'tolerate_correlation({ivs_names}).'
-            else: 
-                return f'not_tolerate_correlation({ivs_names}).'
-        elif key == 'distribution': 
-            if val == 'normal': 
-                return f'normal({ivs_names}).'
-            else: 
-                raise NotImplementedError
-        elif key == 'homoscedastic': 
-            if val: 
-                return f'homoscedastic({ivs_names}).'
-
-    # collect and format assertions to include in query
-    def collect_assertions(self, ivs: List[Concept], dv: Concept): 
-        assertions_list = list() # List[str]
-
         # add constraints that ground the variables
-        # add IVs
-        for i in ivs: 
-            assertions_list.append(f'variable({i.name}).')
-        # add DV
-        assertions_list.append(f'variable({dv.name}).')
+        c_name = concept.name.lower().replace(' ', '_') 
+        assertions.append(f'variable({c_name}).')
         
-        #  add constraints based on properties of variables, effect set (set of variables)
-        for i in ivs: 
-            # the IV has assertions
-            if i.has_assertions(): 
-                assertions_list.append(get_constraint(v=i, key=k, val=v))
-                
+        # add constraints that pertain to properties of the variables
+        if concept.has_assertions(): 
+            assert_dict = concept.get_assertions()
+        
+            for k, v in assert_dict.items(): 
+                ass = format_concept_variable_constraint(concept=concept, key=k, val=v)
+                assertions.append(ass)
+        
+        return assertions
+    
+    def get_effect_set_constraints(self, effect_set: EffectSet): 
+        assertions = list()
 
+        if effect_set.has_assertions(): 
+            assert_dict = effect_set.get_assertions()
+            
+            for k, v in assert_dict.items(): 
+                ass = format_effect_set_constraint(effect_set=effect_set, key=k, val=v)
+                assertions.append(ass)
+        
+        return assertions
 
     # @param file is a .lp file containing ASP constraints
-    def query(self, file_name: str, ivs: List[Concept], dv: Concept): 
+    def query(self, file_name: str, assertions: list): 
         assert(".lp" in file_name)
 
         # collect assertions before querying
