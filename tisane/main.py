@@ -3,6 +3,7 @@ from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 from tisane.effect_set import EffectSet
 from tisane.smt.results import AllStatisticalResults
 from tisane.asp.knowledge_base import KnowledgeBase
+from tisane.statistical_model import StatisticalModel
 
 from enum import Enum 
 from typing import List, Union
@@ -249,7 +250,7 @@ class Tisane(object):
             interaction_effects = effect_set.get_interaction_effects().effect
             for i in interaction_effects: 
                 assert(isinstance(i, str))
-                interaction_concepts.append(self.graph.getConcept(i))
+                interaction_concepts.append(self.graph.getConcept(a))
             ivs_concepts += interaction_concepts
 
         mixed_concepts = list()
@@ -269,19 +270,23 @@ class Tisane(object):
 
         # query knowledge base
         res = self.knowledge_base.query(file_name='specific_constraints_test0.lp', assertions=assertions)
-
+    
         # if there's an error
         if res[1]: 
             # Interactive loop: dynamically, interactively figure out and get user input for additional constraints that underspecifed in current assertions. 
             return self.continue_model(file_name='specific_constraints_test0.lp', assertions=assertions)
         
         else: 
-            return self.finish_model(res)
+            # TODO: This could be moved to helper function outside of KnowledgeBase
+            valid_models = self.knowledge_base.construct_models_from_query_result(query_result=res, effect_set=effect_set)
+            
+            return self.finish_model(valid_models)
 
     def continue_model(self, file_name, assertions): 
         raise NotImplementedError
 
-    def finish_model(self, result): 
+    # Generates the output script and allows for execution of @param valid_models
+    def finish_model(self, valid_models: List[StatisticalModel]): 
         raise NotImplementedError
 
     def model_idea0(self): 

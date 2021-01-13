@@ -1,6 +1,7 @@
 import tisane as ts
 from tisane.asp.knowledge_base import KnowledgeBase, format_concept_variable_constraint, format_effect_set_constraint
 from tisane.effect_set import EffectSet
+from tisane.statistical_model import LinearRegression
 
 import unittest
 
@@ -93,7 +94,7 @@ class KnowledgeBaseTests(unittest.TestCase):
         # This tells us that as long as we pass the correct parameters, the ASP constraints for variables are generated correctly. 
         self.assertEqual(format_concept_variable_constraint(concept=test_score, key='dtype', val='numeric'), "numeric(test_score).")
         self.assertEqual(format_concept_variable_constraint(concept=intelligence, key='dtype', val='numeric'), "numeric(intelligence).")
-        self.assertEqual(format_concept_variable_constraint(concept=tutoring, key='dtype', val='nominal'), "nominal(tutoring).")
+        self.assertEqual(format_concept_variable_constraint(concept=tutoring, key='dtype', val='nominal'), "categorical(tutoring).")
         self.assertEqual(format_concept_variable_constraint(concept=tutoring, key='cardinality', val='binary'), "binary(tutoring).")
 
     def test_effect_set_format_assertions(self):
@@ -160,15 +161,15 @@ class KnowledgeBaseTests(unittest.TestCase):
         tutoring = ts.Concept("Tutoring")
         concepts = [test_score, intelligence, tutoring]
 
-        # Specify data (schema)
-        test_score.specifyData(dtype="numeric")
-        intelligence.specifyData(dtype="numeric")
-        tutoring.specifyData(dtype="nominal", categories=["After school", "Before school"])
-
         # Add relationships
         analysis.addRelationship(intelligence, test_score, "cause")
         analysis.addRelationship(tutoring, test_score, "cause")
         analysis.addRelationship(intelligence, tutoring, "correlate")
+
+        # Specify data (schema)
+        test_score.specifyData(dtype="numeric")
+        intelligence.specifyData(dtype="numeric")
+        tutoring.specifyData(dtype="nominal", categories=["After school", "Before school"])
         
         # Generate effects sets
         effects = analysis.generate_effects_sets(ivs=[intelligence, tutoring], dv=test_score)
@@ -192,21 +193,48 @@ class KnowledgeBaseTests(unittest.TestCase):
                 self.assertTrue(a in DataForTests.expected_assertions_tutoring_first)
                 self.assertFalse(a in DataForTests.expected_assertions_intelligence_first)
 
-    # def test_query(self):
-    #     test_score = ts.Concept("Test Score")
-    #     intelligence = ts.Concept("Intelligence")
-    #     tutoring = ts.Concept("Tutoring")
+    def test_query(self):
+        analysis = ts.Tisane(task="explanation")
 
-    #     test_score.specifyData(dtype="numeric") # Score 0 - 100 
-    #     intelligence.specifyData(dtype="numeric") # IQ score 
-    #     tutoring.specifyData(dtype="nominal", categories=["afterschool", "none"])
+        # Add concepts
+        test_score = ts.Concept("Test Score")
+        intelligence = ts.Concept("Intelligence")
+        tutoring = ts.Concept("Tutoring")
+        concepts = [test_score, intelligence, tutoring]
 
-    #     ivs = [intelligence, tutoring]
-    #     dvs = [test_score]
+        # Specify data (schema)
+        test_score.specifyData(dtype="numeric")
+        intelligence.specifyData(dtype="numeric")
+        tutoring.specifyData(dtype="nominal", categories=["After school", "Before school"])
+
+        # Add relationships
+        analysis.addRelationship(intelligence, test_score, "cause")
+        analysis.addRelationship(tutoring, test_score, "cause")
+        analysis.addRelationship(intelligence, tutoring, "correlate")
         
-    #     kb = KnowledgeBase()
+        # Generate effects sets
+        effects = analysis.generate_effects_sets(ivs=[intelligence, tutoring], dv=test_score)
 
-    #     kb.query('/Users/emjun/Git/tisane/tisane/asp/specific_constraints_test.lp')
+        # Add assertions that pertain to effects sets
+        linear_reg_es = None
+        for es in effects: 
+            if es.to_dict() == DataForTests.expected_effects_set[2]: 
+                linear_reg_es = es
+                break
+        linear_reg_es.assert_property(prop="tolerate_correlation", val=True)
+        linear_reg_es.assert_property(prop="normal_residuals", val=True)
+        linear_reg_es.assert_property(prop="homoscedastic_residuals", val=True)
+
+        # Collect assertions
+        assertions = analysis.collect_assertions(linear_reg_es) 
+        
+        kb = analysis.knowledge_base
+        res = kb.query(file_name='/Users/emjun/Git/tisane/tisane/asp/specific_constraints_test.lp', assertions=assertions)
+        valid_models = kb.construct_models_from_query_result(query_result=res, effect_set=linear_reg_es)
+
+        self.assertEqual(len(valid_models), 1)
+        self.assertTrue(isinstance(valid_models[0], LinearRegression))
+
 
 # TODO connect to the main file, test model selection (esp for all possible model variations)
 
@@ -243,7 +271,7 @@ class DataForTests:
         "tolerate_correlation(intelligence,tutoring).",
         "numeric(test_score).",
         "numeric(intelligence).",
-        "nominal(tutoring).",
+        "categorical(tutoring).",
         "binary(tutoring)."
     ]
 

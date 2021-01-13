@@ -1,5 +1,6 @@
 from tisane.concept import Concept
 from tisane.effect_set import EffectSet
+from tisane.statistical_model import StatisticalModel
 
 import os 
 import subprocess
@@ -25,7 +26,8 @@ def format_concept_variable_constraint(concept: Concept, key: str, val: str):
                 if val == 'numeric': 
                     return f'numeric({c_name}).'
                 elif val =='nominal': 
-                    return f'nominal({c_name}).'
+                    # return f'nominal({c_name}).'
+                    return f'categorical({c_name}).'
                 else: 
                     # import pdb; pdb.set_trace()
                     raise NotImplementedError
@@ -260,8 +262,8 @@ class KnowledgeBase(object):
     def query(self, file_name: str, assertions: list): 
         assert(".lp" in file_name)
 
-        # collect assertions before querying
-        self.collect_assertions(ivs=ivs, dv=dv)
+        # # collect assertions before querying
+        # self.collect_assertions(ivs=ivs, dv=dv)
 
         # Read file in as a string
         constraints = None
@@ -269,12 +271,11 @@ class KnowledgeBase(object):
             constraints = f.read()
         
         # Add assertions to read-in file
-        all_assertions = self.get_assertions()
-        formatted_all_assertions = '\n'.join(str(a) for a in all_assertions)
+        formatted_all_assertions = '\n'.join(str(a) for a in assertions)
         
         # Concatenate constraints with assertions
         query = constraints + formatted_all_assertions
-        query = stquery.encode("utf8") # Add encoding
+        query = query.encode("utf8") # Add encoding
 
         # Run clingo 
         clingo_command = ["clingo"]
@@ -284,6 +285,55 @@ class KnowledgeBase(object):
         
         return (stdout, stderr)
     
+    # def is_query_successful(self, query_result: tuple): 
+    #     assert(len(query_result) == 2) # KnowledgeBase query only returns 2-tuple
+    #     valid_models =list()
+
+    #     output = query_result[0]
+    #     error = query_result[1]
+    #     output_str = output.decode("utf8") # bytes to string
+        
+    #     # Extracting to find the answer now 
+    #     ans = output_str.split('Answer')
+    #     ans_metrics = ans.split('\n')
+
+    #     if 'UNSATISFIABLE' in ans_metrics: 
+    #         return False
+    #     elif 'SATISFIABLE' in ans_metrics: 
+    #         return True
+    #     else: 
+    #         raise ValueError(f"Query result is neither UNSAT or SAT!: {output}")
+
+    # TODO: Move this to be an outside helper function
+    # Should be called after query() function 
+    # @param query_result has is a tuple resulting from calling KnowledgeBase's query() function
+    def construct_models_from_query_result(self, query_result: tuple, effect_set: EffectSet): 
+
+        output = query_result[0]
+        error = query_result[1]
+        assert(not error) # there is no error
+
+        output_str = output.decode("utf8") # bytes to string
+        # Extracting to find the answer now 
+        ans = output_str.split('Answer')
+        ans_metrics = ans[1].split('\n')
+    
+        # get index of SAT keyword 
+        end_idx = ans_metrics.index('SATISFIABLE')
+            
+        # Figure out set of valid linear models
+        valid_model_names = [ans_metrics[i] for i in range(end_idx)]
+        assert(len(valid_model_names) >= 1)
+        
+        valid_models = list()
+        for m in valid_model_names: 
+            if "linear_regression" in m:
+                mdl = StatisticalModel.create(model_type="linear_regression", effect_set=effect_set)
+                valid_models.append(mdl)
+    
+        assert(len(valid_models) >= 1)
+        return valid_models
+
     def get_query_result(self):
         raise NotImplementedError
         # Parse output 
