@@ -20,7 +20,7 @@ def absolute_path(p: str) -> str:
 
 def format_concept_variable_constraint(concept: Concept, key: str, val: str): 
             c_name = concept.getVariableName()
-            
+
             ## Variable constraints
             if key.upper() == 'DTYPE': 
                 if val == 'numeric': 
@@ -113,7 +113,6 @@ class KnowledgeBase(object):
                         # Are there any digits in the line indicating arity?
                         if re.search(r'[1-9]\D', line):
                             clauses = line.split("/")
-                            import pdb; pdb.set_trace()
                             new_line = clauses[0] + "/" + str(len(ivs) + len(dv)) + ".\n"
                         else: 
                             new_line = line
@@ -235,7 +234,7 @@ class KnowledgeBase(object):
         # add constraints that ground the variables
         c_name = concept.name.lower().replace(' ', '_') 
         assertions.append(f'variable({c_name}).')
-        
+
         # add constraints that pertain to properties of the variables
         if concept.has_assertions(): 
             assert_dict = concept.get_assertions()
@@ -267,7 +266,8 @@ class KnowledgeBase(object):
 
         # Read file in as a string
         constraints = None
-        with open(file_name, 'r') as f:
+        file_abs_path = absolute_path(file_name)
+        with open(file_abs_path, 'r') as f:
             constraints = f.read()
         
         # Add assertions to read-in file

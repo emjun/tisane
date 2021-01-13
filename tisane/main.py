@@ -85,7 +85,7 @@ class Tisane(object):
             pass
         else: 
             # copy elts already in graph
-            gr = copy.deepcopy(gr)
+            # gr = copy.deepcopy(gr)
             # add new elt to graph
             gr.addNode(con)
 
@@ -101,15 +101,7 @@ class Tisane(object):
         # import pdb; pdb.set_trace()
         # add the ivs if they are already not part of the graph 
         for c in con_list:
-            if gr.hasConcept(c): 
-                pass
-            else: 
-                # copy elts already in graph
-                gr = copy.deepcopy(gr)
-                # import pdb; pdb.set_trace()
-                # add new elt to graph
-                gr.addNode(c)
-                # import pdb; pdb.set_trace()
+            self.addConcept(c)
         
         self.graph = gr
     
@@ -121,7 +113,8 @@ class Tisane(object):
     def relate(self, ivs:list, dv=list, relationship=str): 
         assert(len(dv) == 1)
 
-        all_cons = copy.deepcopy(ivs) + copy.deepcopy(dv) # deepcopy may not be necessary
+        # all_cons = copy.deepcopy(ivs) + copy.deepcopy(dv) # deepcopy may not be necessary
+        all_cons = ivs + dv # deepcopy may not be necessary
         self.addConceptList(all_cons)
 
         # add the relationship
@@ -132,7 +125,9 @@ class Tisane(object):
 
     def addRelationship(self, lhs_con: Concept, rhs_con: Concept, relationship_type: str): 
         # add all concepts to the graph (nodes before edges)
-        all_cons = [copy.deepcopy(lhs_con), copy.deepcopy(rhs_con)] # may not need deep copy
+        # all_cons = [copy.deepcopy(lhs_con), copy.deepcopy(rhs_con)] # may not need deep copy
+        all_cons = [lhs_con, rhs_con] # may not need deep copy
+
         # all_cons = [lhs_con, rhs_con] # may not need deep copy
         self.addConceptList(all_cons)
 
@@ -227,6 +222,7 @@ class Tisane(object):
     
         return all_assertions
 
+
     # @param effect_set to use in order to model
     # @returns a set/list? of valid StatisticalModels for the @param effect_set
     def start_model(self, effect_set: EffectSet): 
@@ -270,7 +266,8 @@ class Tisane(object):
 
         # query knowledge base
         res = self.knowledge_base.query(file_name='specific_constraints_test0.lp', assertions=assertions)
-    
+        # import pdb; pdb.set_trace()
+
         # if there's an error
         if res[1]: 
             # Interactive loop: dynamically, interactively figure out and get user input for additional constraints that underspecifed in current assertions. 

@@ -30,11 +30,12 @@ class ConceptGraph(object):
     # dict of concepts in the _graph.
     # We use this rather than store concepts directly in the graph because Python passes-by-object-reference.
     # This means that the Concepts in ConceptGraph will reflect changes made to the Concept objects externally
-    # _concepts : Dict[Concept]
+    # _concepts : Dict[str, Concept]
     
 
     def __init__(self): 
         self._graph = nx.MultiDiGraph()
+        # self._concepts = dict()
 
     def __repr__(self): 
         return str(self._graph.__dict__)
@@ -52,6 +53,7 @@ class ConceptGraph(object):
         if not self._graph: 
             self._graph = nx.MultiDiGraph()
         self._graph.add_node(con.name, concept=con)
+        # self._concepts[con.name] = con
     
     def addEdge(self, start_con: Concept, end_con: Concept, edge_type: str): 
         start_node = None
@@ -85,9 +87,12 @@ class ConceptGraph(object):
     
     # @returns Concept with concept_name in this conceptual graph
     def getConcept(self, concept_name: str) -> Concept: 
+        # import pdb; pdb.set_trace()
+        
         for n in self._graph.nodes('concept'): 
             if n[0] == concept_name: 
                 assert(isinstance(n[1], Concept))
+                # return self._concepts[n[0]]
                 return n[1]
         
         return None
