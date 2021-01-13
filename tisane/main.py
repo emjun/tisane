@@ -276,7 +276,7 @@ class Tisane(object):
         else: 
             # TODO: This could be moved to helper function outside of KnowledgeBase
             valid_models = self.knowledge_base.construct_models_from_query_result(query_result=res, effect_set=effect_set)
-            
+
             return self.finish_model(valid_models)
 
     def continue_model(self, file_name, assertions): 
@@ -284,7 +284,7 @@ class Tisane(object):
 
     # Generates the output script and allows for execution of @param valid_models
     def finish_model(self, valid_models: List[StatisticalModel]): 
-        raise NotImplementedError
+        return valid_models
 
     def model_idea0(self): 
         effects_sets = self.generate_effects_sets_with_ivs(ivs=ivs, dv=dv)    
