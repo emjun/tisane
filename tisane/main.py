@@ -135,6 +135,9 @@ class Tisane(object):
         cr = CONCEPTUAL_RELATIONSHIP.cast(relationship_type)
         self.graph.addEdge(lhs_con, rhs_con, cr)
     
+    def relate(self, lhs: Concept, relationship_type: str, rhs: Concept): 
+        self.addRelationship(lhs_con=lhs, rhs_con=rhs, relationship_type=relationship_type)
+
     # @returns Concept that has @param concept_name
     def get_concept(self, concept_name: str) -> Concept:  
         pass
