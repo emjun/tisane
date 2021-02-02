@@ -48,6 +48,9 @@ class EndToEndTests(unittest.TestCase):
         model = valid_models[0]
         self.assertTrue(isinstance(model, LinearRegression))
 
+        for v in valid_models: 
+            v.to_script()
+
     def test_sample(self): 
         aptitude = ts.Concept("Aptitude")
         intelligence = ts.Concept("Intelligence")
