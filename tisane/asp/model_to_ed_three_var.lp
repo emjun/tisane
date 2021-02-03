@@ -109,9 +109,9 @@ numeric(age).
 % TODO: How to make sure we get all data type info for each variable?
 
 % TODO: What and how to represent differences in main vs. interacion vs. mixed effects?
-% Worry about main effects only for now. 
-% 1. get to compile set of facts
-% 2. query loop with facts
+% Focus on main effects only for now. 
+% 1. get to compile set of facts --> mostly done 
+% 2. query loop with facts --> START HERE
 % 3. output based on SAT facts 
 % Related to 3: What if questions about data collection just need to be asked to user (more than one measurement, one, etc.?)
 
@@ -120,5 +120,3 @@ model(age, tutoring, sat).
 interaction(age, tutoring).
 %cause_or_correlate(sex, sat). % can add arbitrary relationships to effects set (from user input)
 *%
-
-%% TODO: How to process output **
