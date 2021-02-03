@@ -1,7 +1,7 @@
 from tisane.concept import Concept
 from tisane.variable import AbstractVariable
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
-from tisane.asp.knowledge_base import KnowledgeBase
+from tisane.asp.knowledge_base import KnowledgeBase, KB
 
 from abc import abstractmethod
 import pandas as pd
@@ -80,10 +80,9 @@ class StatisticalModel(object):
     #TODO: @return a DataSet object with data schema info only 
 
     def find_data_schema(self): 
-        kb = KnowledgeBase()
         ivs = self.get_all_ivs()
-        kb.generate_constraints(name='test', ivs=ivs, dv=[self.dv])
-        import pdb; pdb.set_trace()
+        KB.generate_constraints(ivs=ivs, dv=[self.dv])
+        # import pdb; pdb.set_trace()
 
 
     # @property

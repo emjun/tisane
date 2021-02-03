@@ -20,8 +20,10 @@ stat_mod = ts.StatisticalModel( dv='SAT',
                                 variance='normal') 
 
 facts = stat_mod.to_logical_facts()
-# 1. check that knowledge base generated with correct arity
 stat_mod.find_data_schema()
+import pdb; pdb.set_trace()
+# 2. store facts locally, not in separate file
+# 3. query loop
 # stat_md.find_data_collection_procedure()
 
 # Idea

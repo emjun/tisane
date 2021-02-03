@@ -9,5 +9,6 @@ from tisane.concept import (
 )
 
 from tisane.statistical_model import (
-                                        StatisticalModel
+                                        StatisticalModel,
+                                    
 )

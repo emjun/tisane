@@ -1,11 +1,8 @@
 from tisane.concept import Concept
 from tisane.variable import AbstractVariable
 from tisane.effect_set import EffectSet
-# from tisane.statistical_model import StatisticalModel
+from tisane.asp.helpers import absolute_path, format_concept_variable_constraint, format_effect_set_constraint, update_phrase, update_duplicates, update_multiples
 
-import os 
-import subprocess
-import re 
 from typing import List
 
 single_arity = [    'variable(X)',
@@ -13,90 +10,8 @@ single_arity = [    'variable(X)',
                     'numeric_or_categorical(X)',
                     'transformed(X)'
                 ]
-
-_effects_sets_to_constraints_files = dict()
-
 # cache the constraints generated for any set of variables
-__variables_to_constraints__ = dict()
-
-
-def absolute_path(p: str) -> str:
-    return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
-
-def format_concept_variable_constraint(concept: Concept, key: str, val: str): 
-            c_name = concept.getVariableName()
-
-            ## Variable constraints
-            if key.upper() == 'DTYPE': 
-                if val == 'numeric': 
-                    return f'numeric({c_name}).'
-                elif val =='nominal': 
-                    # return f'nominal({c_name}).'
-                    return f'categorical({c_name}).'
-                else: 
-                    # import pdb; pdb.set_trace()
-                    raise NotImplementedError
-            elif key.upper() == 'CARDINALITY': 
-                return f'binary({c_name}).'
-            else:
-                # import pdb; pdb.set_trace()
-                return NotImplementedError
-
-def format_effect_set_constraint(effect_set: EffectSet, key: str, val: str): 
-            ivs = list()
-            for e in effect_set.get_main_effects().effect:
-                e_name = e.lower().replace(' ', '_') 
-                ivs.append(e_name)
-            ivs_names = ','.join(ivs)
-
-            dv_name = effect_set.get_dv().name.lower().replace(' ', '_') 
-            all_names = ','.join(ivs) + f',{dv_name}'
-
-            ## Effect set constraints
-            if key.upper() == 'TOLERATE_CORRELATION': 
-                if val: 
-                    return f'tolerate_correlation({ivs_names}).'
-                else: 
-                    return f'not_tolerate_correlation({ivs_names}).'
-            elif key.upper() == 'DISTRIBUTION': 
-                if val == 'normal': 
-                    return f'normal({ivs_names}).'
-                else: 
-                    raise NotImplementedError
-            elif key.upper() == 'HOMOSCEDASTIC_RESIDUALS': 
-                if val: 
-                    return f'homoscedastic_residuals({all_names}).'
-            elif key.upper() == 'NORMAL_RESIDUALS': 
-                if val: 
-                    return f'normal_residuals({all_names}).'
-
-# Helper to update any logicl phrase
-# Dispatch to other update methods
-def update_phrase(phrase: str, effects_list: List[str]): 
-    if 'XN' in phrase: 
-        return update_multiples(phrase, effects_list)
-    elif 'DX' in phrase:
-        return update_duplicates(phrase, effects_list)
-    else: # Nothing to change or update
-        return phrase
-
-# Helper to replace 'XN' with 'X0, X1, ...' to match arity of @param effects_list
-def update_multiples(phrase: str, effects_list: List[str]): 
-    effects_str = ','.join(effects_list)
-    
-    assert('XN' in phrase)
-    new_phrase = phrase.replace("XN", effects_str)
-
-    return new_phrase
-# Helper to replace 'DX' phrases with duplicate facts for each 'X0', 'X1', ... to match arity of effects_list
-def update_duplicates(phrase: str, effects_list: List[str]): 
-    new_phrases = list()
-    if 'DX' in phrase: 
-        for e in effects_list: 
-            new_ph = phrase.replace('DX', e)
-            new_phrases.append(new_ph)
-    
-    return new_phrases
+__effects_sets_to_constraints__ = dict()
 
 class KnowledgeBase(object):
     all_generic_facts: str # filepath to .lp file containing all facts combined
@@ -123,21 +38,20 @@ class KnowledgeBase(object):
         self.all_generic_facts = output_path
     """
 
-    # @param name is string for set of variables that are supported/instantiate the constraints
+
     # @param ivs is a list of main effects we are considering 
     # @param dv is a list of DV Concept, need to check length is 1
     # TODO: Change @param effects into a set????
     # TODO: change name/automatically change
-    def generate_constraints(self, name: str, ivs: List[AbstractVariable], dv: List[AbstractVariable]): 
-        global single_arity, _effects_sets_to_constraints_files, __variables_to_constraints__
+    def generate_constraints(self, ivs: List[AbstractVariable], dv: List[AbstractVariable]): 
+        global _effects_sets_to_constraints
 
         assert(len(dv) == 1)
 
-        specific_file_name = 'specific_constraints_' + name + '.lp'
-        specific_abs_path = absolute_path(specific_file_name)
+        specific_constraints = list()
         generic_abs_path = absolute_path('all_generic_facts.lp')
 
-        with open(generic_abs_path, 'r') as generic_constraints, open(specific_abs_path, 'w') as specific_constraints: 
+        with open(generic_abs_path, 'r') as generic_constraints: 
 
                 main_effects_str = 'X0'
                 main_effects_list = ['X0']
@@ -218,13 +132,13 @@ class KnowledgeBase(object):
                         else: 
                             raise ValueError(f"Line cannot be processed: {line}")    
 
-                    specific_constraints.write(new_line)
+                    specific_constraints.append(new_line)
 
         
-        _effects_sets_to_constraints_files[f'(ivs={ivs}, dv={dv})'] = specific_abs_path
+        __effects_sets_to_constraints__[f'(ivs={ivs}, dv={dv})'] = specific_constraints
     
     # Add assertions for solving!!
-    # These assertions are "global" in the sense that they will apply to all sets of constraints in _effects_sets_to_constraints_files
+    # These assertions are "global" in the sense that they will apply to all sets of constraints in __effects_sets_to_constraints__
     def assert_property(self, prop:str): 
         raise NotImplementedError
 
@@ -376,3 +290,7 @@ class KnowledgeBase(object):
 
     # TODO: May want to refactor and make more generic KnowledgeBase querying interface?
     # TODO: KB wrapper for running query, adding assertions, getting results, etc?
+
+
+# Global KnowledgeBase
+KB = KnowledgeBase() 
