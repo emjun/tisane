@@ -35,8 +35,12 @@ class DataVector(object):
      
 
 class AbstractVariable(object): 
+    name: str 
     data : DataVector
     properties : dict
+
+    def __init__(self, name=str): 
+        self.name = name
 
     @classmethod
     def create(cls, **kwargs):

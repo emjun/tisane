@@ -7,3 +7,7 @@ from tisane.main import (
 from tisane.concept import (
                                 Concept
 )
+
+from tisane.statistical_model import (
+                                        StatisticalModel
+)

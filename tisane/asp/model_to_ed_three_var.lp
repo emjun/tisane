@@ -24,16 +24,43 @@ has_datatype(V) :- numeric(V). % For ensuring that all variables have a data typ
 categorical(V) :- binary(V).
 categorical(V) :- ordinal(V).
 
-
 %%%%% Define %%%%%
-transformation(Y, linear) :- link(Y, linear). % for SM -> ED
+% TODO: Want to support transformations that are not the link function, too 
+
+% Link function
+transformation(Y, identity) :- link(Y, identity). % for SM -> ED
 transformation(Y, log) :- link(Y, log). % TODO: enumerate more facts for all possible link functions
 
+% Variance function 
 distribution(Y, gaussian) :- variance(Y, gaussian). % SM -> ED
 distribution(Y, inverse_gaussian) :- variance(Y, inverse_gaussian).
 
+%*
+% Recommendations for link functions based on data type 
+% e.g., poisson distribution and log link for count data
+% Variance functions: link functions (linear predictors to outcome)
+gaussian: identity, log, inverse 
+binomial: logit, probit, cauchit, log, cloglog
+gamma: inverse, identity, log 
+poisson: log, identity, sqrt 
+inverse_gaussian : 1/mu-squared, inverse, identity, log
+*% 
+
+%SPECIAL CASE: quasi : logit, probit, cloglog, identity, inverse, log, 1/mu-squared, sqrt
+
+% Link functions 
+
+% TODO: Sensitivity analysis when uncertain/multiple could hold. -- as part of output script?
+
+
+
+
+
+
+
+
 % Data schema from link function 
-numeric(V) :- link(V, linear).
+numeric(V) :- link(V, identity).
 numeric(V) :- link(V, ln).
 numeric(V) :- link(V, square_root).
 categorical(V) :- link(V, log_log). % if get two different data types, that might be fine!
@@ -74,13 +101,19 @@ interaction(0,0) :- #false.
 
 % Y ~ X1 + X2
 model(age, tutoring, sat).
-link(sat, linear).
+link(sat, identity).
 binary(tutoring).
 numeric(age). 
 %numeric(tutoring). % causes UNSAT if binary(tutoring) also included - yay!
 %cause_or_correlate(sex, sat). % can add arbitrary relationships to effects set (from user input)
 % TODO: How to make sure we get all data type info for each variable?
 
+% TODO: What and how to represent differences in main vs. interacion vs. mixed effects?
+% Worry about main effects only for now. 
+% 1. get to compile set of facts
+% 2. query loop with facts
+% 3. output based on SAT facts 
+% Related to 3: What if questions about data collection just need to be asked to user (more than one measurement, one, etc.?)
 
 %* Y ~ X1 + X2 + X1*X2
 model(age, tutoring, sat).

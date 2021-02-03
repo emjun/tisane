@@ -5,7 +5,7 @@ from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEff
 from abc import abstractmethod
 import pandas as pd
 
-from typing import Any
+from typing import List, Any
 
 supported_model_types = ['LINEAR_REGRESSION', 'LOGISTIC_REGRESSION']
 # TODO: Make this an abstract class?
@@ -18,12 +18,63 @@ class StatisticalModel(object):
     # TODO: May not need properties since not sure what the properties would be if not the indivdiual variables or the residuals
     properties: list # list of properties that this model exhibits
 
+    main_effects: List[AbstractVariable]
+    interaction_effects: List[AbstractVariable]
+    mixed_effects: List[AbstractVariable]
+    link_function: str # maybe, not sure?
+    variance_function: str # maybe, not sure?
+
+
+    """ temp override
     @abstractmethod
     def __init__(self, effect_set: EffectSet): 
         self.dv = effect_set.get_dv()
         self.main = effect_set.get_main_effects()
         self.interaction = effect_set.get_interaction_effects()
         self.mixed = effect_set.get_mixed_effects()
+    """ 
+
+    def __init__(self, dv: str, main_effects: List[str], interaction_effects: List[str], mixed_effects: List[str], link: str, variance: str): 
+        self.dv = AbstractVariable(name=dv)
+        
+        self.main_effects = list()
+        for m in main_effects: 
+            self.main_effects.append(AbstractVariable(name=m))
+        
+        self.interaction_effects = list()
+        for i in interaction_effects: 
+            self.interaction_effects.append(AbstractVariable(name=i))
+        
+        self.mixed_effects = list()
+        for mi in mixed_effects: 
+            self.mixed_effects.append(AbstractVariable(name=mi))
+
+        self.link = link 
+        self.variance = variance
+
+    # @return a list containing all the IVs
+    def get_all_ivs(self): 
+        
+        return self.main_effects + self.interaction_effects + self.mixed_effects
+
+    # @return a list of facts to use when querying the knowledge base
+    def to_logical_facts(self): 
+        facts = list()
+
+        # add model fact
+        dv_name = self.dv.name.lower()
+        iv_names = [v.name.lower() for v in self.get_all_ivs()]
+        var_names = ','.join(iv_names) + f',{dv_name}'
+        model_fact = f'model({var_names}).'
+        facts.append(model_fact)
+
+        # add fact about link function
+        facts.append(f'link({dv_name}, {self.link}).')
+
+        # add fact about variance function
+        facts.append(f'variance({dv_name}, {self.variance}).')
+
+        return facts
 
     # @property
     # def residuals(self): 
