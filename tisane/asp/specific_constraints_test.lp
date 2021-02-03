@@ -1,69 +1,111 @@
-normal_residuals(X0, X1, Y) :- variable(X0), variable(X1), variable(Y).
-%, numeric_or_categorical(X0), numeric_or_categorical(X1), numeric_or_categorical(Y).
-numeric(V) :- variable(V), not categorical(V).
-two_categories(V) :- variable(V), categorical(V).
-transformed(V) :- variable(V).
-multicollinear(X0, X1, Y) :- variable(X0), variable(X1), variable(Y), not tolerate_correlation(X0, X1).
+%%%%% SM -> ED %%%%%
+% TODO: Break these rules apart into separate files?
 
-linear_regression(X0, X1, Y) :- variable(X0), variable(X1), variable(Y), normal_residuals(X0, X1, Y), homoscedastic_residuals(X0, X1, Y), not multicollinear(X0, X1, Y), numeric(Y), transformed(X0), transformed(X1), transformed(Y). 
-%, numeric_or_categorical(X0), numeric_or_categorical(X1).
+%%%%% Generate %%%%%
+% What it means for variables to be in a statistical model
+explains(X0,X1, Y) :-model(X0,X1, Y). 
+predicted(Y) :-explains(X0,X1, Y).
+predictor(X0) :-explains(X0,X1, Y).
+predictor(X1) :-explains(X0,X1, Y).
 
+% For constructing edges in conceptual graph
+cause_or_correlate(X, Y) :-cause(X, Y).
+cause_or_correlate(X, Y) :-correlate(X, Y).
 
-logistic_regression(X0, X1, Y) :- variable(X0), variable(X1), variable(Y), normal_residuals(X0, X1, Y), homoscedastic_residuals(X0, X1, Y), not multicollinear(X0, X1, Y), two_categories(Y), transformed(X0), transformed(X1), transformed(Y). 
-%, numeric_or_categorical(X0), numeric_or_categorical(X1). 
+% Main effects (IV, DV)
+cause_or_correlate(X, Y) :-predictor(X), predicted(Y).
+
+% Interaction effects (between IVs)
+cause_or_correlate(X0, X1) :-interaction(X0, X1), cause_or_correlate(X0, Y), cause_or_correlate(X1, Y).
+
+% Data types
+has_datatype(V) :- categorical(V). % For ensuring that all variables have a data type (assumes we want SAT result)
+has_datatype(V) :- numeric(V). % For ensuring that all variables have a data type (assumes we want SAT result)
+categorical(V) :-binary(V).
+categorical(V) :-ordinal(V).
+
+%%%%% Define %%%%%
+% TODO: Want to support transformations that are not the link function, too 
+
+% Link function
+transformation(Y, identity) :- link(Y, identity). % for SM -> ED
+transformation(Y, log) :- link(Y, log). % TODO: enumerate more facts for all possible link functions
+
+% Variance function 
+distribution(Y, gaussian) :- variance(Y, gaussian). % SM -> ED
+distribution(Y, inverse_gaussian) :-variance(Y, inverse_gaussian).
 
 %*
-variable(intelligence). % unsafe !!!
-variable(score).
-normal_residuals(intelligence, score).
-homoscedastic_residuals(intelligence, score).
-tolerate_correlation(intelligence).
-%numeric(score).
-categorical(score).
-two_categories(score).
-numeric_or_categorical(intelligence).
-transformed(intelligence).
-transformed(score).
+% Recommendations for link functions based on data type 
+% e.g., poisson distribution and log link for count data
+% Variance functions: link functions (linear predictors to outcome)
+*% 
+
+%SPECIAL CASE: quasi : logit, probit, cloglog, identity, inverse, log, 1/mu-squared, sqrt
+
+% Link functions 
+
+% TODO: Sensitivity analysis when uncertain/multiple could hold. -- as part of output script?
+
+
+
+
+
+
+
+
+% Data schema from link function 
+numeric(V) :-link(V, identity).
+numeric(V) :-link(V, ln).
+numeric(V) :-link(V, square_root).
+categorical(V) :- link(V, log_log). % if get two different data types, that might be fine!
+categorical(V) :- link(V, probit). % if get two different data types, that might be fine!
+categorical(V) :-link(V, logit).
+
+% Data schema from variance function
+numeric(V) :-transformation(V, log). 
+binary(V) :-transformation(V, binomial). 
+categorical(V) :-transformation(V, multinomial).
+
+% TODO: Data collection procedure
+% mixed effects
+
+% Silence properties 
+% Interaction terms are not required of all models
+interaction(0,0) :-#false.
+
+
+%%%%% Test %%%%%
+%% Data types
+% cannot be categorical and numeric 
+:-numeric(V), categorical(V).
+%ordinal(V) :- not binary(V). % cannot be binary and ordinal?? - allow for now until have example want to work through.
+
+% Ensure every predicted/predictor has a data type!
+:-predicted(V), not has_datatype(V).
+:-predictor(V), not has_datatype(V).
+
+%%%%% Show %%%%%
+
+
+
+
+%*
+%%%%% Sample program %%%%%
+
+% Y ~ X1 + X2
+%numeric(tutoring). % causes UNSAT if binary(tutoring) also included - yay!
+%cause_or_correlate(sex, sat). % can add arbitrary relationships to effects set (from user input)
+% TODO: How to make sure we get all data type info for each variable?
 *%
 
-%* FOR TESTING AND DEVELOPMENT
+% TODO: What and how to represent differences in main vs. interacion vs. mixed effects?
+% Focus on main effects only for now. 
+% 1. get to compile set of facts --> mostly done 
+% 2. query loop with facts --> START HERE
+% 3. output based on SAT facts 
+% Related to 3: What if questions about data collection just need to be asked to user (more than one measurement, one, etc.?)
 
-variable(intelligence).
-variable(tutoring).
-variable(score).
-normal_residuals(intelligence, tutoring, score).
-homoscedastic_residuals(intelligence, tutoring, score).
-tolerate_correlation(intelligence, tutoring).
-numeric(score).
-numeric(intelligence).
-
-numeric_or_categorical(intelligence).
-numeric_or_categorical(tutoring).
-numeric_or_categorical(score).
-
-categorical(tutoring).
-%categorical(score).
-%two_categories(score).
-%numeric_or_categorical(intelligence).
-transformed(intelligence).
-transformed(score).
+%* Y ~ X1 + X2 + X1*X2
+%cause_or_correlate(sex, sat). % can add arbitrary relationships to effects set (from user input)
 *%
-
-%* GENERATED FOR TEST CASE
-variable(intelligence).
-numeric(intelligence).
-variable(tutoring).
-categorical(tutoring).
-binary(tutoring).
-variable(test_score).
-numeric(test_score).
-tolerate_correlation(intelligence,tutoring).
-normal_residuals(intelligence,tutoring,test_score).
-homoscedastic_residuals(intelligence,tutoring,test_score).
-*%
-
-%%%%%% CONTROL OUTPUT %%%%%%
-#show 0. 
-
-#show linear_regression/3.
-#show logistic_regression/3.

@@ -1,6 +1,7 @@
 from tisane.concept import Concept
 from tisane.variable import AbstractVariable
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
+from tisane.asp.knowledge_base import KnowledgeBase
 
 from abc import abstractmethod
 import pandas as pd
@@ -10,7 +11,7 @@ from typing import List, Any
 supported_model_types = ['LINEAR_REGRESSION', 'LOGISTIC_REGRESSION']
 # TODO: Make this an abstract class?
 class StatisticalModel(object): 
-    dv: Concept
+    dv: AbstractVariable
     main: MainEffect
     interaction: InteractionEffect
     mixed: MixedEffect
@@ -75,6 +76,15 @@ class StatisticalModel(object):
         facts.append(f'variance({dv_name}, {self.variance}).')
 
         return facts
+    
+    #TODO: @return a DataSet object with data schema info only 
+
+    def find_data_schema(self): 
+        kb = KnowledgeBase()
+        ivs = self.get_all_ivs()
+        kb.generate_constraints(name='test', ivs=ivs, dv=[self.dv])
+        import pdb; pdb.set_trace()
+
 
     # @property
     # def residuals(self): 

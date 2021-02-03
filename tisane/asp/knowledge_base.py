@@ -1,6 +1,7 @@
 from tisane.concept import Concept
+from tisane.variable import AbstractVariable
 from tisane.effect_set import EffectSet
-from tisane.statistical_model import StatisticalModel
+# from tisane.statistical_model import StatisticalModel
 
 import os 
 import subprocess
@@ -14,6 +15,10 @@ single_arity = [    'variable(X)',
                 ]
 
 _effects_sets_to_constraints_files = dict()
+
+# cache the constraints generated for any set of variables
+__variables_to_constraints__ = dict()
+
 
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
@@ -65,21 +70,72 @@ def format_effect_set_constraint(effect_set: EffectSet, key: str, val: str):
                 if val: 
                     return f'normal_residuals({all_names}).'
 
-class KnowledgeBase(object):
+# Helper to update any logicl phrase
+# Dispatch to other update methods
+def update_phrase(phrase: str, effects_list: List[str]): 
+    if 'XN' in phrase: 
+        return update_multiples(phrase, effects_list)
+    elif 'DX' in phrase:
+        return update_duplicates(phrase, effects_list)
+    else: # Nothing to change or update
+        return phrase
+
+# Helper to replace 'XN' with 'X0, X1, ...' to match arity of @param effects_list
+def update_multiples(phrase: str, effects_list: List[str]): 
+    effects_str = ','.join(effects_list)
     
+    assert('XN' in phrase)
+    new_phrase = phrase.replace("XN", effects_str)
+
+    return new_phrase
+# Helper to replace 'DX' phrases with duplicate facts for each 'X0', 'X1', ... to match arity of effects_list
+def update_duplicates(phrase: str, effects_list: List[str]): 
+    new_phrases = list()
+    if 'DX' in phrase: 
+        for e in effects_list: 
+            new_ph = phrase.replace('DX', e)
+            new_phrases.append(new_ph)
+    
+    return new_phrases
+
+class KnowledgeBase(object):
+    all_generic_facts: str # filepath to .lp file containing all facts combined
+    
+    # TODO: HACK this out!
+    """
+    # Initialize KnowledgeBase with generic facts 
+    # @params files containing different sets of facts
+    def __init__(self, generate: str, define: str, test: str, show: str): 
+        # TODO: move to helper file
+        generate_path = absolute_path(generate)
+        define_path = absolute_path(define)
+        test_path = absolute_path(test)
+        show_path = absolute_path(show)
+        all_paths = [generate_path, define_path, test_path, show_path]
+
+        output_path = absolute_path('all_generic_facts.lp')
+        with open(output_path, 'r') as outfile: 
+            for p in all_paths: 
+                with open(p) as readfile: 
+                    for line in readfile: 
+                        outfile.write(line)
+        
+        self.all_generic_facts = output_path
+    """
+
     # @param name is string for set of variables that are supported/instantiate the constraints
     # @param ivs is a list of main effects we are considering 
     # @param dv is a list of DV Concept, need to check length is 1
     # TODO: Change @param effects into a set????
     # TODO: change name/automatically change
-    def generate_constraints(self, name: str, ivs: List[Concept], dv: List[Concept]): 
-        global single_arity, _effects_sets_to_constraints_files
+    def generate_constraints(self, name: str, ivs: List[AbstractVariable], dv: List[AbstractVariable]): 
+        global single_arity, _effects_sets_to_constraints_files, __variables_to_constraints__
 
         assert(len(dv) == 1)
 
         specific_file_name = 'specific_constraints_' + name + '.lp'
         specific_abs_path = absolute_path(specific_file_name)
-        generic_abs_path = absolute_path('test_constraints.lp')
+        generic_abs_path = absolute_path('all_generic_facts.lp')
 
         with open(generic_abs_path, 'r') as generic_constraints, open(specific_abs_path, 'w') as specific_constraints: 
 
@@ -91,7 +147,7 @@ class KnowledgeBase(object):
                         main_effects_list.append('X' + str(i))
 
                 # Parse input file and dynamically adapt to current set of effects
-                rule_completed = False
+                # rule_completed = False
                 for line in generic_constraints.readlines():
                     # new line to write out to the new file
                     new_line = str()
@@ -110,108 +166,61 @@ class KnowledgeBase(object):
                     
                     # Update show arity
                     elif "#show" in line: 
-                        # Are there any digits in the line indicating arity?
-                        if re.search(r'[1-9]\D', line):
-                            clauses = line.split("/")
-                            new_line = clauses[0] + "/" + str(len(ivs) + len(dv)) + ".\n"
+                        if "#show 0." in line: 
+                            pass
                         else: 
-                            new_line = line
+                            # Are there any digits in the line indicating arity?
+                            if re.search(r'[1-9]\D', line):
+                                clauses = line.split("/")
+                                new_line = clauses[0] + "/" + str(len(ivs) + len(dv)) + ".\n"
+                            else: 
+                                new_line = line
 
                     # Parse and modify logical constraint
-                    elif not rule_completed:
-                        # This contains the beginning of a constraint
-                        if ":-" in line:
-                            new_head = str()
-                            new_rules = str()
+                    # elif not rule_completed:
+                        # This contains the beginning of a predicate
+                    elif ":-" in line:
 
-                            # Check if there is a head
-                            clauses = line.split(":- ")
-                            if len(clauses) == 2:
-                                head = clauses[0]
-                                rules = clauses[1]
-                            
-                                # Update the head
-                                if 'X' in head:
-                                    new_head = head.replace("X", main_effects_str)
+                        # Check if there is a head
+                        clauses = line.split(":- ")
+                        if len(clauses) == 2:
+                            head = clauses[0]
+                            rule = clauses[1]
+
+                            new_head = update_phrase(head, main_effects_list)
+                            new_rule = update_phrase(rule, main_effects_list)
+
+                            if isinstance(new_head, list): 
+                                assert('DX' in head)
+                                if isinstance(new_rule, list): 
+                                    assert('DX' in rule)
+                                    assert(len(new_head) == len(new_rule))
+                                    lines = [h+':-'+r for h,r in zip(new_head,new_rule)]
+                                    new_line = ''.join(lines)
                                 else:
-                                    new_head = head
-
+                                    assert(isinstance(new_rule, str))
+                                    lines = list()
+                                    for h in new_head: 
+                                        lines.append(h + ':-' + new_rule)
+                                    new_line = ''.join(lines)
                             else: 
-                                assert(len(clauses) == 1)
-                                rules = clauses[0]
-                            
-                            # Update the rules
-                            rule_list = rules.split("),")
-                            for r in rule_list:
-                                r_cleaned = r.strip()
-                                # Only process non-new line characters
-                                if len(r_cleaned) >= 1:
-                                    r_cleaned = r.strip()
-                                    
-                                    if "." not in r_cleaned:
-                                        r_cleaned += ")"
-
-                                    # Add single-arity rules for all IVs
-                                    if r_cleaned in single_arity:
-                                        for i in range(len(main_effects_list)):
-                                            new_rules += r_cleaned.replace("X", main_effects_list[i])
-                                            # if i+1 < len(main_effects_list):
-                                            new_rules += ", "
-                                    
-                                    # If not single-arity, replace Xs with new IVs
-                                    else:
-                                        new_rules += r_cleaned.replace("X", main_effects_str)
-                                        if "." not in r_cleaned: 
-                                            new_rules += ", "
-                                
-                                # Keep track of if we processed the entire logical rule    
-                                if "." in r_cleaned:
-                                    new_rules += "\n"
-                                    rule_completed = True
-
-                            new_line = new_head + ":- " + new_rules
+                                assert(isinstance(new_head, str))
+                                if isinstance(new_rule, list):
+                                    assert('DX' in rule)
+                                    lines = list()
+                                    for r in new_rule: 
+                                        lines.append(new_head + ':-' + r)
+                                    new_line = ''.join(lines)
+                                else: 
+                                    assert(isinstance(new_rule, str))
+                                    new_line = new_head + ':-' + new_rule
                         
-                        # This is a continuation of a constraint
                         else: 
-                            assert(":-" not in line)
-                            new_head = str()
-                            new_rules = str()
-
-                            # Update the rules
-                            rule_list = line.split("),")
-
-                            for r in rule_list:
-                                r_cleaned = r.strip()
-                                # Only process non-new line characters
-                                if len(r_cleaned) >= 1:
-                                    if "." not in r_cleaned:
-                                        r_cleaned += ")"
-                                    
-                                    # Add single-arity rules for all IVs
-                                    if r_cleaned in single_arity:
-                                        for i in range(len(main_effects_list)):
-                                            new_rules += r_cleaned.replace("X", main_effects_list[i])
-                                            # if i+1 < len(main_effects_list):
-                                            new_rules += ", "
-            
-                                    # If not single-arity, replace Xs with new IVs
-                                    else:
-                                        new_rules += r_cleaned.replace("X", main_effects_str)
-                                        if "." not in r_cleaned: 
-                                            new_rules += ", "
-                                # else:
-                                #     new_rules += r_cleaned + ", "
-
-                                # Keep track of if we processed the entire logical rule    
-                                if "." in r_cleaned:
-                                    new_rules += "\n"
-                                    rule_completed = True
-
-                            new_line = new_rules
+                            raise ValueError(f"Line cannot be processed: {line}")    
 
                     specific_constraints.write(new_line)
-                    rule_completed = False
 
+        
         _effects_sets_to_constraints_files[f'(ivs={ivs}, dv={dv})'] = specific_abs_path
     
     # Add assertions for solving!!
@@ -261,9 +270,6 @@ class KnowledgeBase(object):
     def query(self, file_name: str, assertions: list): 
         assert(".lp" in file_name)
 
-        # # collect assertions before querying
-        # self.collect_assertions(ivs=ivs, dv=dv)
-
         # Read file in as a string
         constraints = None
         file_abs_path = absolute_path(file_name)
@@ -284,6 +290,32 @@ class KnowledgeBase(object):
         stdout, stderr = proc.communicate(query)    
         
         return (stdout, stderr)
+
+    # TODO: replace the file_name with arity-specific constraints stored in the This object and globally cached
+    def find_data_schema(self, file_name:str, **kwargs): 
+        if 'carryover_facts' in kwargs: 
+            facts = kwargs['carryover_facts']
+        else: 
+            facts = self.to_logical_facts()
+        
+        progress = self.query(file_name=file_name, assertions=facts)
+
+        if stderr: 
+            #process the error somehow
+            # Check SAT or UNSAT
+            import pdb; pdb.set_trace()
+            # add more facts, query again
+            self.find_data_schema(file_name=file_name, carryover_facts=facts)
+        else: 
+            # assert SAT
+            # parse the output, format data schema
+            return output_data_schema(query_results=stdout)
+    
+    def output_data_schema(self, query_results: str): 
+        pass
+
+    def find_data_collection_procedure(self): 
+        pass
     
     # def is_query_successful(self, query_result: tuple): 
     #     assert(len(query_result) == 2) # KnowledgeBase query only returns 2-tuple
@@ -304,6 +336,7 @@ class KnowledgeBase(object):
     #     else: 
     #         raise ValueError(f"Query result is neither UNSAT or SAT!: {output}")
 
+    """
     # TODO: Move this to be an outside helper function
     # Should be called after query() function 
     # @param query_result has is a tuple resulting from calling KnowledgeBase's query() function
@@ -333,6 +366,7 @@ class KnowledgeBase(object):
     
         assert(len(valid_models) >= 1)
         return valid_models
+"""
 
     def get_query_result(self):
         raise NotImplementedError

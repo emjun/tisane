@@ -20,7 +20,14 @@ stat_mod = ts.StatisticalModel( dv='SAT',
                                 variance='normal') 
 
 facts = stat_mod.to_logical_facts()
-import pdb; pdb.set_trace()
+# 1. check that knowledge base generated with correct arity
+stat_mod.find_data_schema()
+# stat_md.find_data_collection_procedure()
+
+# Idea
+# stat_mod.find_data_schema().filter(...)
+
+
 
 """
 # All IVs in one list
