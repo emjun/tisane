@@ -79,10 +79,10 @@ class StatisticalModel(object):
     
     #TODO: @return a DataSet object with data schema info only 
 
-    def find_data_schema(self): 
+    def query_data_schema(self): 
         ivs = self.get_all_ivs()
-        KB.generate_constraints(ivs=ivs, dv=[self.dv])
-        # import pdb; pdb.set_trace()
+        model_facts = self.to_logical_facts()
+        KB.query_data_schema(facts=model_facts, ivs=ivs, dv=[self.dv])
 
 
     # @property

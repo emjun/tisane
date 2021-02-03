@@ -35,25 +35,6 @@ transformation(Y, log) :- link(Y, log). % TODO: enumerate more facts for all pos
 distribution(Y, gaussian) :- variance(Y, gaussian). % SM -> ED
 distribution(Y, inverse_gaussian) :-variance(Y, inverse_gaussian).
 
-%*
-% Recommendations for link functions based on data type 
-% e.g., poisson distribution and log link for count data
-% Variance functions: link functions (linear predictors to outcome)
-*% 
-
-%SPECIAL CASE: quasi : logit, probit, cloglog, identity, inverse, log, 1/mu-squared, sqrt
-
-% Link functions 
-
-% TODO: Sensitivity analysis when uncertain/multiple could hold. -- as part of output script?
-
-
-
-
-
-
-
-
 % Data schema from link function 
 numeric(V) :-link(V, identity).
 numeric(V) :-link(V, ln).
@@ -82,11 +63,17 @@ interaction(0,0) :-#false.
 %ordinal(V) :- not binary(V). % cannot be binary and ordinal?? - allow for now until have example want to work through.
 
 % Ensure every predicted/predictor has a data type!
-:-predicted(V), not has_datatype(V).
-:-predictor(V), not has_datatype(V).
+%:-predicted(V), not has_datatype(V).
+%:-predictor(V), not has_datatype(V).
 
 %%%%% Show %%%%%
+#show 0. 
 
+model(intelligence,age,sat).
+link(sat, identity).
+variance(sat, gaussian).
+%binary(intelligence).
+%numeric(age). 
 
 
 

@@ -13,6 +13,8 @@ pytest = "*"
 z3-solver = "*"
 scipy = "*"
 more-itertools = "*"
+clingo = "*"
+clyngor = "*"
 
 [requires]
 python_version = "3.7"

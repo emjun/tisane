@@ -4,6 +4,8 @@ from tisane.effect_set import EffectSet
 from tisane.asp.helpers import absolute_path, format_concept_variable_constraint, format_effect_set_constraint, update_phrase, update_duplicates, update_multiples
 
 from typing import List
+import subprocess
+from clingo.control import Control
 
 single_arity = [    'variable(X)',
                     'numeric(X)',
@@ -81,7 +83,7 @@ class KnowledgeBase(object):
                     # Update show arity
                     elif "#show" in line: 
                         if "#show 0." in line: 
-                            pass
+                            new_line = line
                         else: 
                             # Are there any digits in the line indicating arity?
                             if re.search(r'[1-9]\D', line):
@@ -135,7 +137,7 @@ class KnowledgeBase(object):
                     specific_constraints.append(new_line)
 
         
-        __effects_sets_to_constraints__[f'(ivs={ivs}, dv={dv})'] = specific_constraints
+        __effects_sets_to_constraints__[f'(ivs:{ivs}, dv:{dv})'] = specific_constraints
     
     # Add assertions for solving!!
     # These assertions are "global" in the sense that they will apply to all sets of constraints in __effects_sets_to_constraints__
@@ -180,15 +182,9 @@ class KnowledgeBase(object):
         
         return assertions
 
-    # @param file is a .lp file containing ASP constraints
-    def query(self, file_name: str, assertions: list): 
-        assert(".lp" in file_name)
-
-        # Read file in as a string
-        constraints = None
-        file_abs_path = absolute_path(file_name)
-        with open(file_abs_path, 'r') as f:
-            constraints = f.read()
+    # @param rules are a list of not yet ground logical rules
+    def query(self, rules: list, assertions: list): 
+        constraints = ''.join(rules)
         
         # Add assertions to read-in file
         formatted_all_assertions = '\n'.join(str(a) for a in assertions)
@@ -204,22 +200,51 @@ class KnowledgeBase(object):
         stdout, stderr = proc.communicate(query)    
         
         return (stdout, stderr)
-
-    # TODO: replace the file_name with arity-specific constraints stored in the This object and globally cached
-    def find_data_schema(self, file_name:str, **kwargs): 
-        if 'carryover_facts' in kwargs: 
-            facts = kwargs['carryover_facts']
-        else: 
-            facts = self.to_logical_facts()
+    
+    # Try to use clingo module for Python
+    def query_clingo(self, rules: list, assertions: list): 
+        rules_str = ''.join(rules)
+        assertions_str = ''.join(assertions)
         
-        progress = self.query(file_name=file_name, assertions=facts)
+        ctl = Control()
+        ctl.add("base", [], rules_str)
+        ctl.add("assertions", [], assertions_str)
+        ctl.ground([("base", [])])
+        ctl.ground([("assertions", [])])
+        print(ctl.solve(on_model=print))
+        import pdb; pdb.set_trace()
+        # ctl.ground()
+        # with prg.builder() as b:
+        
+        #     prg.ground([("base", [])])
+        #     prg.solve(on_model=lambda m: print("Answer: {}".format(m)))
+
+    def query_clyngor(self, rules: list, assertions: list): 
+        rules_str = ''.join(rules)
+        answer = solve(inline=rules_str)
+    
+
+    # Query: Given a statistical model, get a data schema, asking for user input when necessary
+    def query_data_schema(self, facts: List[str], ivs: List[AbstractVariable], dv: List[AbstractVariable], **kwargs):
+        assert(len(dv) == 1)
+        if 'carryover_facts' in kwargs: 
+            facts.append(kwargs['carryover_facts'])
+    
+        rules = list()
+        # Check if have dynamically generated constraints for this (ivs, dv)
+        if f'(ivs:{ivs}, dv:{dv})' not in __effects_sets_to_constraints__: 
+            self.generate_constraints(ivs=ivs, dv=dv)
+        rules = __effects_sets_to_constraints__[f'(ivs:{ivs}, dv:{dv})']
+        
+        # (stdout, stderr) = 
+        self.query_clingo(rules=rules, assertions=facts)
 
         if stderr: 
-            #process the error somehow
+            # START HERE: process the error somehow - how to check if return UNSAT, what the true vals are in the solver?
             # Check SAT or UNSAT
             import pdb; pdb.set_trace()
             # add more facts, query again
-            self.find_data_schema(file_name=file_name, carryover_facts=facts)
+            self.query_data_schema(file_name=file_name, carryover_facts=facts)
         else: 
             # assert SAT
             # parse the output, format data schema

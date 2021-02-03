@@ -20,8 +20,12 @@ stat_mod = ts.StatisticalModel( dv='SAT',
                                 variance='normal') 
 
 facts = stat_mod.to_logical_facts()
-stat_mod.find_data_schema()
-import pdb; pdb.set_trace()
+
+data_schema = stat_mod.query_data_schema()
+
+
+
+
 # 2. store facts locally, not in separate file
 # 3. query loop
 # stat_md.find_data_collection_procedure()
@@ -57,3 +61,13 @@ stat_mod = ts.StatisticalModel( dv='SAT',
 
 
 # TODO: Open question: What are we going to do about categorical variables and their encoding? 
+
+
+# TODO: tests 
+"""
+# trying to output constraints to debug dynamic generation. 
+        # not working:
+        with('sample_test.lp', 'w') as outfile: 
+            for l in KB.__effects_sets_to_constraints__[f'(ivs:{ivs}, dv:{[self.dv]})']:
+                outfile.write("%s\n" % l)
+"""
