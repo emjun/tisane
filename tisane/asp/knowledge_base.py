@@ -6,6 +6,7 @@ from tisane.asp.helpers import absolute_path, format_concept_variable_constraint
 from typing import List
 import subprocess
 from clingo.control import Control
+from clingo.solving import SolveHandle, SolveResult
 
 single_arity = [    'variable(X)',
                     'numeric(X)',
@@ -182,6 +183,7 @@ class KnowledgeBase(object):
         
         return assertions
 
+
     # @param rules are a list of not yet ground logical rules
     def query(self, rules: list, assertions: list): 
         constraints = ''.join(rules)
@@ -202,28 +204,37 @@ class KnowledgeBase(object):
         return (stdout, stderr)
     
     # Try to use clingo module for Python
-    def query_clingo(self, rules: list, assertions: list): 
+    def query_clingo(self, rules: list, assertions: list):
+        # output rules
         rules_str = ''.join(rules)
         assertions_str = ''.join(assertions)
         
-        ctl = Control()
-        ctl.add("base", [], rules_str)
-        ctl.add("assertions", [], assertions_str)
-        ctl.ground([("base", [])])
-        ctl.ground([("assertions", [])])
-        print(ctl.solve(on_model=print))
-        import pdb; pdb.set_trace()
-        # ctl.ground()
-        # with prg.builder() as b:
+        query = rules_str + assertions_str
+
+        # Next trial: Try to scaffold solving into chunks s.t. can check incrementally for unsat and literals? 
+        # Maybe try with smaller example?? in separate file? 
         
-        #     prg.ground([("base", [])])
-        #     prg.solve(on_model=lambda m: print("Answer: {}".format(m)))
+        # get core of literals that make Solver UNSAT
+        # input from user 
 
-    def query_clyngor(self, rules: list, assertions: list): 
-        rules_str = ''.join(rules)
-        answer = solve(inline=rules_str)
+        # add and ensure that SAT now before adding next set of assertions?? -- may need to do this in a loop?
+
+        ctl = Control()
+        ctl.add("base", [], query)
+        ctl.ground([("base", [])])
+        with ctl.solve(yield_=True) as hnd:
+            import pdb; pdb.set_trace()
+            for m in hnd:
+                print(m)
+            print(hnd.get())
+
+        
+        answer = ctl.solve(on_model=print, yield_=True)    
+        import pdb; pdb.set_trace()
+
+        assert(isinstance(answer, SolveHandle))
+
     
-
     # Query: Given a statistical model, get a data schema, asking for user input when necessary
     def query_data_schema(self, facts: List[str], ivs: List[AbstractVariable], dv: List[AbstractVariable], **kwargs):
         assert(len(dv) == 1)
@@ -237,7 +248,7 @@ class KnowledgeBase(object):
         rules = __effects_sets_to_constraints__[f'(ivs:{ivs}, dv:{dv})']
         
         # (stdout, stderr) = 
-        self.query_clingo(rules=rules, assertions=facts)
+        (stdout, stderr) = self.query_clingo(rules=rules, assertions=facts)
 
         if stderr: 
             # START HERE: process the error somehow - how to check if return UNSAT, what the true vals are in the solver?

@@ -63,8 +63,8 @@ interaction(0,0) :-#false.
 %ordinal(V) :- not binary(V). % cannot be binary and ordinal?? - allow for now until have example want to work through.
 
 % Ensure every predicted/predictor has a data type!
-%:-predicted(V), not has_datatype(V).
-%:-predictor(V), not has_datatype(V).
+:-predicted(V), not has_datatype(V).
+:-predictor(V), not has_datatype(V).
 
 %%%%% Show %%%%%
 #show 0. 
@@ -72,6 +72,7 @@ interaction(0,0) :-#false.
 model(intelligence,age,sat).
 link(sat, identity).
 variance(sat, gaussian).
+%binary(sat).
 %binary(intelligence).
 %numeric(age). 
 
