@@ -43,7 +43,8 @@ def verify_update_constraints(solver: Solver, assertions: list):
     state = solver.check(assertions)
     if (state == unsat): 
         unsat_core = solver.unsat_core() 
-        assert(len(state_cg_unsat_core) > 0)
+        import pdb; pdb.set_trace()
+        assert(len(unsat_core) > 0)
 
         solver.push() # save state before add @param assertions
 
