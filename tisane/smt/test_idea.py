@@ -22,10 +22,8 @@ xs = Const('xs', List)
 x = Const('x', Object) # TODO: Want x to be in xss
 x0 = Const('x0', Object) # TODO: Want x to be in xss
 x1 = Const('x1', Object) # TODO: Want x to be in xss
-
 # xs = Const('xs', SeqSort(Object)) 
-
-# assert 3 is somewhere in this sequence
+# Create a sequence??
 # s.add(Contains(oseq, Unit(IntVal(3))))
 
 model_explanation = [
@@ -49,7 +47,55 @@ conceptual_graph = [
     # Interactions 
     Implies(Interaction(x0, x1, y), And(Cause_or_Correlate(x0, y), Cause_or_Correlate(x1, y))),
     Implies(Interaction(x0, x1, y), And(Cause_or_Correlate(x0, y), Cause_or_Correlate(x1, y))),
-    # Xor(Cause(x, y), Correlate(x, y)),
+]
+
+# Data types
+Categorical = Function('Categorical', Object, BoolSort())
+Numeric = Function('Numeric', Object, BoolSort())
+Unknown_Datatype = Function('Unknown_Datatype', Object, BoolSort())
+Has_Datatype = Function('Has_Datatype', Object, BoolSort())
+Ordinal = Function('Ordinal', Object, BoolSort())
+Binary = Function('Binary', Object, BoolSort())
+
+data_types = [
+    Implies(Categorical(x), Has_Datatype(x)),
+    ForAll([x], Implies(Numeric(x), Has_Datatype(x))),
+    # Xor(Has_Datatype(x), Unknown_Datatype(x)),
+    ForAll([x], Implies(Has_Datatype(x), Not(Unknown_Datatype(x)))),
+    ForAll([x], Has_Datatype(x)), # Ensure that all variables have a data type associated with them
+    Implies(Binary(x), Categorical(x)),
+    Implies(Ordinal(x), Categorical(x)),
+    ForAll([x], Xor(Categorical(x), Numeric(x)))
+    # ForAll([x], Implies(Has_Datatype(x), XOr(Categorical(x), Numeric(x)))),
+    
+]
+
+# Link functions
+Identity = Function('Identity', Object, BoolSort())
+Log = Function('Log', Object, BoolSort())
+Sqrt = Function('Sqrt', Object, BoolSort())
+LogLog = Function('LogLog', Object, BoolSort())
+Probit = Function('Probit', Object, BoolSort())
+Logit = Function('Logit', Object, BoolSort())
+
+link_functions = [
+    ForAll([y], Implies(Identity(y), Numeric(y))), # could change y to x?
+    ForAll([y], Implies(Log(y), Numeric(y))), # could change y to x?
+    ForAll([y], Implies(Sqrt(y), Numeric(y))), # could change y to x?
+    ForAll([y], Implies(LogLog(y), Categorical(y))), # could change y to x?
+    ForAll([y], Implies(Probit(y), Categorical(y))), # could change y to x?
+    ForAll([y], Implies(Logit(y), Categorical(y))), # could change y to x?
+]
+
+# Variance functions
+Gaussian = Function('Gaussian', Object, BoolSort())
+Inverse_Gaussian = Function('Inverse_Gaussian', Object, BoolSort())
+Binomial = Function('Binomial', Object, BoolSort())
+Multinomial = Function('Multinomial', Object, BoolSort())
+
+variance_functions = [
+    ForAll([y], Implies(Binomial(y), Binary(y))),
+    ForAll([y], Implies(Multinomial(y), Categorical(y))),
 ]
 
 
@@ -108,9 +154,30 @@ else:
     raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state_cg}")
 
 
+s.add(data_types)
+input_data_type_assertions = [
+    # TODO: by default, have to make sure that all the variables involved have a datatype if declared, otherwise, Unknown
+    Numeric(sat_score),
+    Binary(tutoring),
+    Numeric(intelligence)
+]
+s.add(input_data_type_assertions)
 
+if s.check(input_data_type_assertions) == unsat: 
+    print(s.unsat_core())
+    import pdb; pdb.set_trace()
 print(s.check()) 
+mdl =  s.model()
+import pdb; pdb.set_trace()
 print(s.model()) # assumes s.check() is SAT
+
+s.add(link_functions)
+print(s.check())
+
+s.add(variance_functions)
+print(s.check())
+
+# TODO: In order to create output, need to get list of all final derived (from user-input SM)+ input constraints to stringify and parse...
 
 ### Questions? 
 # How to use Sequence Sort? -- how to add 
