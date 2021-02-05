@@ -10,23 +10,27 @@ List.declare('cons', ('car', Object), ('cdr', List)) # Define ctor
 List.declare('nil') # Define ctor
 List = List.create() # Create Datatype
 
-Explains = Function('Explains', Object, List, BoolSort())
-Models = Function('Models', Object, List, BoolSort())
+Explains = Function('Explains', Object, SeqSort(Object), BoolSort())
+Models = Function('Models', Object, SeqSort(Object), BoolSort())
 IsPredicted = Function('IsPredicted', Object, BoolSort())
 IsPredictor = Function('IsPredictor', Object, BoolSort()) # TODO 
-ArePredictors = Function('ArePredictors', List, BoolSort()) # TODO
+ArePredictors = Function('ArePredictors', SeqSort(Object), BoolSort()) # TODO
 
 # Free variable
 y = Const('y', Object)
-xs = Const('xs', List)
+# xs = Const('xs', List)
+xs = Const('xs', SeqSort(Object))
 x = Const('x', Object) # TODO: Want x to be in xss
 x0 = Const('x0', Object) # TODO: Want x to be in xss
 x1 = Const('x1', Object) # TODO: Want x to be in xss
+
+
 # xs = Const('xs', SeqSort(Object)) 
 # Create a sequence??
 # s.add(Contains(oseq, Unit(IntVal(3))))
 
 model_explanation = [
+    ForAll([x, xs], Implies(Contains(xs, Unit(x)), IsPredictor(x))),
     ForAll([y, xs], Implies(Models(y, xs), Explains(y, xs))),
     ForAll([y, xs], Implies(Explains(y, xs), IsPredicted(y))),
     ForAll([y, xs], Implies(Explains(y, xs), ArePredictors(xs))), # TODO: Question of how to use IsPredictor for each IV? 
@@ -106,8 +110,10 @@ sat_score = Const('sat_score', Object)
 intelligence = Const('intelligence', Object)
 tutoring = Const('tutoring', Object)
 # Create list of IVs
-ivs = List.cons(tutoring, List.nil)
-ivs = List.cons(intelligence, ivs) 
+# TODO: Sequence
+ivs = Empty(SeqSort(Object))
+ivs = Concat(ivs, Unit(intelligence))
+ivs = Concat(ivs, Unit(tutoring))
 
 # Add model
 s.add(Models(sat_score, ivs))
@@ -130,6 +136,10 @@ input_conceptual_graph_assertions = [
     # Correlate(tutoring, sat_score)
 ]
 verify_update_constraints(solver=s, assertions=input_conceptual_graph_assertions)
+
+
+# TODO: Could we represent conceptual tree in logic??
+
 # state_cg = s.check(input_conceptual_graph_assertions)
 # state_cg_unsat_core = s.unsat_core() 
 
