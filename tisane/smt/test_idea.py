@@ -20,6 +20,9 @@ ArePredictors = Function('ArePredictors', List, BoolSort()) # TODO
 y = Const('y', Object)
 xs = Const('xs', List)
 x = Const('x', Object) # TODO: Want x to be in xss
+x0 = Const('x0', Object) # TODO: Want x to be in xss
+x1 = Const('x1', Object) # TODO: Want x to be in xss
+
 # xs = Const('xs', SeqSort(Object)) 
 
 # assert 3 is somewhere in this sequence
@@ -35,17 +38,17 @@ model_explanation = [
 Cause = Function('Cause', Object, Object, BoolSort())
 Correlate = Function('Correlate', Object, Object, BoolSort())
 Cause_or_Correlate = Function('Cause_or_Correlate', Object, Object, BoolSort())
+Interaction = Function('Interaction', Object, Object, Object, BoolSort())
 HasEdge = Function('HasEdge', Object, Object, BoolSort())
 
 conceptual_graph = [
-    # ForAll([x, y], Implies(Cause(x, y), HasEdge(x, y))),
-    # ForAll([x, y], Implies(Correlate(x, y), HasEdge(x, y))),
-    # ForAll([x, y], Implies(HasEdge(x, y), (Or(Cause(x, y), Correlate(x, y))))),
-    # Implies(Cause(x,y), HasEdge(x, y)),
-    # Implies(Correlate(x,y), HasEdge(x, y)),
+    Xor(Correlate(x, y), Cause(x, y)),
+    Implies(Cause(x, y), Cause_or_Correlate(x, y)), 
+    Implies(Correlate(x, y), Cause_or_Correlate(x, y)), 
     
-    # Implies(Cause_or_Correlate(x, y), ForAll([x, y], Xor(Correlate(x, y), Cause(x, y)))),
-    ForAll([x, y], Xor(Correlate(x, y), Cause(x, y))),
+    # Interactions 
+    Implies(Interaction(x0, x1, y), And(Cause_or_Correlate(x0, y), Cause_or_Correlate(x1, y))),
+    Implies(Interaction(x0, x1, y), And(Cause_or_Correlate(x0, y), Cause_or_Correlate(x1, y))),
     # Xor(Cause(x, y), Correlate(x, y)),
 ]
 
@@ -77,11 +80,13 @@ s.push()
 # Add user assertions
 input_conceptual_graph_assertions = [
     Cause(tutoring, sat_score), 
-    Correlate(tutoring, sat_score)
+    Interaction(tutoring, intelligence, sat_score),
+    # Correlate(tutoring, sat_score)
 ]
 state_cg = s.check(input_conceptual_graph_assertions)
 state_cg_unsat_core = s.unsat_core() 
 
+# This is a process that I want to repeat for each "chunk" of queries. 
 if (state_cg == unsat):
     assert(len(state_cg_unsat_core) > 0)
 
@@ -97,9 +102,12 @@ if (state_cg == unsat):
     s.add(input_conceptual_graph_assertions)
     assert(s.check() == sat)
 elif (state_cg == sat): 
-    pass
+    # Add input_conceptual_graph_assertions
+    s.add(input_conceptual_graph_assertions)
 else: 
     raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state_cg}")
+
+
 
 print(s.check()) 
 print(s.model()) # assumes s.check() is SAT
