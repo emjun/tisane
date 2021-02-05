@@ -1,3 +1,4 @@
+from tisane.smt.helpers import *
 from z3 import *
 
 Object = DeclareSort('Object')
@@ -52,7 +53,7 @@ conceptual_graph = [
 s = Solver()
 
 # Create objects to test with 
-sat = Const('sat', Object)
+sat_score = Const('sat_score', Object)
 intelligence = Const('intelligence', Object)
 tutoring = Const('tutoring', Object)
 # Create list of IVs
@@ -60,7 +61,7 @@ ivs = List.cons(tutoring, List.nil)
 ivs = List.cons(intelligence, ivs) 
 
 # Add model
-s.add(Models(sat, ivs))
+s.add(Models(sat_score, ivs))
 
 # Add constraints
 s.add(And(model_explanation))
@@ -69,65 +70,39 @@ if (s.check() == unsat):
     import pdb; pdb.set_trace()
 s.push()
 
-# Add user assertions
-input_conceptual_graph_assertions = [
-    Cause(tutoring, sat), 
-    Correlate(tutoring, sat)
-]
-# s.add(Cause(tutoring, sat))
-# s.add(Correlate(tutoring, sat))
-s.add(input_conceptual_graph_assertions)
-
 # Add constraints
 s.add(And(conceptual_graph))
 s.push()
 
-if (s.check() == unsat): 
-    s.pop()
+# Add user assertions
+input_conceptual_graph_assertions = [
+    Cause(tutoring, sat_score), 
+    Correlate(tutoring, sat_score)
+]
+state_cg = s.check(input_conceptual_graph_assertions)
+state_cg_unsat_core = s.unsat_core() 
 
-    s.push()
-    # Iterate over each constraint in the chunk that caused an issue.
-    for c in conceptual_graph: 
-        s.add(c)
-        if (s.check() == unsat): 
-            print(s.unsat_core()) # TODO: toy test problem where we get to add multiple tests incrementally and then see which combo leads to UNSAT and use unsat_core (similar to example)
-            import pdb; pdb.set_trace()
-            print(f"{c}")
-            s.pop() # remove this (single) constraint 
-            s.pop() # go back once more and remove user-input constraints, there might be an issue there. 
-            
-            s.add(c) # add this constraint back in
-            # Try each user-input constraint one at a time
-            for a in input_conceptual_graph_assertions: 
-                s.add(a)
-               
-                if (s.check() == unsat): 
-                    try: 
-                        val = input(f'Can you clarify {c}, {a}:')
-                    except ValueError: 
-                        print("Try again.")
-                        continue
-                    else: 
-                        break
+if (state_cg == unsat):
+    assert(len(state_cg_unsat_core) > 0)
 
-            
-            # print(s.assertions())
-    import pdb; pdb.set_trace()
-    
+    s.push() # save state before add user input
+
+    # Ask user for input
+    keep_clause = elicit_user_input(s.assertions(), state_cg_unsat_core)
+    # Modifies input_conceptual_graph_assertions (first @param)
+    updated_clauses = update_clauses(input_conceptual_graph_assertions, state_cg_unsat_core, keep_clause)
+    input_conceptual_graph_assertions = updated_clauses
+
+    # Double check that the new_clauses do not cause UNSAT
+    s.add(input_conceptual_graph_assertions)
+    assert(s.check() == sat)
+elif (state_cg == sat): 
+    pass
+else: 
+    raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state_cg}")
+
 print(s.check()) 
 print(s.model()) # assumes s.check() is SAT
-
-
-# ts = Solver()
-# ts.add(ForAll([x], Xor(Correlate(x, y), Cause(x, y))))
-# ts.add(Cause(tutoring, sat))
-# ts.add(Correlate(tutoring, sat))
-# # ts.add(Xor(Cause(tutoring, sat), Correlate(tutoring, sat)))
-# print(ts.check()) # correctly outputs UNSAT
-# print(ts.model())
-
-# For all objects that explain the same object, they are ivs? 
-
 
 ### Questions? 
 # How to use Sequence Sort? -- how to add 
