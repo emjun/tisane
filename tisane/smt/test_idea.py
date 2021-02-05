@@ -129,30 +129,32 @@ input_conceptual_graph_assertions = [
     Interaction(tutoring, intelligence, sat_score),
     # Correlate(tutoring, sat_score)
 ]
-state_cg = s.check(input_conceptual_graph_assertions)
-state_cg_unsat_core = s.unsat_core() 
+verify_update_constraints(solver=s, assertions=input_conceptual_graph_assertions)
+# state_cg = s.check(input_conceptual_graph_assertions)
+# state_cg_unsat_core = s.unsat_core() 
 
-# This is a process that I want to repeat for each "chunk" of queries. 
-if (state_cg == unsat):
-    assert(len(state_cg_unsat_core) > 0)
+# # This is a process that I want to repeat for each "chunk" of queries. 
+# if (state_cg == unsat):
+#     assert(len(state_cg_unsat_core) > 0)
 
-    s.push() # save state before add user input
+#     s.push() # save state before add user input
 
-    # Ask user for input
-    keep_clause = elicit_user_input(s.assertions(), state_cg_unsat_core)
-    # Modifies input_conceptual_graph_assertions (first @param)
-    updated_clauses = update_clauses(input_conceptual_graph_assertions, state_cg_unsat_core, keep_clause)
-    input_conceptual_graph_assertions = updated_clauses
+#     # Ask user for input
+#     keep_clause = elicit_user_input(s.assertions(), state_cg_unsat_core)
+#     # Modifies input_conceptual_graph_assertions (first @param)
+#     updated_clauses = update_clauses(input_conceptual_graph_assertions, state_cg_unsat_core, keep_clause)
+#     input_conceptual_graph_assertions = updated_clauses
 
-    # Double check that the new_clauses do not cause UNSAT
-    s.add(input_conceptual_graph_assertions)
-    assert(s.check() == sat)
-elif (state_cg == sat): 
-    # Add input_conceptual_graph_assertions
-    s.add(input_conceptual_graph_assertions)
-else: 
-    raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state_cg}")
+#     # Double check that the new_clauses do not cause UNSAT
+#     s.add(input_conceptual_graph_assertions)
+#     assert(s.check() == sat)
+# elif (state_cg == sat): 
+#     # Add input_conceptual_graph_assertions
+#     s.add(input_conceptual_graph_assertions)
+# else: 
+#     raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state_cg}")
 
+import pdb; pdb.set_trace()
 
 s.add(data_types)
 input_data_type_assertions = [
@@ -166,16 +168,18 @@ s.add(input_data_type_assertions)
 if s.check(input_data_type_assertions) == unsat: 
     print(s.unsat_core())
     import pdb; pdb.set_trace()
+
 print(s.check()) 
-mdl =  s.model()
-import pdb; pdb.set_trace()
-print(s.model()) # assumes s.check() is SAT
 
 s.add(link_functions)
 print(s.check())
 
 s.add(variance_functions)
 print(s.check())
+
+mdl =  s.model()
+import pdb; pdb.set_trace()
+print(s.model()) # assumes s.check() is SAT
 
 # TODO: In order to create output, need to get list of all final derived (from user-input SM)+ input constraints to stringify and parse...
 

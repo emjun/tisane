@@ -38,3 +38,25 @@ def elicit_user_input(current_constraints: list, unsat_core: list):
 
     # return current_constraints + keep
     return keep
+
+def verify_update_constraints(solver: Solver, assertions: list): 
+    state = solver.check(assertions)
+    if (state == unsat): 
+        unsat_core = solver.unsat_core() 
+        assert(len(state_cg_unsat_core) > 0)
+
+        solver.push() # save state before add @param assertions
+
+        # Ask user for input
+        keep_constraint = elicit_user_input(solver.assertions(), unsat_core)
+        # Modifies @param assertions
+        updated_assertions = update_clauses(assertions, unsat_core, keep_constraint)
+        assertions = updated_assertions
+    elif (state == sat): 
+        pass
+    else: 
+        raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
+
+    # Double check that the new_assertions do not cause UNSAT
+    solver.add(assertions)
+    assert(solver.check() == sat)
