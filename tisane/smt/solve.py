@@ -4,9 +4,13 @@ from z3 import *
 
 s = Solver()
 
+# TODO: Depending on query (for data schema, for data collection procedure, for power, etc.) change the facts that are considered and how (order)??
+
+
 # TODO: generic way to create and use objects (ivs and y) depending on statistical model input from end-user
 
-# Create objects for current statistical model
+
+# # Create objects for current statistical model
 sat_score = Const('sat_score', Object)
 intelligence = Const('intelligence', Object)
 tutoring = Const('tutoring', Object)
@@ -14,7 +18,7 @@ tutoring = Const('tutoring', Object)
 # Create sequence of IVs -- should be only Main effects?
 ivs = Concat(Unit(tutoring), Unit(intelligence))
 
-# Create sequence of Interaction effects 
+# TODO: Create sequence of Interaction effects 
 ixn = Concat(Unit(intelligence), Unit(tutoring))
 
 ##### MODEL EXPLANATION #####

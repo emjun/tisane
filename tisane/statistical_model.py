@@ -1,12 +1,14 @@
 from tisane.concept import Concept
 from tisane.variable import AbstractVariable
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
-from tisane.asp.knowledge_base import KnowledgeBase, KB
+# from tisane.smt.knowledge_base import KnowledgeBase, KB
+from tisane.smt.declare_constraints import Models
 
 from abc import abstractmethod
 import pandas as pd
-
 from typing import List, Any
+
+from z3 import *
 
 supported_model_types = ['LINEAR_REGRESSION', 'LOGISTIC_REGRESSION']
 # TODO: Make this an abstract class?
@@ -60,20 +62,45 @@ class StatisticalModel(object):
 
     # @return a list of facts to use when querying the knowledge base
     def to_logical_facts(self): 
-        facts = list()
+        facts = dict()
 
-        # add model fact
+        # Declare data type
+        Object = DeclareSort('Object')
+
+        # Add objects for variables
+        var_facts = list()
         dv_name = self.dv.name.lower()
+        dv_obj = Const(dv_name, Object)
+        var_facts.append(dv_obj) # create and add Z3 object for DV
+        
         iv_names = [v.name.lower() for v in self.get_all_ivs()]
-        var_names = ','.join(iv_names) + f',{dv_name}'
-        model_fact = f'model({var_names}).'
-        facts.append(model_fact)
+        ivs_seq = None
+        for iv_n in iv_names: 
+            iv_obj = Const(iv_n, Object) # create a Z3 object
+            var_facts.append(iv_obj) # add each object 
+            # Have we created a sequence of IVs yet?
+            # If not, create one
+            if ivs_seq is None: 
+                # set first Unit of sequence
+                ivs_seq = Unit(iv_obj)
+            # We already created a sequence of IVs
+            else: 
+                # concatenate
+                ivs_seq = Concat(Unit(iv_obj), ivs_seq)
+    
+        # Add variable facts
+        # facts['variables'] = var_facts
 
-        # add fact about link function
-        facts.append(f'link({dv_name}, {self.link}).')
+        # Add model fact
+        facts['model_explanation'] = [Models(dv_obj, ivs_seq)]
 
-        # add fact about variance function
-        facts.append(f'variance({dv_name}, {self.variance}).')
+        # TODO: Add fact about link function
+        #facts.append(f'link({dv_name}, {self.link}).')
+
+        # TODO: Add fact about variance function
+        #facts.append(f'variance({dv_name}, {self.variance}).')
+
+        # TODO: Add facts about variables
 
         return facts
     

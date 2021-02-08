@@ -1,5 +1,6 @@
 from tisane.main import (
                             Tisane,
+                            query
                             
 )
 

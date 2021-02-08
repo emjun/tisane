@@ -1,9 +1,10 @@
 from tisane.concept import Concept
 from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 from tisane.effect_set import EffectSet
-from tisane.smt.results import AllStatisticalResults
-from tisane.asp.knowledge_base import KnowledgeBase
 from tisane.statistical_model import StatisticalModel
+from tisane.asp.knowledge_base import KB, KnowledgeBase
+from tisane.smt.query_manager import QM
+from tisane.smt.results import AllStatisticalResults
 
 from enum import Enum 
 from typing import List, Union
@@ -48,8 +49,6 @@ class RELATIONSHIP(Enum):
 class Data(object): 
     pass
 
-kb = KnowledgeBase()
-
 class Tisane(object):
     task : TASK
     graph : ConceptGraph # Not clear this is necessary at the moment
@@ -58,13 +57,12 @@ class Tisane(object):
     knowledge_base : KnowledgeBase # optional
 
     def __init__(self, task:str, knowledge_base: KnowledgeBase=None):
-        global kb # use global KnowledgeBase by default
 
         self.task = TASK.cast(task)
         self.graph = ConceptGraph() # TODO: graph structure might not be the right one?
         self.relationship = None # TODO: Not sure we want to default to none? 
         self.data = None
-        self.knowledge_base = kb
+        self.knowledge_base = KB # use global KnowledgeBase
     
     def __repr__(self):
         pass
@@ -367,7 +365,7 @@ class Tisane(object):
     def explainWithout(self, dv: Concept, ivs_to_exclude: list): 
         pass
 
-    # @param property is used to parse/generate the constraints
+    # @param property is used to parse/generate the constraints 
     def assume_property(self, property: str): 
         raise NotImplementedError
 
@@ -379,3 +377,7 @@ class Tisane(object):
         # asserted: stop modeling if data does not fit this property
         
         kb.assert_property(property=prop)
+    
+##### Functions that are not associated with a class/object
+def query(input_obj: Union[StatisticalModel], outcome: str): 
+    QM.query(input_obj=input_obj, outcome=outcome)

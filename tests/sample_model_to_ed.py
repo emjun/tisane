@@ -19,11 +19,36 @@ stat_mod = ts.StatisticalModel( dv='SAT',
                                 link='identity', 
                                 variance='normal') 
 
-facts = stat_mod.to_logical_facts()
+# Get this working
+# data_schema = stat_mod.query_data_schema()
+ts.query(input_obj=stat_mod, outcome='data schema')
 
-data_schema = stat_mod.query_data_schema()
 
 
+"""
+Then this working: 
+# @param setting is 'interactive' 'default' (which is interactive), etc.?
+# Would have to check that input and outcome "match"
+ts.query(statistical_model=stat_mod, outcome='data schema').solve(setting=None)
+# Could have multiple calls in a row
+ts.query(statistical_model=stat_mod, outcome='variable relationship graph'). solve()
+ts.query(statistical_model=stat_mod, outcome='data schema').solve(setting=None)
+# which should be equivalent to...
+ts.query_batch(statistical_model=stat_mod, outcome=['variable relationship graph', 'data schema']). solve()
+
+ts.query(...) -> QueryManager.query(...), QueryManager is state-less
+"""
+
+
+# TODO: How much of the querying to expose at the API level?
+# ts.find_statistical_model 
+# ts.find_data_schema
+# ts.find_data_collection_procedure 
+
+# ts.select(sm=Model).where()... 
+
+# ts.query(sm=stat_mod).explain().where()...
+# ts.query(sm=stat_mod).data_schema()
 
 
 # 2. store facts locally, not in separate file
