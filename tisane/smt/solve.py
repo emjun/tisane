@@ -26,8 +26,9 @@ ixn = Concat(Unit(intelligence), Unit(tutoring))
 
 rules = [
     ForAll([x], Implies(Contains(ivs, Unit(x)), Xor(Cause(x, sat_score), Correlate(x, sat_score)))),
-    ForAll([xs], Implies(Contains(interactions, Unit(xs)), Xor(Cause(x, sat_score), Correlate(x, sat_score)))),
-    
+    # ForAll([xs], Implies(Contains(interactions, Unit(xs)), Xor(Cause(x, sat_score), Correlate(x, sat_score)))),
+    # Something similar for Between vs. Within subjects?
+    # Between subjects means occurs once per subject   
 ]
 
 facts = [
@@ -37,17 +38,24 @@ facts = [
     MainEffect(intelligence),
     Cause(tutoring, sat_score), # Add both for each main effect and require end-user to pick one
     Correlate(tutoring, sat_score),
-    Interaction(tutoring, intelligence),
-    Cause(tutoring, intelligence), # Add both for each interaction effect and require end-user to pick one
-    Correlate(tutoring, intelligence),
+    # Interaction(tutoring, intelligence),
+    # Cause(tutoring, intelligence), # Add both for each interaction effect and require end-user to pick one
+    # Correlate(tutoring, intelligence),
 
 ]
 
 # At end of facts disambiguation, will have a complete set of facts for conceptual graph
 # TODO: If add more facts about additional relationships (e.g., that might suggest interaction), what do we do? -- this is something we would have to take care of in sys architecture?
+# TODO: START HERE: Read advanced webpage (incremental)
+# Create separate sample programs for different queries and then figure out how to generate dynamically/connect up with rest of Tisane
+# Query for variable relationship graph
+# Query for data schema
 
 s.add(rules)
 s.check(And(facts))
+import pdb; pdb.set_trace()
+# Should only add this when unsat
+s.set("smt.core.minimize","true") # force min unsat core
 
 
 import pdb; pdb.set_trace()

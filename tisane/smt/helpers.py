@@ -29,7 +29,7 @@ def update_clauses(pushed_constraints: list, unsat_core: list, keep_clause: list
                 pass
             else: 
                 updated_constraints.append(pc)
-
+        # import pdb; pdb.set_trace()
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -53,19 +53,19 @@ def elicit_user_input(current_constraints: list, unsat_core: list):
         # return current_constraints + keep
         return keep
 
-def verify_update_constraints(solver: Solver, assertions: list): 
+def check_update_constraints(solver: Solver, assertions: list): 
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
             solver.push() # save state before add @param assertions
 
             # Ask user for input
-            keep_constraint = self.elicit_user_input(solver.assertions(), unsat_core)
+            keep_constraint = elicit_user_input(solver.assertions(), unsat_core)
             # Modifies @param assertions
-            updated_assertions = self.update_clauses(assertions, unsat_core, keep_constraint)
+            updated_assertions = update_clauses(assertions, unsat_core, keep_constraint)
             assertions = updated_assertions
         elif (state == sat): 
             pass
@@ -73,5 +73,16 @@ def verify_update_constraints(solver: Solver, assertions: list):
             raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
 
         # Double check that the new_assertions do not cause UNSAT
-        solver.add(assertions)
-        assert(solver.check() == sat)
+        new_state = solver.check(assertions)
+        if new_state == sat: 
+            return solver
+        elif new_state == unsat: 
+            return check_update_constraints(solver=solver, assertions=assertions)
+        else: 
+            raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
+
+def parse_and_create_variable_relationship_graph(solver: Solver): 
+    mdl = solver.model()
+    print(mdl)
+    
+    # Should ask if this is valid before being output? (maybe more complex interactive editing is for later)
