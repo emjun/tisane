@@ -17,6 +17,9 @@ x1 = Const('x1', Object)
 Explains = Function('Explains', Object, SeqSort(Object), BoolSort())
 Models = Function('Models', Object, SeqSort(Object), BoolSort())
 IsPredicted = Function('IsPredicted', Object, BoolSort())
+IsDependent = Function('IsDependent', Object, BoolSort())
+MainEffect = Function('MainEffect', Object, BoolSort())
+Interaction = Function('Interaction', Object, Object, BoolSort())
 IsPredictor = Function('IsPredictor', Object, BoolSort())
 ArePredictors = Function('IsPredictor', SeqSort(Object), BoolSort())
 
@@ -24,7 +27,7 @@ ArePredictors = Function('IsPredictor', SeqSort(Object), BoolSort())
 model_explanation_rules = [
     ForAll([y, xs], Implies(Models(y, xs), Explains(y, xs))),
     ForAll([y, xs], Implies(Explains(y, xs), IsPredicted(y))),
-    ForAll([x, xs], Implies(Contains(xs, Unit(x)), IsPredictor(x))),
+    ForAll([x, xs], Implies(Models(y, xs), Implies(Contains(xs, Unit(x)), IsPredictor(x)))),
     # The below cause the solver to return unknown. 
     # ForAll([xs, y], Implies(Explains(y, xs), Implies(Contains(xs, Unit(x)), IsPredictor(x)))),
     # ForAll([x, xs], Implies(ArePredictors(xs), And(Contains(xs, Unit(x)), IsPredictor(x)))),
@@ -36,14 +39,21 @@ Cause = Function('Cause', Object, Object, BoolSort())
 Correlate = Function('Correlate', Object, Object, BoolSort())
 Cause_or_Correlate = Function('Cause_or_Correlate', Object, Object, BoolSort())
 Interaction = Function('Interaction', SeqSort(Object), Object, BoolSort())
-HasEdge = Function('HasEdge', Object, Object, BoolSort())
+Has_Specified_Edge = Function('Has_Specified_Edge', Object, Object, BoolSort())
+Not_Specified_Edge = Function('Not_Specified_Edge', Object, Object, BoolSort())
 
 # Declare constraints for conceptual graphs
 conceptual_graph_rules = [
     ForAll([x, y], Xor(Correlate(x, y), Cause(x, y))),
     ForAll([x, y], Implies(Cause(x, y), Cause_or_Correlate(x, y))), 
     ForAll([x, y], Implies(Correlate(x, y), Cause_or_Correlate(x, y))), 
-    
+    ForAll([x, y], Implies(Cause(x, y), Has_Specified_Edge(x, y))),
+    # ForAll([x, y], Implies(IsPredictor(x), Not_Specified_Edge(x, y))),
+    ForAll([x, y], Implies(Correlate(x, y), Has_Specified_Edge(x, y))),
+    ForAll([x], Implies(Not_Specified_Edge(x, y), Not(Has_Specified_Edge(x, y)))),
+    ForAll([x, y], Implies(And(IsPredictor(x), IsPredicted(y)), Has_Specified_Edge(x, y))), # Ensure that all predictors have an edge associated with them    
+    ForAll([x, y], Implies(And(IsPredictor(x), IsPredicted(y)), Not_Specified_Edge(x, y))), # Ensure that all predictors have an edge associated with them    
+]
     # Interactions TODO: Come back to more complicated interactions!
     # TODO: May want to support more than 2-way interactions by making x0, x1 a SeqSort() that is a subset of ivs
     # ForAll([xs_sub, xs, y], Implies(Interaction(xs_sub, y), Contains(xs, xs_sub))),
@@ -51,7 +61,7 @@ conceptual_graph_rules = [
 
     # ForAll([x0, x1, xs, y], Implies(Interaction(x0, x1, y), Contains(xs, Unit(x1)))),
     # ForAll([x, xs_sub, y], Implies(Interaction(xs_sub, y), (Cause_or_Correlate(x0, y), Cause_or_Correlate(x1, y))),
-]
+
 
 ##### DATA SCHEMA / TYPES #####
 # Declare functions for properties pertaining to data schema/types

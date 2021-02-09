@@ -17,9 +17,40 @@ tutoring = Const('tutoring', Object)
 
 # Create sequence of IVs -- should be only Main effects?
 ivs = Concat(Unit(tutoring), Unit(intelligence))
+# Sequence of tuples
+interactions = Concat(Unit(tutoring), Unit(intelligence))
 
 # TODO: Create sequence of Interaction effects 
 ixn = Concat(Unit(intelligence), Unit(tutoring))
+
+
+rules = [
+    ForAll([x], Implies(Contains(ivs, Unit(x)), Xor(Cause(x, sat_score), Correlate(x, sat_score)))),
+    ForAll([xs], Implies(Contains(interactions, Unit(xs)), Xor(Cause(x, sat_score), Correlate(x, sat_score)))),
+    
+]
+
+facts = [
+    Models(sat_score, ivs), 
+    IsDependent(sat_score),
+    MainEffect(tutoring),
+    MainEffect(intelligence),
+    Cause(tutoring, sat_score), # Add both for each main effect and require end-user to pick one
+    Correlate(tutoring, sat_score),
+    Interaction(tutoring, intelligence),
+    Cause(tutoring, intelligence), # Add both for each interaction effect and require end-user to pick one
+    Correlate(tutoring, intelligence),
+
+]
+
+# At end of facts disambiguation, will have a complete set of facts for conceptual graph
+# TODO: If add more facts about additional relationships (e.g., that might suggest interaction), what do we do? -- this is something we would have to take care of in sys architecture?
+
+s.add(rules)
+s.check(And(facts))
+
+
+import pdb; pdb.set_trace()
 
 ##### MODEL EXPLANATION #####
 # Add rules
@@ -38,8 +69,8 @@ s.add(And(conceptual_graph_rules))
 
 # Add facts (implied/asserted by user)
 facts_conceptual_graph = [
-    Cause(tutoring, sat_score), 
-    Correlate(intelligence, sat_score),
+    # Cause(tutoring, sat_score), 
+    # Correlate(intelligence, sat_score),
     # Interaction(ixn, sat_score),
 ]
 verify_update_constraints(solver=s, assertions=facts_conceptual_graph)
@@ -52,9 +83,9 @@ s.add(data_schema_rules)
 # Add facts (implied/asserted by user)
 # TODO: by default, have to make sure that all the variables involved have a datatype if declared, otherwise, Unknown
 facts_data_schema = [
-    Numeric(sat_score), 
-    Numeric(intelligence), 
-    Binary(tutoring)
+    # Numeric(sat_score), 
+    # Numeric(intelligence), 
+    # Binary(tutoring)
 ]
 verify_update_constraints(solver=s, assertions=facts_data_schema)
 s.push()

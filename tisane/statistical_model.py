@@ -89,7 +89,7 @@ class StatisticalModel(object):
                 ivs_seq = Concat(Unit(iv_obj), ivs_seq)
     
         # Add variable facts
-        # facts['variables'] = var_facts
+        facts['variables'] = var_facts # may want this
 
         # Add model fact
         facts['model_explanation'] = [Models(dv_obj, ivs_seq)]

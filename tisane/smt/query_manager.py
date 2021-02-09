@@ -1,6 +1,6 @@
 from tisane.statistical_model import StatisticalModel
 from tisane.smt.declare_constraints import *
-from tisane.smt.helpers import *
+from tisane.smt.helpers import variables, get_facts_as_list
 
 from typing import Dict, Any, Union
 
@@ -49,15 +49,20 @@ class QueryManager(object):
         for batch_name, rules in rules.items(): 
             print(f'Adding {batch_name} rules.')
             # Add rules
-            s.add(And(rules))
+            s.add(rules)
+            # import pdb; pdb.set_trace()
 
             # Add facts (implied/asserted by user)
             all_facts = get_facts_as_list(facts)
-            self.verify_update_constraints(solver=s, assertions=all_facts)
-            s.push()
+            # all_facts.append(Cause(age, sat_score))
+            # all_facts.append(Correlate(intelligence, age))
+            self.verify_update_constraints(solver=s, facts=all_facts)
+            # import pdb; pdb.set_trace()
+            # s.push()
         
+        import pdb; pdb.set_trace()
         mdl =  s.model()
-        # import pdb; pdb.set_trace()
+        
         print(s.model()) # assumes s.check() is SAT
         return mdl # TODO: Change this!
 
@@ -100,27 +105,27 @@ class QueryManager(object):
         # return current_constraints + keep
         return keep
 
-    def verify_update_constraints(self, solver: Solver, assertions: list): 
-        state = solver.check(assertions)
+    def verify_update_constraints(self, solver: Solver, facts: list): 
+        state = solver.check(facts)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
             import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
-            solver.push() # save state before add @param assertions
+            # solver.push() # save state before add @param facts
 
             # Ask user for input
             keep_constraint = self.elicit_user_input(solver.assertions(), unsat_core)
-            # Modifies @param assertions
-            updated_assertions = self.update_clauses(assertions, unsat_core, keep_constraint)
-            assertions = updated_assertions
+            # Modifies @param facts
+            updated_facts = self.update_clauses(facts, unsat_core, keep_constraint)
+            facts = updated_facts
         elif (state == sat): 
             pass
         else: 
             raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
 
-        # Double check that the new_assertions do not cause UNSAT
-        solver.add(assertions)
+        # Double check that the new_facts do not cause UNSAT
+        solver.add(facts)
         assert(solver.check() == sat)
 
 
