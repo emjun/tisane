@@ -7,7 +7,7 @@ class QueryTest(unittest.TestCase):
 
     def test(self): 
         print('hi')
-    # START HERE!
+
     def test_statistical_model_to_variable_relationship_graph_main_effects_only(self): 
         # Could have a formula-based interface that parses to this object
         # E.g.: 
@@ -28,18 +28,18 @@ class QueryTest(unittest.TestCase):
         # represented in 1 variable, which is not what is happening
         # mathematically, could change this? 
 
-    # def test_statistical_model_to_variable_relationship_graph_main_effects_interaction(self): 
+    def test_statistical_model_to_variable_relationship_graph_main_effects_interaction(self): 
         
-    #     stat_mod = ts.StatisticalModel( dv='SAT', 
-    #                                 main_effects=['Intelligence', 'Age'], 
-    #                                 interaction_effects=[('Intelligence', 'Age')], 
-    #                                 mixed_effects=[], 
-    #                                 link='identity', 
-    #                                 variance='Gaussian') 
+        sm = ts.StatisticalModel( dv='SAT_Score', 
+                                    main_effects=['Intelligence', 'Age'], 
+                                    interaction_effects=[('Intelligence', 'Age')], 
+                                    mixed_effects=[], 
+                                    link='identity', 
+                                    variance='Gaussian') 
         
-    #     ts.query(input_obj=stat_mod, outcome='variable relationship graph')
+        sm.query(outcome='variable relationship graph')
     
-    # Main effects only 
+
     # def test_statistical_model_to_data_schema(self): 
     #     stat_mod = ts.StatisticalModel( dv='SAT', 
     #                                 main_effects=['Intelligence', 'Age'], 

@@ -113,7 +113,7 @@ class StatisticalModel(object):
                     # find the Z3 const that represents this variable
                     ixn_v_const = None
                     # import pdb; pdb.set_trace()
-                    for v_const in facts['main_effects']:
+                    for v_const in var_consts:
                         if v.name == str(v_const): 
                             ixn_v_const = v_const
                             break
@@ -180,18 +180,40 @@ class StatisticalModel(object):
         if desired_outcome == 'STATISTICAL MODEL': 
             raise NotImplementedError
         elif desired_outcome == 'VARIABLE RELATIONSHIP GRAPH': 
-                all_vars = self.consts['variables']
-                dv_const = self.consts['dv']
-                main_effects = self.consts['main_effects']
-                interactions = self.consts['interactions']
+            all_vars = self.consts['variables']
+            dv_const = self.consts['dv']
+            main_effects = self.consts['main_effects']
+            interactions = self.consts['interactions']
 
-                for v in all_vars: 
-                    # Is the variable a main effect?
-                    if is_true(BoolVal(Contains(main_effects, Unit(v)))):
-                        if v is not dv_const: 
-                            facts.append(Cause(v, dv_const))
-                            facts.append(Correlate(v, dv_const))
-                    # TODO: check about interactions
+            for v in all_vars: 
+                # Is the variable a main effect?
+                if is_true(BoolVal(Contains(main_effects, Unit(v)))):
+                    if v is not dv_const: 
+                        facts.append(Cause(v, dv_const))
+                        facts.append(Correlate(v, dv_const))
+                    # Is the variable involved in an interaction?
+                    # for i in interactions: 
+                    #     if is_true(BoolVal(IsMember(v, i))): 
+
+            if self.interaction_effects: 
+                # TODO: Generalize this to more than 2 vars involved in an interaction
+                for v0, v1 in self.interaction_effects: 
+                    v0_const = None 
+                    v1_const = None 
+                    for v in all_vars: 
+                        if v0.name == str(v): 
+                            v0_const = v
+                        if v1.name == str(v): 
+                            v1_const = v
+                    # if v0_const and v1_const: 
+                    #     assert(is_true(BoolVal(IsMember(v0, ))))
+                    
+                    # Have found both variables involved in the interaction
+                    assert(v0_const is not None)
+                    assert(v1_const is not None)
+                    facts.append(Cause(v0_const, v1_const))
+                    facts.append(Correlate(v0_const, v1_const))
+
         elif desired_outcome == 'DATA SCHEMA': 
             pass
         elif desired_outcome == 'DATA COLLECTION PROCEDURE': 
