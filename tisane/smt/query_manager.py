@@ -112,6 +112,8 @@ class QueryManager(object):
             import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
+            # TODO: START HERE: May want to push and pop
+            # Check smaller example where Identity and LogLog issue resolved...
             # solver.push() # save state before add @param facts
 
             # Ask user for input

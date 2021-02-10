@@ -26,6 +26,8 @@ def update_clauses(pushed_constraints: list, unsat_core: list, keep_clause: list
         for pc in pushed_constraints: 
             # Should we remove this constraint?
             if (pc in unsat_core) and (pc not in keep_clause): 
+                # Add the negation to help solver down the line 
+                # updated_constraints.append(Not(pc))
                 pass
             else: 
                 updated_constraints.append(pc)
@@ -54,16 +56,19 @@ def elicit_user_input(current_constraints: list, unsat_core: list):
         return keep
 
 def check_update_constraints(solver: Solver, assertions: list): 
+        # updated_assertions = None
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
-            # import pdb; pdb.set_trace()
+            import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
-            solver.push() # save state before add @param assertions
+
+            # solver.push() # save state before add @param assertions
 
             # Ask user for input
             keep_constraint = elicit_user_input(solver.assertions(), unsat_core)
+            import pdb;pdb.set_trace()
             # Modifies @param assertions
             updated_assertions = update_clauses(assertions, unsat_core, keep_constraint)
             assertions = updated_assertions
@@ -73,10 +78,13 @@ def check_update_constraints(solver: Solver, assertions: list):
             raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
 
         # Double check that the new_assertions do not cause UNSAT
-        new_state = solver.check(assertions)
+        new_state = solver.check(updated_assertions)
+        import pdb; pdb.set_trace()
         if new_state == sat: 
+            # return (solver, assertions)
             return solver
         elif new_state == unsat: 
+            import pdb; pdb.set_trace()
             return check_update_constraints(solver=solver, assertions=assertions)
         else: 
             raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")

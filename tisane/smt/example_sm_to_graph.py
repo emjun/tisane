@@ -83,8 +83,11 @@ facts = [
 # Query for variable relationship graph
 # Query for data schema
 
+# import pdb; pdb.set_trace()
 s.add(rules)
+# import pdb; pdb.set_trace()
 s = check_update_constraints(solver=s, assertions=facts)
+import pdb; pdb.set_trace()
 
 # Output 
 # Create Variable Relationship Graph
