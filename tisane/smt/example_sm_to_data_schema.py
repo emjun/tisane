@@ -56,7 +56,6 @@ Numeric = Function('Numeric', Object, BoolSort())
 data_type_rules = [
     ForAll([x], Xor(Categorical(x), Numeric(x))), 
     ForAll([x], Implies(Categorical(x), Xor(Ordinal(x), Nominal(x)))),
-    ForAll([x], Or(Ordinal(x), Nominal(x))),
     ForAll([x], Implies(Categorical(x), Xor(Binary(x), Multinomial(x)))),
     ForAll([x], Implies(Binary(x), Categorical(x))),
     ForAll([x], Implies(Multinomial(x), Categorical(x))),
@@ -77,9 +76,9 @@ Logit = Function('Logit', Object, BoolSort())
 # Declare constraints pertaining to link functions of GLMs
 # data transformation rules
 data_transformation_rules = [
-
-    ForAll([x], Implies(Identity(x), Numeric(x))),
-    # ForAll([x], Implies(Log(x), Numeric(x))), 
+    # ForAll([x], Xor(Categorical(x), Numeric(x))), 
+    # ForAll([x], Implies(Identity(x), Numeric(x))),
+    ForAll([x], Implies(Log(x), Numeric(x))), 
     # ForAll([x], Implies(Sqrt(x), Numeric(x))), 
     ForAll([x], Implies(LogLog(x), Categorical(x))),
     # ForAll([x], Implies(LogLog(x), Categorical(x))),
@@ -128,8 +127,10 @@ data_type_facts = [
 
 link_facts = [
     Dependent(sat_score),
-    Identity(sat_score),
-    LogLog(sat_score)
+    # Identity(sat_score),
+    Log(sat_score),
+    LogLog(sat_score),
+    
 ]
 
 variance_facts = [
@@ -139,19 +140,20 @@ variance_facts = [
 
 # TODO: Might have to stage facts about Categorical vs. Numeric --> If categorical, nominal vs. ordinal && Binary or Multinomial
 # all_facts = model_facts + graph_facts + data_type_facts + link_facts + variance_facts
-all_facts = model_facts + link_facts
+# all_facts = model_facts + link_facts
+all_facts = link_facts
 # import pdb; pdb.set_trace()
-s.add(graph_rules)
+# s.add(graph_rules)
 # import pdb; pdb.set_trace()
 s.add(data_type_rules)
 # import pdb; pdb.set_trace()
 s.add(data_transformation_rules)
 # import pdb; pdb.set_trace()
-s.add(variance_functions_rules)
+# s.add(variance_functions_rules)
 # import pdb; pdb.set_trace()
 s = check_update_constraints(solver=s, assertions=all_facts)
 # TODO: There are facts that are repeatedly added. 
-# import pdb; pdb.set_trace()
+import pdb; pdb.set_trace()
 
 # At end of facts disambiguation, will have a complete set of facts for conceptual graph
 # TODO: If add more facts about additional relationships (e.g., that might suggest interaction), what do we do? -- this is something we would have to take care of in sys architecture?

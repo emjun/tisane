@@ -78,7 +78,7 @@ def check_update_constraints(solver: Solver, assertions: list):
             raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
 
         # Double check that the new_assertions do not cause UNSAT
-        new_state = solver.check(updated_assertions)
+        new_state = solver.check(assertions)
         import pdb; pdb.set_trace()
         if new_state == sat: 
             # return (solver, assertions)
