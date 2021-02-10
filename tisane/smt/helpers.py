@@ -27,8 +27,8 @@ def update_clauses(pushed_constraints: list, unsat_core: list, keep_clause: list
             # Should we remove this constraint?
             if (pc in unsat_core) and (pc not in keep_clause): 
                 # Add the negation to help solver down the line 
-                # updated_constraints.append(Not(pc))
-                pass
+                updated_constraints.append(Not(pc))
+                # pass
             else: 
                 updated_constraints.append(pc)
         # import pdb; pdb.set_trace()

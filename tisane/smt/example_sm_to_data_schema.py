@@ -127,27 +127,25 @@ data_type_facts = [
 link_facts = [
     Dependent(sat_score),
     Identity(sat_score),
-    LogLog(sat_score),
-    
+    # LogLog(sat_score), 
 ]
 
 variance_facts = [
     Gaussian(sat_score),
-    Binomial(sat_score)
+    # Binomial(sat_score)
 ]
 
 # TODO: Might have to stage facts about Categorical vs. Numeric --> If categorical, nominal vs. ordinal && Binary or Multinomial
 # all_facts = model_facts + graph_facts + data_type_facts + link_facts + variance_facts
-# all_facts = model_facts + link_facts
-all_facts = link_facts
+all_facts = model_facts + graph_facts + link_facts + variance_facts
 # import pdb; pdb.set_trace()
-# s.add(graph_rules)
+s.add(graph_rules)
 # import pdb; pdb.set_trace()
 s.add(data_type_rules)
 # import pdb; pdb.set_trace()
 s.add(data_transformation_rules)
 # import pdb; pdb.set_trace()
-# s.add(variance_functions_rules)
+s.add(variance_functions_rules)
 # import pdb; pdb.set_trace()
 s = check_update_constraints(solver=s, assertions=all_facts)
 # TODO: There are facts that are repeatedly added. 

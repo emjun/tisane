@@ -380,4 +380,6 @@ class Tisane(object):
     
 ##### Functions that are not associated with a class/object
 def query(input_obj: Union[StatisticalModel], outcome: str): 
+    
     QM.query(input_obj=input_obj, outcome=outcome)
+    

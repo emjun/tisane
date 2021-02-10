@@ -46,10 +46,7 @@ facts = [
 
 # At end of facts disambiguation, will have a complete set of facts for conceptual graph
 # TODO: If add more facts about additional relationships (e.g., that might suggest interaction), what do we do? -- this is something we would have to take care of in sys architecture?
-# TODO: START HERE: Read advanced webpage (incremental)
-# Create separate sample programs for different queries and then figure out how to generate dynamically/connect up with rest of Tisane
-# Query for variable relationship graph
-# Query for data schema
+# Connect to rest of Tisane
 
 s.add(rules)
 s.check(And(facts))
