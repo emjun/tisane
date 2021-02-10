@@ -76,14 +76,13 @@ Logit = Function('Logit', Object, BoolSort())
 # Declare constraints pertaining to link functions of GLMs
 # data transformation rules
 data_transformation_rules = [
-    # ForAll([x], Xor(Categorical(x), Numeric(x))), 
-    # ForAll([x], Implies(Identity(x), Numeric(x))),
+    ForAll([x], Implies(Identity(x), Numeric(x))),
     ForAll([x], Implies(Log(x), Numeric(x))), 
-    # ForAll([x], Implies(Sqrt(x), Numeric(x))), 
+    ForAll([x], Implies(Sqrt(x), Numeric(x))), 
     ForAll([x], Implies(LogLog(x), Categorical(x))),
-    # ForAll([x], Implies(LogLog(x), Categorical(x))),
-    # ForAll([x], Implies(Probit(x), Categorical(x))), 
-    # ForAll([x], Implies(Logit(x), Categorical(x)))
+    ForAll([x], Implies(LogLog(x), Categorical(x))),
+    ForAll([x], Implies(Probit(x), Categorical(x))), 
+    ForAll([x], Implies(Logit(x), Categorical(x)))
 ]
 
 ##### VARIANCE FUNCTIONS #####
@@ -127,8 +126,7 @@ data_type_facts = [
 
 link_facts = [
     Dependent(sat_score),
-    # Identity(sat_score),
-    Log(sat_score),
+    Identity(sat_score),
     LogLog(sat_score),
     
 ]
