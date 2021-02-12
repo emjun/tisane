@@ -38,6 +38,39 @@ class QueryTest(unittest.TestCase):
                                     variance='Gaussian') 
         
         sm.query(outcome='variable relationship graph')
+
+    def test_idea(self): 
+        # Assumes people know data schema when thinking about variables
+        student_id = Numeric('pid')
+        classroom = Numeric('class')
+        age = Numeric('age')
+        sat_score = Numeric('score')
+        tutoring = Binary('tutoring') # Categorical('tutoring')
+
+        # Create graph
+        correlate(age, sat_score)
+        cause(tutoring, sat_score)
+
+        design = Design(ivs=[age, tutoring], dv=sat_score)
+        design.nest(student_id, classroom)
+        design.assign(tutoring, student_id)
+
+        sm = StatisticalModel( dv=sat_score, 
+                                    main_effects=[age, tutoring], 
+                                    interaction_effects=[(age, tutoring)], 
+                                    mixed_effects=[])
+                                    # link='identity', 
+                                    # variance='Gaussian') 
+        
+        sm_unknown = StatisticalModel( dv=sat_score, 
+                                        main_effects=[unknown(age), unknown(tutoring)],
+                                        interaction_effects=[unknown(age, tutoring, ...)]) # unknown construct helpful when analysts have most of an idea but don't know others (partial spec)
+
+        sm = ts.infer_from(design, StatisticalModel())
+        graph = ts.infer_from(design, Graph())
+
+        res = ts.verify(design, sm)
+
     
 
     # def test_statistical_model_to_data_schema(self): 

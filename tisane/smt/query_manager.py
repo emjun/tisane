@@ -9,25 +9,7 @@ from typing import List, Union, Dict
 
 class QueryManager(object): 
     # QueryManager should be state-less? 
-    
-    # # TODO: Multiple queries should be handled outside? maybe outcome as a list? 
-    # def query(self, input_obj: Union[StatisticalModel], outcome: str): 
 
-    #     # Set up 
-    #     # Get and use Z3 consts created for the input_obj
-    #     dv_const = input_obj.consts['dv']
-    #     main_effects = input_obj.consts['main_effects']
-    #     interactions = input_obj.consts['interactions']
-    #     self.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
-
-    #     # Collect rules and facts
-    #     rules = self.collect_rules(outcome=outcome) # dict
-    #     facts = self.collect_facts(input_obj=input_obj, outcome=outcome, z3_consts=z3_consts)
-    #     result = self.solve(facts=facts, rules=rules, setting=None)        
-        
-    #     # TODO: cast the result to a specific object? 
-
-    #     return result
     
     def query(self, outcome: str, facts: List): 
         rules = self.collect_rules(outcome=outcome) # dict
@@ -156,6 +138,26 @@ class QueryManager(object):
             return self.check_update_constraints(solver=solver, assertions=assertions)
         else: 
             raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
+
+
+    # # TODO: Multiple queries should be handled outside? maybe outcome as a list? 
+    # def query(self, input_obj: Union[StatisticalModel], outcome: str): 
+
+    #     # Set up 
+    #     # Get and use Z3 consts created for the input_obj
+    #     dv_const = input_obj.consts['dv']
+    #     main_effects = input_obj.consts['main_effects']
+    #     interactions = input_obj.consts['interactions']
+    #     self.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
+
+    #     # Collect rules and facts
+    #     rules = self.collect_rules(outcome=outcome) # dict
+    #     facts = self.collect_facts(input_obj=input_obj, outcome=outcome, z3_consts=z3_consts)
+    #     result = self.solve(facts=facts, rules=rules, setting=None)        
+        
+    #     # TODO: cast the result to a specific object? 
+
+    #     return result
 
 class Query(object): 
     rules : list # rules to consider
