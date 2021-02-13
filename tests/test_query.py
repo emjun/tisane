@@ -56,7 +56,7 @@ class QueryTest(unittest.TestCase):
 
         design = Design(ivs=[age, tutoring], dv=sat_score)
         design.nest(student_id, classroom)
-        design.assign(tutoring, student_id)
+        design.assign(student_id, tutoring)
 
         # Need to update graph with design info
         # design.nest(student_id, classroom, gr)
@@ -82,18 +82,22 @@ class QueryTest(unittest.TestCase):
 
 
     def test_design_to_sm(self): 
-        design = Design(ivs=[age, tutoring], dv=sat_score)
+        design = Design(ivs=[age, tutoring], dv=sat_score, unit=student_id)
         design.nest(student_id, classroom) # -> nest(student_id, classroom, design)
-        design.assign(tutoring, student_id)
+        design.assign(student_id, tutoring)
 
         (gr, sm) = ts.infer_from(design, StatisticalModel())
+
+        # TODO: START HERE: How are other experimental design libraries
+        # structured? What primitives do they have? 
+        # TODO: Create Google Doc of my "findings"
 
     def test_design_to_graph(self): 
         design = Design(ivs=[age, tutoring], dv=sat_score, unit=student_id) # unit of obs, what rows correspond to, id?
         # Even if these IVs are not specified when creating Design object, they
         # are added when declared in this way.
         design.nest(student_id, classroom)
-        design.assign(tutoring, student_id)
+        design.assign(student_id, tutoring)
         # TODO: Should we somehow represent student_id has-a age?  (implied by unit=student_id?)
         # design.assign(age, student_id) # seems kinda weird to "assign"
 

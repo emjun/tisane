@@ -2,6 +2,11 @@ from tisane.variable import AbstractVariable
 
 import networkx as nx
 
+"""
+Class for expressing how variables (i.e., proxies) relate to one another at a
+conceptual level: cause, correlate, unknown.
+"""
+
 class Graph(object): 
     _graph : nx.MultiDiGraph
     
@@ -66,7 +71,3 @@ class Graph(object):
     # TODO: Could rename to unspecify or something like that
     def unknown(lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='unknown')
-
-
-
-    
