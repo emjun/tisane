@@ -382,4 +382,32 @@ class Tisane(object):
 def query(input_obj: Union[StatisticalModel], outcome: str): 
     
     QM.query(input_obj=input_obj, outcome=outcome)
+
+def infer_from(input_: Union[Design], output_: Union[StatisticalModel]): 
+    
+    if isinstance(input_, Design): 
+        if isinstance(output_, StatisticalModel): 
+            gr = input_.get_graph_ir()
+            sm = query(gr, outcome: StatisticalModel)
+            return sm 
+        elif isinstance(output_, Graph): 
+            gr = input_.get_graph_ir()
+            updated_gr = query(gr, outcome: Graph)
+    elif isinstance(input_, StatisticalModel): 
+        if isinstance(output_, Design): 
+            gr = input_.get_graph_ir()
+            design = query(gr, outcome: Design)
+        elif isinstance(output_, Graph): 
+            gr = input_.get_graph_ir()
+            updated_gr = query(gr, outcome: Graph)
+    elif isinstance(input_, Graph): 
+        if isinstance(output_, Design): 
+            design = query(gr, outcome: Design)
+            # What would the above query look like in terms of logical formula?
+        elif isinstance(output_, StatisticalModel): 
+            sm = query(gr, outcome: StatisticalModel)
+    
+
+
+
     

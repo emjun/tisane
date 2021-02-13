@@ -30,6 +30,7 @@ class StatisticalModel(object):
 
     consts: dict # Z3 consts representing the model and its DV, main_effects, etc. 
 
+    graph : Graph # IR
 
     """ temp override
     @abstractmethod

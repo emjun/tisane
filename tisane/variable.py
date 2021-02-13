@@ -101,8 +101,9 @@ class AbstractVariable(object):
     def get_assertions(self) -> dict: 
         return self.properties
 
-class NominalVariable(AbstractVariable): 
+class Nominal(AbstractVariable): 
     # categories = list
+    cardinality: int
     
     def __init__(self, data=None, **kwargs): 
         # self.categories = cat_list
@@ -113,6 +114,7 @@ class NominalVariable(AbstractVariable):
         # for time being until incorporate DataVector class and methods
         if 'categories' in kwargs.keys(): 
             num_categories = len(kwargs['categories'])
+            assert(int(kwargs['cardinality']) == len(kwargs['categories'])
             if num_categories == 1: 
                 self.assert_property(prop="cardinality", val="unary")
             elif num_categories == 2: 
@@ -120,6 +122,9 @@ class NominalVariable(AbstractVariable):
             else: 
                 assert(num_categories > 2)
                 self.assert_property(prop="cardinality", val="multi")
+            self.cardinality = num_categories
+        
+        self.cardinality = kwargs['cardinality']
 
         # has data
         if self.data: 
@@ -161,7 +166,7 @@ class OrdinalVariable(AbstractVariable):
         return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
 
 
-class NumericVariable(AbstractVariable): 
+class Numeric(AbstractVariable): 
     
     def __init__(self, data=None, **kwargs): 
         self.data = data
@@ -171,3 +176,5 @@ class NumericVariable(AbstractVariable):
     #     return f"NumericVariable: data:{self.data}"
     def __str__(self): 
         return f"NumericVariable: data:{self.data}"
+
+
