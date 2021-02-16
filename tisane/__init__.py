@@ -4,12 +4,20 @@ from tisane.main import (
                             
 )
 
-# TODO: May want to replace this so that only ever interact with Tisane object, not Concepts, too
-from tisane.concept import (
-                                Concept
+from tisane.variable import (
+                                Nominal, 
+                                Ordinal,
+                                Numeric
 )
 
 from tisane.statistical_model import (
-                                        StatisticalModel,
-                                    
+                                        StatisticalModel,                                    
+)
+
+from tisane.design import (
+                                        Design,                                    
+)
+
+from tisane.graph import (
+                                        Graph,                                    
 )

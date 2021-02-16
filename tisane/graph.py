@@ -1,6 +1,7 @@
 from tisane.variable import AbstractVariable
 
 import networkx as nx
+import pydot
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -20,6 +21,33 @@ class Graph(object):
         nodes = [n for n in self._graph.nodes()]
         edges = [e for e in self._graph.edges()]
         return f"Nodes: {str(nodes)} has {len(nodes)} concepts. Edges: {str(edges)} has {len(edges)} relationships."
+    
+    # @returns pydot object (representing DOT graph)representing conceptual graph info
+    # Iterates through internal graph object and constructs vis
+    def get_graph_vis(self): 
+        graph = pydot.Dot('graph_vis', graph_type='digraph')
+
+        edges = list(self._graph.edges(data=True)) # get list of edges
+
+        for (n0, n1, edge_data) in edges:         
+            edge_type = edge_data['edge_type']
+            if edge_type == 'cause': 
+                graph.add_edge(pydot.Edge(n0, n1, style='bold', color='black'))
+            elif edge_type == 'correlate': 
+                graph.add_edge(pydot.Edge(n0, n1, style='dotted', color='black'))
+                graph.add_edge(pydot.Edge(n1, n0, style='dotted', color='black'))
+            elif edge_type == 'unknown': 
+                graph.add_edge(pydot.Edge(n0, n1, style='dotted', color='red'))
+            else: 
+                pass
+                # raise ValueError (f"Unsupported edge type: {edge_type}")
+
+        return graph
+    
+    def visualize_graph(self): 
+        graph = self.get_graph_vis()
+
+        graph.write_png('graph_vis.png')
 
     # Variables have unique names and are indexed by their names.
     def _add_variable(self, variable: AbstractVariable):  
@@ -33,7 +61,7 @@ class Graph(object):
     
     # @returns handle to Node that represents the @param variable 
     # @returns None if @param variable is not found in the graph 
-    def _get_variable_node(self, variable: Variable): 
+    def _get_variable_node(self, variable: AbstractVariable): 
         for n in self._graph.nodes('variable'): 
             if n[0] == variable.name:
                 return n
@@ -60,7 +88,7 @@ class Graph(object):
         # Add edges between variable names, use the variable names later to look
         # up the actual variable objects 
         # Add edge using NetworkGraph's API
-        self._graph._add_edge(start_node[0], end_node[0], edge_type=edge_type)
+        self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
 
     def correlate(lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='correlate')
@@ -69,5 +97,5 @@ class Graph(object):
         self._add_edge(start=lhs, end=rhs, edge_type='cause')
     
     # TODO: Could rename to unspecify or something like that
-    def unknown(lhs: AbstractVariable, rhs: AbstractVariable): 
+    def unknown(self, lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='unknown')

@@ -5,6 +5,7 @@ from tisane.statistical_model import StatisticalModel
 from tisane.asp.knowledge_base import KB, KnowledgeBase
 from tisane.smt.query_manager import QM
 from tisane.smt.results import AllStatisticalResults
+from tisane.design import Design
 
 from enum import Enum 
 from typing import List, Union
@@ -388,24 +389,24 @@ def infer_from(input_: Union[Design], output_: Union[StatisticalModel]):
     if isinstance(input_, Design): 
         if isinstance(output_, StatisticalModel): 
             gr = input_.get_graph_ir()
-            sm = query(gr, outcome: StatisticalModel)
+            sm = query(gr, StatisticalModel)
             return sm 
         elif isinstance(output_, Graph): 
             gr = input_.get_graph_ir()
-            updated_gr = query(gr, outcome: Graph)
+            updated_gr = query(gr, Graph())
     elif isinstance(input_, StatisticalModel): 
         if isinstance(output_, Design): 
             gr = input_.get_graph_ir()
-            design = query(gr, outcome: Design)
+            design = query(gr, Design())
         elif isinstance(output_, Graph): 
             gr = input_.get_graph_ir()
-            updated_gr = query(gr, outcome: Graph)
+            updated_gr = query(gr, Graph())
     elif isinstance(input_, Graph): 
         if isinstance(output_, Design): 
-            design = query(gr, outcome: Design)
+            design = query(gr, Design())
             # What would the above query look like in terms of logical formula?
         elif isinstance(output_, StatisticalModel): 
-            sm = query(gr, outcome: StatisticalModel)
+            sm = query(gr, StatisticalModel)
     
 
 

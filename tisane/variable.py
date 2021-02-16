@@ -105,8 +105,9 @@ class Nominal(AbstractVariable):
     # categories = list
     cardinality: int
     
-    def __init__(self, data=None, **kwargs): 
+    def __init__(self, name: str, data=None, **kwargs): 
         # self.categories = cat_list
+        super(Nominal, self).__init__(name)
         self.data = data
         self.properties = dict()
         self.assert_property(prop="dtype", val="nominal")
@@ -114,7 +115,7 @@ class Nominal(AbstractVariable):
         # for time being until incorporate DataVector class and methods
         if 'categories' in kwargs.keys(): 
             num_categories = len(kwargs['categories'])
-            assert(int(kwargs['cardinality']) == len(kwargs['categories'])
+            assert(int(kwargs['cardinality']) == len(kwargs['categories']))
             if num_categories == 1: 
                 self.assert_property(prop="cardinality", val="unary")
             elif num_categories == 2: 
@@ -127,7 +128,7 @@ class Nominal(AbstractVariable):
         self.cardinality = kwargs['cardinality']
 
         # has data
-        if self.data: 
+        if self.data is not None: 
             num_categories = len(self.data.get_categories())
             if num_categories == 1: 
                 self.assert_property(prop="cardinality", val="unary")
@@ -141,11 +142,12 @@ class Nominal(AbstractVariable):
     def __str__(self): 
         return f"NominalVariable: data:{self.data}"
 
-class OrdinalVariable(AbstractVariable): 
+class Ordinal(AbstractVariable): 
     # categories = list
     ordered_cat = list
     
-    def __init__(self, order: list=None, data=None, **kwargs): 
+    def __init__(self, name: str, order: list=None, data=None, **kwargs): 
+        super(Ordinal, self).__init__(name)
         # self.categories = cat_list
         self.ordered_cat = order
         self.data = data
@@ -168,7 +170,8 @@ class OrdinalVariable(AbstractVariable):
 
 class Numeric(AbstractVariable): 
     
-    def __init__(self, data=None, **kwargs): 
+    def __init__(self, name: str, data=None, **kwargs): 
+        super(Numeric, self).__init__(name)
         self.data = data
         self.properties = dict()
         self.assert_property(prop="dtype", val="numeric")
@@ -177,4 +180,8 @@ class Numeric(AbstractVariable):
     def __str__(self): 
         return f"NumericVariable: data:{self.data}"
 
+# Wrapper around AbstractVariable class
+class Variable(AbstractVariable): 
+    def __init__(self, name: str): 
+        super(Variable, self).__init__(name)
 
