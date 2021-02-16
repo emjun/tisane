@@ -15,6 +15,7 @@ scipy = "*"
 more-itertools = "*"
 clingo = "*"
 clyngor = "*"
+pydot = "*"
 
 [requires]
 python_version = "3.7"
