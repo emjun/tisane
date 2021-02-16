@@ -20,3 +20,9 @@ DSL and Knowledge Base:
 Important files: 
 tests/sample.py : Sample program. 
 
+# Design Rationale
+Design API
+- Definitions: https://docs.google.com/document/d/16b1u8WUQFcYdcswJJqIjKzV11VLG2p7ozFQkYX51JaI/edit
+- Early prototype feedback: https://gist.github.com/emjun/97acf6666ed6d4d457efa2edf55eee86 
+- Formative, related work: https://docs.google.com/document/d/1LGfZ3_WKsyGOeZecA-w-cFqDslFRYdqlKCyo6fgdexM/edit
+
