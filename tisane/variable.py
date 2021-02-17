@@ -2,6 +2,7 @@ import pandas as pd
 
 from enum import Enum 
 from typing import Any
+from z3 import *
 # class DTYPE(Enum): 
 #     NOMINAL = 1
 #     ORDINAL = 2
@@ -32,15 +33,20 @@ class DataVector(object):
 
     def get_cardinality(self): 
         pass
-     
+
+# Declare data type
+Object = DeclareSort('Object')     
 
 class AbstractVariable(object): 
     name: str 
     data : DataVector
     properties : dict
 
+    const : Object
+
     def __init__(self, name=str): 
         self.name = name
+        self.const = Const(self.name, Object) # Z3 const
 
     @classmethod
     def create(cls, **kwargs):

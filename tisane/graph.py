@@ -10,6 +10,12 @@ conceptual level: cause, correlate, unknown.
 
 class Graph(object): 
     _graph : nx.MultiDiGraph
+
+    @classmethod
+    def cast(**kwargs): 
+        gr = Graph()
+
+        return gr
     
     def __init__(self): 
         self._graph = nx.MultiDiGraph()
@@ -90,10 +96,10 @@ class Graph(object):
         # Add edge using NetworkGraph's API
         self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
 
-    def correlate(lhs: AbstractVariable, rhs: AbstractVariable): 
+    def correlate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='correlate')
 
-    def cause(lhs: AbstractVariable, rhs: AbstractVariable): 
+    def cause(self, lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='cause')
     
     # TODO: Could rename to unspecify or something like that

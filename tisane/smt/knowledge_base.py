@@ -7,14 +7,23 @@ from z3 import *
 class KnowledgeBase(object): 
 
     # Store all logical rules internally for now, may want to modularize in separate objects...
-    def ground_rules(self, dv_const: Const, main_effects: SeqSort, interactions: SeqSort): 
+    def ground_rules(self, dv_const: Const, main_effects: SeqSort, interactions: SeqSort, **kwargs): 
         
         self.graph_rules = [
             ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, dv_const), Correlate(x, dv_const)))),
-            # TODO: ADD RULE FOR CANT INTERACTION X with Y?
         ] 
+        interaction_rules = [
+            # ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Contains(main_effects, Unit(x)))),
+            # ForAll([x0, x1], Implies(Interaction(x0, x1), And(Contains(interactions, Unit(x0)), Contains(interactions, Unit(x1))))),
+            ForAll([x0, x1], Xor(Interaction(x0, x1), NoInteraction(x0, x1))),
+            # TODO: ADD RULE FOR CANT INTERACTION X with Y?
+        ]
+
+        if 'possible_interactions' in kwargs: 
+            if kwargs['possible_interactions']: 
+                self.graph_rules += interaction_rules
         if interactions is not None: 
-            self.graph_rules.append(ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Xor(Cause(x0, x1), Correlate(x0, x1)))))
+                self.graph_rules.append(ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Xor(Cause(x0, x1), Correlate(x0, x1))))),
 
         self.data_type_rules = [
             ForAll([x], Xor(Categorical(x), Numeric(x))), 

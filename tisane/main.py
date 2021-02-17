@@ -1,8 +1,10 @@
 from tisane.concept import Concept
 from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 from tisane.effect_set import EffectSet
+from tisane.graph import Graph
 from tisane.statistical_model import StatisticalModel
 from tisane.asp.knowledge_base import KB, KnowledgeBase
+import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
 from tisane.smt.results import AllStatisticalResults
 from tisane.design import Design
@@ -380,33 +382,44 @@ class Tisane(object):
         kb.assert_property(property=prop)
     
 ##### Functions that are not associated with a class/object
-def query(input_obj: Union[StatisticalModel], outcome: str): 
-    
-    QM.query(input_obj=input_obj, outcome=outcome)
+def query(input_obj: Union[StatisticalModel, Design, Graph], output: str): 
+    output_obj = None
+    if output.upper() =='VARIABLE RELATIONSHIP GRAPH': 
+        output_obj = Graph()
+    # import pdb; pdb.set_trace()
+    assert(output_obj is not None)        
+    output_obj = QM.query(input_obj=input_obj, output_obj=output_obj)
 
-def infer_from(input_: Union[Design], output_: Union[StatisticalModel]): 
+    return output_obj
+
+def infer_from(input_: Union[Design], output_: str): 
     
     if isinstance(input_, Design): 
-        if isinstance(output_, StatisticalModel): 
-            gr = input_.get_graph_ir()
-            sm = query(gr, StatisticalModel)
-            return sm 
-        elif isinstance(output_, Graph): 
-            gr = input_.get_graph_ir()
-            updated_gr = query(gr, Graph())
+        if output_.upper() == "STATISTICAL MODEL": 
+            # gr = input_.get_graph_ir()
+            # sm = query(gr, StatisticalModel)
+            # return sm 
+            pass
+        elif output_.upper() == "VARIABLE RELATIONSHIP GRAPH": 
+            # gr = input_.get_graph_ir()
+            result_gr = query(input_obj=input_, output=output_)
+            return result_gr
+
     elif isinstance(input_, StatisticalModel): 
-        if isinstance(output_, Design): 
-            gr = input_.get_graph_ir()
-            design = query(gr, Design())
-        elif isinstance(output_, Graph): 
-            gr = input_.get_graph_ir()
-            updated_gr = query(gr, Graph())
+        pass
+        # if isinstance(output_, Design): 
+        #     gr = input_.get_graph_ir()
+        #     design = query(gr, Design())
+        # elif isinstance(output_, Graph): 
+        #     gr = input_.get_graph_ir()
+        #     updated_gr = query(gr, Graph())
     elif isinstance(input_, Graph): 
-        if isinstance(output_, Design): 
-            design = query(gr, Design())
-            # What would the above query look like in terms of logical formula?
-        elif isinstance(output_, StatisticalModel): 
-            sm = query(gr, StatisticalModel)
+        pass
+        # if isinstance(output_, Design): 
+        #     design = query(gr, Design())
+        #     # What would the above query look like in terms of logical formula?
+        # elif isinstance(output_, StatisticalModel): 
+        #     sm = query(gr, StatisticalModel)
     
 
 

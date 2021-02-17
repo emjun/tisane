@@ -1,7 +1,11 @@
-# from tisane.statistical_model import StatisticalModel
+from tisane.statistical_model import StatisticalModel
+from tisane.design import Design 
+from tisane.graph import Graph 
+
 from tisane.smt.declare_constraints import *
 # from tisane.smt.helpers import variables, get_facts_as_list
-from tisane.smt.rules import *
+# from tisane.smt.rules import *
+import tisane.smt.rules as rules
 from tisane.smt.knowledge_base import KB
 
 from z3 import *
@@ -11,60 +15,78 @@ class QueryManager(object):
     # QueryManager should be state-less? 
 
     
-    def query(self, outcome: str, facts: List): 
-        rules = self.collect_rules(outcome=outcome) # dict
-        result = self.solve(facts=facts, rules=rules, setting=None)        
+    def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph]):
+        # Compile @param input_obj to logical facts
+        facts = input_obj.compile_to_facts()
+        ambig_facts = input_obj.collect_ambiguous_facts()
+        facts += ambig_facts # Combine all facts
+
+        # Generate consts for grounding KB
+        consts_to_variables = input_obj.generate_consts() 
+        # Ground rules to simplify quantification during constraint solving
+        dv_const = input_obj.dv.const
+        main_effects = input_obj.consts['main_effects']
+        interactions = input_obj.consts['interactions']
+        
+        
+        # If system should consider possible interactions (involves end-user)
+        possible_interactions = False
+        if isinstance(input_obj, Design): 
+            possible_interactions = True
+        KB.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions, possible_interactions=possible_interactions)
+
+        # After grounding KB, collect rules to guide synthesis
+        rules = self.collect_rules(output_obj=output_obj) # dict
+
+        # Incrementally and interactively solve the facts and rules as constraints
+        (model, updated_facts) = self.solve(facts=facts, rules=rules, setting=None)
+
+        result = self.postprocess_query_results(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj, consts_to_variables=consts_to_variables)
 
         return result
     
     # @param outcome describes what the query result should be, can be a list of items, 
     # including: statistical model, variable relationship graph, data schema, data collection procedure
     # @return logical rules to consider during solving process
-    def collect_rules(self, outcome=str) -> Dict: 
+    def collect_rules(self, output_obj: Union[StatisticalModel, Graph, Design]) -> Dict: 
         # Get and manage the constraints that need to be considered from the rest of Knowledge Base     
         rules_to_consider = dict()
 
         # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
-        if outcome.upper() == 'STATISTICAL MODEL': 
+        if isinstance(output_obj, StatisticalModel):
             raise NotImplementedError
 
-        elif outcome.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
+        elif isinstance(output_obj, Graph):
             rules_to_consider['graph_rules'] = KB.graph_rules
 
-        elif outcome.upper() == 'DATA SCHEMA': 
+        elif isinstance(output_obj, Design): 
+            import pdb; pdb.set_trace()
+            # TODO: Should allow separate queries for data schema and data collection?? probably not?
             rules_to_consider['data_type_rules'] = KB.data_type_rules
             rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
             rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
 
-        elif outcome.upper()  == 'DATA COLLECTION PROCEDURE': 
-            raise NotImplementedError
-        
         else: 
-            raise ValueError(f"Query is not supported: {outcome}. Try the following: 'STATISTICAL MODEL', 'VARIABLE RELATIONSHIP GRAPH', 'DATA SCHEMA', 'DATA COLLECTION PROCEDURE'")
+            raise ValueError(f"Query output is not supported: {type(output_obj)}.")
         
         return rules_to_consider
 
     # @param setting is 'interactive' 'default' (which is interactive), etc.?
     def solve(self, facts: List, rules: dict, setting=None): 
+        updated_facts = list()
+
         s = Solver() # Z3 solver
 
         for batch_name, rules in rules.items(): 
             print(f'Adding {batch_name} rules.')
             # Add rules
             s.add(rules)
-            # import pdb; pdb.set_trace()
 
-            # Add facts (implied/asserted by user)
-            # all_facts = get_facts_as_list(facts)
-            
-            self.check_update_constraints(solver=s, assertions=facts)
+            updated_facts = self.check_update_constraints(solver=s, assertions=facts)[1]
         
         
-        import pdb; pdb.set_trace()
         mdl =  s.model()
-        
-        print(s.model()) # assumes s.check() is SAT
-        return mdl 
+        return (mdl, updated_facts)
 
     # @param pushed_constraints are constraints that were added as constraints all at once but then caused a conflict
     # @param unsat_core is the set of cosntraints that caused a conflict
@@ -110,7 +132,7 @@ class QueryManager(object):
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
-            
+            # import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
 
@@ -131,13 +153,125 @@ class QueryManager(object):
         new_state = solver.check(assertions)
         # import pdb; pdb.set_trace()
         if new_state == sat: 
-            # return (solver, assertions)
-            return solver
+            return (solver, assertions) # return the solver and the updated assertions
         elif new_state == unsat: 
-            # import pdb; pdb.set_trace()
             return self.check_update_constraints(solver=solver, assertions=assertions)
         else: 
             raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
+
+    # UPDATE: After trying to implement this: Realize easier to iterate through updated
+    # facts and check that model is true rather than other way around. Have to
+    # check which function instance is true anyway, which is what we have in the
+    # updated facts. 
+    def cast_from_model(self, input_obj: Union[Design], output_obj: Union[Graph], outcome: str, model: z3.ModelRef): 
+        consts = dict()
+        functions = list()
+
+        # Iterate through the declarations in the model
+        for d in model.decls(): 
+
+            if isinstance(input_obj, Design): 
+                input_vars = [v.name for v in input_obj.get_variables()]
+
+                if d.name() in input_vars: 
+                    consts[model.get_interp(d)] = d
+                    # consts.append(d)
+                # Is the it the name of a Function included in rules.py? 
+                elif d.name() in dir(rules):  
+                    functions.append(d)
+                else: 
+                    raise ValueError(f"Do not recognize this: {d.name()}")
+        
+        for f in functions: 
+            if f.name() == 'Cause': 
+                f_interp = model[f] # Get interpretation of f in this model
+                num_entries = f_interp.num_entries()
+                for i in range(num_entries):
+                    (start, end, to_include) = f_interp.entry(i)
+                    import pdb; pdb.set_trace()
+            elif f.name() == 'Correlate': 
+                pass
+            elif f.name() == 'Interaction':
+                pass
+            else: 
+                pass
+    
+
+    # TODO: START HERE: Probably some hybrid of above and below...
+    # I need function name (to give me edge type), variable objects (to update edges to Graph: remove and replace)
+    def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph], **kwargs):
+        
+        def parse_facts(fact: z3.BoolRef) -> List[str]: 
+            fact_dict = dict()
+            tmp = str(fact).split('(')
+            func_name = tmp[0] 
+            fact_dict['function'] = func_name
+            variables = tmp[1].split(')')[0].split(',')
+            fact_dict['start'] = variables[0].strip()
+            fact_dict['end'] = variables[1].strip()
+            
+            return fact_dict
+        
+        def get_model_consts(model: z3.ModelRef, input_obj: Union[Design]): 
+            consts = dict()
+
+            # Iterate through the declarations in the model
+            for d in model.decls(): 
+                if isinstance(input_obj, Design): 
+                    input_vars = [v.name for v in input_obj.get_variables()]
+
+                    if d.name() in input_vars: 
+                        consts[d.name()] = d
+            
+            return consts
+
+        def get_var_names_to_variables(input_obj: Union[Design]): 
+            var_names_to_variables = dict()
+
+            if isinstance(input_obj, Design): 
+                for v in input_obj.get_variables(): 
+                    var_names_to_variables[v.name] = v
+
+            return var_names_to_variables
+
+
+        
+        # var_name_to_consts = get_model_consts(model=model, input_obj=input_obj)
+        # consts_to_variables = kwargs['consts_to_variables'] # TODO: May want to make this a named param instead of kwargs
+        var_names_to_variables = get_var_names_to_variables(input_obj=input_obj)
+
+        for f in updated_facts: 
+            fact_dict = parse_facts(f)
+            
+            if isinstance(output_obj, Graph): 
+                # Get variable names
+                start_name = fact_dict['start']
+                end_name = fact_dict['end']
+                # # Look up consts that have variable names
+                # start_const = var_name_to_consts[start_name]
+                # end_const = var_name_to_consts[end_name]
+                # # Look up variables associated with the consts
+                # import pdb; pdb.set_trace()
+                start_var = var_names_to_variables[start_name]
+                end_var = var_names_to_variables[end_name]
+
+                if fact_dict['function'] == 'Cause': 
+                    output_obj.cause(start_var, end_var)
+                elif fact_dict['function'] == 'Correlate': 
+                    output_obj.correlate(start_var, end_var)
+                if fact_dict['function'] == 'Interaction': 
+                    # TODO: Should we add Interaction-specific edge??
+                    output_obj.correlate(start_var, end_var)
+
+        
+        return output_obj
+
+
+            
+
+
+            
+
 
 
     # # TODO: Multiple queries should be handled outside? maybe outcome as a list? 

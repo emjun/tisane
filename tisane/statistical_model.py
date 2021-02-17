@@ -4,7 +4,7 @@ from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEff
 from tisane.graph import Graph
 from tisane.smt.knowledge_base import KB
 from tisane.smt.rules import Models, Dependent, Cause, Correlate
-from tisane.smt.query_manager import QM
+# from tisane.smt.query_manager import QM
 
 from abc import abstractmethod
 import pandas as pd

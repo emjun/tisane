@@ -17,6 +17,7 @@ Models = Function('Models', Object, SeqSort(Object), BoolSort())
 Dependent = Function('Dependent', Object, BoolSort())
 MainEffect = Function('MainEffect', Object, BoolSort())
 Interaction = Function('Interaction', Object, Object, BoolSort())
+NoInteraction = Function('NoInteraction', Object, Object, BoolSort())
 
 # Variable Relationship Graph
 Cause = Function('Cause', Object, Object, BoolSort())

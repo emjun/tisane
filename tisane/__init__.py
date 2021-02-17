@@ -1,6 +1,6 @@
 from tisane.main import (
                             Tisane,
-                            query
+                            infer_from
                             
 )
 
