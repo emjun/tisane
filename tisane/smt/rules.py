@@ -15,7 +15,8 @@ i = Const('x1', SetSort(Object))
 Explains = Function('Explains', Object, SeqSort(Object), BoolSort())
 Models = Function('Models', Object, SeqSort(Object), BoolSort())
 Dependent = Function('Dependent', Object, BoolSort())
-MainEffect = Function('MainEffect', Object, BoolSort())
+MainEffect = Function('MainEffect', Object, Object, BoolSort())
+NoMainEffect = Function('NoMainEffect', Object, Object, BoolSort())
 Interaction = Function('Interaction', Object, Object, BoolSort())
 NoInteraction = Function('NoInteraction', Object, Object, BoolSort())
 
@@ -24,12 +25,12 @@ Cause = Function('Cause', Object, Object, BoolSort())
 Correlate = Function('Correlate', Object, Object, BoolSort())
 
 # Data schema, data type
-Binary = Function('Binary', Object, BoolSort())
-Multinomial = Function('Multinomial', Object, BoolSort())
-Nominal = Function('Nominal', Object, BoolSort())
-Ordinal = Function('Ordinal', Object, BoolSort())
-Categorical = Function('Categorical', Object, BoolSort())
-Numeric = Function('Numeric', Object, BoolSort())
+BinaryDataType = Function('BinaryDataType', Object, BoolSort())
+MultinomialDataType = Function('MultinomialDataType', Object, BoolSort())
+NominalDataType = Function('NominalDataType', Object, BoolSort())
+OrdinalDataType = Function('OrdinalDataType', Object, BoolSort())
+CategoricalDataType = Function('CategoricalDataType', Object, BoolSort())
+NumericDataType = Function('NumericDataType', Object, BoolSort())
 
 # Data transformations, link functions
 Transformation = Function('Transformation', Object, BoolSort())

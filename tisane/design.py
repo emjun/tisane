@@ -1,6 +1,6 @@
-from tisane.variable import AbstractVariable
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.graph import Graph
-from tisane.smt.rules import Cause, Correlate, Interaction, NoInteraction
+from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType
 
 from typing import List, Union
 import pydot
@@ -78,49 +78,94 @@ class Design(object):
             self.graph.unknown(lhs=iv, rhs=self.dv)
 
     # @return dict of Z3 consts for variables in model
-    def generate_consts(self): 
-        # consts_to_variables = dict() # used for post-processing query results
+    def generate_const_from_fact(self, fact_dict: dict): 
+        # Declare data type
+        Object = DeclareSort('Object')
+
+        # Prepare variables
+        var_names_to_variables = dict()
+        for v in self.get_variables(): 
+            var_names_to_variables[v.name] = v
 
         main_seq = None
-        # Does not use self.ivs
-        nodes = list(self.graph._graph.nodes(data=True)) # get list of edges
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+        interaction_seq = None
+        # Get variable names
+        start_name = fact_dict['start']
+        end_name = fact_dict['end']
+        # Get variables
+        start_var = var_names_to_variables[start_name]
+        end_var = var_names_to_variables[end_name]
 
-        # for (n, data) in nodes: 
-        #     n_var = data['variable']
-        #     if n_var is not self.dv: 
-        #         if main_seq is None: 
-        #             main_seq = Unit(n_var.const)
-        #         else: 
-        #             main_seq = Concat(Unit(n_var.const), main_seq)
-        for (n0, n1, edge_data) in edges: 
-            edge_type = edge_data['edge_type']
+        if fact_dict['function'] == 'MainEffect': 
+            assert(end_var is self.dv)
 
-            if edge_type == 'unknown_main': 
-                n0_var = self.graph._graph.nodes[n0]['variable']
-                n1_var = self.graph._graph.nodes[n1]['variable']
-                assert(n1_var is self.dv)
+            if 'main_effects' not in self.consts: 
+                main_seq = Unit(start_var.const)
+            else: 
+                main_seq = self.consts['main_effects']
+                main_seq = Concat(Unit(start_var.const), main_seq)
+            self.consts['main_effects'] = main_seq
 
-                if main_seq is None: 
-                    main_seq = Unit(n0_var.const)
-                else: 
-                    main_seq = Concat(Unit(n0_var.const), main_seq)
-
-            # Add to consts_to_variables dict for post-processing query
-            # consts_to_variables[n_var.const] = n_var
+        elif fact_dict['function'] == 'Interaction': 
+            # Create set for interaction
+            interaction = EmptySet(Object)
+            SetAdd(interaction, start_var.const)
+            SetAdd(interaction, end_var.const)
+            if 'interactions' not in self.consts:
+                interaction_seq = Unit(interaction)
+            else: 
+                interaction_seq = self.consts['interactions']
+                interaction_seq = Concat(Unit(interaction), interaction_seq)
+            self.consts['interactions'] = interaction_seq
         
-        self.consts['main_effects'] = main_seq
+        elif fact_dict['function'] == 'NoInteraction': 
+            interaction = EmptySet(Object)
 
-        # TODO: There are no interactions yet until end-user provides info or we do some analysis...?
-        interactions_seq = None
-        self.consts['interactions'] = interactions_seq
+            # If there are interactions already, do nothing
+            if 'interactions' not in self.consts:
+                interaction_seq = Unit(interaction)
+                self.consts['interactions'] = interaction_seq
+        else: 
+            pass
+    
+    def generate_consts(self): 
+        # Declare data type
+        Object = DeclareSort('Object')
 
-        # return consts_to_variables 
+        # If we haven't already generated consts from facts 
+        if 'main_effects' not in self.consts: 
+            main_seq = None
+            # Does not use self.ivs
+            nodes = list(self.graph._graph.nodes(data=True)) # get list of edges
 
+            for (n, data) in nodes: 
+                n_var = data['variable']
+                if n_var is not self.dv: 
+                    if main_seq is None: 
+                        main_seq = Unit(n_var.const)
+                    else: 
+                        main_seq = Concat(Unit(n_var.const), main_seq)
+
+            self.consts['main_effects'] = main_seq
+
+        if 'interactions' not in self.consts: 
+            interactions_seq = Unit(EmptySet(Object))
+            self.consts['interactions'] = interactions_seq
+        
     # Return the set of logical facts that this Design "embodies"
     def compile_to_facts(self) -> List: 
-        facts = list()
-        
+        facts = list() # TODO: START HERE: Are we trying to make facts a dictionary?
+        nodes = list(self.graph._graph.nodes(data=True)) # get list of nodes
+        for (n, data) in nodes: 
+            n_var = data['variable']
+            if isinstance(n_var, Nominal): 
+                facts.append(NominalDataType(n_var.const))
+            elif isinstance(n_var, Ordinal): 
+                facts.append(OrdinalDataType(n_var.const))
+            else: 
+                assert (isinstance(n_var, Numeric)) 
+                facts.append(NumericDataType(n_var.const))
+
         edges = list(self.graph._graph.edges(data=True)) # get list of edges
 
         for (n0, n1, edge_data) in edges: 
@@ -131,25 +176,53 @@ class Design(object):
                 pass
             elif edge_type == 'treat': 
                 pass
+            else: 
+                pass
             
         return facts
 
+    def collect_ambiguous_effects_facts(self, main_effects: bool, interactions: bool) -> List: 
+        facts = list()
+        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+
+        # Do we care about Main Effects? 
+        if main_effects: 
+            # What Main Effects should we consider? 
+            for (n0, n1, edge_data) in edges: 
+                edge_type = edge_data['edge_type']
+                n0_var = self.graph._graph.nodes[n0]['variable']
+                n1_var = self.graph._graph.nodes[n1]['variable']
+                if edge_type == 'nest': 
+                    pass
+                elif edge_type == 'treat': 
+                    pass
+                elif edge_type == 'unknown': 
+                    facts.append(MainEffect(n0_var.const, n1_var.const))
+                    facts.append(NoMainEffect(n0_var.const, n1_var.const))
+        
+        if interactions: 
+            # What Interaction Effects should we consider?
+            # Check if the edge does not include the DV
+            incoming_edges = list(self.graph._graph.in_edges(self.dv.name, data=True))
+            
+            interactions_considered = list()
+            for (ie, dv, data) in incoming_edges: 
+                ie_var = self.graph._graph.nodes[ie]['variable']
+                for (other, dv, data) in incoming_edges: 
+                    # Asks about interactions even if end-user does not want to
+                    # include the corresponding main effects
+                    other_var = self.graph._graph.nodes[other]['variable']
+                    if (ie is not other) and ({ie, other} not in interactions_considered):             
+                        # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones? 
+                        facts.append(Interaction(ie_var.const, other_var.const))
+                        facts.append(NoInteraction(ie_var.const, other_var.const))
+
+                        interactions_considered.append({ie, other})
+
+        return facts
     
     # @return additional set of logical facts that needs disambiguation depending on @param desired output_obj
-    def collect_ambiguous_facts(self, **kwargs) -> List: 
-        def select_main_effect(iv_var: AbstractVariable, dv_var: AbstractVariable): 
-            while True: 
-                ans = str(input(f'Are you interested in explaining {dv_var.name} using {iv_var.name}? Y or N:'))
-                if ans.upper() == 'Y': 
-                    print(f"Ok, will use {iv_var.name} as an IV in the statistical model.")
-                    return True
-                elif ans.upper() == 'N': 
-                    print(f"Ok, will not use {iv_var.name} as an IV in the statistical model.")
-                    return False
-                else: 
-                    raise ValueError(f"Unsupported input: {ans}")
-
-        output = kwargs['output']
+    def collect_ambiguous_facts(self, output: str) -> List: 
 
         facts = list()
         edges = list(self.graph._graph.edges(data=True)) # get list of edges
@@ -164,13 +237,7 @@ class Design(object):
                     facts.append(Cause(n0_var.const, n1_var.const))
                     facts.append(Correlate(n0_var.const, n1_var.const))
                 elif output.upper() == 'STATISTICAL MODEL':
-                    # Should we include n0_var as a main effect?
-                    if (n1_var is self.dv): 
-                        # Ask user
-                        user_decision = select_main_effect(n0_var, n1_var)
-                        if user_decision: 
-                            # Update edge
-                            self.graph.update_edge(n0_var, n1_var, new_edge_type='unknown_main')
+                    import pdb; pdb.set_trace()
             elif edge_type == 'treat': 
                 pass
             elif edge_type == 'nest': 
@@ -179,23 +246,23 @@ class Design(object):
             else: 
                 pass
         
-        # Are there any interactions we should include?
-        # Check if the edge does not include the DV
-        incoming_edges = list(self.graph._graph.in_edges(self.dv.name, data=True))
+        # # Are there any interactions we should include?
+        # # Check if the edge does not include the DV
+        # incoming_edges = list(self.graph._graph.in_edges(self.dv.name, data=True))
         
-        interactions_considered = list()
-        for (ie, dv, data) in incoming_edges: 
-            ie_var = self.graph._graph.nodes[ie]['variable']
-            for (other, dv, data) in incoming_edges: 
-                # Asks about interactions even if end-user does not want to
-                # include the corresponding main effects
-                other_var = self.graph._graph.nodes[other]['variable']
-                if (ie is not other) and ({ie, other} not in interactions_considered):             
-                    # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones? 
-                    facts.append(Interaction(ie_var.const, other_var.const))
-                    facts.append(NoInteraction(ie_var.const, other_var.const))
+        # interactions_considered = list()
+        # for (ie, dv, data) in incoming_edges: 
+        #     ie_var = self.graph._graph.nodes[ie]['variable']
+        #     for (other, dv, data) in incoming_edges: 
+        #         # Asks about interactions even if end-user does not want to
+        #         # include the corresponding main effects
+        #         other_var = self.graph._graph.nodes[other]['variable']
+        #         if (ie is not other) and ({ie, other} not in interactions_considered):             
+        #             # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones? 
+        #             facts.append(Interaction(ie_var.const, other_var.const))
+        #             facts.append(NoInteraction(ie_var.const, other_var.const))
 
-                    interactions_considered.append({ie, other})
+        #             interactions_considered.append({ie, other})
 
         return facts
 

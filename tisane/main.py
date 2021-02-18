@@ -395,7 +395,7 @@ def query(input_obj: Union[StatisticalModel, Design, Graph], output: str):
     assert(output_obj is not None)        
 
     # Query 
-    output_obj = QM.query(input_obj=input_obj, output_obj=output_obj, output=output)
+    output_obj = QM.query(input_obj=input_obj, output_obj=output_obj)#, output=output)
 
     # Return results
     return output_obj
