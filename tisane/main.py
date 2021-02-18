@@ -384,26 +384,34 @@ class Tisane(object):
 ##### Functions that are not associated with a class/object
 def query(input_obj: Union[StatisticalModel, Design, Graph], output: str): 
     output_obj = None
+    # Set up 
     if output.upper() =='VARIABLE RELATIONSHIP GRAPH': 
         output_obj = Graph()
-    # import pdb; pdb.set_trace()
+    elif output.upper() == 'STATISTICAL MODEL': 
+        # TODO: if Graph -> SM, will have to pass dv differently since Graph has no attr DV
+        output_obj = StatisticalModel(dv=input_obj.dv, main_effects=list(), interaction_effects=list(), mixed_effects=list(), link=None, variance=None)
+    else: 
+        raise NotImplementedError
     assert(output_obj is not None)        
-    output_obj = QM.query(input_obj=input_obj, output_obj=output_obj)
 
+    # Query 
+    output_obj = QM.query(input_obj=input_obj, output_obj=output_obj, output=output)
+
+    # Return results
     return output_obj
 
 def infer_from(input_: Union[Design], output_: str): 
     
     if isinstance(input_, Design): 
-        if output_.upper() == "STATISTICAL MODEL": 
-            # gr = input_.get_graph_ir()
-            # sm = query(gr, StatisticalModel)
-            # return sm 
-            pass
+        if output_.upper() == "STATISTICAL MODEL":
+            # Get main effects want to consider from end-user (separate from unsat framework)
+
+            # Get interaction effects want to consider from end-user (fits into unsat framework)
+            sm = query(input_obj=input_, output=output_)
+            return sm 
         elif output_.upper() == "VARIABLE RELATIONSHIP GRAPH": 
-            # gr = input_.get_graph_ir()
-            result_gr = query(input_obj=input_, output=output_)
-            return result_gr
+            gr = query(input_obj=input_, output=output_)
+            return gr
 
     elif isinstance(input_, StatisticalModel): 
         pass

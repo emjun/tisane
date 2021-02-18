@@ -131,7 +131,8 @@ class Nominal(AbstractVariable):
                 self.assert_property(prop="cardinality", val="multi")
             self.cardinality = num_categories
         
-        self.cardinality = kwargs['cardinality']
+        else: 
+            self.cardinality = kwargs['cardinality']
 
         # has data
         if self.data is not None: 
@@ -143,15 +144,17 @@ class Nominal(AbstractVariable):
             else: 
                 assert(num_categories > 2)
                 self.assert_property(prop="cardinality", val="multi")
-    # def __repr__(self): 
-    #     return f"NominalVariable: data:{self.data}"
+
     def __str__(self): 
         return f"NominalVariable: data:{self.data}"
+    def get_cardinality(self): 
+        return self.cardinality
 
 class Ordinal(AbstractVariable): 
     # categories = list
+    cardinality: int
     ordered_cat = list
-    
+
     def __init__(self, name: str, order: list=None, data=None, **kwargs): 
         super(Ordinal, self).__init__(name)
         # self.categories = cat_list
@@ -160,19 +163,23 @@ class Ordinal(AbstractVariable):
         self.properties = dict()
         self.assert_property(prop="dtype", val="ordinal")
 
-        num_categories = len(self.ordered_cat)
-        if num_categories == 1: 
-            self.assert_property(prop="cardinality", val="unary")
-        elif num_categories == 2: 
-            self.assert_property(prop="cardinality", val="binary")
+        if order is not None: 
+            num_categories = len(self.ordered_cat)
+            if num_categories == 1: 
+                self.assert_property(prop="cardinality", val="unary")
+            elif num_categories == 2: 
+                self.assert_property(prop="cardinality", val="binary")
+            else: 
+                assert(num_categories > 2)
+                self.assert_property(prop="cardinality", val="multi")
+            self.cardinality = len(order)
         else: 
-            assert(num_categories > 2)
-            self.assert_property(prop="cardinality", val="multi")
-    # def __repr__(self): 
-    #     return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
+            self.cardinality = kwargs['cardinality']
     def __str__(self): 
         return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
 
+    def get_cardinality(self): 
+        return self.cardinality
 
 class Numeric(AbstractVariable): 
     
@@ -185,6 +192,10 @@ class Numeric(AbstractVariable):
     #     return f"NumericVariable: data:{self.data}"
     def __str__(self): 
         return f"NumericVariable: data:{self.data}"
+    
+    def get_cardinality(self): 
+        # TODO: Does this make sense to do?
+        raise NotImplementedError
 
 # Wrapper around AbstractVariable class
 class Variable(AbstractVariable): 

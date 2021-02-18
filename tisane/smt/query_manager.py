@@ -15,20 +15,32 @@ class QueryManager(object):
     # QueryManager should be state-less? 
 
     
-    def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph]):
+    def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel], output: str):
+        # if isinstance(input_obj, Design): 
+        #     if isinstance(output_obj, StatisticalModel): 
+        #         # Figure out main effects care about for modeling 
+        #         # Update edge from 'unknown' to 'unknown but model/explain'??
+
+        #         # Figure out interaction effects
+            
+
         # Compile @param input_obj to logical facts
         facts = input_obj.compile_to_facts()
-        ambig_facts = input_obj.collect_ambiguous_facts()
+        ambig_facts = input_obj.collect_ambiguous_facts(output=output)
         facts += ambig_facts # Combine all facts
 
         # Generate consts for grounding KB
-        consts_to_variables = input_obj.generate_consts() 
+        input_obj.generate_consts() 
         # Ground rules to simplify quantification during constraint solving
         dv_const = input_obj.dv.const
         main_effects = input_obj.consts['main_effects']
         interactions = input_obj.consts['interactions']
+        mixed_effects = None # mixed effects
         
         
+        # TODO: UPDATE main_effects, interactions, mixed effects before ground KB
+
+
         # If system should consider possible interactions (involves end-user)
         possible_interactions = False
         if isinstance(input_obj, Design): 
@@ -37,11 +49,10 @@ class QueryManager(object):
 
         # After grounding KB, collect rules to guide synthesis
         rules = self.collect_rules(output_obj=output_obj) # dict
-
         # Incrementally and interactively solve the facts and rules as constraints
         (model, updated_facts) = self.solve(facts=facts, rules=rules, setting=None)
-
-        result = self.postprocess_query_results(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj, consts_to_variables=consts_to_variables)
+        import pdb; pdb.set_trace()
+        result = self.postprocess_query_results(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
 
         return result
     
@@ -54,13 +65,15 @@ class QueryManager(object):
 
         # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
         if isinstance(output_obj, StatisticalModel):
-            raise NotImplementedError
-
+            rules_to_consider['interaction_rules'] = KB.interaction_rules
+            rules_to_consider['data_type_rules'] = KB.data_type_rules
+            rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
+            rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
         elif isinstance(output_obj, Graph):
             rules_to_consider['graph_rules'] = KB.graph_rules
 
         elif isinstance(output_obj, Design): 
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             # TODO: Should allow separate queries for data schema and data collection?? probably not?
             rules_to_consider['data_type_rules'] = KB.data_type_rules
             rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
@@ -199,7 +212,7 @@ class QueryManager(object):
 
     # TODO: START HERE: Probably some hybrid of above and below...
     # I need function name (to give me edge type), variable objects (to update edges to Graph: remove and replace)
-    def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph], **kwargs):
+    def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph]):
         
         def parse_facts(fact: z3.BoolRef) -> List[str]: 
             fact_dict = dict()
@@ -212,18 +225,18 @@ class QueryManager(object):
             
             return fact_dict
         
-        def get_model_consts(model: z3.ModelRef, input_obj: Union[Design]): 
-            consts = dict()
+        # def get_model_consts(model: z3.ModelRef, input_obj: Union[Design]): 
+        #     consts = dict()
 
-            # Iterate through the declarations in the model
-            for d in model.decls(): 
-                if isinstance(input_obj, Design): 
-                    input_vars = [v.name for v in input_obj.get_variables()]
+        #     # Iterate through the declarations in the model
+        #     for d in model.decls(): 
+        #         if isinstance(input_obj, Design): 
+        #             input_vars = [v.name for v in input_obj.get_variables()]
 
-                    if d.name() in input_vars: 
-                        consts[d.name()] = d
+        #             if d.name() in input_vars: 
+        #                 consts[d.name()] = d
             
-            return consts
+        #     return consts
 
         def get_var_names_to_variables(input_obj: Union[Design]): 
             var_names_to_variables = dict()
@@ -262,7 +275,13 @@ class QueryManager(object):
                 if fact_dict['function'] == 'Interaction': 
                     # TODO: Should we add Interaction-specific edge??
                     output_obj.correlate(start_var, end_var)
-
+            elif isinstance(output_obj, StatisticalModel): 
+                # TODO: START HERE
+                raise NotImplementedError
+            elif isinstance(output_obj, Design): 
+                raise NotImplementedError
+            else: 
+                raise ValueError (f"Unexpected @param output_obj: {output_obj}")
         
         return output_obj
 

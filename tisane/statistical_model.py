@@ -12,7 +12,7 @@ from typing import List, Any, Tuple
 
 from z3 import *
 
-# TODO: Make this an abstract class?
+# TODO: Make this an abstract class, at least in name?
 class StatisticalModel(object): 
     # dv: AbstractVariable
     # main: MainEffect
@@ -41,8 +41,9 @@ class StatisticalModel(object):
         self.mixed = effect_set.get_mixed_effects()
     """ 
 
-    def __init__(self, dv: str, main_effects: List[str], interaction_effects: List[Tuple[str, ...]], mixed_effects: List[str], link: str, variance: str): 
-        self.dv = AbstractVariable(name=dv)
+    # TODO: Replace str with AbstractVariables in Lists? 
+    def __init__(self, dv: AbstractVariable, main_effects: List[str], interaction_effects: List[Tuple[str, ...]], mixed_effects: List[str], link: str=None, variance: str=None): 
+        self.dv = dv
         
         self.main_effects = list()
         for m in main_effects: 

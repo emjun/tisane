@@ -80,35 +80,59 @@ class QueryTest(unittest.TestCase):
 
     #     res = ts.verify(design, sm)
 
-    def test_design_to_graph_main(self): 
+    # WORKS Feb. 17
+    # def test_design_to_graph(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     design = Design(dv = sat_score)
+    #     design.treat(student_id, tutoring, 'between')
+        
+    #     # Vis pre-disambiguation
+    #     # design.graph.visualize_graph()
+        
+    #     gr = infer_from(design, 'variable relationship graph')
+
+    #     gr.visualize_graph()
+    # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+
+    def test_design_sm_between(self): 
         student_id = Numeric('student_id')
         sat_score = Numeric('sat_score')
         tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
         design = Design(dv = sat_score)
-        design.treat(student_id, tutoring, times=1)
-        
-        # Vis pre-disambiguation
-        # design.graph.visualize_graph()
-        
-        gr = infer_from(design, 'variable relationship graph')
+        design.treat(student_id, tutoring, 'between')
 
-        gr.visualize_graph()
-    # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+        sm = infer_from(design, 'statistical model')
 
-    # def test_design_to_graph_main_interaction(self): 
-    #     student_id = Numeric('pid')
-    #     classroom = Numeric('class')
-    #     age = Numeric('age')
-    #     sat_score = Numeric('score')
-    #     tutoring = Nominal('tutoring', 2) # Categorical('tutoring')
-    #     pass
+        import pdb; pdb.set_trace()
+
     
-    # def test_design_to_graph_main_interaction_nested(self): 
+    # def test_design_to_graph_nested_between(self): 
+    #     student_id = Numeric('student_id')
+    #     classroom = Numeric('class', cardinality=4)
+    #     age = Numeric('age')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+
+    #     # Application of treatment - *that* we treat units
+    #     design = Design(dv = sat_score)
+    #     design.nest(student_id, classroom)
+    #     treatment = design.treat(classroom, tutoring) # "algorithm"
+
+    #     # "schedule" - *how* we treat units
+    #     treatment.assign(classroom, 1) # Between implied since know Tutoring has cardinality 2
+    #     treatment.assign(classroom, 2) # Within applied since know Tutoring has cardinality 2
+    #     # TODO: Assumption: Don't need to know exact order or conditions but that conditions were distributed as between vs. within?
+    #     # TODO: If num (second @param in assign) does not go into group (e.g., classroom) evenly, surface issue to end-user?
+        
+
+    # def test_design_to_graph_nested_within(self): 
     #     pass
 
-    # def test_design_to_graph_main_nested(self): 
-    #     pass
+    # TODO: to SM for nested between and within
 
     # def test_design_to_sm_main(self): 
     #     design = Design(dv = sat_score)

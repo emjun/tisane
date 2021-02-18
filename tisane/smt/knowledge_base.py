@@ -12,7 +12,7 @@ class KnowledgeBase(object):
         self.graph_rules = [
             ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, dv_const), Correlate(x, dv_const)))),
         ] 
-        interaction_rules = [
+        self.interaction_rules = [
             # ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Contains(main_effects, Unit(x)))),
             # ForAll([x0, x1], Implies(Interaction(x0, x1), And(Contains(interactions, Unit(x0)), Contains(interactions, Unit(x1))))),
             ForAll([x0, x1], Xor(Interaction(x0, x1), NoInteraction(x0, x1))),
@@ -21,7 +21,7 @@ class KnowledgeBase(object):
 
         if 'possible_interactions' in kwargs: 
             if kwargs['possible_interactions']: 
-                self.graph_rules += interaction_rules
+                self.graph_rules += self.interaction_rules
         if interactions is not None: 
                 self.graph_rules.append(ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Xor(Cause(x0, x1), Correlate(x0, x1))))),
 
@@ -38,11 +38,15 @@ class KnowledgeBase(object):
         self.data_transformation_rules = [
             ForAll([x], Implies(Identity(x), Numeric(x))),
             ForAll([x], Implies(Log(x), Numeric(x))), 
-            # ForAll([x], Implies(Sqrt(x), Numeric(x))),  # Sqrt is predefined in Z3
-            ForAll([x], Implies(LogLog(x), Categorical(x))),
+            ForAll([x], Implies(Squareroot(x), Numeric(x))),  # Sqrt is predefined in Z3
             ForAll([x], Implies(LogLog(x), Categorical(x))),
             ForAll([x], Implies(Probit(x), Categorical(x))), 
-            ForAll([x], Implies(Logit(x), Categorical(x)))
+            ForAll([x], Implies(Logit(x), Categorical(x))),
+            # From data type to possible transformations...
+            ForAll([x], Xor(Transformation(x), NoTransformation(x))),
+            ForAll([x], Implies(Transformation(x), Xor(NumericTransformation(x),CategoricalTransformation(x)))),
+            ForAll([x], Implies(NumericTransformation(x), Xor(Log(x), Squareroot(x)))),
+            ForAll([x], Implies(CategoricalTransformation(x), Xor(Xor(LogLog(x), Probit(x)), Logit(x))))
         ]
 
         self.variance_functions_rules = [
