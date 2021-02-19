@@ -48,7 +48,8 @@ class KnowledgeBase(object):
             ForAll([x], Xor(Transformation(x), NoTransformation(x))),
             ForAll([x], Implies(Transformation(x), Xor(NumericTransformation(x), CategoricalTransformation(x)))),
             ForAll([x], Implies(NumericTransformation(x), Xor(LogTransform(x), SquarerootTransform(x)))),
-            ForAll([x], Implies(CategoricalTransformation(x), Xor(Xor(LogLogTransform(x), ProbitTransform(x)), LogitTransform(x)))),
+            ForAll([x], Implies(CategoricalTransformation(x), Xor(LogLogTransform(x), ProbitTransform(x)))),
+            # , LogitTransform(x))
             ForAll([x], Implies(NoTransformation(x), Not(Transformation(x)))),
         ]
 

@@ -92,12 +92,13 @@ def design_to_statistical_model(model: z3.ModelRef, updated_facts: List, input_o
 
             interaction_effects.append((start_var, end_var))
             
-        elif function == 'Transformation': 
+        elif ('Transform' in function) and (function != 'Transformation'): 
             assert('variable_name' in fact_dict)
             var_name = fact_dict['variable_name']
 
-            # TODO: Apply transformation to variable, everywhere it exists in output_obj (StatisticalModel)
-            import pdb; pdb.set_trace()
+            # Apply transformation to variable, everywhere it exists in output_obj (StatisticalModel)
+            var = var_names_to_variables[var_name]
+            var.transform(transformation=function)
             
     
     output_obj.set_main_effects(main_effects)    

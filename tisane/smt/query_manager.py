@@ -173,7 +173,7 @@ class QueryManager(object):
                 for pc in pushed_constraints: 
                     # If pc is not k (already added to updated_constraints)
                     if str(pc) != str(k): 
-                        # Is the pushed constraint about the same variable as the keep clause (NoTransform)?
+                        # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
                         if var_name in str(pc): 
                             # Keep the pushed constraint as long as it is not about
                             # transforming the variable

@@ -248,30 +248,6 @@ class Design(object):
                     # Induce UNSAT in order to get end-user clarification
                     facts.append(Cause(n0_var.const, n1_var.const))
                     facts.append(Correlate(n0_var.const, n1_var.const))
-
-                elif output.upper() == 'STATISTICAL MODEL':
-                    # Iterate over nodes
-                    nodes = list(self.graph._graph.nodes(data=True))
-                    for (n, data) in nodes: 
-                        # Check if the variable is included as a main effect
-                        var = data['variable']
-                        if is_true(BoolVal(Contains(self.consts['main_effects'], Unit(var.const)))): 
-                            # Induce UNSAT 
-                            facts.append(Transformation(var.const))
-                            facts.append(NoTransformation(var.const))
-                            # # Induce UNSAT
-                            # Depending on variable data type, add more constraints for possible transformations
-                            if isinstance(var, Numeric): 
-                                facts.append(NumericTransformation(var.const))
-                                facts.append(LogTransform(var.const))
-                                facts.append(SquarerootTransform(var.const))
-                            elif isinstance(var, Nominal) or isinstance(var, Ordinal): 
-                                facts.append(CategoricalTransformation(var.const))
-                                facts.append(LogLogTransform(var.const))
-                                facts.append(ProbitTransform(var.const))
-                                facts.append(LogitTransform(var.const)) # TODO: Might only make sense for binary data??                
-                                
-                            # TODO: If update main effect variable and it is involved in interaction, ask about or propagate automatically?
             elif edge_type == 'treat': 
                 pass
             elif edge_type == 'nest': 
@@ -280,6 +256,29 @@ class Design(object):
             else: 
                 pass
         
+        # Iterate over nodes
+        if output == 'STATISTICAL MODEL': 
+            nodes = list(self.graph._graph.nodes(data=True))
+            for (n, data) in nodes: 
+                # Check if the variable is included as a main effect
+                var = data['variable']
+                if is_true(BoolVal(Contains(self.consts['main_effects'], Unit(var.const)))): 
+                    # Induce UNSAT 
+                    facts.append(Transformation(var.const))
+                    facts.append(NoTransformation(var.const))
+                    # # Induce UNSAT
+                    # Depending on variable data type, add more constraints for possible transformations
+                    if isinstance(var, Numeric): 
+                        facts.append(NumericTransformation(var.const))
+                        facts.append(LogTransform(var.const))
+                        facts.append(SquarerootTransform(var.const))
+                    elif isinstance(var, Nominal) or isinstance(var, Ordinal): 
+                        facts.append(CategoricalTransformation(var.const))
+                        facts.append(LogLogTransform(var.const))
+                        facts.append(ProbitTransform(var.const))
+                        # facts.append(LogitTransform(var.const)) # TODO: Might only make sense for binary data??                
+                        
+                    # TODO: If update main effect variable and it is involved in interaction, ask about or propagate automatically?
         
         return facts
 

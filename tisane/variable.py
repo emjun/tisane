@@ -41,6 +41,7 @@ class AbstractVariable(object):
     name: str 
     data : DataVector
     properties : dict
+    transform : str
 
     const : Object
 
@@ -106,6 +107,10 @@ class AbstractVariable(object):
     # @returns variable properties
     def get_assertions(self) -> dict: 
         return self.properties
+
+    # Apply the @param transformation to the AbstractVariable
+    def transform(self, transformation: str): 
+        self.transform = transformation
 
 class Nominal(AbstractVariable): 
     # categories = list
