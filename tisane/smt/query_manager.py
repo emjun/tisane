@@ -52,8 +52,8 @@ class QueryManager(object):
             if isinstance(output_obj, StatisticalModel): 
                 effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=True, interactions=True)
                 
-            elif isinstance(output_obj, Graph): 
-                effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=False, interactions=False)
+            # elif isinstance(output_obj, Graph): 
+            #     effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=False, interactions=False)
                 
             KB.ground_effects_rules(dv_const=dv_const)
             effects_rules = self.collect_rules(output_obj=output_obj, step='effects')
