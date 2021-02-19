@@ -105,6 +105,14 @@ class Design(object):
                 main_seq = self.consts['main_effects']
                 main_seq = Concat(Unit(start_var.const), main_seq)
             self.consts['main_effects'] = main_seq
+        
+        elif fact_dict['function'] == 'NoMainEffect': 
+            main_seq = Empty(SeqSort(Object))
+            
+            # If there are no main effects so far, create an empty SeqSort
+            if 'main_effects' not in self.consts: 
+                self.consts['main_effects'] = main_seq
+            # Else: If there are main effects already, do nothing
 
         elif fact_dict['function'] == 'Interaction': 
             # Create set for interaction
@@ -121,10 +129,13 @@ class Design(object):
         elif fact_dict['function'] == 'NoInteraction': 
             interaction = EmptySet(Object)
 
-            # If there are interactions already, do nothing
+            # If there are no interactions so far, create a SeqSort of Sets
             if 'interactions' not in self.consts:
                 interaction_seq = Unit(interaction)
                 self.consts['interactions'] = interaction_seq
+
+            # Else: If there are interactions already, do nothing
+
         else: 
             pass
     
@@ -147,6 +158,7 @@ class Design(object):
                         main_seq = Concat(Unit(n_var.const), main_seq)
 
             self.consts['main_effects'] = main_seq
+            import pdb; pdb.set_trace()
 
         if 'interactions' not in self.consts: 
             interactions_seq = Unit(EmptySet(Object))
@@ -247,6 +259,7 @@ class Design(object):
             else: 
                 pass
         
+        import pdb; pdb.set_trace()
         # Iterate over nodes
         nodes = list(self.graph._graph.nodes(data=True))
         for (n, data) in nodes: 
