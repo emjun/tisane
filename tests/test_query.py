@@ -108,6 +108,7 @@ class QueryTest(unittest.TestCase):
         sm = infer_from(design, 'statistical model')
 
         print(sm)
+        print(sm.mathematize())
 
 
     # def test_design_to_graph_nested_between(self): 

@@ -68,7 +68,6 @@ class StatisticalModel(object):
         self.consts = dict()
         self.generate_consts()
 
-    # TODO: Output mathematical version of the statistical model
     def __str__(self): 
         dv = f"DV: {self.dv}\n"
         main_effects = f"Main effects: {self.main_effects}\n" 
@@ -76,6 +75,41 @@ class StatisticalModel(object):
         mixed_effects = f"Mixed effects: {self.mixed_effects}"
         
         return dv + main_effects + interaction_effects + mixed_effects
+    
+    # TODO: Output mathematical version of the statistical model    
+    # TODO: @param setting might tell us something about how to format the categorical variables...
+    def mathematize(self, setting=None): 
+        
+        def var_transform(var: AbstractVariable): 
+            
+            if var.transform != 'NoTransformation': 
+               return var.transform + '('  + var.name + ')'
+            
+            return var.name
+            
+            
+        y = var_transform(self.dv)
+        xs = list()
+        
+        for m in self.main_effects: 
+            xs.append(var_transform(m))
+        
+        for i in self.interaction_effects: 
+            x = '('
+            # Iterate through variables involved in interaction
+            for idx in range(len(i)): 
+                x += var_transform(v)
+                if idx+1 < len(i): 
+                    x += '*'
+            x += ')'
+            xs.append(x)
+        
+        for mi in self.mixed_effects: 
+            # TODO: Implement, may want to do something special about slope vs. intercept vs. both....
+            pass
+        
+        equation = y + ' = ' + '+'.join(xs)
+        return equation
 
     # Sets main effects to @param main_effects
     def set_main_effects(self, main_effects: List[AbstractVariable]): 

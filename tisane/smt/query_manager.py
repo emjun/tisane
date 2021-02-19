@@ -64,7 +64,6 @@ class QueryManager(object):
         # Incrementally and interactively solve the facts and rules as constraints
         # TODO: Pass and initialize with model (used for effects facts to solver?)
         (model, updated_facts) = self.solve(facts=facts, rules=rules, setting=None)
-        import pdb; pdb.set_trace()
         result = self.postprocess_query_results(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
 
         return result
@@ -195,7 +194,6 @@ class QueryManager(object):
 
         # TODO: This may not generalize to n-way interactions
         # TODO: We want the end-user to provide hints towards interesting interactions
-        import pdb; pdb.set_trace()        
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
