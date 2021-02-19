@@ -81,36 +81,47 @@ class QueryTest(unittest.TestCase):
     #     res = ts.verify(design, sm)
 
 
-    def test_design_to_graph(self): 
+    # def test_design_to_graph_between(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     design = Design(dv = sat_score)
+    #     design.treat(student_id, tutoring, 'between')
+        
+    #     # Vis pre-disambiguation
+    #     # design.graph.visualize_graph()
+        
+    #     gr = infer_from(design, 'variable relationship graph')
+
+    #     gr.visualize_graph()
+    # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+
+    # def test_design_sm_between(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     design = Design(dv = sat_score)
+    #     design.treat(student_id, tutoring, 'between')
+
+    #     sm = infer_from(design, 'statistical model')
+
+    #     print(sm)
+    #     print(sm.mathematize())
+
+    def test_sm_to_graph(self): 
         student_id = Numeric('student_id')
         sat_score = Numeric('sat_score')
         tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-        design = Design(dv = sat_score)
-        design.treat(student_id, tutoring, 'between')
-        
-        # Vis pre-disambiguation
-        # design.graph.visualize_graph()
-        
-        gr = infer_from(design, 'variable relationship graph')
+        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
 
-        gr.visualize_graph()
-    # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+        gr = infer_from(sm, 'variable relationship graph')
+        import pdb; pdb.set_trace()
 
-    def test_design_sm_between(self): 
-        student_id = Numeric('student_id')
-        sat_score = Numeric('sat_score')
-        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
-        
-        design = Design(dv = sat_score)
-        design.treat(student_id, tutoring, 'between')
-
-        sm = infer_from(design, 'statistical model')
-
-        print(sm)
-        print(sm.mathematize())
-
-
+    def test_sm_to_design(self): 
+        pass
     # def test_design_to_graph_nested_between(self): 
     #     student_id = Numeric('student_id')
     #     classroom = Numeric('class', cardinality=4)

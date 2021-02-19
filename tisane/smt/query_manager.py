@@ -291,7 +291,7 @@ class QueryManager(object):
                 pass
     
 
-    # TODO: START HERE: Probably some hybrid of above and below...
+    # TODO: Clean up API!
     # I need function name (to give me edge type), variable objects (to update edges to Graph: remove and replace)
     def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph]):
         

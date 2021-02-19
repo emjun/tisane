@@ -1,9 +1,9 @@
 from tisane.concept import Concept
-from tisane.variable import AbstractVariable
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
 from tisane.smt.knowledge_base import KB
-from tisane.smt.rules import Models, Dependent, Cause, Correlate
+from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
 # from tisane.smt.query_manager import QM
 
 from abc import abstractmethod
@@ -41,32 +41,29 @@ class StatisticalModel(object):
         self.mixed = effect_set.get_mixed_effects()
     """ 
 
-    # TODO: Replace str with AbstractVariables in Lists? 
-    def __init__(self, dv: AbstractVariable, main_effects: List[str], interaction_effects: List[Tuple[str, ...]], mixed_effects: List[str], link: str=None, variance: str=None): 
+    def __init__(self, dv: AbstractVariable, main_effects: List[AbstractVariable]=None, interaction_effects: List[Tuple[AbstractVariable, ...]]=None, mixed_effects: List[AbstractVariable]=None, link_func: str=None, variance_func: str=None): 
         self.dv = dv
         
-        self.main_effects = list()
-        for m in main_effects: 
-            self.main_effects.append(AbstractVariable(name=m.upper()))
+        if main_effects is not None: 
+            self.main_effects = main_effects
+        else: 
+            self.main_effects = list()
         
-        self.interaction_effects = list()
-        for i in interaction_effects: 
-            var_list = list()
-            # i is a Tuple of variable names
-            for v in i: 
-                # import pdb; pdb.set_trace()
-                var_list.append(AbstractVariable(name=v.upper())) 
-            self.interaction_effects.append(tuple(var_list))
+        if interaction_effects is not None: 
+            self.interaction_effects = interaction_effects
+        else: 
+            self.interaction_effects = list()
         
-        self.mixed_effects = list()
-        for mi in mixed_effects: 
-            self.mixed_effects.append(AbstractVariable(name=mi.upper()))
+        if mixed_effects is not None: 
+            self.mixed_effects = mixed_effects
+        else: 
+            self.mixed_effects = list()
 
-        self.link = link 
-        self.variance = variance
+        self.link_func = link_func
+        self.variance_func = variance_func
 
         self.consts = dict()
-        self.generate_consts()
+        # self.generate_consts()
 
     def __str__(self): 
         dv = f"DV: {self.dv}\n"
@@ -122,6 +119,10 @@ class StatisticalModel(object):
     def set_mixed_effects(self, mixed_effects: List[AbstractVariable]): 
         self.mixed_effects = mixed_effects
     
+    # @return all variables (DV, IVs)
+    def get_all_variables(self): 
+        return [self.dv] + self.main_effects + self.interaction_effects + self.mixed_effects
+
     # @return a list containing all the IVs
     def get_all_ivs(self): 
         
@@ -131,85 +132,82 @@ class StatisticalModel(object):
     def generate_consts(self): 
         # Declare data type
         Object = DeclareSort('Object')
-
-        # Create Z3 const objects for DV, Main effects
-        var_consts = list()
-        dv_name = self.dv.name
-        dv_const = Const(dv_name, Object)
-        var_consts.append(dv_const) # create and add Z3 const object for DV
-        self.consts['dv'] = dv_const
         
         # Create and add Z3 consts for all main effects
         main_effects = self.main_effects
+        
         main_seq = None
         if len(self.main_effects) > 0: 
             for me in main_effects: 
-                name = me.name
-                me_const = Const(name, Object) # create a Z3 object
-                var_consts.append(me_const) # add each object 
                 # Have we created a sequence of IVs yet?
                 # If not, create one
-                if main_seq is None: # Cannot use idiom with Z3 Exprs: if not ivs_seq
+                if main_seq is None: 
                     # set first Unit of sequence
-                    main_seq = Unit(me_const)
+                    main_seq = Unit(me.const)
                 # We already created a sequence of IVs
                 else: 
-                    # concatenate
-                    main_seq = Concat(Unit(me_const), main_seq)
-        # import pdb; pdb.set_trace()
+                    # Concatenate
+                    main_seq = Concat(Unit(me.const), main_seq)
+        # There are no main effects
+        else: 
+            main_seq = Empty(SeqSort(Object))
+        
         self.consts['main_effects'] = main_seq
 
         # Create and add Z3 consts for Interaction effects
         interactions_seq = None
         if len(self.interaction_effects) > 0: 
             for ixn in self.interaction_effects: 
-                tmp = EmptySet(Object)
-                # For each interaction tuple
+                tmp = EmptySet(Object) 
+                # For each variable in the interaction tuple
                 for v in ixn: 
-                    # find the Z3 const that represents this variable
-                    ixn_v_const = None
-                    # import pdb; pdb.set_trace()
-                    for v_const in var_consts:
-                        if v.name == str(v_const): 
-                            ixn_v_const = v_const
-                            break
-                    # If the variable does not exist in main effects (possible though unlikely)
-                    if ixn_v_const is None: 
-                        # Create a new const!
-                        ixn_v_const = Const(v.name, Object)
-                    # Create a Z3 set for each interaction tuple
-                    tmp = SetAdd(tmp, ixn_v_const)
+                    tmp = SetAdd(tmp, v.const)
                 # Do we already have a sequence we're building onto?
+                # If not, create one 
+                assert(is_false(BoolVal(is_empty(tmp))))
                 if interactions_seq is None: 
                     # Create a sequence
                     interactions_seq = Unit(tmp)
+                # We already have a sequence of interactions
                 else: 
-                    # Add to an existing sequence
+                    # Concatenate
                     interactions_seq = Concat(Unit(tmp), interactions_seq)
+        # There are no interaction effects
+        else: 
+            interactions_seq = Unit(EmptySet(Object))
+
         self.consts['interactions'] = interactions_seq
-
-        self.consts['variables'] = var_consts
+    
         
-    # @return a list of facts to use when querying the knowledge base
-    def to_logical_facts(self): 
-        facts = dict()
-
-        dv_const = self.consts['dv']
-        main_effects = self.consts['main_effects']
-        interactions = self.consts['interactions']
+    # @returns the set of logical facts that this StatisticalModel "embodies"
+    def compile_to_facts(self) -> List: 
+        facts = list()
         
-        # Add model fact
-        facts['model_explanation'] = [Models(dv_const, main_effects), Dependent(dv_const)]
+        # Add link function 
+        if self.link_func is not None: 
+            raise NotImplementedError # Translate str of link function to logical fact
 
-        # TODO: Add fact about link function
-        #facts.append(f'link({dv_name}, {self.link}).')
-
-        # TODO: Add fact about variance function
-        #facts.append(f'variance({dv_name}, {self.variance}).')
+        # Add variance function 
+        if self.variance_func is not None: 
+            raise NotImplementedError
 
         # TODO: Add facts about variables
+        variables = self.get_all_variables()
+        for v in variables: 
+            if isinstance(v, Nominal): 
+                facts.append(NominalDataType(v.const))
+            elif isinstance(v, Ordinal): 
+                facts.append(OrdinalDataType(v.const))
+            else: 
+                assert (isinstance(v, Numeric)) 
+                facts.append(NumericDataType(v.const))
 
         return facts
+    
+    # @return additional set of logical facts that needs disambiguation depending on @param desired output_obj
+    def collect_ambiguous_facts(self, output: str) -> List: 
+        # TODO: START HERE!
+        raise NotImplementedError
     
     def query(self, outcome: str) -> Any: 
         # Ground some rules to make the quantification simpler

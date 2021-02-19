@@ -413,14 +413,15 @@ def infer_from(input_: Union[Design], output_: str):
             gr = query(input_obj=input_, output=output_)
             return gr
 
-    elif isinstance(input_, StatisticalModel): 
-        pass
-        # if isinstance(output_, Design): 
-        #     gr = input_.get_graph_ir()
-        #     design = query(gr, Design())
-        # elif isinstance(output_, Graph): 
-        #     gr = input_.get_graph_ir()
-        #     updated_gr = query(gr, Graph())
+    elif isinstance(input_, StatisticalModel):
+        if output_.upper() == "DESIGN": 
+            raise NotImplementedError
+            # gr = input_.get_graph_ir()
+            # design = query(gr, Design())
+        elif output_.upper() == "VARIABLE RELATIONSHIP GRAPH": 
+            gr = query(input_obj=input_, output=output_)
+            import pdb; pdb.set_trace()
+            return gr
     elif isinstance(input_, Graph): 
         pass
         # if isinstance(output_, Design): 

@@ -163,9 +163,10 @@ class Design(object):
             interactions_seq = Unit(EmptySet(Object))
             self.consts['interactions'] = interactions_seq
         
-    # Return the set of logical facts that this Design "embodies"
+    # @returns the set of logical facts that this Design "embodies"
     def compile_to_facts(self) -> List: 
-        facts = list() # TODO: START HERE: Are we trying to make facts a dictionary?
+        facts = list() # TODO: Should be a dict?
+        
         nodes = list(self.graph._graph.nodes(data=True)) # get list of nodes
         for (n, data) in nodes: 
             n_var = data['variable']
