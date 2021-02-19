@@ -263,7 +263,6 @@ class Design(object):
                     facts.append(LogTransform(var.const))
                     facts.append(SquarerootTransform(var.const))
                 elif isinstance(var, Nominal) or isinstance(var, Ordinal): 
-                    import pdb; pdb.set_trace()
                     facts.append(CategoricalTransformation(var.const))
                     facts.append(LogLogTransform(var.const))
                     facts.append(ProbitTransform(var.const))

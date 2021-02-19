@@ -40,7 +40,7 @@ class QueryManager(object):
     # QueryManager should be state-less? 
 
     def prep_query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
-        # effects_facts = list()
+        effects_facts = list()
 
         # Used to ground rules to simplify quantification during constraint solving
         dv_const = input_obj.dv.const
@@ -65,12 +65,14 @@ class QueryManager(object):
                 fact_dict = parse_fact(f)
                 # Generate consts for grounding KB
                 input_obj.generate_const_from_fact(fact_dict=fact_dict)
-
+            
+            import pdb; pdb.set_trace()
             return updated_effects_facts
     
     def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
         
         updated_effects_facts = self.prep_query(input_obj=input_obj, output_obj=output_obj)
+        
 
         # Collect facts after prepping for query
         facts = updated_effects_facts + self.collect_facts(input_obj=input_obj, output_obj=output_obj)
@@ -88,7 +90,6 @@ class QueryManager(object):
         # Incrementally and interactively solve the facts and rules as constraints
         # TODO: Pass and initialize with model (used for effects facts to solver?)
         (model, updated_facts) = self.solve(facts=facts, rules=rules, setting=None)
-        import pdb; pdb.set_trace()
         result = self.postprocess_query_results(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
 
         return result
@@ -171,8 +172,7 @@ class QueryManager(object):
             s.add(rules)
 
             (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
-            facts = updated_facts
-        
+            facts = updated_facts        
         
         mdl =  s.model()
         return (mdl, updated_facts)
@@ -185,30 +185,29 @@ class QueryManager(object):
         for c in keep_clause:
             assert(c in unsat_core)
         
-        assert(len(keep_clause) == 1)
-        keep = keep_clause[0]
-        
         updated_constraints = list()
-        # TODO: Rewrite this loop. Maybe treat the Transformation as a special case after main function body? 
         for pc in pushed_constraints: 
             # Should we remove this constraint because it caused UNSAT?
             if (pc in unsat_core) and (pc not in keep_clause): 
                 pass
-            # Should we remove this constraint because of a choice the end-user made? 
-            elif 'NoTransformation' in str(keep):
-                fact_dict = parse_fact(keep)
-                assert('variable_name' in fact_dict)
-                var_name = fact_dict['variable_name']
-
-                if ('Transform' in str(pc)) and (var_name in str(pc)): 
-                    # If the user chooses to not transform a variable, remove constraints related to specific constraints
-                        pass
-                else: 
-                    updated_constraints.append(pc)
             else: 
-                updated_constraints.append(pc)
+                for k in keep_clause:
+                    # If the keep clause is a NoTransformation, remove all the corresponding
+                    # facts about interactions
+                    if 'NoTransform' in str(k):
+                        fact_dict = parse_fact(k)
+                        assert('variable_name' in fact_dict)
+                        var_name = fact_dict['variable_name']
 
-        import pdb; pdb.set_trace()
+                        if ('Transform' not in str(pc)) and (var_name not in str(pc)): 
+                            updated_constraints.append(pc)
+                    else:
+                        updated_constraints.append(pc)
+
+        # TODO: This may not generalize to n-way interactions
+        # TODO: We want the end-user to provide hints towards interesting interactions
+        
+        # import pdb; pdb.set_trace()
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -249,6 +248,7 @@ class QueryManager(object):
             # Modifies @param assertions
             updated_assertions = self.update_clauses(assertions, unsat_core, keep_constraint)
             assertions = updated_assertions
+            # import pdb; pdb.set_trace()
         elif (state == sat): 
             pass
         else: 
@@ -329,7 +329,6 @@ class QueryManager(object):
                         output_obj.correlate(start_var, end_var)
                     if fact_dict['function'] == 'Interaction': 
                         # TODO: Should we add Interaction-specific edge??
-                        import pdb; pdb.set_trace()
                         output_obj.correlate(start_var, end_var)
             elif isinstance(output_obj, StatisticalModel): 
                 main_effects = list()
