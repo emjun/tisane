@@ -3,38 +3,14 @@ from tisane.design import Design
 from tisane.graph import Graph 
 
 from tisane.smt.declare_constraints import *
-# from tisane.smt.helpers import variables, get_facts_as_list
-# from tisane.smt.rules import *
 import tisane.smt.rules as rules
 from tisane.smt.knowledge_base import KB
+from tisane.smt.qm_helpers import *
 
 from z3 import *
 from typing import List, Union, Dict
 
-def parse_fact(fact: z3.BoolRef) -> List[str]: 
-    fact_dict = dict()
-    tmp = str(fact).split('(')
-    func_name = tmp[0] 
-    fact_dict['function'] = func_name
-    variables = tmp[1].split(')')[0].split(',')
-    
-    # TODO: What if 3+-way interaction? 
-    if len(variables) == 1: 
-        fact_dict['variable_name'] = variables[0].strip()
-    elif len(variables) == 2: 
-        fact_dict['start'] = variables[0].strip()
-        fact_dict['end'] = variables[1].strip()
-    
-    return fact_dict
-            
-def get_var_names_to_variables(input_obj: Union[Design]): 
-    var_names_to_variables = dict()
 
-    if isinstance(input_obj, Design): 
-        for v in input_obj.get_variables(): 
-            var_names_to_variables[v.name] = v
-
-    return var_names_to_variables
 
 class QueryManager(object): 
     # QueryManager should be state-less? 
@@ -66,14 +42,12 @@ class QueryManager(object):
                 # Generate consts for grounding KB
                 input_obj.generate_const_from_fact(fact_dict=fact_dict)
             
-            import pdb; pdb.set_trace()
             return updated_effects_facts
     
     def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
         
         updated_effects_facts = self.prep_query(input_obj=input_obj, output_obj=output_obj)
         
-
         # Collect facts after prepping for query
         facts = updated_effects_facts + self.collect_facts(input_obj=input_obj, output_obj=output_obj)
         
@@ -90,6 +64,7 @@ class QueryManager(object):
         # Incrementally and interactively solve the facts and rules as constraints
         # TODO: Pass and initialize with model (used for effects facts to solver?)
         (model, updated_facts) = self.solve(facts=facts, rules=rules, setting=None)
+        import pdb; pdb.set_trace()
         result = self.postprocess_query_results(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
 
         return result
@@ -162,8 +137,6 @@ class QueryManager(object):
 
     # @param setting is 'interactive' 'default' (which is interactive), etc.?
     def solve(self, facts: List, rules: dict, setting=None): 
-        updated_facts = list()
-
         s = Solver() # Z3 solver
 
         for batch_name, rules in rules.items(): 
@@ -172,6 +145,7 @@ class QueryManager(object):
             s.add(rules)
 
             (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
+            # import pdb; pdb.set_trace()
             facts = updated_facts        
         
         mdl =  s.model()
@@ -184,30 +158,44 @@ class QueryManager(object):
         # Verify that keep_clause is indeed a subset of unsat_core
         for c in keep_clause:
             assert(c in unsat_core)
-        
-        updated_constraints = list()
-        for pc in pushed_constraints: 
-            # Should we remove this constraint because it caused UNSAT?
-            if (pc in unsat_core) and (pc not in keep_clause): 
-                pass
-            else: 
-                for k in keep_clause:
-                    # If the keep clause is a NoTransformation, remove all the corresponding
-                    # facts about interactions
-                    if 'NoTransform' in str(k):
-                        fact_dict = parse_fact(k)
-                        assert('variable_name' in fact_dict)
-                        var_name = fact_dict['variable_name']
 
-                        if ('Transform' not in str(pc)) and (var_name not in str(pc)): 
+        updated_constraints = list()
+        for k in keep_clause: 
+            # Add the keep clause
+            updated_constraints.append(k)
+
+            # If this keep clause is about Not Transforming data
+            if 'NoTransform' in str(k):
+                fact_dict = parse_fact(k)
+                assert('variable_name' in fact_dict)
+                var_name = fact_dict['variable_name']
+
+                for pc in pushed_constraints: 
+                    # If pc is not k (already added to updated_constraints)
+                    if str(pc) != str(k): 
+                        # Is the pushed constraint about the same variable as the keep clause (NoTransform)?
+                        if var_name in str(pc): 
+                            # Keep the pushed constraint as long as it is not about
+                            # transforming the variable
+                            if 'Transform' not in str(pc):
+                                updated_constraints.append(pc)
+                        else: 
                             updated_constraints.append(pc)
-                    else:
-                        updated_constraints.append(pc)
+            
+            # If this keep clause is about anything else other than Not Transforming data
+            else: 
+                for pc in pushed_constraints: 
+                    # If pc is not k (already added to updated_constraints)
+                    if str(pc) != str(k):
+                        # Should we remove this constraint because it caused UNSAT?
+                        if pc in unsat_core:
+                            pass
+                        else: 
+                            updated_constraints.append(pc)
 
         # TODO: This may not generalize to n-way interactions
         # TODO: We want the end-user to provide hints towards interesting interactions
-        
-        # import pdb; pdb.set_trace()
+        import pdb; pdb.set_trace()        
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -309,96 +297,12 @@ class QueryManager(object):
     # I need function name (to give me edge type), variable objects (to update edges to Graph: remove and replace)
     def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph]):
         
-        var_names_to_variables = get_var_names_to_variables(input_obj=input_obj)
-
-        for f in updated_facts: 
-            fact_dict = parse_fact(f)
-            
-            if isinstance(output_obj, Graph): 
-                if 'start' in fact_dict and 'end' in fact_dict:
-                    # Get variable names
-                    start_name = fact_dict['start']
-                    end_name = fact_dict['end']
-                    # Get variables
-                    start_var = var_names_to_variables[start_name]
-                    end_var = var_names_to_variables[end_name]
-
-                    if fact_dict['function'] == 'Cause': 
-                        output_obj.cause(start_var, end_var)
-                    elif fact_dict['function'] == 'Correlate': 
-                        output_obj.correlate(start_var, end_var)
-                    if fact_dict['function'] == 'Interaction': 
-                        # TODO: Should we add Interaction-specific edge??
-                        output_obj.correlate(start_var, end_var)
-            elif isinstance(output_obj, StatisticalModel): 
-                main_effects = list()
-                interaction_effects = list()
-                mixed_effects = list() 
-
-                # Is this a fact we care about?
-                if 'start' in fact_dict and 'end' in fact_dict: 
-                    # Get variable names
-                    start_name = fact_dict['start']
-                    end_name = fact_dict['end']
-                    # Get variables 
-                    start_var = var_names_to_variables[start_name]
-                    end_var = var_names_to_variables[end_name]
-            
-                    if fact_dict['function'] == 'MainEffect': 
-                        assert(end_var, input_obj.dv)
-                        main_effects.append(start_var)
-                    if fact_dict['function'] == 'Interaction': 
-                        interaction_effects.append((start_var, end_var))
-            elif isinstance(output_obj, Design): 
-                raise NotImplementedError
-            else: 
-                raise ValueError (f"Unexpected @param output_obj: {output_obj}")
+        # Delegate to helpers
+        if isinstance(input_obj, Design) and isinstance(output_obj, Graph): 
+            return design_to_statistical_model(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
         
-        return output_obj
-
-
-            
-
-
-            
-
-
-
-    # # TODO: Multiple queries should be handled outside? maybe outcome as a list? 
-    # def query(self, input_obj: Union[StatisticalModel], outcome: str): 
-
-    #     # Set up 
-    #     # Get and use Z3 consts created for the input_obj
-    #     dv_const = input_obj.consts['dv']
-    #     main_effects = input_obj.consts['main_effects']
-    #     interactions = input_obj.consts['interactions']
-    #     self.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
-
-    #     # Collect rules and facts
-    #     rules = self.collect_rules(outcome=outcome) # dict
-    #     facts = self.collect_facts(input_obj=input_obj, outcome=outcome, z3_consts=z3_consts)
-    #     result = self.solve(facts=facts, rules=rules, setting=None)        
+        elif isinstance(input_obj, Design) and isinstance(output_obj, StatisticalModel): 
+            return design_to_statistical_model(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
         
-    #     # TODO: cast the result to a specific object? 
-
-    #     return result
-
-class Query(object): 
-    rules : list # rules to consider
-    facts : list # facts to consider while solving rules + facts
-    
-    def __init__(self, rules=list, facts=list): 
-        self.rules = rules 
-        self.facts = facts
-    
-    def solve(self): 
-        pass
-
-# Goal: just get the example working with last week working with current API/system
-# 1. Query Manager (only the implementation that is absolutely necessary)
-# 2. Variable Relationship Graph (should be clear if cause or correlate) [M]
-# 3. Data Schema (should output clearly a data schema) [M]
-# 4. Data collect procedure [T]
-
 # Global QueryManager
 QM = QueryManager()

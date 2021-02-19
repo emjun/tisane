@@ -81,21 +81,21 @@ class QueryTest(unittest.TestCase):
     #     res = ts.verify(design, sm)
 
     # WORKS Feb. 17
-    def test_design_to_graph(self): 
-        student_id = Numeric('student_id')
-        sat_score = Numeric('sat_score')
-        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    # def test_design_to_graph(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-        design = Design(dv = sat_score)
-        design.treat(student_id, tutoring, 'between')
+    #     design = Design(dv = sat_score)
+    #     design.treat(student_id, tutoring, 'between')
         
-        # Vis pre-disambiguation
-        # design.graph.visualize_graph()
+    #     # Vis pre-disambiguation
+    #     # design.graph.visualize_graph()
         
-        gr = infer_from(design, 'variable relationship graph')
+    #     gr = infer_from(design, 'variable relationship graph')
 
-        gr.visualize_graph()
-    # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+    #     gr.visualize_graph()
+    # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
 
     def test_design_sm_between(self): 
         student_id = Numeric('student_id')
@@ -107,9 +107,9 @@ class QueryTest(unittest.TestCase):
 
         sm = infer_from(design, 'statistical model')
 
-        import pdb; pdb.set_trace()
+        print(sm)
 
-    
+
     # def test_design_to_graph_nested_between(self): 
     #     student_id = Numeric('student_id')
     #     classroom = Numeric('class', cardinality=4)

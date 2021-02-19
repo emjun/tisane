@@ -68,6 +68,27 @@ class StatisticalModel(object):
         self.consts = dict()
         self.generate_consts()
 
+    # TODO: Output mathematical version of the statistical model
+    def __str__(self): 
+        dv = f"DV: {self.dv}\n"
+        main_effects = f"Main effects: {self.main_effects}\n" 
+        interaction_effects = f"Interaction effects: {self.interaction_effects}\n"
+        mixed_effects = f"Mixed effects: {self.mixed_effects}"
+        
+        return dv + main_effects + interaction_effects + mixed_effects
+
+    # Sets main effects to @param main_effects
+    def set_main_effects(self, main_effects: List[AbstractVariable]): 
+        self.main_effects = main_effects
+
+    # Sets interaction effects to @param main_effects
+    def set_interaction_effects(self, interaction_effects: List[AbstractVariable]): 
+        self.interaction_effects = interaction_effects
+
+    # Sets mixed effects to @param mixed_effects
+    def set_mixed_effects(self, mixed_effects: List[AbstractVariable]): 
+        self.mixed_effects = mixed_effects
+    
     # @return a list containing all the IVs
     def get_all_ivs(self): 
         
@@ -236,10 +257,6 @@ class StatisticalModel(object):
     # @property
     # def residuals(self): 
     #     raise NotImplementedError
-
-    # Output mathematical version of the statistical model
-    def __str__(self): 
-        raise NotImplementedError
     
 
     @classmethod
