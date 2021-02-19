@@ -39,16 +39,17 @@ class KnowledgeBase(object):
 
         self.data_transformation_rules = [
             ForAll([x], Implies(Identity(x), NumericDataType(x))),
-            ForAll([x], Implies(Log(x), NumericDataType(x))), 
-            ForAll([x], Implies(Squareroot(x), NumericDataType(x))),  # Sqrt is predefined in Z3
-            ForAll([x], Implies(LogLog(x), CategoricalDataType(x))),
-            ForAll([x], Implies(Probit(x), CategoricalDataType(x))), 
-            ForAll([x], Implies(Logit(x), CategoricalDataType(x))),
+            ForAll([x], Implies(LogTransform(x), NumericDataType(x))), 
+            ForAll([x], Implies(SquarerootTransform(x), NumericDataType(x))),  # Sqrt is predefined in Z3
+            ForAll([x], Implies(LogLogTransform(x), CategoricalDataType(x))),
+            ForAll([x], Implies(ProbitTransform(x), CategoricalDataType(x))), 
+            ForAll([x], Implies(LogitTransform(x), CategoricalDataType(x))),
             # From data type to possible transformations...
             ForAll([x], Xor(Transformation(x), NoTransformation(x))),
-            ForAll([x], Implies(Transformation(x), Xor(NumericTransformation(x),CategoricalTransformation(x)))),
-            ForAll([x], Implies(NumericTransformation(x), Xor(Log(x), Squareroot(x)))),
-            ForAll([x], Implies(CategoricalTransformation(x), Xor(Xor(LogLog(x), Probit(x)), Logit(x))))
+            ForAll([x], Implies(Transformation(x), Xor(NumericTransformation(x), CategoricalTransformation(x)))),
+            ForAll([x], Implies(NumericTransformation(x), Xor(LogTransform(x), SquarerootTransform(x)))),
+            ForAll([x], Implies(CategoricalTransformation(x), Xor(Xor(LogLogTransform(x), ProbitTransform(x)), LogitTransform(x)))),
+            ForAll([x], Implies(NoTransformation(x), Not(Transformation(x)))),
         ]
 
         self.variance_functions_rules = [

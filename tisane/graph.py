@@ -40,13 +40,11 @@ class Graph(object):
             if edge_type == 'cause': 
                 graph.add_edge(pydot.Edge(n0, n1, style='bold', color='black'))
             elif edge_type == 'correlate': 
-                import pdb; pdb.set_trace()
                 graph.add_edge(pydot.Edge(n0, n1, style='dotted', color='black'))
                 graph.add_edge(pydot.Edge(n1, n0, style='dotted', color='black'))
             elif edge_type == 'unknown': 
                 graph.add_edge(pydot.Edge(n0, n1, style='dotted', color='red'))
             else: 
-                import pdb; pdb.set_trace()
                 pass
                 # raise ValueError (f"Unsupported edge type: {edge_type}")
 
@@ -54,7 +52,6 @@ class Graph(object):
     
     def visualize_graph(self): 
         graph = self.get_graph_vis()
-        import pdb; pdb.set_trace()
 
         graph.write_png('graph_vis.png')
 

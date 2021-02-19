@@ -19,8 +19,9 @@ def parse_fact(fact: z3.BoolRef) -> List[str]:
     variables = tmp[1].split(')')[0].split(',')
     
     # TODO: What if 3+-way interaction? 
-    # import pdb; pdb.set_trace()
-    if len(variables) == 2: 
+    if len(variables) == 1: 
+        fact_dict['variable_name'] = variables[0].strip()
+    elif len(variables) == 2: 
         fact_dict['start'] = variables[0].strip()
         fact_dict['end'] = variables[1].strip()
     
@@ -65,12 +66,13 @@ class QueryManager(object):
                 # Generate consts for grounding KB
                 input_obj.generate_const_from_fact(fact_dict=fact_dict)
 
-            return (model, updated_effects_facts)
+            return updated_effects_facts
     
     def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
         
-        model, updated_effects_facts = self.prep_query(input_obj=input_obj, output_obj=output_obj)
+        updated_effects_facts = self.prep_query(input_obj=input_obj, output_obj=output_obj)
 
+        # Collect facts after prepping for query
         facts = updated_effects_facts + self.collect_facts(input_obj=input_obj, output_obj=output_obj)
         
         # Ground rules to simplify quantification during constraint solving
@@ -79,10 +81,6 @@ class QueryManager(object):
         main_effects = input_obj.consts['main_effects']
         interactions = input_obj.consts['interactions']
         mixed_effects = None # mixed effects
-        
-        
-        # TODO: UPDATE main_effects, interactions, mixed effects before ground KB
-
         KB.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
         
         # After grounding KB, collect rules to guide synthesis
@@ -172,7 +170,8 @@ class QueryManager(object):
             # Add rules
             s.add(rules)
 
-            updated_facts = self.check_update_constraints(solver=s, assertions=facts)[1]
+            (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
+            facts = updated_facts
         
         
         mdl =  s.model()
@@ -186,14 +185,30 @@ class QueryManager(object):
         for c in keep_clause:
             assert(c in unsat_core)
         
+        assert(len(keep_clause) == 1)
+        keep = keep_clause[0]
+        
         updated_constraints = list()
+        # TODO: Rewrite this loop. Maybe treat the Transformation as a special case after main function body? 
         for pc in pushed_constraints: 
-            # Should we remove this constraint?
+            # Should we remove this constraint because it caused UNSAT?
             if (pc in unsat_core) and (pc not in keep_clause): 
                 pass
+            # Should we remove this constraint because of a choice the end-user made? 
+            elif 'NoTransformation' in str(keep):
+                fact_dict = parse_fact(keep)
+                assert('variable_name' in fact_dict)
+                var_name = fact_dict['variable_name']
+
+                if ('Transform' in str(pc)) and (var_name in str(pc)): 
+                    # If the user chooses to not transform a variable, remove constraints related to specific constraints
+                        pass
+                else: 
+                    updated_constraints.append(pc)
             else: 
                 updated_constraints.append(pc)
 
+        import pdb; pdb.set_trace()
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -206,23 +221,23 @@ class QueryManager(object):
             idx = int(input(f'These cannot be true at the same time. Which is true? If neither, enter -1. {unsat_core}:'))
             if idx == -1: 
                 pass
+                # TODO: Remove both?
             elif idx in range(len(unsat_core)): 
                 # only keep the constraint that is selected. 
-                keep.append(unsat_core[idx])
-                print(f"Ok, going to add {unsat_core[idx]} and remove the others.")
+                constraint = unsat_core[idx] 
+                keep.append(constraint)
+                print(f"Ok, going to add {constraint} and remove the others.")
                 break
             else:
                 raise ValueError
 
-        # return current_constraints + keep
         return keep
 
-    def check_update_constraints(self, solver: Solver, assertions: list): 
-        # updated_assertions = None
+    def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
-            # import pdb; pdb.set_trace()
+            
             assert(len(unsat_core) > 0)
 
 
@@ -241,10 +256,13 @@ class QueryManager(object):
 
         # Double check that the new_assertions do not cause UNSAT
         new_state = solver.check(assertions)
-        # import pdb; pdb.set_trace()
+        
         if new_state == sat: 
             return (solver, assertions) # return the solver and the updated assertions
+            # import pdb; pdb.set_trace()
+            # return assertions
         elif new_state == unsat: 
+            
             return self.check_update_constraints(solver=solver, assertions=assertions)
         else: 
             raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")

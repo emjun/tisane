@@ -1,6 +1,6 @@
 from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.graph import Graph
-from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType
+from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
 
 from typing import List, Union
 import pydot
@@ -227,6 +227,7 @@ class Design(object):
         facts = list()
         edges = list(self.graph._graph.edges(data=True)) # get list of edges
 
+        # Iterate over edges
         for (n0, n1, edge_data) in edges:         
             edge_type = edge_data['edge_type']
             n0_var = self.graph._graph.nodes[n0]['variable']
@@ -237,7 +238,7 @@ class Design(object):
                     facts.append(Cause(n0_var.const, n1_var.const))
                     facts.append(Correlate(n0_var.const, n1_var.const))
                 elif output.upper() == 'STATISTICAL MODEL':
-                    import pdb; pdb.set_trace()
+                    pass
             elif edge_type == 'treat': 
                 pass
             elif edge_type == 'nest': 
@@ -246,24 +247,30 @@ class Design(object):
             else: 
                 pass
         
-        # # Are there any interactions we should include?
-        # # Check if the edge does not include the DV
-        # incoming_edges = list(self.graph._graph.in_edges(self.dv.name, data=True))
+        # Iterate over nodes
+        nodes = list(self.graph._graph.nodes(data=True))
+        for (n, data) in nodes: 
+            # Check if the variable is included as a main effect
+            var = data['variable']
+            if is_true(BoolVal(Contains(self.consts['main_effects'], Unit(var.const)))): 
+                # Induce UNSAT 
+                facts.append(Transformation(var.const))
+                facts.append(NoTransformation(var.const))
+                # # Induce UNSAT
+                # Depending on variable data type, add more constraints for possible transformations
+                if isinstance(var, Numeric): 
+                    facts.append(NumericTransformation(var.const))
+                    facts.append(LogTransform(var.const))
+                    facts.append(SquarerootTransform(var.const))
+                elif isinstance(var, Nominal) or isinstance(var, Ordinal): 
+                    import pdb; pdb.set_trace()
+                    facts.append(CategoricalTransformation(var.const))
+                    facts.append(LogLogTransform(var.const))
+                    facts.append(ProbitTransform(var.const))
+                    facts.append(LogitTransform(var.const)) # TODO: Might only make sense for binary data??                
+                    
+                # TODO: If update main effect variable and it is involved in interaction, ask about or propagate automatically?
         
-        # interactions_considered = list()
-        # for (ie, dv, data) in incoming_edges: 
-        #     ie_var = self.graph._graph.nodes[ie]['variable']
-        #     for (other, dv, data) in incoming_edges: 
-        #         # Asks about interactions even if end-user does not want to
-        #         # include the corresponding main effects
-        #         other_var = self.graph._graph.nodes[other]['variable']
-        #         if (ie is not other) and ({ie, other} not in interactions_considered):             
-        #             # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones? 
-        #             facts.append(Interaction(ie_var.const, other_var.const))
-        #             facts.append(NoInteraction(ie_var.const, other_var.const))
-
-        #             interactions_considered.append({ie, other})
-
         return facts
 
     # @returns underlying graph IR
