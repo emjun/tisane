@@ -80,22 +80,22 @@ class QueryTest(unittest.TestCase):
 
     #     res = ts.verify(design, sm)
 
-    # WORKS Feb. 17
-    # def test_design_to_graph(self): 
-    #     student_id = Numeric('student_id')
-    #     sat_score = Numeric('sat_score')
-    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
-        
-    #     design = Design(dv = sat_score)
-    #     design.treat(student_id, tutoring, 'between')
-        
-    #     # Vis pre-disambiguation
-    #     # design.graph.visualize_graph()
-        
-    #     gr = infer_from(design, 'variable relationship graph')
 
-    #     gr.visualize_graph()
-    # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+    def test_design_to_graph(self): 
+        student_id = Numeric('student_id')
+        sat_score = Numeric('sat_score')
+        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+        design = Design(dv = sat_score)
+        design.treat(student_id, tutoring, 'between')
+        
+        # Vis pre-disambiguation
+        # design.graph.visualize_graph()
+        
+        gr = infer_from(design, 'variable relationship graph')
+
+        gr.visualize_graph()
+    # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
 
     def test_design_sm_between(self): 
         student_id = Numeric('student_id')

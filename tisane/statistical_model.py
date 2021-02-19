@@ -80,25 +80,24 @@ class StatisticalModel(object):
     # TODO: @param setting might tell us something about how to format the categorical variables...
     def mathematize(self, setting=None): 
         
-        def var_transform(var: AbstractVariable): 
-            
+        def transform_var(var: AbstractVariable): 
             if var.transform != 'NoTransformation': 
                return var.transform + '('  + var.name + ')'
             
             return var.name
             
             
-        y = var_transform(self.dv)
+        y = transform_var(self.dv)
         xs = list()
         
         for m in self.main_effects: 
-            xs.append(var_transform(m))
+            xs.append(transform_var(m))
         
         for i in self.interaction_effects: 
             x = '('
             # Iterate through variables involved in interaction
             for idx in range(len(i)): 
-                x += var_transform(v)
+                x += transform_var(i[idx])
                 if idx+1 < len(i): 
                     x += '*'
             x += ')'

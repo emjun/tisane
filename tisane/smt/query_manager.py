@@ -297,7 +297,7 @@ class QueryManager(object):
         
         # Delegate to helpers
         if isinstance(input_obj, Design) and isinstance(output_obj, Graph): 
-            return design_to_statistical_model(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
+            return design_to_graph(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
         
         elif isinstance(input_obj, Design) and isinstance(output_obj, StatisticalModel): 
             return design_to_statistical_model(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
