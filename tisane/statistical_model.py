@@ -14,10 +14,6 @@ from z3 import *
 
 # TODO: Make this an abstract class, at least in name?
 class StatisticalModel(object): 
-    # dv: AbstractVariable
-    # main: MainEffect
-    # interaction: InteractionEffect
-    # mixed: MixedEffect
     # residuals: AbstractVariable
     # TODO: May not need properties since not sure what the properties would be if not the indivdiual variables or the residuals
     properties: list # list of properties that this model exhibits
@@ -31,15 +27,6 @@ class StatisticalModel(object):
     consts: dict # Z3 consts representing the model and its DV, main_effects, etc. 
 
     graph : Graph # IR
-
-    """ temp override
-    @abstractmethod
-    def __init__(self, effect_set: EffectSet): 
-        self.dv = effect_set.get_dv()
-        self.main = effect_set.get_main_effects()
-        self.interaction = effect_set.get_interaction_effects()
-        self.mixed = effect_set.get_mixed_effects()
-    """ 
 
     def __init__(self, dv: AbstractVariable, main_effects: List[AbstractVariable]=None, interaction_effects: List[Tuple[AbstractVariable, ...]]=None, mixed_effects: List[AbstractVariable]=None, link_func: str=None, variance_func: str=None): 
         self.dv = dv
@@ -72,8 +59,8 @@ class StatisticalModel(object):
         mixed_effects = f"Mixed effects: {self.mixed_effects}"
         
         return dv + main_effects + interaction_effects + mixed_effects
-    
-    # TODO: Output mathematical version of the statistical model    
+
+    # @return string of mathematical version of the statistical model    
     # TODO: @param setting might tell us something about how to format the categorical variables...
     def mathematize(self, setting=None): 
         
@@ -82,7 +69,6 @@ class StatisticalModel(object):
                return var.transform + '('  + var.name + ')'
             
             return var.name
-            
             
         y = transform_var(self.dv)
         xs = list()
@@ -124,8 +110,7 @@ class StatisticalModel(object):
         return [self.dv] + self.main_effects + self.interaction_effects + self.mixed_effects
 
     # @return a list containing all the IVs
-    def get_all_ivs(self): 
-        
+    def get_all_ivs(self):     
         return self.main_effects + self.interaction_effects + self.mixed_effects
 
     # @return Z3 consts for variables in model
@@ -208,7 +193,7 @@ class StatisticalModel(object):
     def collect_ambiguous_facts(self, output: str) -> List: 
         # TODO: START HERE!
         raise NotImplementedError
-    
+
     def query(self, outcome: str) -> Any: 
         # Ground some rules to make the quantification simpler
         dv_const = self.consts['dv']

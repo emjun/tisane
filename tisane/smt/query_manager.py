@@ -11,9 +11,10 @@ from z3 import *
 from typing import List, Union, Dict
 
 
-
+"""
+Class for managing queries to KnowledgeBase and processing results of solving constraints
+"""
 class QueryManager(object): 
-    # QueryManager should be state-less? 
 
     def prep_query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
         effects_facts = list()
@@ -252,47 +253,9 @@ class QueryManager(object):
             return self.check_update_constraints(solver=solver, assertions=assertions)
         else: 
             raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
-
-    # UPDATE: After trying to implement this: Realize easier to iterate through updated
-    # facts and check that model is true rather than other way around. Have to
-    # check which function instance is true anyway, which is what we have in the
-    # updated facts. 
-    def cast_from_model(self, input_obj: Union[Design], output_obj: Union[Graph], outcome: str, model: z3.ModelRef): 
-        consts = dict()
-        functions = list()
-
-        # Iterate through the declarations in the model
-        for d in model.decls(): 
-
-            if isinstance(input_obj, Design): 
-                input_vars = [v.name for v in input_obj.get_variables()]
-
-                if d.name() in input_vars: 
-                    consts[model.get_interp(d)] = d
-                    # consts.append(d)
-                # Is the it the name of a Function included in rules.py? 
-                elif d.name() in dir(rules):  
-                    functions.append(d)
-                else: 
-                    raise ValueError(f"Do not recognize this: {d.name()}")
-        
-        for f in functions: 
-            if f.name() == 'Cause': 
-                f_interp = model[f] # Get interpretation of f in this model
-                num_entries = f_interp.num_entries()
-                for i in range(num_entries):
-                    (start, end, to_include) = f_interp.entry(i)
-                    import pdb; pdb.set_trace()
-            elif f.name() == 'Correlate': 
-                pass
-            elif f.name() == 'Interaction':
-                pass
-            else: 
-                pass
     
-
-    # TODO: Clean up API!
-    # I need function name (to give me edge type), variable objects (to update edges to Graph: remove and replace)
+    # Postprocess results of finding a valid z3 @param model and @param updated_facts
+    # @return results cast in output_obj
     def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph]):
         
         # Delegate to helpers

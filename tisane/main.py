@@ -52,6 +52,7 @@ class RELATIONSHIP(Enum):
 class Data(object): 
     pass
 
+# TODO: REVAMP API
 class Tisane(object):
     task : TASK
     graph : ConceptGraph # Not clear this is necessary at the moment

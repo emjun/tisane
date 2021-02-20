@@ -35,7 +35,6 @@ Together with Class Treatment, Class for expressing (i) data collection structur
 Relies on Class Treatment
 """
 class Design(object): 
-
     ivs : List[AbstractVariable]
     dv : AbstractVariable
     unit : AbstractVariable # unit of observation and manipulation
@@ -166,7 +165,7 @@ class Design(object):
     # @returns the set of logical facts that this Design "embodies"
     def compile_to_facts(self) -> List: 
         facts = list() # TODO: Should be a dict?
-        
+
         nodes = list(self.graph._graph.nodes(data=True)) # get list of nodes
         for (n, data) in nodes: 
             n_var = data['variable']
@@ -332,8 +331,6 @@ class Design(object):
                 number_of_assignments = treatment.get_cardinality()
         self.treatments.append(Treatment(unit=unit, manipulation=treatment, number_of_assignments=number_of_assignments))
         self.graph._add_edge(start=treatment, end=unit, edge_type="treat")
-
-
     
     # TODO: Name "measure" or "observe"? Is this a special instance of treat? 
     # Example: measure age
