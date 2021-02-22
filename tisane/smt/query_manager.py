@@ -27,7 +27,7 @@ class QueryManager(object):
         # solving process
         if isinstance(input_obj, Design): 
             if isinstance(output_obj, StatisticalModel): 
-                effects_facts = input_obj.collect_coous_effects_facts(main_effects=True, interactions=True)
+                effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=True, interactions=True)
                 
             # elif isinstance(output_obj, Graph): 
             #     effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=False, interactions=False)
@@ -247,29 +247,12 @@ class QueryManager(object):
             elif new_state == unsat: 
                 return self.check_update_constraints(solver=solver, assertions=assertions)
             else: 
-                import pdb; pdb.set_trace()
                 raise ValueError (f"After eliciting end-user input, solver state is neither SAT nor UNSAT: {new_state}")    
         elif (state == sat): 
-            pass
+            return (solver, assertions)
         else:
-            # import pdb; pdb.set_trace()
             raise ValueError(f"Initial solver state into check_update_constraints is {state}")
-            # raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
-
-        # import pdb;pdb.set_trace()
-        # # Double check that the new_assertions do not cause UNSAT
-        # new_state = solver.check(assertions)
-        # import pdb; pdb.set_trace()
-        # if new_state == sat: 
-        #     return (solver, assertions) # return the solver and the updated assertions
-        #     # import pdb; pdb.set_trace()
-        #     # return assertions
-        # elif new_state == unsat: 
-        #     return self.check_update_constraints(solver=solver, assertions=assertions)
-        # else: 
-        #     import pdb; pdb.set_trace()
-        #     raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
-    
+            
     # Postprocess results of finding a valid z3 @param model and @param updated_facts
     # @return results cast in output_obj
     def postprocess_query_results(self, model: z3.ModelRef, updated_facts: List, input_obj: Union[Design], output_obj: Union[Graph]):

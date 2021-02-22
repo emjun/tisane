@@ -102,6 +102,7 @@ class Design(object):
         main_seq = None
         interaction_seq = None
         # Get variable names
+        import pdb; pdb.set_trace()
         start_name = fact_dict['start']
         end_name = fact_dict['end']
         # Get variables
@@ -209,6 +210,9 @@ class Design(object):
         facts = list()
         edges = list(self.graph._graph.edges(data=True)) # get list of edges
 
+        # Declare data type
+        Object = DeclareSort('Object')
+
         # Do we care about Main Effects? 
         if main_effects: 
             # What Main Effects should we consider? 
@@ -238,8 +242,12 @@ class Design(object):
                     other_var = self.graph._graph.nodes[other]['variable']
                     if (ie is not other) and ({ie, other} not in interactions_considered):             
                         # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones? 
-                        facts.append(Interaction(ie_var.const, other_var.const))
-                        facts.append(NoInteraction(ie_var.const, other_var.const))
+                        i_set = EmptySet(Object)
+                        i_set = SetAdd(i_set, ie_var.const)
+                        i_set = SetAdd(i_set, other_var.const)
+
+                        facts.append(Interaction(i_set))
+                        facts.append(NoInteraction(i_set))
 
                         interactions_considered.append({ie, other})
 

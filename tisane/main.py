@@ -390,7 +390,7 @@ def query(input_obj: Union[StatisticalModel, Design, Graph], output: str):
         output_obj = Graph()
     elif output.upper() == 'STATISTICAL MODEL': 
         # TODO: if Graph -> SM, will have to pass dv differently since Graph has no attr DV
-        output_obj = StatisticalModel(dv=input_obj.dv, main_effects=list(), interaction_effects=list(), mixed_effects=list(), link=None, variance=None)
+        output_obj = StatisticalModel(dv=input_obj.dv, main_effects=list(), interaction_effects=list(), mixed_effects=list(), link_func=None, variance_func=None)
     else: 
         raise NotImplementedError
     assert(output_obj is not None)        

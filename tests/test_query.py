@@ -8,21 +8,21 @@ class QueryTest(unittest.TestCase):
     def test(self): 
         print('hi')
 
-    # def test_design_to_graph_between(self): 
-    #     student_id = Numeric('student_id')
-    #     sat_score = Numeric('sat_score')
-    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    def test_design_to_graph_between(self): 
+        student_id = Numeric('student_id')
+        sat_score = Numeric('sat_score')
+        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-    #     design = Design(dv = sat_score)
-    #     design.treat(student_id, tutoring, 'between')
+        design = Design(dv = sat_score)
+        design.treat(student_id, tutoring, 'between')
         
-    #     # Vis pre-disambiguation
-    #     # design.graph.visualize_graph()
+        # Vis pre-disambiguation
+        # design.graph.visualize_graph()
         
-    #     gr = infer_from(design, 'variable relationship graph')
+        gr = infer_from(design, 'variable relationship graph')
 
-    #     gr.visualize_graph()
-    # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
+        gr.visualize_graph()
+    # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
 
     # TODO: Think through how an end-user might express interaction in a study design 
     # def test_design_to_graph_interaction(self): 
@@ -40,29 +40,29 @@ class QueryTest(unittest.TestCase):
 
     #     gr.visualize_graph()
 
-    # def test_design_sm_between(self): 
-    #     student_id = Numeric('student_id')
-    #     sat_score = Numeric('sat_score')
-    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    def test_design_sm_between(self): 
+        student_id = Numeric('student_id')
+        sat_score = Numeric('sat_score')
+        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-    #     design = Design(dv = sat_score)
-    #     design.treat(student_id, tutoring, 'between')
+        design = Design(dv = sat_score)
+        design.treat(student_id, tutoring, 'between')
 
-    #     sm = infer_from(design, 'statistical model')
+        sm = infer_from(design, 'statistical model')
 
-    #     print(sm)
-    #     print(sm.mathematize())
+        print(sm)
+        print(sm.mathematize())
 
-    # def test_sm_to_graph_main(self): 
-    #     student_id = Numeric('student_id')
-    #     sat_score = Numeric('sat_score')
-    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    def test_sm_to_graph_main(self): 
+        student_id = Numeric('student_id')
+        sat_score = Numeric('sat_score')
+        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
+        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
 
-    #     gr = infer_from(sm, 'variable relationship graph')
+        gr = infer_from(sm, 'variable relationship graph')
         
-    #     gr.visualize_graph()
+        gr.visualize_graph()
 
     def test_sm_to_graph_interaction(self): 
         student_id = Numeric('student_id')
@@ -88,7 +88,7 @@ class QueryTest(unittest.TestCase):
 
     #     # Application of treatment - *that* we treat units
     #     design = Design(dv = sat_score)
-    #     design.nest(student_id, classroom)
+    #     design.nest(studenƒ2t_id, classroom)
     #     treatment = design.treat(classroom, tutoring) # "algorithm"
 
     #     # "schedule" - *how* we treat units

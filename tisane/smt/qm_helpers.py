@@ -11,14 +11,30 @@ def parse_fact(fact: z3.BoolRef) -> List[str]:
     tmp = str(fact).split('(')
     func_name = tmp[0] 
     fact_dict['function'] = func_name
-    variables = tmp[1].split(')')[0].split(',')
     
-    # TODO: What if 3+-way interaction? 
+    # Parse Interaction facts aware that the argument is a SetSort
+    if func_name == 'Interaction': 
+        set_arg = fact.arg(0)
+        arg_str = str(set_arg).split('False), ')
+
+        assert(len(arg_str) == 2)
+        arg_str = arg_str[1].split(',')
+
+        # This for loop should take care of n-way Interactions
+        variables = list()
+        for s in arg_str: 
+            if 'True' not in s: 
+                variables.append(s.strip())
+    else: 
+        variables = tmp[1].split(')')[0].split(',')
+    
+    
     if len(variables) == 1: 
         fact_dict['variable_name'] = variables[0].strip()
     elif len(variables) == 2: 
         fact_dict['start'] = variables[0].strip()
         fact_dict['end'] = variables[1].strip()
+    # TODO: What if 3+-way interaction? May want to have a more dedicated interaction branch/function? 
     
     return fact_dict
 
