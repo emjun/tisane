@@ -5,27 +5,11 @@ import unittest
 
 class QueryTest(unittest.TestCase): 
 
+    # Included only when need to debug pytest
     def test(self): 
         print('hi')
 
-    def test_design_to_graph_between(self): 
-        student_id = Numeric('student_id')
-        sat_score = Numeric('sat_score')
-        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
-        
-        design = Design(dv = sat_score)
-        design.treat(student_id, tutoring, 'between')
-        
-        # Vis pre-disambiguation
-        # design.graph.visualize_graph()
-        
-        gr = infer_from(design, 'variable relationship graph')
-
-        gr.visualize_graph()
-    # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
-
-    # TODO: Think through how an end-user might express interaction in a study design 
-    # def test_design_to_graph_interaction(self): 
+    # def test_design_to_graph_between(self): 
     #     student_id = Numeric('student_id')
     #     sat_score = Numeric('sat_score')
     #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
@@ -39,32 +23,62 @@ class QueryTest(unittest.TestCase):
     #     gr = infer_from(design, 'variable relationship graph')
 
     #     gr.visualize_graph()
+    # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
 
-    def test_design_sm_between(self): 
-        student_id = Numeric('student_id')
-        sat_score = Numeric('sat_score')
-        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    # # TODO: Think through how an end-user might express interaction in a study design 
+    # # def test_design_to_graph_interaction(self): 
+    # #     student_id = Numeric('student_id')
+    # #     sat_score = Numeric('sat_score')
+    # #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-        design = Design(dv = sat_score)
-        design.treat(student_id, tutoring, 'between')
-
-        sm = infer_from(design, 'statistical model')
-
-        print(sm)
-        print(sm.mathematize())
-
-    def test_sm_to_graph_main(self): 
-        student_id = Numeric('student_id')
-        sat_score = Numeric('sat_score')
-        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    # #     design = Design(dv = sat_score)
+    # #     design.treat(student_id, tutoring, 'between')
         
-        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
-
-        gr = infer_from(sm, 'variable relationship graph')
+    # #     # Vis pre-disambiguation
+    # #     # design.graph.visualize_graph()
         
-        gr.visualize_graph()
+    # #     gr = infer_from(design, 'variable relationship graph')
 
-    def test_sm_to_graph_interaction(self): 
+    # #     gr.visualize_graph()
+
+    # def test_design_sm_between(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     design = Design(dv = sat_score)
+    #     design.treat(student_id, tutoring, 'between')
+
+    #     sm = infer_from(design, 'statistical model')
+
+    #     print(sm)
+    #     print(sm.mathematize())
+
+    # def test_sm_to_graph_main(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
+
+    #     gr = infer_from(sm, 'variable relationship graph')
+        
+    #     gr.visualize_graph()
+
+    # def test_sm_to_graph_interaction(self): 
+    #     student_id = Numeric('student_id')
+    #     intelligence = Numeric('iq')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
+
+    #     gr = infer_from(sm, 'variable relationship graph')
+        
+    #     gr.visualize_graph()
+
+    def test_sm_to_design_between(self): 
+        # TODO: Allow for "Variable" rather than "Numeric/Nominal/Ordinal" -- might have to change the code in a few different places
         student_id = Numeric('student_id')
         intelligence = Numeric('iq')
         sat_score = Numeric('sat_score')
@@ -72,12 +86,10 @@ class QueryTest(unittest.TestCase):
         
         sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
 
-        gr = infer_from(sm, 'variable relationship graph')
+        design = infer_from(sm, 'study design')
         
-        gr.visualize_graph()
+        print(design)
 
-    def test_sm_to_design(self): 
-        pass
 
     # def test_design_to_graph_nested_between(self): 
     #     student_id = Numeric('student_id')

@@ -29,15 +29,12 @@ class QueryManager(object):
             if isinstance(output_obj, StatisticalModel): 
                 effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=True, interactions=True)
                 
-            # elif isinstance(output_obj, Graph): 
-            #     effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=False, interactions=False)
-                
             KB.ground_effects_rules(dv_const=dv_const)
             effects_rules = self.collect_rules(output_obj=output_obj, step='effects')
             (model, updated_effects_facts) = self.solve(facts=effects_facts, rules=effects_rules, setting=None)
             
             # Postprocess: Use these updated_effects_facts to update main
-            # and interaction effect sequences Postprocess
+            # and interaction effect sequences
             for f in updated_effects_facts: 
                 fact_dict = parse_fact(f)
                 # Generate consts for grounding KB
@@ -45,6 +42,15 @@ class QueryManager(object):
             
             return updated_effects_facts
         
+        if isinstance(input_obj, StatisticalModel): 
+            if isinstance(output_obj, Design): 
+                pass
+
+                # ds_facts = input_obj.collect_ambiguous_data_structure_facts()
+                # treatment_facts = input_obj.collect_ambiguous_treatment_facts()
+
+                # import pdb; pdb.set_trace()
+
         return effects_facts
     
     def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
