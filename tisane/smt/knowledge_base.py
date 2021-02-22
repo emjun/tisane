@@ -10,7 +10,8 @@ class KnowledgeBase(object):
                 ForAll([x], Xor(MainEffect(x, dv_const), NoMainEffect(x, dv_const))),
                 # ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Contains(main_effects, Unit(x)))),
                 # ForAll([x0, x1], Implies(Interaction(x0, x1), And(Contains(interactions, Unit(x0)), Contains(interactions, Unit(x1))))),
-                ForAll([x0, x1], Xor(Interaction(x0, x1), NoInteraction(x0, x1))),
+                # TODO: Expand this for multiple xs for n-way interactions
+                ForAll([xs], Xor(Interaction(xs), NoInteraction(xs))),
                 # TODO: ADD RULE FOR CANT INTERACTION X with Y?
             ]
 
@@ -19,13 +20,11 @@ class KnowledgeBase(object):
         
         self.graph_rules = [
             ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, dv_const), Correlate(x, dv_const)))),
+            ForAll([x0, x1], Implies(Cause(x0, x1), Not(Cause(x1, x0)))), # If x0 causes x1, x1 cannot cause x0
+            ForAll([x0, x1], Xor(Cause(x0, x1), Correlate(x0, x1))), # If x0 causes x1, x1 cannot cause x0
         ] 
 
-        if 'possible_interactions' in kwargs: 
-            if kwargs['possible_interactions']: 
-                self.graph_rules += self.effect_rules
-        if interactions is not None: 
-                self.graph_rules.append(ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Xor(Cause(x0, x1), Correlate(x0, x1))))),
+        
 
         self.data_type_rules = [
             ForAll([x], Xor(CategoricalDataType(x), NumericDataType(x))), 

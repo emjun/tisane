@@ -51,7 +51,8 @@ Cause = Function('Cause', Object, Object, BoolSort())
 Correlate = Function('Correlate', Object, Object, BoolSort())
 
 rules = [
-    ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, _y), Correlate(x, _y)))),
+    # ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, _y), Correlate(x, _y)))),
+    
     # ForAll([x0, x1], Implies(Interaction(x0, x1), Xor(Cause(x0, x1), Correlate(x0, x1)))),
     # Implies(Interaction(x0, x1), Xor(Cause(x0, x1), Correlate(x0, x1))),
     ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Xor(Cause(x0, x1), Correlate(x0, x1)))),
@@ -64,36 +65,36 @@ rules = [
     # Between subjects means occurs once per subject   
 ]
 
-# starting state
-facts = [
-    Models(sat_score, main_effects), 
-    Dependent(sat_score),
-    # MainEffect(tutoring),
-    Cause(tutoring, sat_score), # Add both for each main effect and require end-user to pick one
-    Correlate(tutoring, sat_score),
-    # MainEffect(intelligence),
-    Cause(intelligence, sat_score), # Add both for each main effect and require end-user to pick one
-    Correlate(intelligence, sat_score),
-]
+# # starting state
+# facts = [
+#     Models(sat_score, main_effects), 
+#     Dependent(sat_score),
+#     # MainEffect(tutoring),
+#     Cause(tutoring, sat_score), # Add both for each main effect and require end-user to pick one
+#     Correlate(tutoring, sat_score),
+#     # MainEffect(intelligence),
+#     Cause(intelligence, sat_score), # Add both for each main effect and require end-user to pick one
+#     Correlate(intelligence, sat_score),
+# ]
 
-# At end of facts disambiguation, will have a complete set of facts for conceptual graph
-# TODO: If add more facts about additional relationships (e.g., that might suggest interaction), what do we do? -- this is something we would have to take care of in sys architecture?
-# TODO: Need to know which facts to add depending on query!!!
-# Create separate sample programs for different queries and then figure out how to generate dynamically/connect up with rest of Tisane
-# Query for variable relationship graph
-# Query for data schema
+# # At end of facts disambiguation, will have a complete set of facts for conceptual graph
+# # TODO: If add more facts about additional relationships (e.g., that might suggest interaction), what do we do? -- this is something we would have to take care of in sys architecture?
+# # TODO: Need to know which facts to add depending on query!!!
+# # Create separate sample programs for different queries and then figure out how to generate dynamically/connect up with rest of Tisane
+# # Query for variable relationship graph
+# # Query for data schema
 
+# # import pdb; pdb.set_trace()
+# s.add(rules)
+# # import pdb; pdb.set_trace()
+# s = check_update_constraints(solver=s, assertions=facts)
 # import pdb; pdb.set_trace()
-s.add(rules)
-# import pdb; pdb.set_trace()
-s = check_update_constraints(solver=s, assertions=facts)
-import pdb; pdb.set_trace()
 
-# Output 
-# Create Variable Relationship Graph
-parse_and_create_variable_relationship_graph(solver=s)
-# s.consequences()
-#s.eval()
+# # Output 
+# # Create Variable Relationship Graph
+# parse_and_create_variable_relationship_graph(solver=s)
+# # s.consequences()
+# #s.eval()
 
 
 ##### INTERACTION EFFECTS : Y = X1 + X2 + X1*X2
@@ -115,4 +116,5 @@ ixn_facts = [
 s1 = Solver()
 s1.add(rules)
 s1 = check_update_constraints(solver=s1, assertions=ixn_facts)
+import pdb; pdb.set_trace()
 parse_and_create_variable_relationship_graph(solver=s1)

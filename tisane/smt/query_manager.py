@@ -3,7 +3,7 @@ from tisane.design import Design
 from tisane.graph import Graph 
 
 from tisane.smt.declare_constraints import *
-import tisane.smt.rules as rules
+from tisane.smt.rules import *
 from tisane.smt.knowledge_base import KB
 from tisane.smt.qm_helpers import *
 
@@ -27,7 +27,7 @@ class QueryManager(object):
         # solving process
         if isinstance(input_obj, Design): 
             if isinstance(output_obj, StatisticalModel): 
-                effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=True, interactions=True)
+                effects_facts = input_obj.collect_coous_effects_facts(main_effects=True, interactions=True)
                 
             # elif isinstance(output_obj, Graph): 
             #     effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=False, interactions=False)
@@ -44,6 +44,8 @@ class QueryManager(object):
                 input_obj.generate_const_from_fact(fact_dict=fact_dict)
             
             return updated_effects_facts
+        
+        return effects_facts
     
     def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
         
@@ -58,6 +60,7 @@ class QueryManager(object):
         main_effects = input_obj.consts['main_effects']
         interactions = input_obj.consts['interactions']
         mixed_effects = None # mixed effects
+        # import pdb; pdb.set_trace()
         KB.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
         
         # After grounding KB, collect rules to guide synthesis
@@ -195,6 +198,7 @@ class QueryManager(object):
 
         # TODO: This may not generalize to n-way interactions
         # TODO: We want the end-user to provide hints towards interesting interactions
+        import pdb; pdb.set_trace()
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -235,24 +239,36 @@ class QueryManager(object):
             # Modifies @param assertions
             updated_assertions = self.update_clauses(assertions, unsat_core, keep_constraint)
             assertions = updated_assertions
-            # import pdb; pdb.set_trace()
+
+            new_state = solver.check(assertions)
+
+            if new_state == sat: 
+                return (solver, assertions)
+            elif new_state == unsat: 
+                return self.check_update_constraints(solver=solver, assertions=assertions)
+            else: 
+                import pdb; pdb.set_trace()
+                raise ValueError (f"After eliciting end-user input, solver state is neither SAT nor UNSAT: {new_state}")    
         elif (state == sat): 
             pass
-        else: 
-            raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
-
-        # Double check that the new_assertions do not cause UNSAT
-        new_state = solver.check(assertions)
-        
-        if new_state == sat: 
-            return (solver, assertions) # return the solver and the updated assertions
+        else:
             # import pdb; pdb.set_trace()
-            # return assertions
-        elif new_state == unsat: 
-            
-            return self.check_update_constraints(solver=solver, assertions=assertions)
-        else: 
-            raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
+            raise ValueError(f"Initial solver state into check_update_constraints is {state}")
+            # raise ValueError(f"State of solver after adding user input conceptual graph constraints is {state}")
+
+        # import pdb;pdb.set_trace()
+        # # Double check that the new_assertions do not cause UNSAT
+        # new_state = solver.check(assertions)
+        # import pdb; pdb.set_trace()
+        # if new_state == sat: 
+        #     return (solver, assertions) # return the solver and the updated assertions
+        #     # import pdb; pdb.set_trace()
+        #     # return assertions
+        # elif new_state == unsat: 
+        #     return self.check_update_constraints(solver=solver, assertions=assertions)
+        # else: 
+        #     import pdb; pdb.set_trace()
+        #     raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")
     
     # Postprocess results of finding a valid z3 @param model and @param updated_facts
     # @return results cast in output_obj
@@ -264,6 +280,11 @@ class QueryManager(object):
         
         elif isinstance(input_obj, Design) and isinstance(output_obj, StatisticalModel): 
             return design_to_statistical_model(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
+
+        elif isinstance(input_obj, StatisticalModel) and isinstance(output_obj, Graph): 
+            return statistical_model_to_graph(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
+        else: 
+            raise NotImplementedError
         
 # Global QueryManager
 QM = QueryManager()

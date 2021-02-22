@@ -9,8 +9,16 @@ from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interac
 from abc import abstractmethod
 import pandas as pd
 from typing import List, Any, Tuple
+from itertools import chain, combinations
 
 from z3 import *
+
+##### HELPER ##### 
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
 
 # TODO: Make this an abstract class, at least in name?
 class StatisticalModel(object): 
@@ -24,25 +32,29 @@ class StatisticalModel(object):
     link_function: str # maybe, not sure?
     variance_function: str # maybe, not sure?
 
+    graph : Graph # IR
+
     consts: dict # Z3 consts representing the model and its DV, main_effects, etc. 
 
-    graph : Graph # IR
 
     def __init__(self, dv: AbstractVariable, main_effects: List[AbstractVariable]=None, interaction_effects: List[Tuple[AbstractVariable, ...]]=None, mixed_effects: List[AbstractVariable]=None, link_func: str=None, variance_func: str=None): 
         self.dv = dv
+
+        self.graph = Graph()
+        self.graph._add_variable(self.dv)
         
         if main_effects is not None: 
-            self.main_effects = main_effects
+            self.set_main_effects(main_effects=main_effects)
         else: 
             self.main_effects = list()
         
         if interaction_effects is not None: 
-            self.interaction_effects = interaction_effects
+            self.set_interaction_effects(interaction_effects=interaction_effects)
         else: 
             self.interaction_effects = list()
         
         if mixed_effects is not None: 
-            self.mixed_effects = mixed_effects
+            self.set_mixed_effects(mixed_effects=mixed_effects)
         else: 
             self.mixed_effects = list()
 
@@ -51,6 +63,10 @@ class StatisticalModel(object):
 
         self.consts = dict()
         # self.generate_consts()
+
+    # TODO: Should be class method? 
+    def create_from(graph: Graph): 
+        raise NotImplementedError
 
     def __str__(self): 
         dv = f"DV: {self.dv}\n"
@@ -97,17 +113,51 @@ class StatisticalModel(object):
     def set_main_effects(self, main_effects: List[AbstractVariable]): 
         self.main_effects = main_effects
 
+        # Update the Graph IR
+        for m in self.main_effects: 
+            self.graph.unknown(lhs=m, rhs=self.dv)
+
     # Sets interaction effects to @param main_effects
     def set_interaction_effects(self, interaction_effects: List[AbstractVariable]): 
         self.interaction_effects = interaction_effects
 
+        # There may be 2+-way interactions
+        for ixn in self.interaction_effects: 
+            # For each interaction, add edges between the variables involved in the interaction
+            # Get powerset of ixn 
+            pset = list(powerset(ixn))
+            # Only keep sets that are of size 2 
+            pset_len_2 = [p for p in pset if len(p) == 2]
+            
+            # Update the Graph IR
+            for p in pset_len_2: 
+                assert(len(p)==2)
+                lhs = p[0]
+                rhs = p[1]
+                self.graph.unknown(lhs=lhs, rhs=rhs)
+
     # Sets mixed effects to @param mixed_effects
     def set_mixed_effects(self, mixed_effects: List[AbstractVariable]): 
         self.mixed_effects = mixed_effects
+
+        for mi in self.mixed_effects: 
+            self.graph.unknown(lhs=mi, rhs=self.dv)
     
     # @return all variables (DV, IVs)
-    def get_all_variables(self): 
-        return [self.dv] + self.main_effects + self.interaction_effects + self.mixed_effects
+    def get_variables(self) -> List[AbstractVariable]: 
+        variables = [self.dv] + self.main_effects
+        
+        for ixn in self.interaction_effects: 
+            for i in ixn: 
+                # Check that we haven't already added the variable (as a main effect)
+                if i not in variables: 
+                    variables.append(i)
+        
+        # TODO for mixed effects!
+        for mi in self.mixed_effects: 
+            pass
+
+        return variables
 
     # @return a list containing all the IVs
     def get_all_ivs(self):     
@@ -144,12 +194,14 @@ class StatisticalModel(object):
         if len(self.interaction_effects) > 0: 
             for ixn in self.interaction_effects: 
                 tmp = EmptySet(Object) 
+                
                 # For each variable in the interaction tuple
                 for v in ixn: 
                     tmp = SetAdd(tmp, v.const)
+
                 # Do we already have a sequence we're building onto?
-                # If not, create one 
-                assert(is_false(BoolVal(is_empty(tmp))))
+                # If not, create one
+                assert(tmp is not None)
                 if interactions_seq is None: 
                     # Create a sequence
                     interactions_seq = Unit(tmp)
@@ -167,6 +219,21 @@ class StatisticalModel(object):
     # @returns the set of logical facts that this StatisticalModel "embodies"
     def compile_to_facts(self) -> List: 
         facts = list()
+
+        # Declare data type
+        Object = DeclareSort('Object')
+
+        # Add interaction effects 
+        if self.interaction_effects is not None: 
+            # i_set is a Tuple of AbstractVariables
+            for i_set in self.interaction_effects: 
+                # Create set object
+                tmp = EmptySet(Object) 
+                # Add each variable in the interaction set
+                for v in i_set: 
+                    tmp = SetAdd(tmp, v.const)
+
+                facts.append(Interaction(tmp))
         
         # Add link function 
         if self.link_func is not None: 
@@ -176,8 +243,7 @@ class StatisticalModel(object):
         if self.variance_func is not None: 
             raise NotImplementedError
 
-        # TODO: Add facts about variables
-        variables = self.get_all_variables()
+        variables = self.get_variables()
         for v in variables: 
             if isinstance(v, Nominal): 
                 facts.append(NominalDataType(v.const))
@@ -185,14 +251,34 @@ class StatisticalModel(object):
                 facts.append(OrdinalDataType(v.const))
             else: 
                 assert (isinstance(v, Numeric)) 
+
                 facts.append(NumericDataType(v.const))
 
         return facts
     
     # @return additional set of logical facts that needs disambiguation depending on @param desired output_obj
     def collect_ambiguous_facts(self, output: str) -> List: 
-        # TODO: START HERE!
-        raise NotImplementedError
+        facts = list()
+        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+
+        if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
+            # Iterate over all edges
+            # This covers all the interactions, too. 
+            for (n0, n1, edge_data) in edges:         
+                edge_type = edge_data['edge_type']
+                n0_var = self.graph._graph.nodes[n0]['variable']
+                n1_var = self.graph._graph.nodes[n1]['variable']
+                if edge_type == 'unknown':
+                    if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
+                        # Induce UNSAT in order to get end-user clarification
+                        facts.append(Cause(n0_var.const, n1_var.const))
+                        facts.append(Correlate(n0_var.const, n1_var.const))
+                else: 
+                    raise NotImplementedError
+        elif output.upper() == 'STUDY DESIGN': 
+            pass
+
+        return facts
 
     def query(self, outcome: str) -> Any: 
         # Ground some rules to make the quantification simpler

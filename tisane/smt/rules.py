@@ -9,7 +9,8 @@ Object = DeclareSort('Object')
 x = Const('x', Object)
 x0 = Const('x0', Object)
 x1 = Const('x1', Object)
-i = Const('x1', SetSort(Object))
+xs = Const('xs', SetSort(Object))
+i = Const('i', SetSort(Object))
 
 # Model explanation
 Explains = Function('Explains', Object, SeqSort(Object), BoolSort())
@@ -17,8 +18,8 @@ Models = Function('Models', Object, SeqSort(Object), BoolSort())
 Dependent = Function('Dependent', Object, BoolSort())
 MainEffect = Function('MainEffect', Object, Object, BoolSort())
 NoMainEffect = Function('NoMainEffect', Object, Object, BoolSort())
-Interaction = Function('Interaction', Object, Object, BoolSort())
-NoInteraction = Function('NoInteraction', Object, Object, BoolSort())
+Interaction = Function('Interaction', SetSort(Object), BoolSort())
+NoInteraction = Function('NoInteraction', SetSort(Object), BoolSort())
 
 # Variable Relationship Graph
 Cause = Function('Cause', Object, Object, BoolSort())

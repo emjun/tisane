@@ -26,7 +26,7 @@ def parse_fact(fact: z3.BoolRef) -> List[str]:
 def get_var_names_to_variables(input_obj: Union[Design]): 
     var_names_to_variables = dict()
 
-    if isinstance(input_obj, Design): 
+    if isinstance(input_obj, Design) or isinstance(input_obj, StatisticalModel): 
         for v in input_obj.get_variables(): 
             var_names_to_variables[v.name] = v
 
@@ -106,3 +106,27 @@ def design_to_statistical_model(model: z3.ModelRef, updated_facts: List, input_o
     output_obj.set_mixed_effects(mixed_effects)
 
     return output_obj       
+
+def statistical_model_to_graph(model: z3.ModelRef, updated_facts: List, input_obj: StatisticalModel, output_obj: Graph):
+    var_names_to_variables = get_var_names_to_variables(input_obj=input_obj)
+
+    for f in updated_facts: 
+        fact_dict = parse_fact(f)
+
+        if 'start' in fact_dict and 'end' in fact_dict:
+            # Get variable names
+            start_name = fact_dict['start']
+            end_name = fact_dict['end']
+            # Get variables
+            start_var = var_names_to_variables[start_name]
+            end_var = var_names_to_variables[end_name]
+
+            if fact_dict['function'] == 'Cause': 
+                output_obj.cause(start_var, end_var)
+            elif fact_dict['function'] == 'Correlate': 
+                output_obj.correlate(start_var, end_var)
+            if fact_dict['function'] == 'Interaction': 
+                # TODO: Should we add Interaction-specific edge??
+                output_obj.correlate(start_var, end_var)
+    
+    return output_obj

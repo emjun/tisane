@@ -8,79 +8,6 @@ class QueryTest(unittest.TestCase):
     def test(self): 
         print('hi')
 
-    # def test_statistical_model_to_variable_relationship_graph_main_effects_only(self): 
-    #     # Could have a formula-based interface that parses to this object
-    #     # E.g.: 
-    #     # ts.StatisticalModel('SAT ~ Intelligence + Age', link='identity', variance='Gaussian')
-    #     # or even something in the query function: ts.query('SAT ~ Intelligence + Age', outcome='variable relationship graph'...)
-        
-    #     sm = ts.StatisticalModel( dv='SAT_Score', 
-    #                                 main_effects=['Intelligence', 'Age'], 
-    #                                 interaction_effects=[], 
-    #                                 mixed_effects=[], 
-    #                                 link='identity', 
-    #                                 variance='Gaussian') 
-    
-    #     # sm.to_logical_facts()
-    #     sm.query(outcome='variable relationship graph')
-
-    #     # Other important considerations: Currently assume categorical data is
-    #     # represented in 1 variable, which is not what is happening
-    #     # mathematically, could change this? 
-
-    # def test_statistical_model_to_variable_relationship_graph_main_effects_interaction(self): 
-        
-    #     sm = ts.StatisticalModel( dv='SAT_Score', 
-    #                                 main_effects=['Intelligence', 'Age'], 
-    #                                 interaction_effects=[('Intelligence', 'Age')], 
-    #                                 mixed_effects=[], 
-    #                                 link='identity', 
-    #                                 variance='Gaussian') 
-        
-    #     sm.query(outcome='variable relationship graph')
-
-    # def test_idea(self): 
-    #     # Assumes people know data schema when thinking about variables
-    #     student_id = Numeric('pid')
-    #     classroom = Numeric('class')
-    #     age = Numeric('age')
-    #     sat_score = Numeric('score')
-    #     tutoring = Nominal('tutoring', 2) # Categorical('tutoring')
-
-    #     # Create graph
-    #     gr = Graph()
-    #     gr = gr.correlate(age, sat_score)
-    #     gr.cause(tutoring, sat_score)
-    #     # Could be more functional 
-    #     # correlate(age, sat_score, graph=gr)
-
-    #     design = Design(ivs=[age, tutoring], dv=sat_score)
-    #     design.nest(student_id, classroom)
-    #     design.assign(student_id, tutoring)
-
-    #     # Need to update graph with design info
-    #     # design.nest(student_id, classroom, gr)
-    #     # gr.apply(design) 
-    #     # Could be more functional 
-    #     # apply(design, gr)?
-
-    #     sm = StatisticalModel( dv=sat_score, 
-    #                                 main_effects=[age, tutoring], 
-    #                                 interaction_effects=[(age, tutoring)], 
-    #                                 mixed_effects=[])
-    #                                 # link='identity', 
-    #                                 # variance='Gaussian') 
-        
-    #     sm_unknown = StatisticalModel( dv=sat_score, 
-    #                                     main_effects=[unknown(age), unknown(tutoring)],
-    #                                     interaction_effects=[unknown(age, tutoring, ...)]) # unknown construct helpful when analysts have most of an idea but don't know others (partial spec)
-
-    #     sm = ts.infer_from(design, StatisticalModel())
-    #     graph = ts.infer_from(design, Graph())
-
-    #     res = ts.verify(design, sm)
-
-
     # def test_design_to_graph_between(self): 
     #     student_id = Numeric('student_id')
     #     sat_score = Numeric('sat_score')
@@ -97,6 +24,22 @@ class QueryTest(unittest.TestCase):
     #     gr.visualize_graph()
     # # TODO: What happens if end-user does not specify the types of variables? (When Graph -> Design/SM)? 
 
+    # TODO: Think through how an end-user might express interaction in a study design 
+    # def test_design_to_graph_interaction(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     design = Design(dv = sat_score)
+    #     design.treat(student_id, tutoring, 'between')
+        
+    #     # Vis pre-disambiguation
+    #     # design.graph.visualize_graph()
+        
+    #     gr = infer_from(design, 'variable relationship graph')
+
+    #     gr.visualize_graph()
+
     # def test_design_sm_between(self): 
     #     student_id = Numeric('student_id')
     #     sat_score = Numeric('sat_score')
@@ -110,18 +53,32 @@ class QueryTest(unittest.TestCase):
     #     print(sm)
     #     print(sm.mathematize())
 
-    def test_sm_to_graph(self): 
+    # def test_sm_to_graph_main(self): 
+    #     student_id = Numeric('student_id')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
+
+    #     gr = infer_from(sm, 'variable relationship graph')
+        
+    #     gr.visualize_graph()
+
+    def test_sm_to_graph_interaction(self): 
         student_id = Numeric('student_id')
+        intelligence = Numeric('iq')
         sat_score = Numeric('sat_score')
         tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring])
+        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
 
         gr = infer_from(sm, 'variable relationship graph')
-        import pdb; pdb.set_trace()
+        
+        gr.visualize_graph()
 
     def test_sm_to_design(self): 
         pass
+
     # def test_design_to_graph_nested_between(self): 
     #     student_id = Numeric('student_id')
     #     classroom = Numeric('class', cardinality=4)
@@ -247,26 +204,6 @@ class QueryTest(unittest.TestCase):
     #     # TODO: During inference process, need to ask about interactions...
     #     gr = ts.infer_from(design, Graph())
 
-    # def test_sm_to_design(self): 
-    #     sm = StatisticalModel( dv=sat_score, 
-    #                                 main_effects=[age, tutoring], 
-    #                                 interaction_effects=[(age, tutoring)], 
-    #                                 mixed_effects=[])
-    #                                 # link='identity', 
-    #                                 # variance='Gaussian') 
-
-    #     design = ts.infer_from(sm, Design())
-
-    # def test_sm_to_graph(self): 
-    #     sm = StatisticalModel( dv=sat_score, 
-    #                                 main_effects=[age, tutoring], 
-    #                                 interaction_effects=[(age, tutoring)], 
-    #                                 mixed_effects=[])
-    #                                 # link='identity', 
-    #                                 # variance='Gaussian') 
-
-    #     gr = ts.infer_from(sm, Graph())
-
     # def test_graph_to_design(self): 
     #     student_id = Variable('pid') # TODO: What happens if we dont have this? 
     #     classroom = Variable('class') # TODO: What happens if we dont have this? 
@@ -320,3 +257,35 @@ class QueryTest(unittest.TestCase):
 
     # #     ts.query(input_obj=stat_mod, outcome='data schema')
 
+
+
+# def test_statistical_model_to_variable_relationship_graph_main_effects_only(self): 
+    #     # Could have a formula-based interface that parses to this object
+    #     # E.g.: 
+    #     # ts.StatisticalModel('SAT ~ Intelligence + Age', link='identity', variance='Gaussian')
+    #     # or even something in the query function: ts.query('SAT ~ Intelligence + Age', outcome='variable relationship graph'...)
+        
+    #     sm = ts.StatisticalModel( dv='SAT_Score', 
+    #                                 main_effects=['Intelligence', 'Age'], 
+    #                                 interaction_effects=[], 
+    #                                 mixed_effects=[], 
+    #                                 link='identity', 
+    #                                 variance='Gaussian') 
+    
+    #     # sm.to_logical_facts()
+    #     sm.query(outcome='variable relationship graph')
+
+    #     # Other important considerations: Currently assume categorical data is
+    #     # represented in 1 variable, which is not what is happening
+    #     # mathematically, could change this? 
+
+    # def test_statistical_model_to_variable_relationship_graph_main_effects_interaction(self): 
+        
+    #     sm = ts.StatisticalModel( dv='SAT_Score', 
+    #                                 main_effects=['Intelligence', 'Age'], 
+    #                                 interaction_effects=[('Intelligence', 'Age')], 
+    #                                 mixed_effects=[], 
+    #                                 link='identity', 
+    #                                 variance='Gaussian') 
+        
+    #     sm.query(outcome='variable relationship graph')

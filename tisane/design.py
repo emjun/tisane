@@ -55,6 +55,19 @@ class Design(object):
 
         self.consts = dict()
 
+    # TODO: Should be class method? 
+    # Create Design object from a @param Graph object
+    # Useful for when moving between states Design - Graph - StatisticalModel
+    # E.g., gr = infer_from(design, 'variable relationship graph') then infer_from (gr, 'statistical model')
+    # TODO: Not sure if @param graph could be StatisticalModel as well...?
+    def create_from(graph: Graph): 
+        raise NotImplementedError
+        
+        # Might have some logical facts "baked in" so would not have to ask for the same facts all the time...?
+        # Could store some of this info in the edges? or as separate properties/piv? 
+
+        # TODO: Update rest of object in order to reflect updates to graph 
+
     # @return IV and DV variables
     def get_variables(self): 
         variables = list()
@@ -62,12 +75,12 @@ class Design(object):
 
         return variables
 
-    def _create_graph(self, ivs: List[AbstractVariable], dv: AbstractVariable): 
-        gr = Graph()
-        for v in ivs: 
-            gr.unknown(v, dv)
+    # def _create_graph(self, ivs: List[AbstractVariable], dv: AbstractVariable): 
+    #     gr = Graph()
+    #     for v in ivs: 
+    #         gr.unknown(v, dv)
         
-        return gr
+    #     return gr
 
     # TODO: Any way to get rid of ivs list? 
     # Add iv to self.ivs if iv is not already included
