@@ -44,7 +44,8 @@ class QueryManager(object):
         
         if isinstance(input_obj, StatisticalModel): 
             if isinstance(output_obj, Design): 
-                pass
+                input_obj.elicit_treatment_facts()
+                import pdb; pdb.set_trace()
 
                 # ds_facts = input_obj.collect_ambiguous_data_structure_facts()
                 # treatment_facts = input_obj.collect_ambiguous_treatment_facts()

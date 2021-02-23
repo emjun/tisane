@@ -87,6 +87,7 @@ class QueryTest(unittest.TestCase):
         sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
 
         design = infer_from(sm, 'study design')
+        import pdb; pdb.set_trace()
         
         print(design)
 

@@ -291,6 +291,8 @@ class StatisticalModel(object):
             
             if n1_var is self.dv: 
                 # Ask about Nesting 
+                # TODO: START HERE: Test elicit_treatment_facts end-to-end before add this method?
+                # TODO: probably very similar to elicit_treatment_facts. 
                 idx = int(input(f'These cannot be true at the same time. Which is true? If neither, enter -1. {unsat_core}:'))
                 if idx == -1: 
                     pass
@@ -346,7 +348,7 @@ class StatisticalModel(object):
                             # TODO: Update this when create Graph IR!
                             self.graph._add_edge(start=n0_var, end=var_unit, edge_type='treat')
                         else: 
-                            raise ValueError f("Picked an index out of bounds!")
+                            raise ValueError (f"Picked an index out of bounds!")
                     
                 elif ans == 'N': 
                     # TODO: What happens if treats more than one variable? 
@@ -377,7 +379,7 @@ class StatisticalModel(object):
                         # Induce UNSAT in order to get end-user clarification
                         facts.append(Cause(n0_var.const, n1_var.const))
                         facts.append(Correlate(n0_var.const, n1_var.const))
-                    else output.upper() == 'STUDY DESIGN': 
+                    elif output.upper() == 'STUDY DESIGN': 
                         # Induce UNSAT in order to get end-user clarification
                         # Let's start by assuming n1_var is the dv
                         assert(n1_var is self.dv)
@@ -393,7 +395,8 @@ class StatisticalModel(object):
                 edge_type = edge_data['edge_type']
                 n0_var = self.graph._graph.nodes[n0]['variable']
                 n1_var = self.graph._graph.nodes[n1]['variable']
-                if edge_type == 'unknown'
+                if edge_type == 'unknown':
+                    pass
                 
             
             # Data collection procedure
