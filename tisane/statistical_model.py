@@ -20,24 +20,6 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-# Elicit info to and create a new variable 
-def elicit_and_create_new_variable(): 
-    # TODO: Provide option to exit?
-    var_name = str(input(f"What is the name of the new variable? "))
-    # TODO: Provide "None of the above" option?
-    var_type_options = ['Nominal', 'Ordinal', 'Numeric']
-    idx = int(input(f"What is the data type of \'{var_name}\'? Pick index number: {var_type_options} "))
-    
-    if idx in range(len(var_type_options)):
-        var_type = var_type_options[idx]
-    if var_type.upper() == 'NOMINAL': 
-        return Nominal(name=var_name)
-    elif var_type.upper() == 'ORDINAL': 
-        return Ordinal(name=var_name)
-    else: 
-        assert(var_type.upper() == 'NUMERIC')
-        return Numeric(name=var_name)
-
 
 # TODO: Make this an abstract class, at least in name?
 class StatisticalModel(object): 
@@ -307,11 +289,11 @@ class StatisticalModel(object):
                 raise ValueError
 
         # Add structure facts
-        edges = self.graph._graph.edges(data=True)
+        edges = self.graph.get_nodes()
         for (n0, n1, edge_data) in edges: 
             edge_type = edge_data['edge_type']
-            n0_var = self.graph._graph.nodes[n0]['variable']
-            n1_var = self.graph._graph.nodes[n1]['variable']
+            n0_var = gr.get_variable(n0)
+            n1_var = gr.get_variable(n1)
 
             if edge_type == 'treat': 
                 pass
@@ -331,112 +313,18 @@ class StatisticalModel(object):
     
         return facts
 
-    def elicit_structure_facts(self) -> List: 
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
-
-        for (n0, n1, edge_data) in edges:        
-            edge_type = edge_data['edge_type']
-            n0_var = self.graph._graph.nodes[n0]['variable']
-            n1_var = self.graph._graph.nodes[n1]['variable']
-
-
-            if n1_var is self.dv: 
-                # Ask about Nesting 
-                # TODO: START HERE: Test elicit_treatment_facts end-to-end before add this method?
-                # TODO: probably very similar to elicit_treatment_facts. 
-                idx = int(input(f'These cannot be true at the same time. Which is true? If neither, enter -1. {unsat_core}:'))
-                if idx == -1: 
-                    pass
-                    # TODO: Remove both?
-                elif idx in range(len(unsat_core)): 
-                    # only keep the constraint that is selected. 
-                    constraint = unsat_core[idx] 
-                    keep.append(constraint)
-                    print(f"Ok, going to add {constraint} and remove the others.")
-                    break
-                else:
-                    raise ValueError
-
-                
-                # If so, which variable does it treat: existing or new 
-                # TODO: What happens if treats more than one variable? 
-
-                # Create New Variable
-
-                # Add treatment, unknown edges
-
-            else: 
-                # TODO: This might happen for a mixed effect? 
-                import pdb; pdb.set_trace()
-
-
-
-    def elicit_treatment_facts(self) -> List: 
-        # nodes = list(self.graph._graph.nodes(data=True)) # get all nodes
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
-
-        for (n0, n1, edge_data) in edges:        
-            edge_type = edge_data['edge_type']
-            n0_var = self.graph._graph.nodes[n0]['variable']
-            n1_var = self.graph._graph.nodes[n1]['variable']
-            
-            if n1_var is self.dv: 
-                # Ask if treatment
-                treatment_var_str = f"\'{n0_var.name}\'"
-                ans = str(input(f'Is {treatment_var_str} a treatment? Y or N:')).upper()
-                if ans == 'Y': 
-                    prompt = f'Which other variables does {treatment_var_str} treat?'
-                    
-                    variables = self.get_variables()
-                    # Filter out DV (n1_var) and n0_var
-                    variable_options = [v for v in variables if (v is not n0_var) and (v is not n1_var)]
-                    variable_options_names = [v.name for v in variable_options]
-                    assert(len(variable_options_names) == len(variable_options))
-                    if len(variable_options) > 0: 
-                        options = f'Pick index of {variable_options_names} OR E to create a new variable.'
-                        opt = input(prompt + ' ' + options)
-                    else: 
-                        print(f'Looks like {treatment_var_str} is the only IV currently. What (new) variable does it treat?')
-                        opt = 'E'
-                
-                    if opt == 'E': 
-                        # TODO: What happens if treats more than one variable? 
-                        assert(opt.upper() == 'E')
-                        var = elicit_and_create_new_variable()
-                        # TODO: Update this when create Graph IR!
-                        self.add_main_effect(var)
-
-                    else:  
-                        if int(opt): 
-                            idx = int(opt)
-                            if idx in range(len(variable_options)): 
-                                var_unit = variable_options[idx]
-                                # TODO: Update this when create Graph IR!
-                                import pdb; pdb.set_trace()
-                                self.graph._add_edge(start=n0_var, end=var_unit, edge_type='treat')
-                            else: 
-                                raise ValueError (f"Picked an index out of bounds!")
-                    
-                elif ans == 'N': 
-                    pass
-                else: 
-                    raise ValueError
-            else: 
-                # TODO: This might happen for a mixed effect? 
-                import pdb; pdb.set_trace()
-
     # @return additional set of logical facts that needs disambiguation depending on @param desired output_obj
     def collect_ambiguous_facts(self, output: str) -> List: 
         facts = list()
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+        edges = self.graph.get_edges() # get list of edges
 
         if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
             # Iterate over all edges
             # This covers all the interactions, too. 
             for (n0, n1, edge_data) in edges:         
                 edge_type = edge_data['edge_type']
-                n0_var = self.graph._graph.nodes[n0]['variable']
-                n1_var = self.graph._graph.nodes[n1]['variable']
+                n0_var = gr.get_variable(n0)
+                n1_var = gr.get_variable(n1)
                 if edge_type == 'unknown':
                     if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
                         # Induce UNSAT in order to get end-user clarification
@@ -446,7 +334,7 @@ class StatisticalModel(object):
                     raise NotImplementedError
         elif output.upper() == 'STUDY DESIGN': 
             # Data schema
-            nodes = list(self.graph._graph.nodes(data=True))
+            nodes = self.graph.get_nodes()
             for (n, data)  in nodes: 
                 n_var = data['variable']
                 facts.append(NumericDataType(n_var.const))
@@ -463,8 +351,8 @@ class StatisticalModel(object):
             # Data collection procedure    
             for (n0, n1, edge_data) in edges: 
                 edge_type = edge_data['edge_type']
-                n0_var = self.graph._graph.nodes[n0]['variable'] # treatment
-                n1_var = self.graph._graph.nodes[n1]['variable'] # unit
+                n0_var = gr.get_variable(n0)
+                n1_var = gr.get_variable(n1)
                 if edge_type == 'treat':
                     facts.append(Between(n1_var.const, n0_var.const))
                     facts.append(Within(n1_var.const, n0_var.const))

@@ -1,6 +1,8 @@
 from tisane.statistical_model import StatisticalModel
 from tisane.design import Design 
 from tisane.graph import Graph 
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
+
 
 from z3 import *
 from typing import List, Union
@@ -37,6 +39,149 @@ def parse_fact(fact: z3.BoolRef) -> List[str]:
     # TODO: What if 3+-way interaction? May want to have a more dedicated interaction branch/function? 
     
     return fact_dict
+
+# Elicit info to and create a new variable 
+def elicit_and_create_new_variable(): 
+    # TODO: Provide option to exit?
+    var_name = str(input(f"What is the name of the new variable? "))
+    # TODO: Provide "None of the above" option?
+    var_type_options = ['Nominal', 'Ordinal', 'Numeric']
+    idx = int(input(f"What is the data type of \'{var_name}\'? Pick index number: {var_type_options} "))
+    
+    if idx in range(len(var_type_options)):
+        var_type = var_type_options[idx]
+    if var_type.upper() == 'NOMINAL': 
+        return Nominal(name=var_name)
+    elif var_type.upper() == 'ORDINAL': 
+        return Ordinal(name=var_name)
+    else: 
+        assert(var_type.upper() == 'NUMERIC')
+        return Numeric(name=var_name)
+
+##### FOR PREPARING FOR QUERIES #####
+
+# Ask users for which DV to consider when infering Designs and StatisitcalModels
+def elicit_dv(gr: Graph):
+    # TODO: Suggest nodes with only incoming edges and no outgoing edges?
+    # edges = gr.get_edges() # get list of edges
+
+    nodes = gr.get_nodes()
+    node_names = [data['variable'].name for (n, data) in nodes]
+    assert(len(nodes) == len(node_names))
+    # TODO: An end-user may want to do this in a loop for more complex graphs/designs?
+    idx = int(input(f'Which variable is your dependent variable: {node_names}? Choose index: '))
+
+    if idx in range(len(nodes)):
+        print(f'Ok, will use {node_names[idx]} as DV!')
+    else: 
+        raise ValueError("Index is out of range!")
+    
+    return  gr.get_variable(node_names[idx])
+
+# Ask users about nesting and other structures
+def elicit_structure_facts(gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable]) -> List: 
+    nodes = gr.get_nodes()
+
+    ans = str(input(f'Are there any nesting relationships? Y or N:'))
+    
+    if ans.upper() == 'Y':
+        variables = gr.get_variables() 
+        variable_names = [v.name for v in variables]
+        assert(len(variables) == len(variable_names))
+        
+        all_done = False
+
+        while not all_done: 
+            # TODO: Do we need to consider the case where we want to create a new variable UNIT and not just GROUP?
+            idx_unit = int(input(f'Which variable is nested in another: {variable_names}? Choose index: '))
+
+            if idx_unit in range(len(variables)): 
+                unit = variables[idx_unit]
+                group_variables = [v for v in variables if v.name != unit.name]
+                options = [v.name for v in group_variables]
+                assert(len(group_variables) == len(options))
+                idx_group = str(input(f"Which variable is \'{unit}\' nested under?: {options}. Choose index or E to create a new variable: "))
+
+                if idx_group.upper() == 'E': 
+                    group = elicit_and_create_new_variable()
+                    # TODO: Update w Graph IR?
+                    gr._add_edge(start=group, end=unit, edge_type='nest')
+                elif int(idx_group) in range(len(options)): 
+                    group = group_variables[int(idx_group)]
+                    # TODO: Update w Graph IR?
+                    gr._add_edge(start=group, end=unit, edge_type='nest')
+                else: 
+                    raise ValueError(f"Unrecognized option: {idx_group}")
+            else: 
+                raise ValueError(f"Unrecognized option: {idx_group}")
+
+            ans = str(input(f'Any more nesting relationships to declare? Y or N: '))
+            if ans.upper() == 'N': 
+                all_done = True
+
+# @param gr is Graph from which to elicit treatment facts
+def elicit_treatment_facts(gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable], **kwargs) -> List: 
+    # nodes = list(gr.nodes(data=True)) # get all nodes
+    edges = gr.get_edges() # get list of edges
+
+    for (n0, n1, edge_data) in edges:     
+        edge_type = edge_data['edge_type']
+        n0_var = gr.get_variable(n0)
+        n1_var = gr.get_variable(n1)
+        
+        if n1_var is dv: 
+            # Ask if treatment
+            treatment_var_str = f"\'{n0_var.name}\'"
+            ans = str(input(f'Is {treatment_var_str} a treatment? Y or N:')).upper()
+            if ans == 'Y': 
+                prompt = f'Which other variables does {treatment_var_str} treat?'
+                
+                # Filter out DV (n1_var) and n0_var
+                variable_options = [v for v in variables if (v is not n0_var) and (v is not n1_var)]
+                variable_options_names = [v.name for v in variable_options]
+                assert(len(variable_options_names) == len(variable_options))
+                if len(variable_options) > 0: 
+                    options = f'Pick index of {variable_options_names} OR E to create a new variable.'
+                    opt = input(prompt + ' ' + options)
+                else: 
+                    print(f'Looks like {treatment_var_str} is the only IV currently. What (new) variable does it treat?')
+                    opt = 'E'
+            
+                if opt == 'E': 
+                    # TODO: What happens if treats more than one variable? 
+                    assert(opt.upper() == 'E')
+                    var = elicit_and_create_new_variable()
+                    # TODO: Update this when create Graph IR!
+                    # TODO: This is a workaround, an observer pattern or something else might be better!
+                    # REPLACE ivs and other objects in StatisticalModel, Design with calls to graph?
+                    if 'input_obj' in kwargs: 
+                        input_obj = kwargs['input_obj']
+                        if isinstance(input_obj, Statistical): 
+                            input_obj.add_main_effect(var) 
+                        else:
+                            raise NotImplementedError
+                    else: 
+                        # TODO: Replace with Treat when create Graph IR!
+                        gr._add_edge(start=var, end=n1_var, edge_type='treat')
+                else:  
+                    if int(opt): 
+                        idx = int(opt)
+                        if idx in range(len(variable_options)): 
+                            var_unit = variable_options[idx]
+                            # TODO: Update this when create Graph IR!
+                            import pdb; pdb.set_trace()
+                            gr._add_edge(start=n0_var, end=var_unit, edge_type='treat')
+                        else: 
+                            raise ValueError (f"Picked an index out of bounds!")
+                
+            elif ans == 'N': 
+                pass
+            else: 
+                raise ValueError
+        else: 
+            # TODO: This might happen for a mixed effect? 
+            import pdb; pdb.set_trace()
+
 
 ##### FOR POSTPROCESSING QUERY RESULTS #####
 def get_var_names_to_variables(input_obj: Union[Design]): 

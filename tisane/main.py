@@ -392,7 +392,7 @@ def query(input_obj: Union[StatisticalModel, Design, Graph], output: str):
         # TODO: if Graph -> SM, will have to pass dv differently since Graph has no attr DV
         output_obj = StatisticalModel(dv=input_obj.dv, main_effects=list(), interaction_effects=list(), mixed_effects=list(), link_func=None, variance_func=None)
     elif output.upper() == 'STUDY DESIGN': 
-        output_obj = Design(dv=input_obj.dv)
+        output_obj = Design() # No dv, set DV during query process
     assert(output_obj is not None)        
 
     # Query 
@@ -422,13 +422,12 @@ def infer_from(input_: Union[Design], output_: str):
         elif output_.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
             gr = query(input_obj=input_, output=output_)
             return gr
-    elif isinstance(input_, Graph): 
-        pass
-        # if isinstance(output_, Design): 
-        #     design = query(gr, Design())
-        #     # What would the above query look like in terms of logical formula?
-        # elif isinstance(output_, StatisticalModel): 
-        #     sm = query(gr, StatisticalModel)
+    elif isinstance(input_, Graph):
+        if output_.upper() == 'STUDY DESIGN': 
+            design = query(input_obj=input_, output=output_)
+            return design 
+        elif isinstance(output_, StatisticalModel): 
+            sm = query(gr, StatisticalModel)
     
 
 

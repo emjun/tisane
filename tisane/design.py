@@ -43,15 +43,17 @@ class Design(object):
 
     consts : dict # Dict of Z3 consts involved in Design
 
-    def __init__(self, dv: AbstractVariable): 
+    def __init__(self, dv: AbstractVariable=None): 
         self.ivs = list()
         self.dv = dv
         self.treatments = list() 
         # self.unit = unit
         # self.graph = self._create_graph(ivs=ivs, dv=dv)
         self.graph = Graph() # empty graph
-        # Add dv to graph
-        self.graph._add_variable(dv)
+        
+        if self.dv: 
+            # Add dv to graph
+            self.graph._add_variable(dv)
 
         self.consts = dict()
 
@@ -88,6 +90,15 @@ class Design(object):
         if iv not in self.ivs: 
             self.ivs.append(iv)
             self.graph.unknown(lhs=iv, rhs=self.dv)
+    
+    # Set self.dv to be @param dv
+    # Assumes self.dv was None before
+    def set_dv(self, dv: AbstractVariable): 
+        assert(self.dv is None)
+        self.dv = dv 
+        self.graph._add_variable(dv)
+
+
 
     # @return dict of Z3 consts for variables in model
     def generate_const_from_fact(self, fact_dict: dict): 
@@ -191,12 +202,12 @@ class Design(object):
                 assert (isinstance(n_var, Numeric)) 
                 facts.append(NumericDataType(n_var.const))
 
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+        edges = self.graph.get_edges() # get list of edges
 
         for (n0, n1, edge_data) in edges: 
             edge_type = edge_data['edge_type']
-            n0_var = self.graph._graph.nodes[n0]['variable']
-            n1_var = self.graph._graph.nodes[n1]['variable']
+            n0_var = gr.get_variable(n0)
+            n1_var = gr.get_variable(n1)
             if edge_type == 'nest': 
                 pass
             elif edge_type == 'treat': 
@@ -208,7 +219,7 @@ class Design(object):
 
     def collect_ambiguous_effects_facts(self, main_effects: bool, interactions: bool) -> List: 
         facts = list()
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+        edges = self.graph.get_nodes() # get list of edges
 
         # Declare data type
         Object = DeclareSort('Object')
@@ -218,8 +229,8 @@ class Design(object):
             # What Main Effects should we consider? 
             for (n0, n1, edge_data) in edges: 
                 edge_type = edge_data['edge_type']
-                n0_var = self.graph._graph.nodes[n0]['variable']
-                n1_var = self.graph._graph.nodes[n1]['variable']
+                n0_var = gr.get_variable(n0)
+                n1_var = gr.get_variable(n1)
                 if edge_type == 'nest': 
                     pass
                 elif edge_type == 'treat': 
@@ -257,13 +268,13 @@ class Design(object):
     def collect_ambiguous_facts(self, output: str) -> List: 
 
         facts = list()
-        edges = list(self.graph._graph.edges(data=True)) # get list of edges
+        edges = self.graph.get_edges() # get list of edges
 
         # Iterate over edges
         for (n0, n1, edge_data) in edges:         
             edge_type = edge_data['edge_type']
-            n0_var = self.graph._graph.nodes[n0]['variable']
-            n1_var = self.graph._graph.nodes[n1]['variable']
+            n0_var = gr.get_variable(n0)
+            n1_var = gr.get_variable(n1)
             if edge_type == 'unknown':
                 if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
                     # Induce UNSAT in order to get end-user clarification

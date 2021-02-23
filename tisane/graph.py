@@ -2,6 +2,7 @@ from tisane.variable import AbstractVariable
 
 import networkx as nx
 import pydot
+from typing import List
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -55,6 +56,37 @@ class Graph(object):
 
         graph.write_png('graph_vis.png')
 
+    # @return List of variables represented in this graph as nodes
+    def get_variables(self) -> List[AbstractVariable]:
+        variables = list()
+
+        nodes = list(self._graph.nodes(data=True))
+        for (n, data) in nodes:
+            n_var = data['variable']
+            variables.append(n_var)
+
+        return variables
+
+    # @return list of nodes in graph
+    def get_nodes(self) -> List:
+        return list(self._graph.nodes(data=True))
+    
+
+    # @return list of edges in graph
+    def get_edges(self) -> List:
+        return list(self._graph.edges(data=True))
+
+    # @param name is the name of the variable we are looking for
+    # @return AbstractVariable in Graph with @param name, None otherwise
+    def get_variable(self, name: str) -> AbstractVariable: 
+        nodes = self.get_nodes()
+
+        for (n, data) in nodes: 
+            n_var = data['variable']
+            if n_var.name == name: 
+                return n_var
+        return None
+
     # Variables have unique names and are indexed by their names.
     def _add_variable(self, variable: AbstractVariable):  
         if not self._graph: 
@@ -64,7 +96,7 @@ class Graph(object):
     # @returns node of underlying _graph if in graph, otherwise None
     def _has_variable(self, variable: AbstractVariable): 
         return self._graph.has_node(variable.name)
-    
+
     # @returns handle to Node that represents the @param variable 
     # @returns None if @param variable is not found in the graph 
     def _get_variable_node(self, variable: AbstractVariable): 

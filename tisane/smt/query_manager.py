@@ -16,16 +16,18 @@ Class for managing queries to KnowledgeBase and processing results of solving co
 """
 class QueryManager(object): 
 
-    def prep_query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
+    # TODO: When move to Graph IR: It seems to me that all the prep methods could be in the QueryManager itself!
+    # TODO: Could also move collect_ambiguous facts to QueryManager (helpers)???
+    def prep_query(self, input_obj: Union[Design, StatisticalModel, Graph], output_obj: Union[Graph, StatisticalModel, Design]):
         effects_facts = list()
-
-        # Used to ground rules to simplify quantification during constraint solving
-        dv_const = input_obj.dv.const
 
         # If the @param output_obj is a StatisticalModel, do a prep phase to
         # narrow down an Effects Set to consider for the rest of the constraint
         # solving process
         if isinstance(input_obj, Design): 
+            # Used to ground rules to simplify quantification during constraint solving
+            dv_const = input_obj.dv.const
+
             if isinstance(output_obj, StatisticalModel): 
                 effects_facts = input_obj.collect_ambiguous_effects_facts(main_effects=True, interactions=True)
                 
@@ -43,21 +45,35 @@ class QueryManager(object):
             return updated_effects_facts
         
         if isinstance(input_obj, StatisticalModel): 
+            # Used to ground rules to simplify quantification during constraint solving
+            dv_const = input_obj.dv.const
+            
             if isinstance(output_obj, Design): 
                 # Ask for treatment before structure because seems more
                 # intuitive this way. 
                 # Also, by asking for treatment, get some structure information.
-                input_obj.elicit_treatment_facts()
+                input_obj.elicit_treatment_facts(gr=input_obj.graph, dv=input_obj.dv, variables=get_variables(), input_obj=input_obj)
                 # input_obj.elicit_structure_facts()
 
                 # ds_facts = input_obj.collect_ambiguous_data_structure_facts()
                 # treatment_facts = input_obj.collect_ambiguous_treatment_facts()
 
                 # import pdb; pdb.set_trace()
+        
+        if isinstance(input_obj, Graph): 
+            if isinstance(output_obj, Design): 
+                # Ask end-user about which DV to use
+                dv = elicit_dv(gr=input_obj)
+                output_obj.set_dv(dv=dv)
+                variables = input_obj.get_variables()
+                # Elicit treatment facts
+                elicit_treatment_facts(gr=input_obj, dv=dv, variables=variables)
+                # Elicit data/structure facts
+                elicit_structure_facts(gr=input_obj, dv=dv, variables=variables)
 
         return effects_facts
     
-    def query(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]):
+    def query(self, input_obj: Union[Design, StatisticalModel, Graph], output_obj: Union[Graph, StatisticalModel, Design]):
         
         updated_effects_facts = self.prep_query(input_obj=input_obj, output_obj=output_obj)
         

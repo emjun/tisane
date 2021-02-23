@@ -77,20 +77,40 @@ class QueryTest(unittest.TestCase):
         
     #     gr.visualize_graph()
 
-    def test_sm_to_design_between(self):
+    # TODO: COME BACK TO!
+    # def test_sm_to_design_between(self):
+    #     sat_score = Variable('sat_score')
+    #     tutoring = Variable('tutoring')
+        
+    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring], link_func='Log', variance_func='Gaussian')
+
+    #     design = infer_from(sm, 'study design')
+    #     import pdb; pdb.set_trace()
+
+    #     # GOAL 
+    #     # design = Design(dv = sat_score)
+    #     # design.treat(student_id, tutoring, 'between')
+        
+    #     print(design)
+
+    def test_graph_to_design_simple(self): 
         sat_score = Variable('sat_score')
         tutoring = Variable('tutoring')
         
-        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring], link_func='Log', variance_func='Gaussian')
-
-        design = infer_from(sm, 'study design')
-        import pdb; pdb.set_trace()
-
-        # GOAL 
+        gr = Graph()
+        gr.cause(tutoring, sat_score)
+        
+        # GOAL
         # design = Design(dv = sat_score)
         # design.treat(student_id, tutoring, 'between')
-        
-        print(design)
+
+        design = infer_from(gr, 'study design')
+
+        # TODO: For "Between" --> Student_id should be in Graph? 
+        # TODO: How much to suggest changes to the original input? Not take as complete truth? (Maybe this is what makes this domain a bit harder for interactive synth?)
+    
+    def test_graph_to_statistical_model(self): 
+        pass
 
     # def test_sm_to_design_between_multiple(self): 
     #     # TODO: Allow for "Variable" rather than "Numeric/Nominal/Ordinal" -- might have to change the code in a few different places
@@ -99,7 +119,7 @@ class QueryTest(unittest.TestCase):
     #     sat_score = Numeric('sat_score')
     #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
         
-    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
+    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence])
 
     #     design = infer_from(sm, 'study design')
     #     import pdb; pdb.set_trace()
