@@ -7,7 +7,8 @@ from tisane.main import (
 from tisane.variable import (
                                 Nominal, 
                                 Ordinal,
-                                Numeric
+                                Numeric,
+                                Variable
 )
 
 from tisane.statistical_model import (

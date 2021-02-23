@@ -137,7 +137,9 @@ class Nominal(AbstractVariable):
             self.cardinality = num_categories
         
         else: 
-            self.cardinality = kwargs['cardinality']
+            if 'cardinality' in kwargs: 
+                self.cardinality = kwargs['cardinality'] 
+            # TODO: What to do if cardinality not in kwargs?   
 
         # has data
         if self.data is not None: 
@@ -179,7 +181,9 @@ class Ordinal(AbstractVariable):
                 self.assert_property(prop="cardinality", val="multi")
             self.cardinality = len(order)
         else: 
-            self.cardinality = kwargs['cardinality']
+            if 'cardinality' in kwargs: 
+                self.cardinality = kwargs['cardinality']
+            # TODO: What to do if cardinality not in kwargs? 
     def __str__(self): 
         return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
 

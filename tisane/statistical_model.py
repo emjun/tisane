@@ -3,7 +3,8 @@ from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
 from tisane.smt.knowledge_base import KB
-from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
+# from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
+from tisane.smt.rules import *
 # from tisane.smt.query_manager import QM
 
 from abc import abstractmethod
@@ -22,13 +23,13 @@ def powerset(iterable):
 # Elicit info to and create a new variable 
 def elicit_and_create_new_variable(): 
     # TODO: Provide option to exit?
-    var_name = str(input(f"What is the name of the new variable?"))
+    var_name = str(input(f"What is the name of the new variable? "))
     # TODO: Provide "None of the above" option?
     var_type_options = ['Nominal', 'Ordinal', 'Numeric']
-    idx = int(input(f"What is the data type of {var_name}? Pick index number: {var_type_options}"))
+    idx = int(input(f"What is the data type of \'{var_name}\'? Pick index number: {var_type_options} "))
     
     if idx in range(len(var_type_options)):
-        var_type = var_type_option[idx]
+        var_type = var_type_options[idx]
     if var_type.upper() == 'NOMINAL': 
         return Nominal(name=var_name)
     elif var_type.upper() == 'ORDINAL': 
@@ -181,9 +182,15 @@ class StatisticalModel(object):
     def get_all_ivs(self):     
         return self.main_effects + self.interaction_effects + self.mixed_effects
 
-    def add_main_effect(self, new_main_effect: AbstractVariable): 
+    def add_main_effect(self, new_main_effect: AbstractVariable, **kwargs): 
+        if 'edge_type' in kwargs: 
+            edge_type = kwargs['edge_type']
+        else: 
+            edge_type = 'unknown'
+
         updated_main_effects = self.main_effects + [new_main_effect]
-        self.set_main_effects(updated_main_effects)
+        # TODO: Update when move to Graph IR -- add a treat Graph function?
+        self.graph._add_edge(start=new_main_effect, end=self.dv, edge_type=edge_type)
 
     # @return Z3 consts for variables in model
     def generate_consts(self): 
@@ -259,26 +266,71 @@ class StatisticalModel(object):
         
         # Add link function 
         if self.link_func is not None: 
-            raise NotImplementedError # Translate str of link function to logical fact
+            if self.link_func == 'Log': 
+                facts.append(LogTransform(self.dv.const))
+            elif self.link_func == 'Squareroot': 
+                facts.append(SquarerootTransform(self.dv.const))
+            elif self.link_func == 'LogLog': 
+                facts.append(LogLogTransform(self.dv.const))
+            elif self.link_func == 'Probit': 
+                facts.append(ProbitTransform(self.dv.const))
+            elif self.link_func == 'Logit': 
+                facts.append(LogitTransform(self.dv.const))
+            else: 
+                raise ValueError (f"Link function not supproted: {self.link_func}")
 
         # Add variance function 
         if self.variance_func is not None: 
-            raise NotImplementedError
+            if self.variance_func == 'Gaussian': 
+                facts.append(Gaussian(self.dv.const))
+            elif self.variance_func == 'InverseGaussian': 
+                facts.append(InverseGaussian(self.dv.const))
+            elif self.variance_func == 'Binomial': 
+                facts.append(Binomial(self.dv.const))
+            elif self.variance_func == 'Multinomial': 
+                facts.append(Multinomial(self.dv.const))
+            else: 
+                raise ValueError (f"Variance function not supported: {self.variance_func}")
 
+        # Add variable data types
         variables = self.get_variables()
         for v in variables: 
             if isinstance(v, Nominal): 
                 facts.append(NominalDataType(v.const))
             elif isinstance(v, Ordinal): 
                 facts.append(OrdinalDataType(v.const))
-            else: 
-                assert (isinstance(v, Numeric)) 
-
+            elif isinstance(v, Numeric):
                 facts.append(NumericDataType(v.const))
+            elif isinstance(v, AbstractVariable): 
+                pass
+            else: 
+                raise ValueError
 
+        # Add structure facts
+        edges = self.graph._graph.edges(data=True)
+        for (n0, n1, edge_data) in edges: 
+            edge_type = edge_data['edge_type']
+            n0_var = self.graph._graph.nodes[n0]['variable']
+            n1_var = self.graph._graph.nodes[n1]['variable']
+
+            if edge_type == 'treat': 
+                pass
+                # # n0_var is unit
+                # facts.append()
+                # # n1_var is treatment
+                # facts.append()
+
+            elif edge_type == 'nest': 
+                pass
+                # TODO: Useful for mixed effects
+            else: 
+                pass
+
+            # What is the unit
+            # What is the nesting 
+    
         return facts
-    
-    
+
     def elicit_structure_facts(self) -> List: 
         edges = list(self.graph._graph.edges(data=True)) # get list of edges
 
@@ -288,7 +340,6 @@ class StatisticalModel(object):
             n1_var = self.graph._graph.nodes[n1]['variable']
 
 
-            
             if n1_var is self.dv: 
                 # Ask about Nesting 
                 # TODO: START HERE: Test elicit_treatment_facts end-to-end before add this method?
@@ -331,31 +382,43 @@ class StatisticalModel(object):
             
             if n1_var is self.dv: 
                 # Ask if treatment
-                ans = str(input(f'Is this a treatment? Y or N:')).upper()
+                treatment_var_str = f"\'{n0_var.name}\'"
+                ans = str(input(f'Is {treatment_var_str} a treatment? Y or N:')).upper()
                 if ans == 'Y': 
-                    prompt = f'Which other variables does {n1_var.name} treat?'
+                    prompt = f'Which other variables does {treatment_var_str} treat?'
                     
                     variables = self.get_variables()
                     # Filter out DV (n1_var) and n0_var
                     variable_options = [v for v in variables if (v is not n0_var) and (v is not n1_var)]
-                    options = f'Pick index of {variable_options} OR E to create a new variable.'
-                    opt = input(prompt + options)
-                    
-                    if int(opt): 
-                        idx = int(opt)
-                        if idx in range(len(variable_options)): 
-                            var_unit = variable_options[idx]
-                            # TODO: Update this when create Graph IR!
-                            self.graph._add_edge(start=n0_var, end=var_unit, edge_type='treat')
-                        else: 
-                            raise ValueError (f"Picked an index out of bounds!")
+                    variable_options_names = [v.name for v in variable_options]
+                    assert(len(variable_options_names) == len(variable_options))
+                    if len(variable_options) > 0: 
+                        options = f'Pick index of {variable_options_names} OR E to create a new variable.'
+                        opt = input(prompt + ' ' + options)
+                    else: 
+                        print(f'Looks like {treatment_var_str} is the only IV currently. What (new) variable does it treat?')
+                        opt = 'E'
+                
+                    if opt == 'E': 
+                        # TODO: What happens if treats more than one variable? 
+                        assert(opt.upper() == 'E')
+                        var = elicit_and_create_new_variable()
+                        # TODO: Update this when create Graph IR!
+                        self.add_main_effect(var)
+
+                    else:  
+                        if int(opt): 
+                            idx = int(opt)
+                            if idx in range(len(variable_options)): 
+                                var_unit = variable_options[idx]
+                                # TODO: Update this when create Graph IR!
+                                import pdb; pdb.set_trace()
+                                self.graph._add_edge(start=n0_var, end=var_unit, edge_type='treat')
+                            else: 
+                                raise ValueError (f"Picked an index out of bounds!")
                     
                 elif ans == 'N': 
-                    # TODO: What happens if treats more than one variable? 
-                    var = elicit_create_new_variable()
-                    self.add_main_effect(var)
-                    # TODO: Update this when create Graph IR!
-                    self.graph._add_edge(start=n0_var, end=var, edge_type='treat')
+                    pass
                 else: 
                     raise ValueError
             else: 
@@ -379,28 +442,33 @@ class StatisticalModel(object):
                         # Induce UNSAT in order to get end-user clarification
                         facts.append(Cause(n0_var.const, n1_var.const))
                         facts.append(Correlate(n0_var.const, n1_var.const))
-                    elif output.upper() == 'STUDY DESIGN': 
-                        # Induce UNSAT in order to get end-user clarification
-                        # Let's start by assuming n1_var is the dv
-                        assert(n1_var is self.dv)
-                        # What does n1_var treat? 
-
-                        # Nesting? 
-                        facts.append()
                 else: 
                     raise NotImplementedError
         elif output.upper() == 'STUDY DESIGN': 
-            # Data schema 
+            # Data schema
+            nodes = list(self.graph._graph.nodes(data=True))
+            for (n, data)  in nodes: 
+                n_var = data['variable']
+                facts.append(NumericDataType(n_var.const))
+                facts.append(CategoricalDataType(n_var.const)) 
+                # TODO: Start here: Find data type info during prep_query? 
+                # Doing so seems to defeat purpose of interactive synth procedure...
+                # Maybe I don't need to add these ambiguous facts since I have a link and variance functions? 
+                # Think through (1) have link and variance functions, (2) do not have (this seems like a separate pre-step...?)
+                # Map out diagrammatically what looking for, etc.
+
+                # facts.append(NominalDataType(n_var.const))
+                # facts.append(OrdinalDataType(n_var.const))
+
+            # Data collection procedure    
             for (n0, n1, edge_data) in edges: 
                 edge_type = edge_data['edge_type']
-                n0_var = self.graph._graph.nodes[n0]['variable']
-                n1_var = self.graph._graph.nodes[n1]['variable']
-                if edge_type == 'unknown':
-                    pass
+                n0_var = self.graph._graph.nodes[n0]['variable'] # treatment
+                n1_var = self.graph._graph.nodes[n1]['variable'] # unit
+                if edge_type == 'treat':
+                    facts.append(Between(n1_var.const, n0_var.const))
+                    facts.append(Within(n1_var.const, n0_var.const))
                 
-            
-            # Data collection procedure
-
         return facts
 
     def query(self, outcome: str) -> Any: 

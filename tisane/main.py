@@ -391,8 +391,8 @@ def query(input_obj: Union[StatisticalModel, Design, Graph], output: str):
     elif output.upper() == 'STATISTICAL MODEL': 
         # TODO: if Graph -> SM, will have to pass dv differently since Graph has no attr DV
         output_obj = StatisticalModel(dv=input_obj.dv, main_effects=list(), interaction_effects=list(), mixed_effects=list(), link_func=None, variance_func=None)
-    else: 
-        raise NotImplementedError
+    elif output.upper() == 'STUDY DESIGN': 
+        output_obj = Design(dv=input_obj.dv)
     assert(output_obj is not None)        
 
     # Query 
@@ -404,22 +404,22 @@ def query(input_obj: Union[StatisticalModel, Design, Graph], output: str):
 def infer_from(input_: Union[Design], output_: str): 
     
     if isinstance(input_, Design): 
-        if output_.upper() == "STATISTICAL MODEL":
+        if output_.upper() == 'STATISTICAL MODEL':
             # Get main effects want to consider from end-user (separate from unsat framework)
 
             # Get interaction effects want to consider from end-user (fits into unsat framework)
             sm = query(input_obj=input_, output=output_)
             return sm 
-        elif output_.upper() == "VARIABLE RELATIONSHIP GRAPH": 
+        elif output_.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
             gr = query(input_obj=input_, output=output_)
             return gr
 
     elif isinstance(input_, StatisticalModel):
-        if output_.upper() == "DESIGN": 
+        if output_.upper() == 'STUDY DESIGN': 
             design = query(input_obj=input_, output=output_)
             import pdb; pdb.set_trace()
             return design 
-        elif output_.upper() == "VARIABLE RELATIONSHIP GRAPH": 
+        elif output_.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
             gr = query(input_obj=input_, output=output_)
             return gr
     elif isinstance(input_, Graph): 

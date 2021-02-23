@@ -96,7 +96,7 @@ class Graph(object):
         # Add edge using NetworkGraph's API
         self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
 
-    def update_edge(self, start:AbstractVariable, end: AbstractVariable, new_edge_type: str): 
+    def update_edge(self, start: AbstractVariable, end: AbstractVariable, new_edge_type: str): 
         start_node = self._get_variable_node(variable=start)
         end_node = self._get_variable_node(variable=end)
 

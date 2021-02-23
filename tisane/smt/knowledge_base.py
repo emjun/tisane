@@ -22,13 +22,20 @@ class KnowledgeBase(object):
             ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, dv_const), Correlate(x, dv_const)))),
             ForAll([x0, x1], Implies(Cause(x0, x1), Not(Cause(x1, x0)))), # If x0 causes x1, x1 cannot cause x0
             ForAll([x0, x1], Xor(Cause(x0, x1), Correlate(x0, x1))), # If x0 causes x1, x1 cannot cause x0
-        ] 
-
-        
+        ]         
 
         self.data_type_rules = [
             ForAll([x], Xor(CategoricalDataType(x), NumericDataType(x))), 
-            ForAll([x], Implies(CategoricalDataType(x), Xor(OrdinalDataType(x), NominalDataType(x)))),
+            ForAll([x], Implies(CategoricalDataType(x), Xor(NominalDataType(x), OrdinalDataType(x)))),
+
+            # ForAll([x], Implies(NominalDataType(x), Not(OrdinalDataType(x)))),
+            # ForAll([x], Implies(NominalDataType(x), Not(NumericDataType(x)))),
+            # ForAll([x], Implies(NumericDataType(x), And(Not(OrdinalDataType(x), Not(NominalDataType(x)))))),
+
+            # ForAll([x], Implies(OrdinalDataType(x), CategoricalDataType(x))),
+            # ForAll([x], Implies(NominalDataType(x), CategoricalDataType(x))),
+            
+            # ForAll([x], Implies(CategoricalDataType(x), Xor(OrdinalDataType(x), NominalDataType(x)))),
             ForAll([x], Implies(CategoricalDataType(x), Xor(BinaryDataType(x), Multinomial(x)))),
             ForAll([x], Implies(BinaryDataType(x), CategoricalDataType(x))),
             ForAll([x], Implies(Multinomial(x), CategoricalDataType(x))),

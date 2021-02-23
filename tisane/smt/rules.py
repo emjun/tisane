@@ -47,10 +47,13 @@ LogitTransform = Function('LogitTransform', Object, BoolSort())
 
 # Variance functions
 Gaussian = Function('Gaussian', Object, BoolSort())
-Inverse_Gaussian = Function('Inverse_Gaussian', Object, BoolSort())
+InverseGaussian = Function('InverseGaussian', Object, BoolSort())
 Binomial = Function('Binomial', Object, BoolSort())
 Multinomial = Function('Multinomial', Object, BoolSort())
 
+# Data collection procedures
+Between = Function('Between', Object, Object, BoolSort())
+Within = Function('Within', Object, Object, BoolSort())
 
 # Template facts
 # template_graph_facts = [

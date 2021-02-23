@@ -77,20 +77,34 @@ class QueryTest(unittest.TestCase):
         
     #     gr.visualize_graph()
 
-    def test_sm_to_design_between(self): 
-        # TODO: Allow for "Variable" rather than "Numeric/Nominal/Ordinal" -- might have to change the code in a few different places
-        student_id = Numeric('student_id')
-        intelligence = Numeric('iq')
-        sat_score = Numeric('sat_score')
-        tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+    def test_sm_to_design_between(self):
+        sat_score = Variable('sat_score')
+        tutoring = Variable('tutoring')
         
-        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
+        sm = StatisticalModel(dv=sat_score, main_effects=[tutoring], link_func='Log', variance_func='Gaussian')
 
         design = infer_from(sm, 'study design')
         import pdb; pdb.set_trace()
+
+        # GOAL 
+        # design = Design(dv = sat_score)
+        # design.treat(student_id, tutoring, 'between')
         
         print(design)
 
+    # def test_sm_to_design_between_multiple(self): 
+    #     # TODO: Allow for "Variable" rather than "Numeric/Nominal/Ordinal" -- might have to change the code in a few different places
+    #     student_id = Numeric('student_id')
+    #     intelligence = Numeric('iq')
+    #     sat_score = Numeric('sat_score')
+    #     tutoring = Nominal('tutoring', cardinality=2) # Categorical('tutoring')
+        
+    #     sm = StatisticalModel(dv=sat_score, main_effects=[tutoring, intelligence], interaction_effects=[(intelligence, tutoring)])
+
+    #     design = infer_from(sm, 'study design')
+    #     import pdb; pdb.set_trace()
+        
+    #     print(design)
 
     # def test_design_to_graph_nested_between(self): 
     #     student_id = Numeric('student_id')

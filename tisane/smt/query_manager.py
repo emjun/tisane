@@ -44,8 +44,11 @@ class QueryManager(object):
         
         if isinstance(input_obj, StatisticalModel): 
             if isinstance(output_obj, Design): 
+                # Ask for treatment before structure because seems more
+                # intuitive this way. 
+                # Also, by asking for treatment, get some structure information.
                 input_obj.elicit_treatment_facts()
-                import pdb; pdb.set_trace()
+                # input_obj.elicit_structure_facts()
 
                 # ds_facts = input_obj.collect_ambiguous_data_structure_facts()
                 # treatment_facts = input_obj.collect_ambiguous_treatment_facts()
@@ -82,33 +85,20 @@ class QueryManager(object):
     def collect_facts(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]): 
         # Compile @param input_obj to logical facts
         facts = input_obj.compile_to_facts() # D -> SM: Data types, Nested
-        
-        # TODO: Not sure this is necessary to do
-        # # Prune out logical facts that would be trivially true
-        # if isinstance(output_obj, StatisticalModel):
-        #     rules_to_consider['data_type_rules'] = KB.data_type_rules
-        #     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
-        #     rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
-        # elif isinstance(output_obj, Graph):
-        #     rules_to_consider['graph_rules'] = KB.graph_rules
-
-        # elif isinstance(output_obj, Design): 
-        #     # import pdb; pdb.set_trace()
-        #     # TODO: Should allow separate queries for data schema and data collection?? probably not?
-        #     rules_to_consider['data_type_rules'] = KB.data_type_rules
-        #     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
-        #     rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
-
-        # else: 
-        #     raise ValueError(f"Query output is not supported: {type(output_obj)}.")
+    
         output = None
         if isinstance(output_obj, Graph): 
             output = 'VARIABLE RELATIONSHIP GRAPH'
         elif isinstance(output_obj, StatisticalModel): 
             output = 'STATISTICAL MODEL'
-        
+        else: 
+            assert(isinstance(output_obj, Design))
+            output = 'STUDY DESIGN'
         assert(output is not None)
+
+        import pdb; pdb.set_trace()
         ambig_facts = input_obj.collect_ambiguous_facts(output=output) # D -> SM: Transformations, Link, Var
+        import pdb; pdb.set_trace()
         facts += ambig_facts # Combine all facts
 
         return facts
@@ -154,6 +144,7 @@ class QueryManager(object):
             # Add rules
             s.add(rules)
 
+            import pdb; pdb.set_trace()
             (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
             # import pdb; pdb.set_trace()
             facts = updated_facts        
@@ -191,7 +182,22 @@ class QueryManager(object):
                                 updated_constraints.append(pc)
                         else: 
                             updated_constraints.append(pc)
-            
+            # elif 'NumericDataType' in str(k): 
+            #     fact_dict = parse_fact(k)
+            #     assert('variable_name' in fact_dict)
+            #     var_name = fact_dict['variable_name']
+
+            #     for pc in pushed_constraints: 
+            #         # If pc is not k (already added to updated_constraints)
+            #         if str(pc) != str(k): 
+            #             # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
+            #             if var_name in str(pc): 
+            #                 # Keep the pushed constraint as long as it is not about
+            #                 # categorical data types
+            #                 if 'CategoricalDataType' not in str(pc) and 'NominalDataType' not in str(pc) and 'OrdinalDataType' not in str(pc):
+            #                     updated_constraints.append(pc)
+            #             else: 
+            #                 updated_constraints.append(pc)
             # If this keep clause is about anything else other than Not Transforming data
             else: 
                 for pc in pushed_constraints: 
@@ -235,6 +241,7 @@ class QueryManager(object):
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
             
+            import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
 
