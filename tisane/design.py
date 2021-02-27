@@ -75,7 +75,7 @@ class Design(object):
                 unit = g.unit
                 response = g.response
 
-                self.graph.repeat(unit=unit, group=group, repeat_obj=g)
+                self.graph.repeat(unit=unit, response=response, repeat_obj=g)
 
     # TODO: Should be class method? 
     # Create Design object from a @param Graph object
