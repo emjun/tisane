@@ -1,8 +1,8 @@
-from tisane.variable import AbstractVariable
+from tisane.variable import AbstractVariable, Treatment, Nest, RepeatedMeasure
 
 import networkx as nx
 import pydot
-from typing import List
+from typing import List, Union, Tuple
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -29,9 +29,75 @@ class Graph(object):
         edges = [e for e in self._graph.edges()]
         return f"Nodes: {str(nodes)} has {len(nodes)} concepts. Edges: {str(edges)} has {len(edges)} relationships."
     
+    # @returns True if the variable is in the graph
+    def has_variable(self, variable: AbstractVariable) -> bool: 
+        return self._graph.has_node(variable.name)
+    
+    # @returns True if the edge between @params start and end is in the graph
+    def has_edge(self, start: AbstractVariable, end: AbstractVariable) -> bool: 
+        return self._graph.has_edge(start.name, end.name)
+
+    # @returns tuple representing edge or None if edge is not found in graph
+    def get_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> Union[Tuple, None]: 
+        edges = self.get_edges()
+
+        for (n0, n1, edge_data) in edges: 
+
+            if n0 == start.name and n1 == end.name:  
+                 if edge_type == edge_data['edge_type']: 
+                    return (n0, n1, edge_data)
+
+        return None
+
+    # @returns handle to Node that represents the @param variable 
+    # @returns None if @param variable is not found in the graph 
+    def _get_variable_node(self, variable: AbstractVariable): 
+        for n in self._graph.nodes('variable'): 
+            if n[0] == variable.name:
+                return n
+        return None
+    
+    # Variables have unique names and are indexed by their names.
+    def _add_variable(self, variable: AbstractVariable):  
+        if not self._graph: 
+            self._graph = nx.MultiDiGraph()
+        self._graph.add_node(variable.name, variable=variable)
+
+    # Add edge to graph
+    # If nodes aren't already in the graph, add them
+    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
+
+        # If the variables aren't in the graph, add nodes first.
+        start_node = None
+        end_node = None 
+
+        if not self.has_variable(start): 
+            self._add_variable(start)
+        start_node = self._get_variable_node(start)
+
+        if not self.has_variable(end): 
+            self._add_variable(end)
+        end_node = self._get_variable_node(end)
+        # Assert the start and end nodes are not None            
+        assert(start_node)
+        assert(end_node)
+
+        # This assumes that each variable has a unique name
+        # Add edges between variable names, use the variable names later to look
+        # up the actual variable objects 
+        # Add edge using NetworkGraph's API
+        if edge_type == 'treat': 
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+        elif edge_type == 'nest': 
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+        elif edge_type == 'repeat': 
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+        else: 
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
+
     # @returns pydot object (representing DOT graph)representing conceptual graph info
     # Iterates through internal graph object and constructs vis
-    def get_graph_vis(self): 
+    def _get_graph_vis(self): 
         graph = pydot.Dot('graph_vis', graph_type='digraph')
 
         edges = list(self._graph.edges(data=True)) # get list of edges
@@ -52,7 +118,7 @@ class Graph(object):
         return graph
     
     def visualize_graph(self): 
-        graph = self.get_graph_vis()
+        graph = self._get_graph_vis()
 
         graph.write_png('graph_vis.png')
 
@@ -71,7 +137,6 @@ class Graph(object):
     def get_nodes(self) -> List:
         return list(self._graph.nodes(data=True))
     
-
     # @return list of edges in graph
     def get_edges(self) -> List:
         return list(self._graph.edges(data=True))
@@ -87,47 +152,7 @@ class Graph(object):
                 return n_var
         return None
 
-    # Variables have unique names and are indexed by their names.
-    def _add_variable(self, variable: AbstractVariable):  
-        if not self._graph: 
-            self._graph = nx.MultiDiGraph()
-        self._graph.add_node(variable.name, variable=variable)
-
-    # @returns node of underlying _graph if in graph, otherwise None
-    def _has_variable(self, variable: AbstractVariable): 
-        return self._graph.has_node(variable.name)
-
-    # @returns handle to Node that represents the @param variable 
-    # @returns None if @param variable is not found in the graph 
-    def _get_variable_node(self, variable: AbstractVariable): 
-        for n in self._graph.nodes('variable'): 
-            if n[0] == variable.name:
-                return n
-        return None
-
-    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str): 
-
-        # If the variables aren't in the graph, add nodes first.
-        start_node = None
-        end_node = None 
-
-        if not self._has_variable(start): 
-            self._add_variable(start)
-        start_node = self._get_variable_node(start)
-
-        if not self._has_variable(end): 
-            self._add_variable(end)
-        end_node = self._get_variable_node(end)
-        # Assert the start and end nodes are not None            
-        assert(start_node)
-        assert(end_node)
-
-        # This assumes that each variable has a unique name
-        # Add edges between variable names, use the variable names later to look
-        # up the actual variable objects 
-        # Add edge using NetworkGraph's API
-        self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
-
+    # Update the edge by first removing then adding
     def update_edge(self, start: AbstractVariable, end: AbstractVariable, new_edge_type: str): 
         start_node = self._get_variable_node(variable=start)
         end_node = self._get_variable_node(variable=end)
@@ -139,12 +164,36 @@ class Graph(object):
         # Then add back in
         self._add_edge(start=start, end=end, edge_type=new_edge_type)
 
-    def correlate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
-        self._add_edge(start=lhs, end=rhs, edge_type='correlate')
+    # Generate Z3 consts that correspond to nodes in this graph 
+    def generate_consts(self): 
+        pass
 
+    # @return logical facts representing the Graph
+    def compile_to_facts(self): 
+        pass
+    
+    # Add an ''associate'' edge to the graph 
+    # Adds two edges, one in each direction 
+    def associate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
+        self._add_edge(start=lhs, end=rhs, edge_type='associate')
+        self._add_edge(start=rhs, end=lhs, edge_type='associate')
+
+    # Add a causal edge to the graph 
     def cause(self, lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='cause')
     
-    # TODO: Could rename to unspecify or something like that
+    # Add an ambiguous/unknown edge to the graph
     def unknown(self, lhs: AbstractVariable, rhs: AbstractVariable): 
         self._add_edge(start=lhs, end=rhs, edge_type='unknown')
+
+    # Add a 'treat' edge to the graph
+    def treat(self, unit: AbstractVariable, treatment: AbstractVariable, treatment_obj: Treatment): 
+        self._add_edge(start=treatment, end=unit, edge_type='treat', edge_obj=treatment_obj)
+
+    # Add a 'nest' edge to the graph 
+    def nest(self, unit: AbstractVariable, group: AbstractVariable, nest_obj: Nest):
+        self._add_edge(start=unit, end=group, edge_type='nest', edge_obj=nest_obj)
+    
+    # Add a 'repeat' edge to the graph
+    def repeat(self, unit: AbstractVariable, response: AbstractVariable, repeat_obj: RepeatedMeasure): 
+        self._add_edge(start=unit, end=response, edge_type='repeat', edge_obj=repeat_obj)

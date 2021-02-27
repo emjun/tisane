@@ -1,61 +1,81 @@
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure
 from tisane.graph import Graph
 from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
 
-from typing import List, Union
+from typing import List
+import typing 
 import pydot
 from z3 import *
 
 """
-Class for expressing (i) that there is a manipulation and (ii) how there is a manipulation (e.g., between-subjects, within-subjects)
-Used within Class Design
-"""
-class Treatment(object): 
-    unit: AbstractVariable
-    manipulation: AbstractVariable
-    number_of_assignments: int # 1 means Between-subjects, >1 means Within-subjects
-
-    def __init__(self, unit: AbstractVariable, manipulation: AbstractVariable, number_of_assignments: int=1): 
-        self.unit = unit
-        self.manipulation = manipulation
-        self.number_of_assignments = number_of_assignments
-        
-        # TODO: Check that allocation is divisble? 
-        # TODO: Assumption that manipulation is categorical, not continuous? 
-    
-    # Default to between subjects
-    def assign(self, number_of_assignments: int, unit: AbstractVariable=None): 
-        assert(unit is self.unit)
-        self.number_of_assignments = number_of_assignments
-
-        # TODO: Check if number_of_assignments < cardinality of manipulation?
-
-"""
-Together with Class Treatment, Class for expressing (i) data collection structure, (ii) that there is a manipulation and (iii) how there is a manipulation (e.g., between-subjects, within-subjects)
-Relies on Class Treatment
+Class for expressing (i) data collection structure, (ii) that there is a manipulation and (iii) how there is a manipulation (e.g., between-subjects, within-subjects)
+Relies on Class Treatment, Nest, RepeatedMeasure
 """
 class Design(object): 
-    ivs : List[AbstractVariable]
     dv : AbstractVariable
-    unit : AbstractVariable # unit of observation and manipulation
-    treatments : List[Treatment] # list of treatments applied in this design
+    ivs : List[typing.Union[AbstractVariable, Treatment]]
+    groupings: List[typing.Union[Nest, RepeatedMeasure]]
+    
     graph : Graph # IR
 
+    # TODO: Necessary?
     consts : dict # Dict of Z3 consts involved in Design
 
-    def __init__(self, dv: AbstractVariable=None): 
-        self.ivs = list()
+    # TODO: Not necessary: 
+    unit : AbstractVariable # unit of observation and manipulation
+    treatments : List[Treatment] # list of treatments applied in this design
+    
+
+    def __init__(self, dv: AbstractVariable=None, ivs: List[typing.Union[Treatment, AbstractVariable]]=None, groupings: List[typing.Union[Nest, RepeatedMeasure]]=None): 
         self.dv = dv
-        self.treatments = list() 
-        # self.unit = unit
-        # self.graph = self._create_graph(ivs=ivs, dv=dv)
+        # self.ivs = list()
+        # self.groupigns = list() 
+        
         self.graph = Graph() # empty graph
         
         if self.dv: 
             # Add dv to graph
             self.graph._add_variable(dv)
+        
+        if ivs: 
+            self._add_ivs(ivs=ivs)
+        
+        if groupings: 
+            self._add_groupings(groupings=groupings)
+
 
         self.consts = dict()
+
+    def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
+        
+        for i in ivs: 
+            if isinstance(i, AbstractVariable): 
+                # TODO: Should the default be 'associate' instead of 'unknown'??
+                self.graph.unknown(lhs=i, rhs=self.dv)
+            
+            elif isinstance(i, Treatment): 
+                unit = i.unit
+                treatment = i.treatment
+
+                self.graph.treat(unit=unit, treatment=treatment, treatment_obj=i)
+                
+                # Add treatment edge
+                self.graph.unknown(lhs=treatment, rhs=self.dv)
+
+    def _add_groupings(self, groupings: List[typing.Union[Nest, RepeatedMeasure]]): 
+        for g in groupings: 
+
+            if isinstance(g, Nest): 
+                unit = g.unit
+                group = g.group 
+
+                self.graph.nest(unit=unit, group=group, nest_obj=g)
+
+            elif isinstance(g, RepeatedMeasure): 
+                unit = g.unit
+                response = g.response
+
+                self.graph.repeat(unit=unit, group=group, repeat_obj=g)
 
     # TODO: Should be class method? 
     # Create Design object from a @param Graph object
@@ -97,8 +117,6 @@ class Design(object):
         assert(self.dv is None)
         self.dv = dv 
         self.graph._add_variable(dv)
-
-
 
     # @return dict of Z3 consts for variables in model
     def generate_const_from_fact(self, fact_dict: dict): 
@@ -319,7 +337,7 @@ class Design(object):
         return self.graph
 
     def get_design_vis(self): 
-        graph = self.graph.get_graph_vis()
+        graph = self.graph._get_graph_vis()
 
         edges = list(self.graph._graph.edges(data=True)) # get list of edges
 
