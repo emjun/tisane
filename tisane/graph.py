@@ -1,4 +1,4 @@
-from tisane.variable import AbstractVariable, Treatment, Nest, RepeatedMeasure
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure
 
 import networkx as nx
 import pydot
@@ -29,14 +29,18 @@ class Graph(object):
         edges = [e for e in self._graph.edges()]
         return f"Nodes: {str(nodes)} has {len(nodes)} concepts. Edges: {str(edges)} has {len(edges)} relationships."
     
-    # @returns True if the variable is in the graph
+    # @returns True if the variable is in the grah
     def has_variable(self, variable: AbstractVariable) -> bool: 
         return self._graph.has_node(variable.name)
     
     # @returns True if the edge between @params start and end is in the graph
-    def has_edge(self, start: AbstractVariable, end: AbstractVariable) -> bool: 
-        return self._graph.has_edge(start.name, end.name)
+    def has_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> bool: 
+        # return self._graph.has_edge(start.name, end.name)
 
+        edge = self.get_edge(start=start, end=end, edge_type=edge_type)
+        
+        return edge is not None
+        
     # @returns tuple representing edge or None if edge is not found in graph
     def get_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> Union[Tuple, None]: 
         edges = self.get_edges()
@@ -164,14 +168,6 @@ class Graph(object):
         # Then add back in
         self._add_edge(start=start, end=end, edge_type=new_edge_type)
 
-    # Generate Z3 consts that correspond to nodes in this graph 
-    def generate_consts(self): 
-        pass
-
-    # @return logical facts representing the Graph
-    def compile_to_facts(self): 
-        pass
-    
     # Add an ''associate'' edge to the graph 
     # Adds two edges, one in each direction 
     def associate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
@@ -179,8 +175,8 @@ class Graph(object):
         self._add_edge(start=rhs, end=lhs, edge_type='associate')
 
     # Add a causal edge to the graph 
-    def cause(self, lhs: AbstractVariable, rhs: AbstractVariable): 
-        self._add_edge(start=lhs, end=rhs, edge_type='cause')
+    def cause(self, cause: AbstractVariable, effect: AbstractVariable): 
+        self._add_edge(start=cause, end=effect, edge_type='cause')
     
     # Add an ambiguous/unknown edge to the graph
     def unknown(self, lhs: AbstractVariable, rhs: AbstractVariable): 
@@ -197,3 +193,10 @@ class Graph(object):
     # Add a 'repeat' edge to the graph
     def repeat(self, unit: AbstractVariable, response: AbstractVariable, repeat_obj: RepeatedMeasure): 
         self._add_edge(start=unit, end=response, edge_type='repeat', edge_obj=repeat_obj)
+
+    # Generate Z3 consts that correspond to nodes in this graph 
+    def generate_consts(self): 
+        pass
+
+    
+from tisane.smt.query_manager import QM

@@ -72,6 +72,27 @@ class RepeatedMeasure(object):
         # self.graph = Graph()
         # graph.treat(unit=unit, manipulation=manipulation)
 
+"""
+Class for Cause relationships
+"""
+class Cause(object):
+    cause: 'AbstractVariable'
+    effect: 'AbstractVariable'
+
+    def __init__(self, cause: 'AbstractVariable', effect: 'AbstractVariable'):
+        self.cause = cause
+        self.effect = effect
+
+"""
+Class for Associate relationships
+"""
+class Associate(object):
+    lhs: 'AbstractVariable'
+    rhs: 'AbstractVariable'
+
+    def __init__(self, lhs: 'AbstractVariable', rhs: 'AbstractVariable'):
+        self.lhs = lhs
+        self.rhs = rhs
 
 class AbstractVariable(object): 
     name: str 
@@ -118,6 +139,14 @@ class AbstractVariable(object):
     def repeat(self, response: 'AbstractVariable', number_of_measures: int): 
         return RepeatedMeasure(unit=self, response=response, number_of_measures=number_of_measures)
 
+    # @param effect the variable causes
+    def cause(self, effect: 'AbstractVariable'):
+        return Cause(cause=self, effect=effect)
+
+    # @param associated with this variable
+    def associate(self, rhs: 'AbstractVariable'):
+        return Associate(lhs=self, rhs=rhs)
+        
     # Apply the @param transformation to the AbstractVariable
     def transform(self, transformation: str): 
         self.transform = transformation

@@ -13,17 +13,17 @@ Relies on Class Treatment, Nest, RepeatedMeasure
 """
 class Design(object): 
     dv : AbstractVariable
-    ivs : List[typing.Union[AbstractVariable, Treatment]]
-    groupings: List[typing.Union[Nest, RepeatedMeasure]]
+    # ivs : List[typing.Union[AbstractVariable, Treatment]]
+    # groupings: List[typing.Union[Nest, RepeatedMeasure]]
     
     graph : Graph # IR
 
     # TODO: Necessary?
-    consts : dict # Dict of Z3 consts involved in Design
+    # consts : dict # Dict of Z3 consts involved in Design
 
     # TODO: Not necessary: 
-    unit : AbstractVariable # unit of observation and manipulation
-    treatments : List[Treatment] # list of treatments applied in this design
+    # unit : AbstractVariable # unit of observation and manipulation
+    # treatments : List[Treatment] # list of treatments applied in this design
     
 
     def __init__(self, dv: AbstractVariable=None, ivs: List[typing.Union[Treatment, AbstractVariable]]=None, groupings: List[typing.Union[Nest, RepeatedMeasure]]=None): 
@@ -44,7 +44,7 @@ class Design(object):
             self._add_groupings(groupings=groupings)
 
 
-        self.consts = dict()
+        # self.consts = dict()
 
     def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
         
@@ -76,6 +76,7 @@ class Design(object):
                 response = g.response
 
                 self.graph.repeat(unit=unit, response=response, repeat_obj=g)
+            
 
     # TODO: Should be class method? 
     # Create Design object from a @param Graph object
@@ -237,7 +238,7 @@ class Design(object):
 
     def collect_ambiguous_effects_facts(self, main_effects: bool, interactions: bool) -> List: 
         facts = list()
-        edges = self.graph.get_nodes() # get list of edges
+        edges = self.graph.get_edges() # get list of edges
 
         # Declare data type
         Object = DeclareSort('Object')
@@ -357,38 +358,3 @@ class Design(object):
         p_graph = self.get_design_vis()
         
         p_graph.write_png('design_vis.png')
-
-    # For expressing nested relationships
-    def nest(self, unit: AbstractVariable, group: AbstractVariable): 
-        self._add_iv(unit)
-        self._add_iv(group)
-        # Group -> Unit
-        self.graph._add_edge(start=group, end=unit, edge_type="nest")
-
-    # TODO: Name "treat" or "assign"?
-    # Example: treat/assign student with/to tutoring
-    # times for between and within?
-    # Side effect: If either unit or treatment are not in the graph already, adds them to the graph first
-    def treat(self, unit: AbstractVariable, treatment: AbstractVariable, how: str=None): 
-        self._add_iv(unit)
-        self._add_iv(treatment)
-
-        number_of_assignments = 1
-        if how is not None: 
-            if how == "within": 
-                # Assume fully factorial design
-                # Otherwise, must use treat then assign idiom
-                number_of_assignments = treatment.get_cardinality()
-        self.treatments.append(Treatment(unit=unit, manipulation=treatment, number_of_assignments=number_of_assignments))
-        self.graph._add_edge(start=treatment, end=unit, edge_type="treat")
-    
-    # TODO: Name "measure" or "observe"? Is this a special instance of treat? 
-    # Example: measure age
-    # Example: If measure a variable more than once, as long as not DV don't need special tagging with unit? 
-    # How use times? between and within? 
-    def randomize(self, unit: AbstractVariable, measure: AbstractVariable, times: int): 
-        pass
-
-    # TODO: Separate frequency from how manipulate? 
-    # design.treat(student_id, tutoring).frequency(n=1) # default is n=1 (between)?
-    # design.treat(student_id, tutoring, n=1)
