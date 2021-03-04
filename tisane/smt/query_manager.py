@@ -1,3 +1,4 @@
+from tisane.variable import AbstractVariable
 from tisane.statistical_model import StatisticalModel
 from tisane.design import Design 
 from tisane.graph import Graph 
@@ -15,6 +16,132 @@ from typing import List, Union, Dict
 Class for managing queries to KnowledgeBase and processing results of solving constraints
 """
 class QueryManager(object): 
+
+    def _collect_ambiguous_effects_facts(self, dv: AbstractVariable, graph: Graph, main_effects: bool, interactions: bool): 
+        facts = list() 
+        edges = graph.get_edges()
+
+        # Declare data type
+        Object = DeclareSort('Object')
+
+        # Do we care about Main Effects? 
+        if main_effects: 
+            # What Main Effects should we consider? 
+            for (n0, n1, edge_data) in edges: 
+                edge_type = edge_data['edge_type']
+                n0_var = graph.get_variable(n0)
+                n1_var = graph.get_variable(n1)
+                if edge_type == 'unknown': 
+                    facts.append(MainEffect(n0_var.const, n1_var.const))
+                    facts.append(NoMainEffect(n0_var.const, n1_var.const))
+
+        if interactions: 
+            # What Interaction Effects should we consider?
+            # Check if the edge does not include the DV
+            incoming_edges = list(graph._graph.in_edges(dv.name, data=True))
+            
+            interactions_considered = list()
+            for (ie, dv, data) in incoming_edges: 
+                ie_var = graph.get_variable(ie)
+                for (other, dv, data) in incoming_edges: 
+                    # Asks about interactions even if end-user does not want to
+                    # include the corresponding main effects
+                    other_var = graph.get_variable(other)
+                    if (ie is not other) and ({ie, other} not in interactions_considered):             
+                        # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones? 
+                        i_set = EmptySet(Object)
+                        i_set = SetAdd(i_set, ie_var.const)
+                        i_set = SetAdd(i_set, other_var.const)
+
+                        facts.append(Interaction(i_set))
+                        facts.append(NoInteraction(i_set))
+
+                        interactions_considered.append({ie, other})
+
+        return facts
+
+    def _postprocess_effects_facts(self, dv: AbstractVariable, graph: Graph, effects_facts: list): 
+        # Postprocess result of KB query and generate Z3 consts
+        main_seq = None
+        interaction_seq = None
+        model_variables = set() # Variables that are included in a Statistical Model
+
+        for f in effects_facts: 
+            fact_dict = parse_fact(f)
+            start_name = fact_dict['start']
+            end_name = fact_dict['end']
+            start_var = graph.get_variable(start_name)
+            end_var = graph.get_variable(end_name)
+
+            if fact_dict['function'] == 'MainEffect': 
+                assert(end_var is dv)
+                if main_seq is None: 
+                    main_seq = Unit(start_var.const)
+                else: 
+                    main_seq = Concat(Unit(start_var.const), main_seq)
+                model_variables.add(start_var)
+            elif fact_dict['function'] == 'Interaction': 
+                # Create set for interaction
+                interaction = EmptySet(Object)
+                SetAdd(interaction, start_var.const)
+                SetAdd(interaction, end_var.const)
+                if interaction_seq is None: 
+                    interaction_seq = Unit(interaction)
+                else: 
+                    interaction_seq = Concat(Unit(interaction), interaction_seq)
+                model_variables.append(start_var)
+                model_variables.append(end_var)
+        
+        # Before returning 
+        if main_seq is None: 
+            main_seq = Empty(SeqSort(Object))
+        if interaction_seq is None: 
+            interaction_seq = Unit(EmptySet(Object))
+
+        # return {'main_effects': main_seq, 'interactions': interaction_seq}
+        return (main_seq, interaction_seq, model_variables)
+    
+    def _prep_synthesize_statistical_model(self, dv: AbstractVariable, graph: Graph): 
+        # Collect ambiguous effects facts for end-user interaction
+        dv_const = dv.const
+        effects_facts = self._collect_ambiguous_effects_facts(dv=dv, graph=graph, main_effects=True, interactions=True)
+        # Collect rules for effects facts
+        KB.ground_effects_rules(dv_const=dv_const)
+        effects_rules = self.collect_rules(output='STATISTICAL MODEL', step='effects')
+        # Query Knowledge Base and solve for valid effects_facts
+        (model, updated_effects_facts) = self.solve(facts=effects_facts, rules=effects_rules, setting=None)
+
+        return updated_effects_facts
+
+    def synthesize_statistical_model(self, dv: AbstractVariable, graph: Graph): 
+        # Prep query
+        effects_facts = self._prep_synthesize_statistical_model(dv=dv, graph=graph)
+        (main_effects, interactions, model_variables) = self._postprocess_effects_facts(dv=dv, graph=graph, effects_facts=effects_facts)
+        
+        # Query + Interaction 
+        (model, updated_facts) = self.query(dv=dv, graph=graph, main_effects=main_effects, interactions=interactions, model_variables=model_variables)
+
+        # Process output
+        sm = postprocess_to_statistical_model(dv=dv, graph=graph, model=model, updated_facts=updated_facts)
+        
+        return sm
+
+
+    def query(self, dv: AbstractVariable, graph: Graph, main_effects: SeqSort, interactions: SeqSort, **kwargs) -> Any: 
+            
+            KB.ground_rules(dv_const=dv.const, main_effects=main_effects, interactions=interactions)
+            
+            # Collect facts
+            if 'model_variables' in kwargs: 
+                facts = self.collect_facts(dv=dv, graph=graph, output='STATISTICAL MODEL', model_variables=kwargs['model_variables'])
+            else: 
+                facts = self.collect_facts(dv=dv, graph=graph, output='STATISTICAL MODEL')
+
+            # After grounding KB, collect rules to guide synthesis
+            rules = self.collect_rules(output='STATISTICAL MODEL') # dict
+            # Incrementally and interactively solve the facts and rules as constraints
+            return self.solve(facts=facts, rules=rules, setting=None)
+
 
     # TODO: When move to Graph IR: It seems to me that all the prep methods could be in the QueryManager itself!
     # TODO: Could also move collect_ambiguous facts to QueryManager (helpers)???
@@ -73,7 +200,8 @@ class QueryManager(object):
 
         return effects_facts
     
-    def query(self, input_obj: Union[Design, StatisticalModel, Graph], output_obj: Union[Graph, StatisticalModel, Design]):
+
+    def query_old(self, input_obj: Union[Design, StatisticalModel, Graph], output_obj: Union[Graph, StatisticalModel, Design]):
         
         updated_effects_facts = self.prep_query(input_obj=input_obj, output_obj=output_obj)
         
@@ -98,53 +226,87 @@ class QueryManager(object):
 
         return result
 
-    def collect_facts(self, input_obj: Union[Design, StatisticalModel], output_obj: Union[Graph, StatisticalModel]): 
-        # Compile @param input_obj to logical facts
-        facts = input_obj.compile_to_facts() # D -> SM: Data types, Nested
+    def _compile_graph_to_facts(self, graph: Graph): 
+        facts = list()  # should be dict?
+
+        nodes = graph.get_nodes()
+        # Data type facts
+        for (n, data) in nodes: 
+            n_var = data['variable']
+            if isinstance(n_var, Nominal): 
+                facts.append(NominalDataType(n_var.const))
+            elif isinstance(n_var, Ordinal): 
+                facts.append(OrdinalDataType(n_var.const))
+            else: 
+                assert (isinstance(n_var, Numeric)) 
+                facts.append(NumericDataType(n_var.const))
+        
+        return facts
     
-        output = None
-        if isinstance(output_obj, Graph): 
-            output = 'VARIABLE RELATIONSHIP GRAPH'
-        elif isinstance(output_obj, StatisticalModel): 
-            output = 'STATISTICAL MODEL'
-        else: 
-            assert(isinstance(output_obj, Design))
-            output = 'STUDY DESIGN'
-        assert(output is not None)
+    def _collect_ambiguous_facts_for_statistical_model(self, graph: Graph, **kwargs): 
+        facts = list() 
+
+        model_variables = kwargs['model_variables'] # Variables that are involved in the Statistical Model 
+
+        nodes = graph.get_nodes()
 
         import pdb; pdb.set_trace()
-        ambig_facts = input_obj.collect_ambiguous_facts(output=output) # D -> SM: Transformations, Link, Var
-        import pdb; pdb.set_trace()
-        facts += ambig_facts # Combine all facts
+        for var in model_variables: 
+            # Data Transformations
+            # Induce UNSAT 
+            facts.append(Transformation(var.const))
+            facts.append(NoTransformation(var.const))
+            # Depending on variable data type, add more constraints for possible transformations
+            if isinstance(var, Numeric): 
+                facts.append(NumericTransformation(var.const))
+                facts.append(LogTransform(var.const))
+                facts.append(SquarerootTransform(var.const))
+            elif isinstance(var, Nominal) or isinstance(var, Ordinal): 
+                facts.append(CategoricalTransformation(var.const))
+                facts.append(LogLogTransform(var.const))
+                facts.append(ProbitTransform(var.const))
+                # facts.append(LogitTransform(var.const)) # TODO: Might only make sense for binary data??                
 
         return facts
 
+    def collect_facts(self, dv: AbstractVariable, graph: Graph, output: str, **kwargs): 
+    
+        facts = self._compile_graph_to_facts(graph=graph)
+        if output == 'STATISTICAL MODEL': 
+            if 'model_variables' in kwargs:
+                model_variables = kwargs['model_variables'] 
+                ambig_facts = self._collect_ambiguous_facts_for_statistical_model(graph=graph, model_variables=model_variables) 
+            else: 
+                ambig_facts = self._collect_ambiguous_facts_for_statistical_model(graph=graph)
+            facts += ambig_facts # Combine all facts
+
+        return facts
     
     # @param outcome describes what the query result should be, can be a list of items, 
     # including: statistical model, variable relationship graph, data schema, data collection procedure
     # @return logical rules to consider during solving process
-    def collect_rules(self, output_obj: Union[StatisticalModel, Graph, Design], **kwargs) -> Dict: 
+    def collect_rules(self, output: str, **kwargs) -> Dict: 
         # Get and manage the constraints that need to be considered from the rest of Knowledge Base     
         rules_to_consider = dict()
 
+        # TODO: This step might not belong here. Seems odd. 
         if 'step' in kwargs: 
             if kwargs['step'] == 'effects':     
                 rules_to_consider['effects_rules'] = KB.effects_rules
         else: 
             # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
-            if isinstance(output_obj, StatisticalModel):
+            if output.upper() == 'STATISTICAL MODEL': 
                     rules_to_consider['data_type_rules'] = KB.data_type_rules
                     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
                     rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
-            elif isinstance(output_obj, Graph):
+            elif output.upper() == 'CONCEPTUAL MODEL': 
                 rules_to_consider['graph_rules'] = KB.graph_rules
-
-            elif isinstance(output_obj, Design): 
-                # import pdb; pdb.set_trace()
-                # TODO: Should allow separate queries for data schema and data collection?? probably not?
-                rules_to_consider['data_type_rules'] = KB.data_type_rules
-                rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
-                rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
+            # elif output.upper() == 'STUDY DESIGN': 
+            #     # import pdb; pdb.set_trace()
+            #     # TODO: Should allow separate queries for data schema and data collection?? probably not?
+            #     rules_to_consider['data_type_rules'] = KB.data_type_rules
+            #     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
+            #     rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
 
             else: 
                 raise ValueError(f"Query output is not supported: {type(output_obj)}.")
@@ -298,6 +460,7 @@ class QueryManager(object):
             return statistical_model_to_graph(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
         else: 
             raise NotImplementedError
+
         
 # Global QueryManager
 QM = QueryManager()

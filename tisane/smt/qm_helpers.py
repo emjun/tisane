@@ -218,9 +218,8 @@ def design_to_graph(model: z3.ModelRef, updated_facts: List, input_obj: Design, 
     
     return output_obj
 
-def design_to_statistical_model(model: z3.ModelRef, updated_facts: List, input_obj: Design, output_obj: StatisticalModel):
-    
-    var_names_to_variables = get_var_names_to_variables(input_obj=input_obj)
+def postprocess_to_statistical_model(graph: Graph, dv: AbstractVariable, model: z3.ModelRef, updated_facts: List): 
+    output_obj = StatisticalModel(dv=dv)
 
     main_effects = list()
     interaction_effects = list()
@@ -236,10 +235,10 @@ def design_to_statistical_model(model: z3.ModelRef, updated_facts: List, input_o
             start_name = fact_dict['start']
             end_name = fact_dict['end']
             # Get variables 
-            start_var = var_names_to_variables[start_name]
-            end_var = var_names_to_variables[end_name]
+            start_var = graph.get_variable(start_name)
+            end_var = graph.get_variable(end_name)
             
-            assert(end_var, input_obj.dv)
+            assert(end_var, dv)
             main_effects.append(start_var)
 
         elif function == 'Interaction': 
@@ -248,8 +247,8 @@ def design_to_statistical_model(model: z3.ModelRef, updated_facts: List, input_o
             start_name = fact_dict['start']
             end_name = fact_dict['end']
             # Get variables 
-            start_var = var_names_to_variables[start_name]
-            end_var = var_names_to_variables[end_name]
+            start_var = graph.get_variable(start_name)
+            end_var = graph.get_variable(end_name)
 
             interaction_effects.append((start_var, end_var))
             
@@ -258,7 +257,7 @@ def design_to_statistical_model(model: z3.ModelRef, updated_facts: List, input_o
             var_name = fact_dict['variable_name']
 
             # Apply transformation to variable, everywhere it exists in output_obj (StatisticalModel)
-            var = var_names_to_variables[var_name]
+            var = graph.get_variable(var_name)
             var.transform(transformation=function)
             
     
