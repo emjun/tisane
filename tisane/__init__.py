@@ -1,6 +1,8 @@
 from tisane.main import (
-                            Tisane,
-                            infer_from
+                            # Tisane,
+                            infer_from,
+                            synthesize_statistical_model,
+                            verify
                             
 )
 
@@ -21,4 +23,8 @@ from tisane.design import (
 
 from tisane.graph import (
                                         Graph,                                    
+)
+
+from tisane.conceptual_model import (
+                                        ConceptualModel
 )
