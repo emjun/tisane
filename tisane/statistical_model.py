@@ -29,7 +29,9 @@ class StatisticalModel(object):
 
     main_effects: List[AbstractVariable]
     interaction_effects: List[Tuple[AbstractVariable, ...]]
-    mixed_effects: List[AbstractVariable]
+    # mixed_effects: List[AbstractVariable]
+    random_slopes: List[Tuple[AbstractVariable, ...]]
+    random_intercepts: List[Tuple[AbstractVariable, ...]]
     link_function: str # maybe, not sure?
     variance_function: str # maybe, not sure?
 
@@ -38,7 +40,7 @@ class StatisticalModel(object):
     consts: dict # Z3 consts representing the model and its DV, main_effects, etc. 
 
 
-    def __init__(self, dv: AbstractVariable, main_effects: List[AbstractVariable]=None, interaction_effects: List[Tuple[AbstractVariable, ...]]=None, mixed_effects: List[AbstractVariable]=None, link_func: str=None, variance_func: str=None): 
+    def __init__(self, dv: AbstractVariable, main_effects: List[AbstractVariable]=None, interaction_effects: List[Tuple[AbstractVariable, ...]]=None, random_slopes: List[Tuple[AbstractVariable,...]]=None, random_intercepts: List[Tuple[AbstractVariable,...]]=None, link_func: str=None, variance_func: str=None): 
         self.dv = dv
 
         self.graph = Graph()
@@ -53,11 +55,16 @@ class StatisticalModel(object):
             self.set_interaction_effects(interaction_effects=interaction_effects)
         else: 
             self.interaction_effects = list()
+
+        if random_slopes is not None:
+            self.set_random_slopes(random_slopes=random_slopes)
+        else:
+            self.random_slopes = list()
         
-        if mixed_effects is not None: 
-            self.set_mixed_effects(mixed_effects=mixed_effects)
-        else: 
-            self.mixed_effects = list()
+        if random_intercepts is not None:
+            self.set_random_intercepts(random_intercepts=random_intercepts)
+        else:
+            self.random_intercepts = list()
 
         self.link_func = link_func
         self.variance_func = variance_func
@@ -144,6 +151,14 @@ class StatisticalModel(object):
         for mi in self.mixed_effects: 
             self.graph.unknown(lhs=mi, rhs=self.dv)
     
+    # Sets random slopes 
+    def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 
+        self.random_slopes = random_slopes
+
+    # Sets random intercepts
+    def set_random_intercepts(self, random_intercepts: List[Tuple[AbstractVariable, ...]]): 
+        self.random_intercepts = random_intercepts
+
     # @return all variables (DV, IVs)
     def get_variables(self) -> List[AbstractVariable]: 
         variables = [self.dv] + self.main_effects
