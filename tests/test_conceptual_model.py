@@ -1,3 +1,7 @@
+"""
+Tests initialization, graph construction, and verification of several different conceptual models.
+"""
+
 import tisane as ts
 from tisane.variable import Treatment, Nest, RepeatedMeasure, Cause, Associate
 
