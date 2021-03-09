@@ -525,6 +525,24 @@ class KreftDeLeeuwExamples(unittest.TestCase):
             interactions=[(hw, mean_ses)], # 4.3.10 uses an interaction variable named "HomeSES"
         )
 
+        sm = ts.StatisticalModel(
+            dv=math, 
+            fixed_ivs=[ts.FixedVariable(race), ts.FixedVaraible(mean_ses)],
+            random_ivs=[ts.RandomSlope(slope_for_each=hw, slopes_vary_among=school), 
+                        ts.RandomIntercept(intercept_for_each=hw, intercepts_vary_among=school)],
+            interaction_ivs=[ts.Interaction(hw, mean_ses)]
+        )
+
+        sm = ts.StatisticalModel(
+            dv=math, 
+            ivs=[   ts.FixedVariable(race), 
+                    ts.FixedVaraible(mean_ses),
+                    ts.RandomSlope(slope_for_each=hw, slopes_vary_among=school), 
+                    ts.RandomIntercept(intercept_for_each=hw, intercepts_vary_among=school),
+                    ts.Interaction(hw, mean_ses)
+            ]
+        )
+
         # LMER R formula
         # math ~ race + mean_ses + (0+hw|school) + hw*mean_ses
 

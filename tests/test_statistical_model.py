@@ -67,7 +67,7 @@ class StatisticalModelTest(unittest.TestCase):
         variables_in_graph = sm.graph.get_variables()
         ixn_var = None
         for v in variables_in_graph: 
-            if v.name == 'Question type*Time of day': 
+            if v.name == '*'.join([qtype.name,tod.name]):
                 ixn_var = v
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
@@ -81,8 +81,51 @@ class StatisticalModelTest(unittest.TestCase):
         # Interaction effects
         self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='contribute'))
     
-    # def test_initialize_main_interaction_2(self): 
-    #     pass
+    def test_initialize_main_interaction_2(self): 
+        """ Example adapted from Jun et al. CSCW 2019
+        """
+        chronotype = ts.Nominal('Group chronotype')
+        composition = ts.Nominal('Group composition')
+        tod = ts.Nominal('Time of day')
+        qtype = ts.Nominal('Question type')
+        acc = ts.Numeric('Accuracy')
+        group = ts.Nominal('Group')
+        variables = [acc, chronotype, composition, tod, qtype]
+        
+        sm = ts.StatisticalModel(
+            dv=acc,
+            fixed_ivs=[chronotype, composition, tod, qtype, group], 
+            random_slopes=None, 
+            random_intercepts=None,
+            interactions=[(qtype, tod, composition)]
+        )
+
+        # Statistical Model has properties we expect
+        self.assertEquals(sm.random_slopes, list())
+        self.assertEquals(sm.random_intercepts, list())
+        self.assertIsNone(sm.family)
+        self.assertIsNone(sm.link_func)
+
+        # The graph IR has all the variables
+        self.assertEquals(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
+        for v in variables: 
+            self.assertTrue(sm.graph.has_variable(v))
+        variables_in_graph = sm.graph.get_variables()
+        ixn_var = None
+        for v in variables_in_graph: 
+            if v.name == '*'.join([qtype.name,tod.name,composition.name]):
+                ixn_var = v
+        self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
+        
+        # The graph IR has all the edges we expect
+        # Main effects
+        self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(tod, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(qtype, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(group, acc, edge_type='contribute'))
+        # Interaction effects
+        self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='contribute'))
     
     # def test_initialize_random_slopes_1(self): 
     #     pass
