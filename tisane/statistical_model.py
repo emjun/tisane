@@ -129,6 +129,7 @@ class StatisticalModel(object):
     def set_interaction_effects(self, interaction_effects: List[AbstractVariable]): 
         self.interaction_effects = interaction_effects
 
+        # TODO: Make sure this works for n-way interactions
         # There may be 2+-way interactions
         for ixn in self.interaction_effects: 
             # For each interaction, add edges between the variables involved in the interaction

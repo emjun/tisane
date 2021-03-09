@@ -12,24 +12,11 @@ Class for expressing (i) data collection structure, (ii) that there is a manipul
 Relies on Class Treatment, Nest, RepeatedMeasure
 """
 class Design(object): 
-    dv : AbstractVariable
-    # ivs : List[typing.Union[AbstractVariable, Treatment]]
-    # groupings: List[typing.Union[Nest, RepeatedMeasure]]
-    
+    dv : AbstractVariable    
     graph : Graph # IR
-
-    # TODO: Necessary?
-    # consts : dict # Dict of Z3 consts involved in Design
-
-    # TODO: Not necessary: 
-    # unit : AbstractVariable # unit of observation and manipulation
-    # treatments : List[Treatment] # list of treatments applied in this design
-    
 
     def __init__(self, dv: AbstractVariable=None, ivs: List[typing.Union[Treatment, AbstractVariable]]=None, groupings: List[typing.Union[Nest, RepeatedMeasure]]=None): 
         self.dv = dv
-        # self.ivs = list()
-        # self.groupigns = list() 
         
         self.graph = Graph() # empty graph
         
@@ -42,9 +29,6 @@ class Design(object):
         
         if groupings: 
             self._add_groupings(groupings=groupings)
-
-
-        # self.consts = dict()
 
     def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
         
