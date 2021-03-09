@@ -6,7 +6,7 @@ from typing import List, Union, Tuple
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
-conceptual level: cause, correlate, unknown.
+conceptual level: cause, correlate, contribute.
 """
 
 class Graph(object): 
@@ -62,10 +62,11 @@ class Graph(object):
         return None
     
     # Variables have unique names and are indexed by their names.
-    def _add_variable(self, variable: AbstractVariable):  
+    # Variables also have a 'tag' that indicate if they are 'identifiers' for a level
+    def _add_variable(self, variable: AbstractVariable, is_identifier: bool=False):  
         if not self._graph: 
             self._graph = nx.MultiDiGraph()
-        self._graph.add_node(variable.name, variable=variable)
+        self._graph.add_node(variable.name, variable=variable, is_identifer=is_identifier)
 
     # Add edge to graph
     # If nodes aren't already in the graph, add them
@@ -113,7 +114,7 @@ class Graph(object):
             elif edge_type == 'correlate': 
                 graph.add_edge(pydot.Edge(n0, n1, style='dotted', color='black'))
                 graph.add_edge(pydot.Edge(n1, n0, style='dotted', color='black'))
-            elif edge_type == 'unknown': 
+            elif edge_type == 'contribute': 
                 graph.add_edge(pydot.Edge(n0, n1, style='dotted', color='red'))
             else: 
                 pass
@@ -168,6 +169,14 @@ class Graph(object):
         # Then add back in
         self._add_edge(start=start, end=end, edge_type=new_edge_type)
 
+    # Add a node that identifies levels in the Graph    
+    def add_identifier(self, identifier: AbstractVariable): 
+        self._add_variable(variable=identifier, is_identifier=True)
+
+    # Add an edge that indicates that identifier 'has' the variable measurement
+    def has(self, identifier: AbstractVariable, variable: AbstractVariable): 
+        self._add_edge(start=identifier, end=variable, edge_type='has')
+
     # Add an ''associate'' edge to the graph 
     # Adds two edges, one in each direction 
     def associate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
@@ -178,17 +187,17 @@ class Graph(object):
     def cause(self, cause: AbstractVariable, effect: AbstractVariable): 
         self._add_edge(start=cause, end=effect, edge_type='cause')
     
-    # Add an ambiguous/unknown edge to the graph
-    def unknown(self, lhs: AbstractVariable, rhs: AbstractVariable): 
-        self._add_edge(start=lhs, end=rhs, edge_type='unknown')
+    # Add an ambiguous/contribute edge to the graph
+    def contribute(self, lhs: AbstractVariable, rhs: AbstractVariable): 
+        self._add_edge(start=lhs, end=rhs, edge_type='contribute')
 
     # Add a 'treat' edge to the graph
     def treat(self, unit: AbstractVariable, treatment: AbstractVariable, treatment_obj: Treatment): 
         self._add_edge(start=treatment, end=unit, edge_type='treat', edge_obj=treatment_obj)
 
     # Add a 'nest' edge to the graph 
-    def nest(self, unit: AbstractVariable, group: AbstractVariable, nest_obj: Nest):
-        self._add_edge(start=unit, end=group, edge_type='nest', edge_obj=nest_obj)
+    def nest(self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest):
+        self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
     
     # Add a 'repeat' edge to the graph
     def repeat(self, unit: AbstractVariable, response: AbstractVariable, repeat_obj: RepeatedMeasure): 

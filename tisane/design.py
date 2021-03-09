@@ -1,9 +1,10 @@
 from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure
+from tisane.level import Level, LevelSet
 from tisane.graph import Graph
 from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
 
-from typing import List
-import typing 
+from typing import List, Union
+import typing
 import pydot
 from z3 import *
 
@@ -12,10 +13,11 @@ Class for expressing (i) data collection structure, (ii) that there is a manipul
 Relies on Class Treatment, Nest, RepeatedMeasure
 """
 class Design(object): 
-    dv : AbstractVariable    
+    dv : AbstractVariable  
+    levels: typing.Union[Level, LevelSet]
     graph : Graph # IR
 
-    def __init__(self, dv: AbstractVariable=None, ivs: List[typing.Union[Treatment, AbstractVariable]]=None, groupings: List[typing.Union[Nest, RepeatedMeasure]]=None): 
+    def __init__(self, dv: AbstractVariable, ivs: typing.Union[Level, LevelSet]): 
         self.dv = dv
         
         self.graph = Graph() # empty graph
@@ -24,18 +26,42 @@ class Design(object):
             # Add dv to graph
             self.graph._add_variable(dv)
         
-        if ivs: 
-            self._add_ivs(ivs=ivs)
-        
-        if groupings: 
-            self._add_groupings(groupings=groupings)
+        self.levels = ivs
+        # Is there only one level of measurements?
+        if isinstance(ivs, Level): 
+            self._add_level_to_graph(level=ivs)
+        # Are there multiple levels of measurements that are batched into a LevelSet?
+        else: 
+            assert(isinstance(ivs, LevelSet))
+            
+            # Add each level on its own to graph
+            for level in ivs: 
+                self._add_level_to_graph(level=level)
+            
+            # Add relations between levels in graph
+            for i in range(len(ivs)): 
+                if i+1 < len(ivs): 
+                    self.nest(base=ivs[i], group=ivs[i+1])
+
+    def _add_level_to_graph(self, level: Level): 
+        # Create variable for identifier
+        id_var = Nominal(level._id)
+        # Add identifier into graph with special 'is_identifier tag'
+        self.graph.add_identifier(identifier=id_var)
+
+        for m in level._measures: 
+            # Add has relation/edge with identifier
+            self.graph.has(identifier=id_var, variable=m)
+            # Add edge between measure and dv 
+            self.graph.contribute(lhs=m, rhs=self.dv)
+
 
     def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
         
         for i in ivs: 
             if isinstance(i, AbstractVariable): 
-                # TODO: Should the default be 'associate' instead of 'unknown'??
-                self.graph.unknown(lhs=i, rhs=self.dv)
+                # TODO: Should the default be 'associate' instead of 'contribute'??
+                self.graph.contribute(lhs=i, rhs=self.dv)
             
             elif isinstance(i, Treatment): 
                 unit = i.unit
@@ -44,7 +70,7 @@ class Design(object):
                 self.graph.treat(unit=unit, treatment=treatment, treatment_obj=i)
                 
                 # Add treatment edge
-                self.graph.unknown(lhs=treatment, rhs=self.dv)
+                self.graph.contribute(lhs=treatment, rhs=self.dv)
 
     def _add_groupings(self, groupings: List[typing.Union[Nest, RepeatedMeasure]]): 
         for g in groupings: 
@@ -85,7 +111,7 @@ class Design(object):
     # def _create_graph(self, ivs: List[AbstractVariable], dv: AbstractVariable): 
     #     gr = Graph()
     #     for v in ivs: 
-    #         gr.unknown(v, dv)
+    #         gr.contribute(v, dv)
         
     #     return gr
 
@@ -94,7 +120,7 @@ class Design(object):
     def _add_iv(self, iv: AbstractVariable): 
         if iv not in self.ivs: 
             self.ivs.append(iv)
-            self.graph.unknown(lhs=iv, rhs=self.dv)
+            self.graph.contribute(lhs=iv, rhs=self.dv)
     
     # Set self.dv to be @param dv
     # Assumes self.dv was None before
@@ -238,7 +264,7 @@ class Design(object):
                     pass
                 elif edge_type == 'treat': 
                     pass
-                elif edge_type == 'unknown': 
+                elif edge_type == 'contribute': 
                     facts.append(MainEffect(n0_var.const, n1_var.const))
                     facts.append(NoMainEffect(n0_var.const, n1_var.const))
         
@@ -278,7 +304,7 @@ class Design(object):
             edge_type = edge_data['edge_type']
             n0_var = gr.get_variable(n0)
             n1_var = gr.get_variable(n1)
-            if edge_type == 'unknown':
+            if edge_type == 'contribute':
                 if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
                     # Induce UNSAT in order to get end-user clarification
                     facts.append(Cause(n0_var.const, n1_var.const))
