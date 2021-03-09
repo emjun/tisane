@@ -129,8 +129,65 @@ class StatisticalModelTest(unittest.TestCase):
         # Interaction effects
         self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='contribute'))
     
-    # def test_initialize_random_slopes_1(self): 
-    #     pass
+    def test_initialize_random_slopes_1(self): 
+        math = ts.Numeric('MathAchievement')
+        # Student-level variables 
+        student = ts.Nominal('id')
+        hw = ts.Numeric('HomeWork')
+        race = ts.Nominal('Race')
+        # School-level variables
+        school = ts.Nominal('school')
+        mean_ses = ts.Numeric('MeanSES')
+        variables = [math, hw, race, mean_ses]
+        identifiers = [student, school]
+
+        random_slopes = [(hw, school)]
+        sm = ts.StatisticalModel(
+            dv=math,
+            fixed_ivs=[race, mean_ses], 
+            random_slopes=random_slopes, 
+            random_intercepts=None,
+            interactions=[(hw, mean_ses)], 
+        )
+
+        # Statistical Model has properties we expect
+        self.assertEquals(sm.random_slopes, random_slopes)
+        self.assertEquals(sm.random_intercepts, list())
+        self.assertIsNone(sm.family)
+        self.assertIsNone(sm.link_func)
+
+        # The graph IR has all the variables
+        self.assertEquals(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random slopes + 1 interaction
+        for v in variables: 
+            self.assertTrue(sm.graph.has_variable(v))
+        variables_in_graph = sm.graph.get_variables()
+        student_id = None 
+        school_id = None
+        ixn_var = None
+        for v in variables_in_graph: 
+            if v.name == '*'.join([hw.name,mean_ses.name]):
+                ixn_var = v
+            if v.name == 'Unknown identifier': 
+                student_id = v
+            if v.name == 'school': 
+                school_id = v
+        self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
+        self.assertIsNotNone(student_id) # Student variable in the graph as an unknown identifier node
+        self.assertIsNotNone(school_id) # School variable in the graph as an identifier node
+        
+        # The graph IR has all the edges we expect
+        self.assertEquals(len(sm.graph.get_edges()), 7)
+        # Main effects
+        self.assertTrue(sm.graph.has_edge(hw, math, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(race, math, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(mean_ses, math, edge_type='contribute'))
+        # Interaction effects
+        self.assertTrue(sm.graph.has_edge(ixn_var, math, edge_type='contribute'))
+        # Identifier
+        self.assertTrue(sm.graph.has_edge(student_id, hw, edge_type='has'))
+        self.assertTrue(sm.graph.has_edge(student_id, ixn_var, edge_type='has'))
+        # Nesting
+        self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest'))
 
     # def test_initialize_random_slopes_2(self): 
     #     pass

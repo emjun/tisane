@@ -121,8 +121,9 @@ class StatisticalModel(object):
         self.fixed_ivs = fixed_ivs
 
         # Update the Graph IR
-        for m in self.fixed_ivs: 
-            self.graph.contribute(lhs=m, rhs=self.dv)
+        for var in self.fixed_ivs: 
+            assert(isinstance(var, AbstractVariable))
+            self.graph.contribute(lhs=var, rhs=self.dv)
 
     # TODO: Update the interactions after add random slopes/random intercepts...
     # Sets interaction effects to @param fixed_ivs
@@ -144,14 +145,18 @@ class StatisticalModel(object):
             # Ixn variable 'inherits' has/identifier edges from component variables/nodes
             pre_identifiers=list()
             for variable in ixn:
-                predecessors = self.graph.get_predecessors(var=variable) # returns an iterator
+                predecessors = self.graph.get_predecessors(var=variable) # returns a dict keyiterator
 
                 for p in predecessors: 
-                    if p['is_identifier'] is True: 
-                        pre_identifiers.append(p)
+                    p_var = self.graph.get_variable(name=p)
+                    p_node, p_data = self.graph.get_node(variable=p_var)
+                    if p_data['is_identifier']: 
+                        pre_identifiers.append(p_var)
             
-                for pi in pre_identifiers:
-                    self.graph.has(identifier=pi, variable=ixn_var)
+            if len(pre_identifiers) > 0: 
+                import pdb; pdb.set_trace()
+            for pi in pre_identifiers:
+                self.graph.has(identifier=pi, variable=ixn_var)
 
     # Sets random slopes 
     def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 
@@ -162,6 +167,9 @@ class StatisticalModel(object):
             # Add unknown 'has'/identifier relation 
             unknown_id = Nominal('Unknown identifier')
             self.graph.has(identifier=unknown_id, variable=slope_for_each)
+
+            # Add the random slope to dv relation 
+            self.graph.contribute(lhs=slope_for_each, rhs=self.dv)
 
             # Add nesting relation 
             self.graph.nest(base=unknown_id, group=slopes_vary_among)

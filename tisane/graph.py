@@ -66,7 +66,7 @@ class Graph(object):
     def _add_variable(self, variable: AbstractVariable, is_identifier: bool=False):  
         if not self._graph: 
             self._graph = nx.MultiDiGraph()
-        self._graph.add_node(variable.name, variable=variable, is_identifer=is_identifier)
+        self._graph.add_node(variable.name, variable=variable, is_identifier=is_identifier)
 
     # Add edge to graph
     # If nodes aren't already in the graph, add them
@@ -142,6 +142,14 @@ class Graph(object):
     def get_nodes(self) -> List:
         return list(self._graph.nodes(data=True))
     
+    # @return Node representing @param variable in graph
+    def get_node(self, variable: AbstractVariable): 
+        nodes = self.get_nodes()
+
+        for n in nodes: 
+            if n[1]['variable'] == variable: 
+                return n
+    
     # @return list of edges in graph
     def get_edges(self) -> List:
         return list(self._graph.edges(data=True))
@@ -183,6 +191,12 @@ class Graph(object):
 
     # Add an edge that indicates that identifier 'has' the variable measurement
     def has(self, identifier: AbstractVariable, variable: AbstractVariable): 
+        if not self.has_variable(identifier): 
+            self._add_variable(variable=identifier, is_identifier=True)
+        else: 
+            # Update the variable to be an identifier 
+            (node, node_data) = self.get_node(variable=variable)    
+            node_data['is_identifier'] = True
         self._add_edge(start=identifier, end=variable, edge_type='has')
 
     # Add an ''associate'' edge to the graph 
