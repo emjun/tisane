@@ -29,32 +29,40 @@ class Design(object):
         self.levels = ivs
         # Is there only one level of measurements?
         if isinstance(ivs, Level): 
-            self._add_level_to_graph(level=ivs)
+            # Create variable for identifier
+            id_var = Nominal(ivs._id)
+            # Add identifier into graph with special 'is_identifier tag'
+            self.graph.add_identifier(identifier=id_var)
+
+            self._add_level_to_graph(level=ivs, id_var=id_var)
         # Are there multiple levels of measurements that are batched into a LevelSet?
         else: 
             assert(isinstance(ivs, LevelSet))
             
+            levels = ivs.get_levels()
+            id_vars = list()
             # Add each level on its own to graph
-            for level in ivs: 
-                self._add_level_to_graph(level=level)
+            for level in levels:
+                # Create variable for identifier
+                id_var = Nominal(level._id)
+                # Add identifier into graph with special 'is_identifier tag'
+                self.graph.add_identifier(identifier=id_var)
+                self._add_level_to_graph(level=level, id_var=id_var)
+                id_vars.append(id_var)
             
+            assert(len(levels) == len(id_vars))
             # Add relations between levels in graph
-            for i in range(len(ivs)): 
-                if i+1 < len(ivs): 
-                    self.nest(base=ivs[i], group=ivs[i+1])
+            for i in range(len(id_vars)): 
+                if i+1 < len(id_vars): 
+                    self.graph.nest(base=id_vars[i], group=id_vars[i+1])
 
-    def _add_level_to_graph(self, level: Level): 
-        # Create variable for identifier
-        id_var = Nominal(level._id)
-        # Add identifier into graph with special 'is_identifier tag'
-        self.graph.add_identifier(identifier=id_var)
+    def _add_level_to_graph(self, level: Level, id_var: AbstractVariable): 
 
         for m in level._measures: 
             # Add has relation/edge with identifier
             self.graph.has(identifier=id_var, variable=m)
             # Add edge between measure and dv 
             self.graph.contribute(lhs=m, rhs=self.dv)
-
 
     def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
         

@@ -4,11 +4,12 @@ Tests initialization, graph construction, and verification of several different 
 
 import tisane as ts
 from tisane.variable import Treatment, Nest, RepeatedMeasure
+from tisane.level import Level, LevelSet
 
 import unittest
 
 class DesignTest(unittest.TestCase): 
-    def test_initialize_ivs_only_1(self): 
+    def test_initialize_1_level(self): 
         acc = ts.Numeric('accuracy')
         expl = ts.Nominal('explanation type')
         variables = [acc, expl]
@@ -41,7 +42,58 @@ class DesignTest(unittest.TestCase):
         self.assertTrue(design.graph.has_edge(expl, acc, edge_type='contribute'))
         self.assertTrue(design.graph.has_edge(pid, expl, edge_type='has'))
     
-    
+    def test_initialize_2_levels(self): 
+        """Example from Kreft and de Leeuw, 1989"""
+
+        # Variables
+        math = ts.Numeric('MathAchievement')
+        hw = ts.Numeric('HomeWork')
+        race = ts.Nominal('Race')
+        mean_ses = ts.Numeric('MeanSES')
+        variables = [math, hw, race, mean_ses]
+
+        # No need to create a separate variable for 'student' and 'school'
+        student_level = ts.Level(identifier='student', measures=[hw, race])
+        school_level = ts.Level(identifier='school', measures=[mean_ses])
+
+        design = ts.Design(
+            dv=math, 
+            ivs=student_level.nest_under(school_level)
+        )
+
+        # DV 
+        self.assertEquals(design.dv, math)
+        # Levels 
+        self.assertTrue(isinstance(design.levels, LevelSet))
+        self.assertTrue(student_level in design.levels.get_levels())
+        self.assertTrue(school_level in design.levels.get_levels())
+
+        # The graph IR has all the variables
+        self.assertEquals(len(design.graph.get_variables()), len(variables) + 2) # +1 for each identifier
+        for v in variables: 
+            self.assertTrue(design.graph.has_variable(v))
+        # The graph IR has the identifier
+        student_id = None 
+        school_id = None
+        for v in design.graph.get_variables(): 
+            if v.name == 'student': 
+                student_id = v
+            elif v.name == 'school': 
+                school_id = v
+        self.assertIsNotNone(student_id)
+        self.assertIsNotNone(school_id)
+
+        # The graph IR has all the edges we expect
+        self.assertEqual(len(design.graph.get_edges()), 7)
+        self.assertTrue(design.graph.has_edge(hw, math, edge_type='contribute'))
+        self.assertTrue(design.graph.has_edge(race, math, edge_type='contribute'))
+        self.assertTrue(design.graph.has_edge(mean_ses, math, edge_type='contribute'))
+        self.assertTrue(design.graph.has_edge(student_id, hw, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(student_id, race, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(school_id, mean_ses, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(student_id, school_id, edge_type='nest'))
+
+
     # def test_initialize_ivs_only_2(self): 
     #     chronotype = ts.Nominal('Group chronotype')
     #     composition = ts.Nominal('Group composition')

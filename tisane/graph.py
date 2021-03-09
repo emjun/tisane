@@ -196,7 +196,7 @@ class Graph(object):
         self._add_edge(start=treatment, end=unit, edge_type='treat', edge_obj=treatment_obj)
 
     # Add a 'nest' edge to the graph 
-    def nest(self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest):
+    def nest(self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest=None):
         self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
     
     # Add a 'repeat' edge to the graph

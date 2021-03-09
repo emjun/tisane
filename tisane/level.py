@@ -22,6 +22,9 @@ class LevelSet(object):
     def __init__(self, levels=List[Level]): 
         self._level_set = levels
 
+    def get_levels(self): 
+        return self._level_set
+
     # Nest this LevelSet under another Level
     # Useful for chaining nest_under statements
     def nest_under(self, level: Level): 
