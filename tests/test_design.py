@@ -7,6 +7,7 @@ from tisane.variable import Treatment, Nest, RepeatedMeasure
 from tisane.level import Level, LevelSet
 
 import unittest
+import pandas as pd
 
 class DesignTest(unittest.TestCase): 
     def test_initialize_1_level(self): 
@@ -93,6 +94,37 @@ class DesignTest(unittest.TestCase):
         self.assertTrue(design.graph.has_edge(school_id, mean_ses, edge_type='has'))
         self.assertTrue(design.graph.has_edge(student_id, school_id, edge_type='nest'))
 
+    def test_initialize_with_data(self): 
+        math = ts.Numeric('MathAchievement')
+        hw = ts.Numeric('HomeWork')
+        race = ts.Nominal('Race')
+        mean_ses = ts.Numeric('MeanSES')
+        variables = [math, hw, race, mean_ses]
+
+        # No need to create a separate variable for 'student' and 'school'
+        student_level = ts.Level(identifier='student', measures=[hw, race])
+        school_level = ts.Level(identifier='school', measures=[mean_ses])
+        
+        source = pd.DataFrame(data={
+            'MathAchievement': [100, 90, 90, 80, 92],
+            'HomeWork': [1, 3, 4, 9, 4],
+            'Race': ['White', 'White', 'Black', 'Asian', 'Hispanic'],
+            'MeanSES': [100000, 100000, 90000, 83000, 70000]
+        })
+
+        design = ts.Design(
+            dv=math, 
+            ivs=student_level.nest_under(school_level)
+        ).assign_data(source)
+
+        self.assertIsNotNone(design.dataset)
+        self.assertIsInstance(design.dataset.dataset, pd.DataFrame)
+        # Compare element-wise
+        design_data = design.dataset.dataset
+        self.assertTrue((design_data['MathAchievement'] == source['MathAchievement']).all())
+        self.assertTrue((design_data['HomeWork'] == source['HomeWork']).all())
+        self.assertTrue((design_data['Race'] == source['Race']).all())
+        self.assertTrue((design_data['MeanSES'] == source['MeanSES']).all())
 
     # def test_initialize_ivs_only_2(self): 
     #     chronotype = ts.Nominal('Group chronotype')

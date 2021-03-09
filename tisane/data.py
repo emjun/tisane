@@ -2,18 +2,26 @@ import os
 import pandas as pd 
 from typing import Union
 
+def absolute_path(p: str) -> str:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
+
 class Dataset(object): 
     # data_vectors: dict
-    data : pd.DataFrame
+    dataset : pd.DataFrame
 
     # Takes input in either a CSV or a Pandas DataFrame
     def __init__(self, source: Union[str, pd.DataFrame]): 
-        df = None
+        df = None 
+        # Read in data 
         if isinstance(source, str): 
-            df = pd.read_csv(source)
+            abs_path = absolute_path(p=source)
+            df = pd.read_csv(abs_path)
+        elif isinstance(source, pd.DataFrame): 
+            df = source 
 
-        if isinstance(source, pd.DataFrame): 
-            data = source
+        # TODO: post-processing? E.g., break up into DataVectors?
+        self.dataset = df
+
 
 class DataVector(object): 
     name: str

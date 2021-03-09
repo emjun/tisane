@@ -2,9 +2,12 @@ from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatme
 from tisane.level import Level, LevelSet
 from tisane.graph import Graph
 from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
+from tisane.data import Dataset
 
-from typing import List, Union
-import typing
+import os
+from typing import List
+import typing # to use typing.Union; Union is overloaded in z3
+import pandas as pd
 import pydot
 from z3 import *
 
@@ -16,8 +19,9 @@ class Design(object):
     dv : AbstractVariable  
     levels: typing.Union[Level, LevelSet]
     graph : Graph # IR
+    dataset: Dataset
 
-    def __init__(self, dv: AbstractVariable, ivs: typing.Union[Level, LevelSet]): 
+    def __init__(self, dv: AbstractVariable, ivs: typing.Union[Level, LevelSet], source: typing.Union[os.PathLike, pd.DataFrame]=None): 
         self.dv = dv
         
         self.graph = Graph() # empty graph
@@ -55,6 +59,17 @@ class Design(object):
             for i in range(len(id_vars)): 
                 if i+1 < len(id_vars): 
                     self.graph.nest(base=id_vars[i], group=id_vars[i+1])
+
+        if source: 
+            self.dataset = Dataset(source)
+        else: 
+            self.dataset = None
+
+    # Associate this Study Design with a Dataset
+    def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]): 
+        self.dataset = Dataset(source)
+
+        return self
 
     def _add_level_to_graph(self, level: Level, id_var: AbstractVariable): 
 
