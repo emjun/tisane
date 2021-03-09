@@ -153,8 +153,8 @@ class StatisticalModel(object):
                     if p_data['is_identifier']: 
                         pre_identifiers.append(p_var)
             
-            if len(pre_identifiers) > 0: 
-                import pdb; pdb.set_trace()
+            # if len(pre_identifiers) > 0: 
+            #     import pdb; pdb.set_trace()
             for pi in pre_identifiers:
                 self.graph.has(identifier=pi, variable=ixn_var)
 
@@ -180,10 +180,13 @@ class StatisticalModel(object):
         self.random_intercepts = random_intercepts
 
         # Update the Graph IR
-        for intercept_for_each, intercepts_vary_among in random_slopes: 
+        for intercept_for_each, intercepts_vary_among in random_intercepts: 
             # Add unknown 'has'/identifier relation 
             unknown_id = Nominal('Unknown identifier')
             self.graph.has(identifier=unknown_id, variable=intercept_for_each)
+
+            # Add the random intercept to dv relation 
+            self.graph.contribute(lhs=intercept_for_each, rhs=self.dv)
 
             # Add nesting relation 
             self.graph.nest(base=unknown_id, group=intercepts_vary_among)
