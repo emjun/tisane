@@ -156,6 +156,14 @@ class Graph(object):
             if n_var.name == name: 
                 return n_var
         return None
+    
+    def get_predecessors(self, var: AbstractVariable): 
+        if self.has_variable(var): 
+            nodes = self.get_nodes()
+            for n, data in nodes: 
+                n_var = data['variable']
+                if n_var == var: 
+                    return self._graph.predecessors(n) # pass node, not variable
 
     # Update the edge by first removing then adding
     def update_edge(self, start: AbstractVariable, end: AbstractVariable, new_edge_type: str): 

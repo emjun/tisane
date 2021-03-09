@@ -20,41 +20,34 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-
-# TODO: Make this an abstract class, at least in name?
 class StatisticalModel(object): 
     # residuals: AbstractVariable
     # TODO: May not need properties since not sure what the properties would be if not the indivdiual variables or the residuals
     properties: list # list of properties that this model exhibits
 
-    main_effects: List[AbstractVariable]
-    interaction_effects: List[Tuple[AbstractVariable, ...]]
-    # mixed_effects: List[AbstractVariable]
+    fixed_ivs: List[AbstractVariable]
+    interactions: List[Tuple[AbstractVariable, ...]]
     random_slopes: List[Tuple[AbstractVariable, ...]]
     random_intercepts: List[Tuple[AbstractVariable, ...]]
+    family: str
     link_function: str # maybe, not sure?
     variance_function: str # maybe, not sure?
 
     graph : Graph # IR
 
-    consts: dict # Z3 consts representing the model and its DV, main_effects, etc. 
+    consts: dict # Z3 consts representing the model and its DV, fixed_ivs, etc. 
 
 
-    def __init__(self, dv: AbstractVariable, main_effects: List[AbstractVariable]=None, interaction_effects: List[Tuple[AbstractVariable, ...]]=None, random_slopes: List[Tuple[AbstractVariable,...]]=None, random_intercepts: List[Tuple[AbstractVariable,...]]=None, link_func: str=None, variance_func: str=None): 
+    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_slopes: List[Tuple[AbstractVariable,...]]=None, random_intercepts: List[Tuple[AbstractVariable,...]]=None, family: str=None, link_func: str=None): 
         self.dv = dv
 
         self.graph = Graph()
         self.graph._add_variable(self.dv)
         
-        if main_effects is not None: 
-            self.set_main_effects(main_effects=main_effects)
+        if fixed_ivs is not None: 
+            self.set_fixed_ivs(fixed_ivs=fixed_ivs)
         else: 
-            self.main_effects = list()
-        
-        if interaction_effects is not None: 
-            self.set_interaction_effects(interaction_effects=interaction_effects)
-        else: 
-            self.interaction_effects = list()
+            self.fixed_ivs = list()
 
         if random_slopes is not None:
             self.set_random_slopes(random_slopes=random_slopes)
@@ -66,11 +59,17 @@ class StatisticalModel(object):
         else:
             self.random_intercepts = list()
 
+        # Set interactions last in case Random Slope, Random Intercept adds identifier variables/relations we care about
+        if interactions is not None: 
+            self.set_interactions(interactions=interactions)
+        else: 
+            self.interactions = list()
+
+        self.family = family
         self.link_func = link_func
-        self.variance_func = variance_func
+        # self.variance_func = variance_func
 
         self.consts = dict()
-        # self.generate_consts()
 
     # TODO: Should be class method? 
     def create_from(graph: Graph): 
@@ -78,11 +77,11 @@ class StatisticalModel(object):
 
     def __str__(self): 
         dv = f"DV: {self.dv}\n"
-        main_effects = f"Main effects: {self.main_effects}\n" 
-        interaction_effects = f"Interaction effects: {self.interaction_effects}\n"
+        fixed_ivs = f"Main effects: {self.fixed_ivs}\n" 
+        interactions = f"Interaction effects: {self.interactions}\n"
         mixed_effects = f"Mixed effects: {self.mixed_effects}"
         
-        return dv + main_effects + interaction_effects + mixed_effects
+        return dv + fixed_ivs + interactions + mixed_effects
 
     # @return string of mathematical version of the statistical model    
     # TODO: @param setting might tell us something about how to format the categorical variables...
@@ -97,10 +96,10 @@ class StatisticalModel(object):
         y = transform_var(self.dv)
         xs = list()
         
-        for m in self.main_effects: 
+        for m in self.fixed_ivs: 
             xs.append(transform_var(m))
         
-        for i in self.interaction_effects: 
+        for i in self.interactions: 
             x = '('
             # Iterate through variables involved in interaction
             for idx in range(len(i)): 
@@ -117,54 +116,75 @@ class StatisticalModel(object):
         equation = y + ' = ' + '+'.join(xs)
         return equation
 
-    # Sets main effects to @param main_effects
-    def set_main_effects(self, main_effects: List[AbstractVariable]): 
-        self.main_effects = main_effects
+    # Sets main effects to @param fixed_ivs
+    def set_fixed_ivs(self, fixed_ivs: List[AbstractVariable]): 
+        self.fixed_ivs = fixed_ivs
 
         # Update the Graph IR
-        for m in self.main_effects: 
-            self.graph.unknown(lhs=m, rhs=self.dv)
+        for m in self.fixed_ivs: 
+            self.graph.contribute(lhs=m, rhs=self.dv)
 
-    # Sets interaction effects to @param main_effects
-    def set_interaction_effects(self, interaction_effects: List[AbstractVariable]): 
-        self.interaction_effects = interaction_effects
-
-        # TODO: Make sure this works for n-way interactions
-        # There may be 2+-way interactions
-        for ixn in self.interaction_effects: 
-            # For each interaction, add edges between the variables involved in the interaction
-            # Get powerset of ixn 
-            pset = list(powerset(ixn))
-            # Only keep sets that are of size 2 
-            pset_len_2 = [p for p in pset if len(p) == 2]
+    # TODO: Update the interactions after add random slopes/random intercepts...
+    # Sets interaction effects to @param fixed_ivs
+    def set_interactions(self, interactions: List[AbstractVariable]): 
+        self.interactions = interactions
+        
+        for ixn in self.interactions: 
+            ixn_name = list()
+            # TODO: interaction_data = DataVector()
+        
+            # Create ixn variable
+            for variable in ixn: 
+                ixn_name.append(variable.name)
+                self.graph.get_variable        
+            ixn_var = Nominal('*'.join(ixn_name))
+            # Ixn contributes to DV
+            self.graph.contribute(lhs=ixn_var, rhs=self.dv)
             
-            # Update the Graph IR
-            for p in pset_len_2: 
-                assert(len(p)==2)
-                lhs = p[0]
-                rhs = p[1]
-                self.graph.unknown(lhs=lhs, rhs=rhs)
+            # Ixn variable 'inherits' has/identifier edges from component variables/nodes
+            pre_identifiers=list()
+            for variable in ixn:
+                predecessors = self.graph.get_predecessors(var=variable) # returns an iterator
 
-    # Sets mixed effects to @param mixed_effects
-    def set_mixed_effects(self, mixed_effects: List[AbstractVariable]): 
-        self.mixed_effects = mixed_effects
+                for p in predecessors: 
+                    if p['is_identifier'] is True: 
+                        pre_identifiers.append(p)
+            
+                for pi in pre_identifiers:
+                    self.graph.has(identifier=pi, variable=ixn_var)
 
-        for mi in self.mixed_effects: 
-            self.graph.unknown(lhs=mi, rhs=self.dv)
-    
     # Sets random slopes 
     def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 
         self.random_slopes = random_slopes
+        
+        # Update the Graph IR
+        for slope_for_each, slopes_vary_among in random_slopes: 
+            # Add unknown 'has'/identifier relation 
+            unknown_id = Nominal('Unknown identifier')
+            self.graph.has(identifier=unknown_id, variable=slope_for_each)
+
+            # Add nesting relation 
+            self.graph.nest(base=unknown_id, group=slopes_vary_among)
+            
 
     # Sets random intercepts
     def set_random_intercepts(self, random_intercepts: List[Tuple[AbstractVariable, ...]]): 
         self.random_intercepts = random_intercepts
 
+        # Update the Graph IR
+        for intercept_for_each, intercepts_vary_among in random_slopes: 
+            # Add unknown 'has'/identifier relation 
+            unknown_id = Nominal('Unknown identifier')
+            self.graph.has(identifier=unknown_id, variable=intercept_for_each)
+
+            # Add nesting relation 
+            self.graph.nest(base=unknown_id, group=intercepts_vary_among)
+
     # @return all variables (DV, IVs)
     def get_variables(self) -> List[AbstractVariable]: 
-        variables = [self.dv] + self.main_effects
+        variables = [self.dv] + self.fixed_ivs
         
-        for ixn in self.interaction_effects: 
+        for ixn in self.interactions: 
             for i in ixn: 
                 # Check that we haven't already added the variable (as a main effect)
                 if i not in variables: 
@@ -178,7 +198,7 @@ class StatisticalModel(object):
 
     # @return a list containing all the IVs
     def get_all_ivs(self):     
-        return self.main_effects + self.interaction_effects + self.mixed_effects
+        return self.fixed_ivs + self.interactions + self.mixed_effects
 
     def add_main_effect(self, new_main_effect: AbstractVariable, **kwargs): 
         if 'edge_type' in kwargs: 
@@ -186,7 +206,7 @@ class StatisticalModel(object):
         else: 
             edge_type = 'unknown'
 
-        updated_main_effects = self.main_effects + [new_main_effect]
+        updated_fixed_ivs = self.fixed_ivs + [new_main_effect]
         # TODO: Update when move to Graph IR -- add a treat Graph function?
         self.graph._add_edge(start=new_main_effect, end=self.dv, edge_type=edge_type)
 
@@ -196,11 +216,11 @@ class StatisticalModel(object):
         Object = DeclareSort('Object')
         
         # Create and add Z3 consts for all main effects
-        main_effects = self.main_effects
+        fixed_ivs = self.fixed_ivs
         
         main_seq = None
-        if len(self.main_effects) > 0: 
-            for me in main_effects: 
+        if len(self.fixed_ivs) > 0: 
+            for me in fixed_ivs: 
                 # Have we created a sequence of IVs yet?
                 # If not, create one
                 if main_seq is None: 
@@ -214,12 +234,12 @@ class StatisticalModel(object):
         else: 
             main_seq = Empty(SeqSort(Object))
         
-        self.consts['main_effects'] = main_seq
+        self.consts['fixed_ivs'] = main_seq
 
         # Create and add Z3 consts for Interaction effects
         interactions_seq = None
-        if len(self.interaction_effects) > 0: 
-            for ixn in self.interaction_effects: 
+        if len(self.interactions) > 0: 
+            for ixn in self.interactions: 
                 tmp = EmptySet(Object) 
                 
                 # For each variable in the interaction tuple
@@ -251,9 +271,9 @@ class StatisticalModel(object):
         Object = DeclareSort('Object')
 
         # Add interaction effects 
-        if self.interaction_effects is not None: 
+        if self.interactions is not None: 
             # i_set is a Tuple of AbstractVariables
-            for i_set in self.interaction_effects: 
+            for i_set in self.interactions: 
                 # Create set object
                 tmp = EmptySet(Object) 
                 # Add each variable in the interaction set
@@ -378,9 +398,9 @@ class StatisticalModel(object):
     def query(self, outcome: str) -> Any: 
         # Ground some rules to make the quantification simpler
         dv_const = self.consts['dv']
-        main_effects = self.consts['main_effects']
+        fixed_ivs = self.consts['fixed_ivs']
         interactions = self.consts['interactions']
-        KB.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
+        KB.ground_rules(dv_const=dv_const, fixed_ivs=fixed_ivs, interactions=interactions)
         
         # Collect facts based on @param outcome
         facts = self.collect_facts(outcome=outcome)
@@ -402,12 +422,12 @@ class StatisticalModel(object):
         elif desired_outcome == 'VARIABLE RELATIONSHIP GRAPH': 
             all_vars = self.consts['variables']
             dv_const = self.consts['dv']
-            main_effects = self.consts['main_effects']
+            fixed_ivs = self.consts['fixed_ivs']
             interactions = self.consts['interactions']
 
             for v in all_vars: 
                 # Is the variable a main effect?
-                if is_true(BoolVal(Contains(main_effects, Unit(v)))):
+                if is_true(BoolVal(Contains(fixed_ivs, Unit(v)))):
                     if v is not dv_const: 
                         facts.append(Cause(v, dv_const))
                         facts.append(Correlate(v, dv_const))
@@ -415,9 +435,9 @@ class StatisticalModel(object):
                     # for i in interactions: 
                     #     if is_true(BoolVal(IsMember(v, i))): 
 
-            if self.interaction_effects: 
+            if self.interactions: 
                 # TODO: Generalize this to more than 2 vars involved in an interaction
-                for v0, v1 in self.interaction_effects: 
+                for v0, v1 in self.interactions: 
                     v0_const = None 
                     v1_const = None 
                     for v in all_vars: 
