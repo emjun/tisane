@@ -28,3 +28,7 @@ from tisane.graph import (
 from tisane.conceptual_model import (
                                         ConceptualModel
 )
+
+from tisane.level import (
+                                Level
+)
