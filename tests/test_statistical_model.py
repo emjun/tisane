@@ -72,6 +72,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
         # The graph IR has all the edges we expect
+        self.assertEquals(len(sm.graph.get_edges()), 6)
         # Main effects
         self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
         self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
@@ -118,6 +119,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
         # The graph IR has all the edges we expect
+        self.assertEquals(len(sm.graph.get_edges()), 6)
         # Main effects
         self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
         self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
