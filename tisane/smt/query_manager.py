@@ -7,6 +7,7 @@ from tisane.smt.declare_constraints import *
 from tisane.smt.rules import *
 from tisane.smt.knowledge_base import KB
 from tisane.smt.qm_helpers import *
+from tisane.smt.input_interface import InputInterface
 
 from z3 import *
 from typing import List, Union, Dict
@@ -289,10 +290,10 @@ class QueryManager(object):
         # Get and manage the constraints that need to be considered from the rest of Knowledge Base     
         rules_to_consider = dict()
 
-        # TODO: This step might not belong here. Seems odd. 
-        if 'step' in kwargs: 
-            if kwargs['step'] == 'effects':     
-                rules_to_consider['effects_rules'] = KB.effects_rules
+        if output.upper() == 'EFFECTS':
+            assert('dv_const' in kwargs)
+            KB.ground_effects_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['effects_rules'] = KB.effects_rules
         else: 
             # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
             if output.upper() == 'STATISTICAL MODEL': 
@@ -322,7 +323,6 @@ class QueryManager(object):
             # Add rules
             s.add(rules)
 
-            import pdb; pdb.set_trace()
             (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
             # import pdb; pdb.set_trace()
             facts = updated_facts        
@@ -333,63 +333,61 @@ class QueryManager(object):
     # @param pushed_constraints are constraints that were added as constraints all at once but then caused a conflict
     # @param unsat_core is the set of cosntraints that caused a conflict
     # @param keep_clause is the clause in unsat_core to keep and that resolves the conflict
-    def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause: list): 
+    def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause): 
         # Verify that keep_clause is indeed a subset of unsat_core
-        for c in keep_clause:
-            assert(c in unsat_core)
+        assert(keep_clause in unsat_core)
 
         updated_constraints = list()
-        for k in keep_clause: 
-            # Add the keep clause
-            updated_constraints.append(k)
+        # Add the keep clause
+        updated_constraints.append(keep_clause)
 
-            # If this keep clause is about Not Transforming data
-            if 'NoTransform' in str(k):
-                fact_dict = parse_fact(k)
-                assert('variable_name' in fact_dict)
-                var_name = fact_dict['variable_name']
+        # If this keep clause is about Not Transforming data
+        # TODO: Probably revise this
+        if 'NoTransform' in str(keep_clause):
+            fact_dict = parse_fact(keep_clause)
+            assert('variable_name' in fact_dict)
+            var_name = fact_dict['variable_name']
 
-                for pc in pushed_constraints: 
-                    # If pc is not k (already added to updated_constraints)
-                    if str(pc) != str(k): 
-                        # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
-                        if var_name in str(pc): 
-                            # Keep the pushed constraint as long as it is not about
-                            # transforming the variable
-                            if 'Transform' not in str(pc):
-                                updated_constraints.append(pc)
-                        else: 
+            for pc in pushed_constraints: 
+                # If pc is not keep_clause (already added to updated_constraints)
+                if str(pc) != str(keep_clause): 
+                    # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
+                    if var_name in str(pc): 
+                        # Keep the pushed constraint as long as it is not about
+                        # transforming the variable
+                        if 'Transform' not in str(pc):
                             updated_constraints.append(pc)
-            # elif 'NumericDataType' in str(k): 
-            #     fact_dict = parse_fact(k)
-            #     assert('variable_name' in fact_dict)
-            #     var_name = fact_dict['variable_name']
+                    else: 
+                        updated_constraints.append(pc)
+        # elif 'NumericDataType' in str(keep_clause): 
+        #     fact_dict = parse_fact(keep_clause)
+        #     assert('variable_name' in fact_dict)
+        #     var_name = fact_dict['variable_name']
 
-            #     for pc in pushed_constraints: 
-            #         # If pc is not k (already added to updated_constraints)
-            #         if str(pc) != str(k): 
-            #             # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
-            #             if var_name in str(pc): 
-            #                 # Keep the pushed constraint as long as it is not about
-            #                 # categorical data types
-            #                 if 'CategoricalDataType' not in str(pc) and 'NominalDataType' not in str(pc) and 'OrdinalDataType' not in str(pc):
-            #                     updated_constraints.append(pc)
-            #             else: 
-            #                 updated_constraints.append(pc)
-            # If this keep clause is about anything else other than Not Transforming data
-            else: 
-                for pc in pushed_constraints: 
-                    # If pc is not k (already added to updated_constraints)
-                    if str(pc) != str(k):
-                        # Should we remove this constraint because it caused UNSAT?
-                        if pc in unsat_core:
-                            pass
-                        else: 
-                            updated_constraints.append(pc)
+        #     for pc in pushed_constraints: 
+        #         # If pc is not keep_clause (already added to updated_constraints)
+        #         if str(pc) != str(keep_clause): 
+        #             # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
+        #             if var_name in str(pc): 
+        #                 # Keep the pushed constraint as long as it is not about
+        #                 # categorical data types
+        #                 if 'CategoricalDataType' not in str(pc) and 'NominalDataType' not in str(pc) and 'OrdinalDataType' not in str(pc):
+        #                     updated_constraints.append(pc)
+        #             else: 
+        #                 updated_constraints.append(pc)
+        # If this keep clause is about anything else other than Not Transforming data
+        else: 
+            for pc in pushed_constraints: 
+                # If pc is not keep_clause (already added to updated_constraints)
+                if str(pc) != str(keep_clause):
+                    # Should we remove this constraint because it caused UNSAT?
+                    if pc in unsat_core:
+                        pass
+                    else: 
+                        updated_constraints.append(pc)
 
         # TODO: This may not generalize to n-way interactions
         # TODO: We want the end-user to provide hints towards interesting interactions
-        import pdb; pdb.set_trace()
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -419,14 +417,12 @@ class QueryManager(object):
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
             
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
-
-            # solver.push() # save state before add @param assertions
-
             # Ask user for input
-            keep_constraint = self.elicit_user_input(solver.assertions(), unsat_core)
+            keep_constraint = InputInterface.resolve_unsat(facts=solver.assertions(), unsat_core=unsat_core)
+            # keep_constraint = self.elicit_user_input(solver.assertions(), unsat_core)
             
             # Modifies @param assertions
             updated_assertions = self.update_clauses(assertions, unsat_core, keep_constraint)

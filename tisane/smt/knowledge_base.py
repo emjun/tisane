@@ -7,7 +7,7 @@ from z3 import *
 class KnowledgeBase(object): 
     def ground_effects_rules(self, dv_const: Const): 
         self.effects_rules = [
-                ForAll([x], Xor(MainEffect(x, dv_const), NoMainEffect(x, dv_const))),
+                ForAll([x], Xor(FixedEffect(x, dv_const), NoFixedEffect(x, dv_const))),
                 # ForAll([x0, x1, i], Implies(And(Contains(interactions, Unit(i)), And(IsMember(x0, i), IsMember(x1, i))), Contains(main_effects, Unit(x)))),
                 # ForAll([x0, x1], Implies(Interaction(x0, x1), And(Contains(interactions, Unit(x0)), Contains(interactions, Unit(x1))))),
                 # TODO: Expand this for multiple xs for n-way interactions

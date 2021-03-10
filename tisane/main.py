@@ -2,13 +2,16 @@ from tisane.concept import Concept
 # from tisane.concept_graph import ConceptGraph, CONCEPTUAL_RELATIONSHIP
 from tisane.effect_set import EffectSet
 from tisane.graph import Graph
+from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.conceptual_model import ConceptualModel
+from tisane.smt.results import AllStatisticalResults
 from tisane.asp.knowledge_base import KB, KnowledgeBase
 import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
-from tisane.smt.results import AllStatisticalResults
-from tisane.design import Design
+from tisane.smt.synthesizer import Synthesizer
+
+
 
 from enum import Enum 
 from typing import List, Union
@@ -68,7 +71,9 @@ def infer_from(input_: Union[Design], output_: str):
 # @returns statistical model that reflects the study design 
 def synthesize_statistical_model(design: Design): 
     # Invoke synthesizer
-    return QM.synthesize_statistical_model(dv=design.dv, graph=design.graph)
+    synth = Synthesizer()
+    return synth.synthesize_statistical_model(design=design)
+    # return QM.synthesize_statistical_model(dv=design.dv, graph=design.graph)
 
 def verify(input_: Union[Design, ConceptualModel, StatisticalModel], output_: Union[Design, ConceptualModel, StatisticalModel]): 
     if isinstance(input_, Design) and isinstance(output_, ConceptualModel): 

@@ -194,8 +194,8 @@ class Graph(object):
         if not self.has_variable(identifier): 
             self._add_variable(variable=identifier, is_identifier=True)
         else: 
-            # Update the variable to be an identifier 
-            (node, node_data) = self.get_node(variable=variable)    
+            # Update the variable to have an identifier
+            (node, node_data) = self.get_node(variable=identifier)    
             node_data['is_identifier'] = True
         self._add_edge(start=identifier, end=variable, edge_type='has')
 

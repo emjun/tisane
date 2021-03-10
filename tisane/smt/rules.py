@@ -16,10 +16,14 @@ i = Const('i', SetSort(Object))
 Explains = Function('Explains', Object, SeqSort(Object), BoolSort())
 Models = Function('Models', Object, SeqSort(Object), BoolSort())
 Dependent = Function('Dependent', Object, BoolSort())
-MainEffect = Function('MainEffect', Object, Object, BoolSort())
-NoMainEffect = Function('NoMainEffect', Object, Object, BoolSort())
+FixedEffect = Function('FixedEffect', Object, Object, BoolSort())
+NoFixedEffect = Function('NoFixedEffect', Object, Object, BoolSort())
 Interaction = Function('Interaction', SetSort(Object), BoolSort())
 NoInteraction = Function('NoInteraction', SetSort(Object), BoolSort())
+
+# TODO: Remove
+MainEffect = Function('MainEffect', Object, Object, BoolSort())
+NoMainEffect = Function('NoMainEffect', Object, Object, BoolSort())
 
 # Variable Relationship Graph
 Cause = Function('Cause', Object, Object, BoolSort())
