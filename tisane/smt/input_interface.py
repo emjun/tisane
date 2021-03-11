@@ -14,15 +14,33 @@ class InputInterface(object):
             ans = input(prompt + choices)
 
             if ans.upper() == 'Y': 
-                return True
+                return ans.upper()
             elif ans.upper() == 'N': 
-                return False
+                return ans.upper()
             else: 
                 pass
     
     @classmethod
+    def ask_inclusion(cls, subject: str) -> bool: 
+   
+        ans = cls.ask_inclusion_prompt(subject)
+
+        if ans.upper() == 'Y': 
+            return True
+        elif ans.upper() == 'N': 
+            return False
+        else: 
+            pass
+    
+    # TODO: Format the interactions to be more readable
+    @classmethod 
+    def format_options(cls, options: List) -> List: 
+        return options
+
+    @classmethod
     def ask_multiple_choice_prompt(cls, options: List) -> Any: 
         prompt = f'These cannot be true simultaneously.'
+        formatted_options = cls.format_options(options)
         choices = f' Pick index (starting at 0) to select option in: {options}: '
         while True: 
             idx = int(input(prompt + choices))
@@ -31,13 +49,13 @@ class InputInterface(object):
                 # only keep the constraint that is selected. 
                 constraint = options[idx] 
                 print(f'Ok, going to add {constraint} and remove the others.')
-                return constraint
+                return idx
             else:
                 print(f'Pick a value in range')
                 pass
     
     @classmethod
     def resolve_unsat(cls, facts: List, unsat_core: List) -> List: 
-        keep = cls.ask_multiple_choice_prompt(options=unsat_core)
+        idx = cls.ask_multiple_choice_prompt(options=unsat_core)
     
-        return keep
+        return unsat_core[idx]

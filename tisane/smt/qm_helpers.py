@@ -27,17 +27,16 @@ def parse_fact(fact: z3.BoolRef) -> List[str]:
         for s in arg_str: 
             if 'True' not in s: 
                 variables.append(s.strip())
+        fact_dict['variables'] = variables
     else: 
         variables = tmp[1].split(')')[0].split(',')
     
-    
-    if len(variables) == 1: 
-        fact_dict['variable_name'] = variables[0].strip()
-    elif len(variables) == 2: 
-        fact_dict['start'] = variables[0].strip()
-        fact_dict['end'] = variables[1].strip()
-    # TODO: What if 3+-way interaction? May want to have a more dedicated interaction branch/function? 
-    
+        if len(variables) == 1: 
+            fact_dict['variable_name'] = variables[0].strip()
+        elif len(variables) == 2: 
+            fact_dict['start'] = variables[0].strip()
+            fact_dict['end'] = variables[1].strip()
+        
     return fact_dict
 
 # Elicit info to and create a new variable 
@@ -218,54 +217,53 @@ def design_to_graph(model: z3.ModelRef, updated_facts: List, input_obj: Design, 
     
     return output_obj
 
-def postprocess_to_statistical_model(graph: Graph, dv: AbstractVariable, model: z3.ModelRef, updated_facts: List): 
-    output_obj = StatisticalModel(dv=dv)
-
-    main_effects = list()
-    interaction_effects = list()
-    mixed_effects = list() 
-
-    for f in updated_facts: 
+def postprocess_to_statistical_model(model: z3.ModelRef, facts: List, graph: Graph, statistical_model: StatisticalModel) -> StatisticalModel: 
+    fixed_ivs = list()
+    interaction_ivs = list()
+    random_slopes = list() 
+    random_intercepts = list()
+    
+    for f in facts: 
         fact_dict = parse_fact(f)
         function = fact_dict['function']
         
-        # Is this fact about the effects structure? (MAIN, INTERACTION)
-        if function == 'MainEffect': 
+        # Is this fact about Fixed effects?
+        if function == 'FixedEffect': 
             # Get variable names
-            start_name = fact_dict['start']
-            end_name = fact_dict['end']
+            iv = fact_dict['start']
+            dv = fact_dict['end']
             # Get variables 
-            start_var = graph.get_variable(start_name)
-            end_var = graph.get_variable(end_name)
+            iv_var = graph.get_variable(start_name)
+            dv_var = graph.get_variable(end_name)
             
-            assert(end_var, dv)
-            main_effects.append(start_var)
+            assert(dv_var, dv)
+            fixed_ivs.append(iv_var)
 
-        elif function == 'Interaction': 
-            # TODO: This is where we would expand/change to allow for n-way interactions!
-            # Get variable names
-            start_name = fact_dict['start']
-            end_name = fact_dict['end']
-            # Get variables 
-            start_var = graph.get_variable(start_name)
-            end_var = graph.get_variable(end_name)
+        # elif function == 'Interaction': 
+        #     # TODO: This is where we would expand/change to allow for n-way interactions!
+        #     # Get variable names
+        #     start_name = fact_dict['start']
+        #     end_name = fact_dict['end']
+        #     # Get variables 
+        #     start_var = graph.get_variable(start_name)
+        #     end_var = graph.get_variable(end_name)
 
-            interaction_effects.append((start_var, end_var))
+        #     interaction_effects.append((start_var, end_var))
             
-        elif ('Transform' in function) and (function != 'Transformation'): 
-            assert('variable_name' in fact_dict)
-            var_name = fact_dict['variable_name']
+        # elif ('Transform' in function) and (function != 'Transformation'): 
+        #     assert('variable_name' in fact_dict)
+        #     var_name = fact_dict['variable_name']
 
-            # Apply transformation to variable, everywhere it exists in output_obj (StatisticalModel)
-            var = graph.get_variable(var_name)
-            var.transform(transformation=function)
+        #     # Apply transformation to variable, everywhere it exists in output_obj (StatisticalModel)
+        #     var = graph.get_variable(var_name)
+        #     var.transform(transformation=function)
             
     
-    output_obj.set_main_effects(main_effects)    
-    output_obj.set_interaction_effects(interaction_effects)    
-    output_obj.set_mixed_effects(mixed_effects)
+    sm.set_fixed_ivs(fixed_ivs)
+    # output_obj.set_interaction_effects(interaction_effects)    
+    # output_obj.set_mixed_effects(mixed_effects)
 
-    return output_obj       
+    return sm
 
 def statistical_model_to_graph(model: z3.ModelRef, updated_facts: List, input_obj: StatisticalModel, output_obj: Graph):
     var_names_to_variables = get_var_names_to_variables(input_obj=input_obj)

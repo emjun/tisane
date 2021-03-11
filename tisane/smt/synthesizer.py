@@ -5,6 +5,7 @@ from tisane.smt.rules import *
 from tisane.smt.query_manager import QM
 
 from z3 import * 
+from itertools import chain, combinations
 
 # Declare data type
 Object = DeclareSort('Object')
@@ -17,6 +18,8 @@ def powerset(iterable):
 class Synthesizer(object): 
 
     def generate_and_select_effects_sets_from_design(self, design: Design): 
+        sm = StatisticalModel(dv=design.dv)
+
         ##### Fixed effects 
         fixed_candidates = set() 
 
@@ -29,7 +32,7 @@ class Synthesizer(object):
                 fixed_candidates.add(p_var)
         
         # Ask for user-input 
-        include_fixed = InputInterface.ask_inclusion_prompt('fixed effects')
+        include_fixed = InputInterface.ask_inclusion(subject='fixed effects')
         if include_fixed: 
             fixed_facts = list()
             dv = design.dv
@@ -43,58 +46,75 @@ class Synthesizer(object):
             rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
 
             # Solve constraints + rules
-            # TODO: Probably hold on to, keep track of all res_models and res_facts??
             (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
-        import pdb; pdb.set_trace()
+            
+            # Update result StatisticalModel based on user selection 
+            sm = QM.postprocess(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+
         ##### Interaction effects
-        # Ask for user-input
-        include_interactions = InputInterface.ask_inclusion_prompt('interaction effects')
-        if include_interactions: 
-            interaction_facts = list() 
-            dv = design.dv
+        # Do we have enough fixed effects to create interactions?
+        if len(fixed_candidates) >= 2:
+            # Ask for user-input
+            include_interactions = InputInterface.ask_inclusion(subject='interaction effects')
+            if include_interactions: 
+                interaction_facts = list() 
+                dv = design.dv
 
-            # Generate possible interaction candidates from fixed_candidates
-            interaction_candidates = [c for c in powserset(fixed_candidates) if len(c)>=2]
-            
-            # Get facts
-            interaction_seq = None 
-            for ixn in interaction_candidates: 
-                # Build interaction sequence
-                interaction = EmptySet(Object)
-                for v in ixn:   
-                    SetAdd(interaction, v.const)
-                if interaction_seq is None: 
-                    interaction_seq = Unit(interaction)
-                else: 
-                    interaction_seq = Concat(Unit(interaction), interaction_seq)
-            
-                interaction_facts.append(Interaction(interaction))
-                interaction_facts.append(NoInteraction(interaction))
-            
-            # Get rules 
-            rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+                # Generate possible interaction candidates from fixed_candidates
+                interaction_candidates = [c for c in powerset(fixed_candidates) if len(c)>=2]
+                
+                # Get facts
+                interaction_seq = None 
+                for ixn in interaction_candidates: 
+                    # Build interaction sequence
+                    interaction = EmptySet(Object)
 
-            # Solve constraints + rules
-            (res_model_interaction, res_facts_interaction) = QM.solve(facts=interaction_facts, rules=rules_dict)
-        import pdb; pdb.set_trace()
-        ##### Random effects
-        # Random if more than one level in design 
-        # Random slopes vs. Random intercepts 
-        # Correlations
-        # Look for elbow 
+                    for v in ixn:   
+                        interaction = SetAdd(interaction, v.const)
+                    # if interaction_seq is None: 
+                    #     interaction_seq = Unit(interaction)
+                    #     import pdb; pdb.set_trace()
+                    # else: 
+                    #     interaction_seq = Concat(Unit(interaction), interaction_seq)
+                
+                    interaction_facts.append(Interaction(interaction))
+                    interaction_facts.append(NoInteraction(interaction))
+                    
+                    interaction_seq = None 
 
-        # Output effects sets --> a Statistical Model obj with "partial" initializiation?
+                # Get rules 
+                rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+
+                # Solve constraints + rules
+                (res_model_interaction, res_facts_interaction) = QM.solve(facts=interaction_facts, rules=rules_dict)
         
+                # Update result StatisticalModel based on user selection 
+            sm = QM.postprocess(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
+
+        ##### Random effects
+        # Random slopes and intercepts are possible if there is more than one level in design 
+        if design.get_number_of_levels() >= 2:
+            pass
+            # Look for "elbow" pattern in graph IR 
+
+            # Random slopes vs. Random intercepts 
+
+            # Correlations
+            # Look for elbow 
+
+        # Return a Statistical Model obj with effects set
+        return sm
     
     # Input: Design 
     # Output: StatisticalModel
     def synthesize_statistical_model(self, design: Design): 
         """
         Step-based, feedback-based (both) synthesis algorithm
+        Incrementally builds up an output StatisticalModel object
         """
         # Effects set generation 
-        self.generate_and_select_effects_sets_from_design(design=design)
-
+        sm = self.generate_and_select_effects_sets_from_design(design=design)
+        assert(isinstance(sm, StatisticalModel))
 
         # Data property checking + Model characteristic selection 
 

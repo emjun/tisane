@@ -391,3 +391,11 @@ class Design(object):
         p_graph = self.get_design_vis()
         
         p_graph.write_png('design_vis.png')
+
+    # TODO: Update if move to more atomic API 
+    # @returns the number of levels involved in this study design
+    def get_number_of_levels(self): 
+        if isinstance(self.levels, Level): 
+            return 1 
+        elif isinstance(self.levels, LevelSet): 
+            return len(self.levels._level_set)

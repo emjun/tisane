@@ -10,7 +10,7 @@ from tisane.smt.qm_helpers import *
 from tisane.smt.input_interface import InputInterface
 
 from z3 import *
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Tuple
 
 
 """
@@ -351,7 +351,7 @@ class QueryManager(object):
             for pc in pushed_constraints: 
                 # If pc is not keep_clause (already added to updated_constraints)
                 if str(pc) != str(keep_clause): 
-                    # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
+                    # Is the pushed consctr, aint about the same variable as the keep clause (NoTransform)?
                     if var_name in str(pc): 
                         # Keep the pushed constraint as long as it is not about
                         # transforming the variable
@@ -456,6 +456,56 @@ class QueryManager(object):
             return statistical_model_to_graph(model=model, updated_facts=updated_facts, input_obj=input_obj, output_obj=output_obj)
         else: 
             raise NotImplementedError
+
+    def postprocess_to_statistical_model(self, model: z3.ModelRef, facts: List, graph: Graph, statistical_model: StatisticalModel) -> StatisticalModel: 
+        fixed_ivs = list()
+        interaction_ivs = list()
+        random_slopes = list() 
+        random_intercepts = list()
+        
+        for f in facts: 
+            fact_dict = parse_fact(f)
+            function = fact_dict['function']
+            
+            # Is this fact about Fixed effects?
+            if function == 'FixedEffect': 
+                # Get variable names
+                iv_name = fact_dict['start']
+                dv_name = fact_dict['end']
+                # Get variables 
+                iv_var = graph.get_variable(iv_name)
+                dv_var = graph.get_variable(dv_name)
+
+                fixed_ivs.append(iv_var)
+
+            elif function == 'Interaction': 
+                # Get variable names
+                var_names = fact_dict['variables']
+                # Get variables 
+                variables = list()
+
+                for v in var_names: 
+                    var = graph.get_variable(v)
+                    variables.append(var)
+
+                interaction_ivs.append(tuple(variables))
+                
+            # elif ('Transform' in function) and (function != 'Transformation'): 
+            #     assert('variable_name' in fact_dict)
+            #     var_name = fact_dict['variable_name']
+
+            #     # Apply transformation to variable, everywhere it exists in output_obj (StatisticalModel)
+            #     var = graph.get_variable(var_name)
+            #     var.transform(transformation=function)
+                
+        
+        if len(fixed_ivs) > 0:
+            statistical_model.set_fixed_ivs(fixed_ivs)
+        if len(interaction_ivs) > 0: 
+            statistical_model.set_interactions(interaction_ivs)    
+        # output_obj.set_mixed_effects(mixed_effects)
+
+        return statistical_model
 
         
 # Global QueryManager

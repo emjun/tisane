@@ -127,7 +127,7 @@ class StatisticalModel(object):
 
     # TODO: Update the interactions after add random slopes/random intercepts...
     # Sets interaction effects to @param fixed_ivs
-    def set_interactions(self, interactions: List[AbstractVariable]): 
+    def set_interactions(self, interactions: List[Tuple[AbstractVariable,...]]): 
         self.interactions = interactions
         
         for ixn in self.interactions: 
@@ -147,11 +147,12 @@ class StatisticalModel(object):
             for variable in ixn:
                 predecessors = self.graph.get_predecessors(var=variable) # returns a dict keyiterator
 
-                for p in predecessors: 
-                    p_var = self.graph.get_variable(name=p)
-                    p_node, p_data = self.graph.get_node(variable=p_var)
-                    if p_data['is_identifier']: 
-                        pre_identifiers.append(p_var)
+                if predecessors is not None: 
+                    for p in predecessors: 
+                        p_var = self.graph.get_variable(name=p)
+                        p_node, p_data = self.graph.get_node(variable=p_var)
+                        if p_data['is_identifier']: 
+                            pre_identifiers.append(p_var)
             
             # if len(pre_identifiers) > 0: 
             #     import pdb; pdb.set_trace()
