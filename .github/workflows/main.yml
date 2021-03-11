@@ -25,7 +25,7 @@ jobs:
         pipenv install -r requirements.txt
     - name: Set Pythonpath
       run: |
-        echo "/home/runner/work/tisane/" >> $GITHUB_PATH
+        echo "/home/runner/work/tisane/" >> $GITHUB_ENV
     - name: Test with pytest
       run: |
         pipenv install pytest-cov
