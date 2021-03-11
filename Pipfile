@@ -16,6 +16,7 @@ more-itertools = "*"
 clingo = "*"
 clyngor = "*"
 pydot = "*"
+pipfile = "*"
 
 [requires]
 python_version = "3.7"
