@@ -17,8 +17,8 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install pipenv
-        run: |
-          python -m pip install --upgrade pipenv wheel
+      run: |
+        python -m pip install --upgrade pipenv wheel
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
