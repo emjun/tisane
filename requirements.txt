@@ -1,7 +1,7 @@
-pandas = "*"
-networkx = "*"
-pytest = "*"
-z3-solver = "*"
-scipy = "*"
-more-itertools = "*"
-pydot = "*"
+pandas
+networkx
+pytest
+z3-solver
+scipy
+more-itertools
+pydot
