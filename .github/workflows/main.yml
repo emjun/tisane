@@ -25,11 +25,11 @@ jobs:
         pipenv install -r requirements.txt
     - name: Set Pythonpath
       run: |
-        echo "$PATH"
+        echo "/home/runner/work/tisane/" >> $GITHUB_PATH
     - name: Test with pytest
       run: |
         pipenv install pytest-cov
-        pipenv run pytest tisane/tests/ --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
+        pipenv run pytest tests/ --doctest-modules --junitxml=junit/test-results.xml --cov=com --cov-report=xml --cov-report=html
     - name: Lint with flake8
       run: |
         pipenv install flake8
