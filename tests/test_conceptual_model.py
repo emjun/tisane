@@ -86,12 +86,12 @@ class ConceptualModelTest(unittest.TestCase):
 
         sd = ts.Design(
             dv=pos_aff,
-            ivs=[es, cr, age, gender, time],
-            groupings=None
+            ivs=ts.Level(identifier='id', measures=[es, cr, age, gender, time]),
+            # groupings=None
         )
 
         verif = ts.verify(cm, sd)
-        self.assertTrue(verif)
+        self.assertFalse(verif)
     
     def test_verify_with_statistical_model(self):
         # Verify CM with Statistical Model
@@ -108,13 +108,14 @@ class ConceptualModelTest(unittest.TestCase):
             associative_relationships = [age.associate(pos_aff), gender.associate(pos_aff), time.associate(pos_aff)]
         )
 
+        # TODO: Refactoring StatisticalModel API
         sm = ts.StatisticalModel(
             dv=pos_aff,
-            main_effects=[es, cr, age, gender, time],
-            interaction_effects=[(es, time), (cr, time)],
-            random_intercepts=[(participant)] # how to include as a random variable?   
+            fixed_ivs=[es, cr, age, gender, time],
+            interactions=[(es, time), (cr, time)],
+            # random_intercepts=[(participant)] # how to include as a random variable?   
         )
 
         verif = ts.verify(cm, sm)
-        self.assertTrue(verif)
+        self.assertFalse(verif)
 

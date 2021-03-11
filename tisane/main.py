@@ -127,7 +127,6 @@ def verify_statistical_model_and_conceptual_model(sm: StatisticalModel, cm: Conc
         elif data['edge_type'] == 'cause': 
             # check if there is a corresponding 'unknown' edge in the Statistical Model
             if not sm_graph.has_edge(start=n0_var, end=n1_var, edge_type='unknown'): 
-                import pdb; pdb.set_trace()
                 return False
     return True
     

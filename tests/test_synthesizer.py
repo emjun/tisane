@@ -1,19 +1,21 @@
 import tisane as ts 
+from tisane.smt.input_interface import InputInterface
 
 import unittest
 from unittest.mock import patch
 from unittest.mock import Mock
+import pytest
 
 class SynthesizerTest(unittest.TestCase): 
 
-
-    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion_prompt', return_value='y')
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion_prompt', return_value='y')
     def test_answer_inclusion_yes(self, input):
         self.assertTrue(InputInterface.ask_inclusion('subject'))
+
     def test_synth_one_level_fixed(self): 
         pass
 
+    @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_one_level_fixed(self): 
         """
         Example from Bansal et al. CHI 2021
@@ -29,6 +31,7 @@ class SynthesizerTest(unittest.TestCase):
 
         ts.synthesize_statistical_model(design=design)
     
+    @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_one_level_fixed_interaction(self): 
         """
         Example from Kreft & de Leeuw, 1989
@@ -45,6 +48,7 @@ class SynthesizerTest(unittest.TestCase):
 
         ts.synthesize_statistical_model(design=design)
     
+    @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_two_levels_fixed_interaction(self): 
         # Variables
         math = ts.Numeric('MathAchievement')
@@ -64,6 +68,7 @@ class SynthesizerTest(unittest.TestCase):
 
         ts.synthesize_statistical_model(design=design)
 
+    @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_two_levels_random(self): 
         # Variables
         math = ts.Numeric('MathAchievement')
