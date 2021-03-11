@@ -1,4 +1,4 @@
-name: tisane
+name: CI
 
 on: [push, pull_request]
 
