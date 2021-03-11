@@ -209,9 +209,10 @@ class Nominal(AbstractVariable):
             self.cardinality = num_categories
         
         else: 
-            if 'cardinality' in kwargs: 
+            if 'cardinality' in kwargs.keys(): 
                 self.cardinality = kwargs['cardinality'] 
-            # TODO: What to do if cardinality not in kwargs?   
+            else: 
+                self.cardinality = None
 
         # has data
         if self.data is not None: 

@@ -1,9 +1,13 @@
 import tisane as ts 
 from tisane.smt.input_interface import InputInterface
+from tisane.smt.rules import *
 
 import unittest 
 from unittest.mock import patch
 from unittest.mock import Mock
+
+dv = ts.Ordinal('Ordinal DV')
+gamma_family = GammaFamily(dv.const)
 
 class InputInterfaceTest(unittest.TestCase): 
     
@@ -28,3 +32,18 @@ class InputInterfaceTest(unittest.TestCase):
         unsat_core = [ufact_1, ufact_1]
 
         self.assertEqual(InputInterface.resolve_unsat(facts=facts, unsat_core=unsat_core), ufact_1)
+
+    @patch('tisane.smt.input_interface.InputInterface.ask_family_prompt', return_value=3)
+    def test_ask_family_for_ordinal_dv(self, input): 
+        global dv, gamma_family
+
+        options = list()
+        options.append(GaussianFamily(dv.const))
+        options.append(InverseGaussianFamily(dv.const))
+        options.append(PoissonFamily(dv.const))
+        options.append(gamma_family)
+        options.append(BinomialFamily(dv.const))
+        options.append(NegativeBinomialFamily(dv.const))
+        options.append(MultinomialFamily(dv.const))
+
+        self.assertEqual(InputInterface.ask_family(options=options, dv=dv), gamma_family)

@@ -114,8 +114,8 @@ class Synthesizer(object):
         # Ideally: Would be ideal to let them go back and forth between transformation and family...
         
         pass
-
-    def generate_and_select_family(self, design: Design, statistical_model: StatisticalModel): 
+    
+    def generate_family(self, design: Design): 
         family_facts = list() 
 
         # Get facts from data types
@@ -129,14 +129,20 @@ class Synthesizer(object):
             if dv.cardinality is not None: 
                 if dv.cardinality == 2:
                     family_facts.append(BinomialFamily(dv.const))
-                    family_facts.append(NegatidveBinomialFamily(dv.const))
+                    family_facts.append(NegativeBinomialFamily(dv.const))
                 elif dv.cardinality > 2: 
                     family_facts.append(MultinomialFamily(dv.const))
             # TODO: Get missing info about cardinality?
             else: 
                 pass
+
+        return family_facts
         
-        # Ask about which family 
+    def generate_and_select_family(self, design: Design, statistical_model: StatisticalModel): 
+        family_facts = self.generate_family(design=design)
+        dv = design.dv
+
+        # End-user: Ask about which family 
         selected_family_fact = [InputInterface.ask_family(options=family_facts, dv=design.dv)]
 
         # Get rules
@@ -152,7 +158,9 @@ class Synthesizer(object):
         return statistical_model
 
     def generate_and_select_variance_function(self, design: Design, statistical_model: StatisticalModel): 
-        pass
+        variance_facts = list()
+
+        # Get facts from variance function 
 
     # Synthesizer generates viable data transformations to the variables 
     # End-user interactively selects which transformations they want
@@ -209,13 +217,16 @@ class Synthesizer(object):
         Step-based, feedback-based (both) synthesis algorithm
         Incrementally builds up an output StatisticalModel object
         """
-        # Effects set generation 
+        ##### Effects set generation 
         sm = self.generate_and_select_effects_sets_from_design(design=design)
         assert(isinstance(sm, StatisticalModel))
 
-        # Data property checking + Model characteristic selection 
-        # Updates the StatisticalModel constructed above
+        ##### Data property checking + Model characteristic selection 
+        ##### Updates the StatisticalModel constructed above
+        # Family 
         sm = self.generate_and_select_family(design=design, statistical_model=sm)
+        # Variance
+        sm = self.generate_and_select_variance_function(design=design, statistical_model=sm)
         
         sm = self.generate_and_select_data_model_properties(design=design, statistical_model=sm)
 
