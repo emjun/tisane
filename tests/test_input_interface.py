@@ -27,4 +27,4 @@ class InputInterfaceTest(unittest.TestCase):
         ufact_2.name = 'NOT Unsat constraint 1'
         unsat_core = [ufact_1, ufact_1]
 
-        self.assertEquals(InputInterface.resolve_unsat(facts=facts, unsat_core=unsat_core), ufact_1)
+        self.assertEqual(InputInterface.resolve_unsat(facts=facts, unsat_core=unsat_core), ufact_1)

@@ -15,6 +15,20 @@ class KnowledgeBase(object):
                 # TODO: ADD RULE FOR CANT INTERACTION X with Y?
             ]
 
+    def ground_family_rules(self, dv_const: Const): 
+        self.family_rules = [
+            # Xor(GaussianFamily(dv_const), InverseGaussianFamily(dv_const), PoissonFamily(dv_const), GammaFamily(dv_const), BinomialFamily(dv_const), NegativeBinomialFamily(dv_const), MultinomialFamily(dv_const))
+            Xor(GaussianFamily(dv_const), InverseGaussianFamily(dv_const)),
+            Xor(GaussianFamily(dv_const), PoissonFamily(dv_const)),
+            Xor(GaussianFamily(dv_const), GammaFamily(dv_const)),
+            # Xor(InverseGaussianFamily(dv_const), PoissonFamily(dv_const)),
+            # Xor(InverseGaussianFamily(dv_const), GammaFamily(dv_const)),
+            # Xor(PoissonFamily(dv_const), GammaFamily(dv_const))
+            # Xor(Xor(GaussianFamily(dv_const), InverseGaussianFamily(dv_const)), PoissonFamily(dv_const))
+            Xor(BinomialFamily(dv_const),NegativeBinomialFamily(dv_const)),
+            Xor(BinomialFamily(dv_const), MultinomialFamily(dv_const))
+        ]
+
     # Store all logical rules internally for now, may want to modularize in separate objects...
     def ground_rules(self, dv_const: Const, main_effects: SeqSort, interactions: SeqSort, **kwargs): 
         

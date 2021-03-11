@@ -1,3 +1,5 @@
+from tisane.variable import AbstractVariable
+
 from typing import List, Any
 
 class InputInterface(object): 
@@ -41,7 +43,7 @@ class InputInterface(object):
     def ask_multiple_choice_prompt(cls, options: List) -> Any: 
         prompt = f'These cannot be true simultaneously.'
         formatted_options = cls.format_options(options)
-        choices = f' Pick index (starting at 0) to select option in: {options}: '
+        choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
         while True: 
             idx = int(input(prompt + choices))
 
@@ -59,3 +61,32 @@ class InputInterface(object):
         idx = cls.ask_multiple_choice_prompt(options=unsat_core)
     
         return unsat_core[idx]
+
+    # TODO: Format options for specifying family of a distribution
+    @classmethod
+    def format_family(cls, options: List): 
+        return options
+    
+    @classmethod
+    def ask_family_prompt(cls, options: List, dv: AbstractVariable): 
+        prompt = f'Which distribution best approximates your dependent variable {dv}?'
+        formatted_options = cls.format_options(options)
+        choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
+
+        while True: 
+            idx = int(input(prompt + choices))
+
+            if idx in range(len(options)): 
+                # only keep the constraint that is selected. 
+                constraint = options[idx] 
+                print(f'Ok, going to add {constraint} and remove the others.')
+                return idx
+            else:
+                print(f'Pick a value in range')
+                pass
+    
+    @classmethod
+    def ask_family(cls, options: List, dv: AbstractVariable): 
+        idx = cls.ask_family_prompt(options=options, dv=dv)
+
+        return options[idx]

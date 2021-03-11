@@ -23,12 +23,12 @@ class DesignTest(unittest.TestCase):
         )
 
         # DV 
-        self.assertEquals(design.dv, acc)
+        self.assertEqual(design.dv, acc)
         # Levels 
-        self.assertEquals(design.levels, iv)
+        self.assertEqual(design.levels, iv)
 
         # The graph IR has all the variables
-        self.assertEquals(len(design.graph.get_variables()), len(variables) + 1) # +1 for the identifier
+        self.assertEqual(len(design.graph.get_variables()), len(variables) + 1) # +1 for the identifier
         for v in variables: 
             self.assertTrue(design.graph.has_variable(v))
         # The graph IR has the identifier
@@ -63,14 +63,14 @@ class DesignTest(unittest.TestCase):
         )
 
         # DV 
-        self.assertEquals(design.dv, math)
+        self.assertEqual(design.dv, math)
         # Levels 
         self.assertTrue(isinstance(design.levels, LevelSet))
         self.assertTrue(student_level in design.levels.get_levels())
         self.assertTrue(school_level in design.levels.get_levels())
 
         # The graph IR has all the variables
-        self.assertEquals(len(design.graph.get_variables()), len(variables) + 2) # +1 for each identifier
+        self.assertEqual(len(design.graph.get_variables()), len(variables) + 2) # +1 for each identifier
         for v in variables: 
             self.assertTrue(design.graph.has_variable(v))
         # The graph IR has the identifier

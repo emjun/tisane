@@ -192,6 +192,10 @@ class StatisticalModel(object):
             # Add nesting relation 
             self.graph.nest(base=unknown_id, group=intercepts_vary_among)
 
+    # Sets the family
+    def set_family(self, family: str): 
+        self.family = family
+
     # @return all variables (DV, IVs)
     def get_variables(self) -> List[AbstractVariable]: 
         variables = [self.dv] + self.fixed_ivs

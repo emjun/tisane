@@ -50,10 +50,15 @@ ProbitTransform = Function('ProbitTransform', Object, BoolSort())
 LogitTransform = Function('LogitTransform', Object, BoolSort())
 
 # Variance functions
-Gaussian = Function('Gaussian', Object, BoolSort())
-InverseGaussian = Function('InverseGaussian', Object, BoolSort())
-Binomial = Function('Binomial', Object, BoolSort())
-Multinomial = Function('Multinomial', Object, BoolSort())
+GaussianFamily = Function('GaussianFamily', Object, BoolSort())
+InverseGaussianFamily = Function('InverseGaussianFamily', Object, BoolSort())
+PoissonFamily = Function('PoissonFamily', Object, BoolSort())
+GammaFamily = Function('GammaFamily', Object, BoolSort())
+BinomialFamily = Function('BinomialFamily', Object, BoolSort())
+NegativeBinomialFamily = Function('NegativeBinomialFamily', Object, BoolSort())
+MultinomialFamily = Function('MultinomialFamily', Object, BoolSort())
+
+# TODO: Variance functions can only have certain link functions 
 
 # Data collection procedures
 Between = Function('Between', Object, Object, BoolSort())

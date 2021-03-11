@@ -20,19 +20,19 @@ class StatisticalModelTest(unittest.TestCase):
         )
 
         # Statistical Model has properties we expect
-        self.assertEquals(sm.random_slopes, list())
-        self.assertEquals(sm.random_intercepts, list())
-        self.assertEquals(sm.interactions, list())
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.interactions, list())
         self.assertIsNone(sm.family)
         self.assertIsNone(sm.link_func)
 
         # The graph IR has all the variables
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
-        self.assertEquals(len(sm.graph.get_variables()), 2)
+        self.assertEqual(len(sm.graph.get_variables()), 2)
         
         # The graph IR has all the edges we expect
-        self.assertEquals(len(sm.graph.get_edges()), 1)
+        self.assertEqual(len(sm.graph.get_edges()), 1)
         self.assertTrue(sm.graph.has_edge(expl, acc, edge_type='contribute'))
         
     def test_initialize_fixed_interaction_1(self): 
@@ -55,13 +55,13 @@ class StatisticalModelTest(unittest.TestCase):
         )
 
         # Statistical Model has properties we expect
-        self.assertEquals(sm.random_slopes, list())
-        self.assertEquals(sm.random_intercepts, list())
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, list())
         self.assertIsNone(sm.family)
         self.assertIsNone(sm.link_func)
 
         # The graph IR has all the variables
-        self.assertEquals(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
+        self.assertEqual(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
         variables_in_graph = sm.graph.get_variables()
@@ -72,7 +72,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
         # The graph IR has all the edges we expect
-        self.assertEquals(len(sm.graph.get_edges()), 6)
+        self.assertEqual(len(sm.graph.get_edges()), 6)
         # Main effects
         self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
         self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
@@ -102,13 +102,13 @@ class StatisticalModelTest(unittest.TestCase):
         )
 
         # Statistical Model has properties we expect
-        self.assertEquals(sm.random_slopes, list())
-        self.assertEquals(sm.random_intercepts, list())
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, list())
         self.assertIsNone(sm.family)
         self.assertIsNone(sm.link_func)
 
         # The graph IR has all the variables
-        self.assertEquals(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
+        self.assertEqual(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
         variables_in_graph = sm.graph.get_variables()
@@ -119,7 +119,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
         # The graph IR has all the edges we expect
-        self.assertEquals(len(sm.graph.get_edges()), 6)
+        self.assertEqual(len(sm.graph.get_edges()), 6)
         # Main effects
         self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
         self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
@@ -153,13 +153,13 @@ class StatisticalModelTest(unittest.TestCase):
         )
 
         # Statistical Model has properties we expect
-        self.assertEquals(sm.random_slopes, random_slopes)
-        self.assertEquals(sm.random_intercepts, list())
+        self.assertEqual(sm.random_slopes, random_slopes)
+        self.assertEqual(sm.random_intercepts, list())
         self.assertIsNone(sm.family)
         self.assertIsNone(sm.link_func)
 
         # The graph IR has all the variables
-        self.assertEquals(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random slopes + 1 interaction
+        self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random slopes + 1 interaction
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
         variables_in_graph = sm.graph.get_variables()
@@ -178,7 +178,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(school_id) # School variable in the graph as an identifier node
         
         # The graph IR has all the edges we expect
-        self.assertEquals(len(sm.graph.get_edges()), 7)
+        self.assertEqual(len(sm.graph.get_edges()), 7)
         # Main effects
         self.assertTrue(sm.graph.has_edge(hw, math, edge_type='contribute'))
         self.assertTrue(sm.graph.has_edge(race, math, edge_type='contribute'))
@@ -219,13 +219,13 @@ class StatisticalModelTest(unittest.TestCase):
         )
 
         # Statistical Model has properties we expect
-        self.assertEquals(sm.random_slopes, list())
-        self.assertEquals(sm.random_intercepts, random_intercepts)
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, random_intercepts)
         self.assertIsNone(sm.family)
         self.assertIsNone(sm.link_func)
 
         # The graph IR has all the variables
-        self.assertEquals(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random intercepts + 1 interaction
+        self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random intercepts + 1 interaction
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
         variables_in_graph = sm.graph.get_variables()
@@ -244,7 +244,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(school_id) # School variable in the graph as an identifier node
         
         # The graph IR has all the edges we expect
-        self.assertEquals(len(sm.graph.get_edges()), 7)
+        self.assertEqual(len(sm.graph.get_edges()), 7)
         # Main effects
         self.assertTrue(sm.graph.has_edge(hw, math, edge_type='contribute'))
         self.assertTrue(sm.graph.has_edge(race, math, edge_type='contribute'))

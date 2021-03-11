@@ -294,6 +294,10 @@ class QueryManager(object):
             assert('dv_const' in kwargs)
             KB.ground_effects_rules(dv_const=kwargs['dv_const'])
             rules_to_consider['effects_rules'] = KB.effects_rules
+        elif output.upper() == 'FAMILY': 
+            assert('dv_const' in kwargs)
+            KB.ground_family_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['family_rules'] = KB.family_rules
         else: 
             # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
             if output.upper() == 'STATISTICAL MODEL': 
@@ -335,6 +339,8 @@ class QueryManager(object):
     # @param keep_clause is the clause in unsat_core to keep and that resolves the conflict
     def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause): 
         # Verify that keep_clause is indeed a subset of unsat_core
+        if keep_clause not in unsat_core: 
+            import pdb; pdb.set_trace()
         assert(keep_clause in unsat_core)
 
         updated_constraints = list()
@@ -417,7 +423,8 @@ class QueryManager(object):
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
             
-            # import pdb; pdb.set_trace()
+            if len(unsat_core) == 0: 
+                import pdb; pdb.set_trace()
             assert(len(unsat_core) > 0)
 
             # Ask user for input
@@ -462,6 +469,8 @@ class QueryManager(object):
         interaction_ivs = list()
         random_slopes = list() 
         random_intercepts = list()
+        family = None 
+        link_function = None
         
         for f in facts: 
             fact_dict = parse_fact(f)
@@ -490,6 +499,12 @@ class QueryManager(object):
 
                 interaction_ivs.append(tuple(variables))
                 
+            elif function == 'Random': 
+                pass
+
+            elif 'Family' in function: 
+                family = function.split('Family')[0] # Get the family name alone 
+
             # elif ('Transform' in function) and (function != 'Transformation'): 
             #     assert('variable_name' in fact_dict)
             #     var_name = fact_dict['variable_name']
@@ -502,8 +517,10 @@ class QueryManager(object):
         if len(fixed_ivs) > 0:
             statistical_model.set_fixed_ivs(fixed_ivs)
         if len(interaction_ivs) > 0: 
-            statistical_model.set_interactions(interaction_ivs)    
+            statistical_model.set_interactions(interaction_ivs)   
         # output_obj.set_mixed_effects(mixed_effects)
+
+        if family is not None:            statistical_model.set_family(family=family)
 
         return statistical_model
 
