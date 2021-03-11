@@ -23,7 +23,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flake8 pytest
-        pipenv install Pipfile
+        pip install requirements.txt
     - name: Test with pytest
       run: |
         pip install pytest
