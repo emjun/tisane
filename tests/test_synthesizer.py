@@ -40,7 +40,7 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         family_facts = synth.generate_family(design=design)
-        self.assertEqual(len(family_facts), 4)
+        self.assertEqual(len(family_facts), 5)
         self.assertTrue(gaussian_family in family_facts)
         self.assertTrue(inverse_gaussian_family in family_facts)
         self.assertTrue(poisson_family in family_facts)
@@ -64,7 +64,7 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         family_facts = synth.generate_family(design=design)
-        self.assertEqual(len(family_facts), 6)
+        self.assertEqual(len(family_facts), 7)
         self.assertTrue(o_gaussian_family in family_facts)
         self.assertTrue(inverse_gaussian_family in family_facts)
         self.assertTrue(poisson_family in family_facts)
@@ -92,7 +92,7 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         family_facts = synth.generate_family(design=design)
-        self.assertEqual(len(family_facts), 5)
+        self.assertEqual(len(family_facts), 6)
         self.assertTrue(o_gaussian_family in family_facts)
         self.assertTrue(inverse_gaussian_family in family_facts)
         self.assertTrue(poisson_family in family_facts)

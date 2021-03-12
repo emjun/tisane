@@ -298,6 +298,10 @@ class QueryManager(object):
             assert('dv_const' in kwargs)
             KB.ground_family_rules(dv_const=kwargs['dv_const'])
             rules_to_consider['family_rules'] = KB.family_rules
+        elif output.upper() == 'TRANSFORMATION': 
+            assert('dv_const' in kwargs)
+            KB.ground_data_transformation_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['transformation_rules'] = KB.data_transformation_rules
         else: 
             # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
             if output.upper() == 'STATISTICAL MODEL': 

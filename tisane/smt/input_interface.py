@@ -90,3 +90,23 @@ class InputInterface(object):
         idx = cls.ask_family_prompt(options=options, dv=dv)
 
         return options[idx]
+
+    @classmethod
+    def ask_link_prompt(cls, options: List, dv: AbstractVariable): 
+        prompt = f'W'
+
+
+    @classmethod
+    def ask_link(cls, options: List, dv: AbstractVariable): 
+        idx = cls.ask_link_prompt(options=options, dv=dv)
+
+        return options[idx]
+
+    # @classmethod
+    # def ask_change_default_prompt(cls, subject: str, default: str, options: List): 
+    #     prompt = f'The default {subject} is {default}. Would you like to change it to one of {options}?'
+
+    # @classmethod
+    # def ask_change_default(cls, subject: str, default: str, options: List): 
+    #     idx = cls.ask_change_default_prompt(subject=subject, default=default, options=options)
+    #     pass

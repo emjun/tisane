@@ -57,6 +57,34 @@ class QueryManagerTest(unittest.TestCase):
         res = s.check(rules['family_rules'])
         self.assertEqual(str(res), 'unsat')
     
+    def test_collect_rules_transformation(self): 
+        dv = ts.Numeric('DV')
+        rules = QM.collect_rules(output='TRANSFORMATION', dv_const=dv.const)
+
+        kb = KnowledgeBase()
+        kb.ground_data_transformation_rules(dv_const=dv.const)
+
+        self.assertIsInstance(rules, dict)
+        self.assertTrue('transformation_rules' in rules.keys())
+        self.assertEqual(rules['transformation_rules'], kb.data_transformation_rules)
+
+        s = Solver() 
+        res = s.check(rules['transformation_rules'])
+        self.assertEqual(str(res), 'sat')
+
+        s.add(GaussianFamily(dv.const))
+        res = s.check(rules['transformation_rules'])
+        self.assertEqual(str(res), 'sat')
+
+        s.add(IdentityTransform(dv.const))
+        res = s.check(rules['transformation_rules'])
+        self.assertEqual(str(res), 'sat')
+
+        s.add(LogTransform(dv.const))
+        s.add(SquarerootTransform(dv.const))
+        res = s.check(rules['transformation_rules'])
+        self.assertEqual(str(res), 'unsat')
+    
     def test_update_clauses(self): 
         global iv, dv, fixed_effect
 

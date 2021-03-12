@@ -125,6 +125,7 @@ class Synthesizer(object):
             family_facts.append(InverseGaussianFamily(dv.const))
             family_facts.append(PoissonFamily(dv.const))
             family_facts.append(GammaFamily(dv.const))
+            family_facts.append(TweedieFamily(dv.const)) # TODO: Add test
         if isinstance(dv, Nominal) or isinstance(dv, Ordinal): 
             if dv.cardinality is not None: 
                 if dv.cardinality == 2:
@@ -157,17 +158,13 @@ class Synthesizer(object):
         # Return updated StatisticalModel 
         return statistical_model
 
-    def generate_and_select_variance_function(self, design: Design, statistical_model: StatisticalModel): 
-        variance_facts = list()
-
-        # Get facts from variance function 
-
     # Synthesizer generates viable data transformations to the variables 
     # End-user interactively selects which transformations they want
-    def generate_and_select_data_transformations(self, design: Design, statistical_model: StatisticalModel): 
+    # These transformations are the link functions
+    def generate_and_select_link(self, design: Design, statistical_model: StatisticalModel): 
         # TODO: Start with no vis 
         # TODO: Add in vis
-        
+
         # Ask for user-input 
         transform_data = InputInterface.ask_inclusion(subject='data transformations')
         
@@ -175,13 +172,17 @@ class Synthesizer(object):
             transformation_facts = list()
             dv = design.dv
             
-            # Get facts about data types 
-            for v in design.get_variables(): 
-                transformation_facts.append(Transform(v.const))
-                transformation_facts.append(NoTransform(v.const))
+            # Depending on family, only some link functions make sense 
+            family = statistical_model.family.upper()
+            if family == 'GAUSSIAN': 
+                pass
+            elif family == 'INVERSEGAUSSIAN': 
+                pass
+            # elif family == ''
 
+            # Get facts about data types
             # Depending on variable data type, add more constraints for possible transformations
-            if isinstance(var, Numeric): 
+            if isinstance(dv, Numeric): 
                 facts.append(NumericTransformation(var.const))
                 facts.append(LogTransform(var.const))
                 facts.append(SquarerootTransform(var.const))
@@ -225,10 +226,9 @@ class Synthesizer(object):
         ##### Updates the StatisticalModel constructed above
         # Family 
         sm = self.generate_and_select_family(design=design, statistical_model=sm)
-        # Variance
-        sm = self.generate_and_select_variance_function(design=design, statistical_model=sm)
-        
-        sm = self.generate_and_select_data_model_properties(design=design, statistical_model=sm)
+
+        # Link function    
+        sm = self.generate_and_select_link(design=design, statistical_model=sm)
 
         # Multicollinearity
 
@@ -236,3 +236,22 @@ class Synthesizer(object):
 
         # TODO: Do we have a revision notion?
         # Model construction 
+
+    # Not yet necessary
+    # Synthesizer generates possible variance functions based on the family
+    # End-user selects variance function
+    def generate_and_select_variance_function(self, design: Design, statistical_model: StatisticalModel): 
+        # If the statistical model has no specified family, pick a family first
+        if statistical_model.family is None: 
+            self.generate_and_select_family(design=design, statistical_model=statistical_model)
+        
+        # We have already specified a family
+        # Get the default variance function  
+        default_variance_func = None # TODO
+
+        # Ask user if they want to change the default
+        InputInterface.ask_change_default(subject='variance function', default=default_variance_func)
+        
+        variance_facts = list()
+
+        # Get facts from variance function 
