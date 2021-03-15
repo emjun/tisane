@@ -66,7 +66,7 @@ class StatisticalModel(object):
             self.interactions = list()
 
         self.family = family
-        self.link_func = link_func
+        self.link_function = link_func
         # self.variance_func = variance_func
 
         self.consts = dict()
@@ -196,6 +196,10 @@ class StatisticalModel(object):
     def set_family(self, family: str): 
         self.family = family
 
+    # Sets the link function 
+    def set_link_function(self, link_function: str): 
+        self.link_function = link_function
+
     # @return all variables (DV, IVs)
     def get_variables(self) -> List[AbstractVariable]: 
         variables = [self.dv] + self.fixed_ivs
@@ -299,19 +303,19 @@ class StatisticalModel(object):
                 facts.append(Interaction(tmp))
         
         # Add link function 
-        if self.link_func is not None: 
-            if self.link_func == 'Log': 
+        if self.link_function is not None: 
+            if self.link_function == 'Log': 
                 facts.append(LogTransform(self.dv.const))
-            elif self.link_func == 'Squareroot': 
+            elif self.link_function == 'Squareroot': 
                 facts.append(SquarerootTransform(self.dv.const))
-            elif self.link_func == 'LogLog': 
+            elif self.link_function == 'LogLog': 
                 facts.append(LogLogTransform(self.dv.const))
-            elif self.link_func == 'Probit': 
+            elif self.link_function == 'Probit': 
                 facts.append(ProbitTransform(self.dv.const))
-            elif self.link_func == 'Logit': 
+            elif self.link_function == 'Logit': 
                 facts.append(LogitTransform(self.dv.const))
             else: 
-                raise ValueError (f"Link function not supproted: {self.link_func}")
+                raise ValueError (f"Link function not supproted: {self.link_function}")
 
         # Add variance function 
         if self.variance_func is not None: 

@@ -178,7 +178,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.random_intercepts, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gaussian')
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
     
     @patch('tisane.smt.input_interface.InputInterface.ask_family', return_value=gamma_family)
     def test_generate_and_select_family_gamma(self, input): 
@@ -202,7 +202,106 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.random_intercepts, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gamma')
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
+
+    @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
+    def test_generate_and_select_link_gaussian_identity(self, input, mock_increment): 
+        global dv, v1, v2
+
+        # Simulate end-user selecting between two options at a time repeatedly
+        mock_increment.side_effect = [IdentityTransform(dv.const), IdentityTransform(dv.const)]
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = ts.Level(identifier='id', measures=[v1, v2])
+        )
+
+        # StatisticalModel with all but link 
+        sm = ts.StatisticalModel(
+            dv=dv, 
+            fixed_ivs=[v1, v2],
+            family='Gaussian'
+        )
+
+        synth = Synthesizer() 
+        sm = synth.generate_and_select_link(design=design, statistical_model=sm)
+        self.assertEqual(sm.dv, dv)
+        self.assertTrue(v1 in sm.fixed_ivs)
+        self.assertTrue(v2 in sm.fixed_ivs)
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.interactions, list())
+        self.assertEqual(sm.family, 'Gaussian')
+        self.assertIsNotNone(sm.link_function)
+        self.assertEqual(sm.link_function, 'Identity')
+    
+    @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
+    def test_generate_and_select_link_gaussian_log(self, input, mock_increment): 
+        global dv, v1, v2
+        
+        # Simulate end-user selecting between two options at a time repeatedly
+        mock_increment.side_effect = [LogTransform(dv.const), LogTransform(dv.const)]
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = ts.Level(identifier='id', measures=[v1, v2])
+        )
+
+        # StatisticalModel with all but link 
+        sm = ts.StatisticalModel(
+            dv=dv, 
+            fixed_ivs=[v1, v2],
+            family='Gaussian'
+        )
+
+        synth = Synthesizer() 
+        sm = synth.generate_and_select_link(design=design, statistical_model=sm)
+        self.assertEqual(sm.dv, dv)
+        self.assertTrue(v1 in sm.fixed_ivs)
+        self.assertTrue(v2 in sm.fixed_ivs)
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.interactions, list())
+        self.assertEqual(sm.family, 'Gaussian')
+        self.assertIsNotNone(sm.link_function)
+        self.assertEqual(sm.link_function, 'Log')
+
+    @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
+    def test_generate_and_select_link_gaussian_squareroot(self, input, mock_increment): 
+        global dv, v1, v2
+
+        mock_increment.side_effect = [IdentityTransform(dv.const), SquarerootTransform(dv.const)]
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = ts.Level(identifier='id', measures=[v1, v2])
+        )
+
+        # StatisticalModel with all but link 
+        sm = ts.StatisticalModel(
+            dv=dv, 
+            fixed_ivs=[v1, v2],
+            family='Gaussian'
+        )
+
+        synth = Synthesizer() 
+        sm = synth.generate_and_select_link(design=design, statistical_model=sm)
+        self.assertEqual(sm.dv, dv)
+        self.assertTrue(v1 in sm.fixed_ivs)
+        self.assertTrue(v2 in sm.fixed_ivs)
+        self.assertEqual(sm.random_slopes, list())
+        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.interactions, list())
+        self.assertEqual(sm.family, 'Gaussian')
+        self.assertIsNotNone(sm.link_function)
+        self.assertEqual(sm.link_function, 'Squareroot')
+    
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
+    def test_generate_and_select_link_binomial(self, input): 
+        pass
 
     @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_one_level_fixed(self): 

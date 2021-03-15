@@ -301,7 +301,8 @@ class QueryManager(object):
         elif output.upper() == 'TRANSFORMATION': 
             assert('dv_const' in kwargs)
             KB.ground_data_transformation_rules(dv_const=kwargs['dv_const'])
-            rules_to_consider['transformation_rules'] = KB.data_transformation_rules
+            rules_to_consider['family_to_transformation_rules'] = KB.family_to_transformation_rules
+            rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
         else: 
             # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
             if output.upper() == 'STATISTICAL MODEL': 
@@ -326,11 +327,10 @@ class QueryManager(object):
     def solve(self, facts: List, rules: dict, setting=None): 
         s = Solver() # Z3 solver
 
-        for batch_name, rules in rules.items(): 
+        for batch_name, rule_set in rules.items(): 
             print(f'Adding {batch_name} rules.')
             # Add rules
-            s.add(rules)
-
+            s.add(rule_set)
             (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
             # import pdb; pdb.set_trace()
             facts = updated_facts        
@@ -342,9 +342,11 @@ class QueryManager(object):
     # @param unsat_core is the set of cosntraints that caused a conflict
     # @param keep_clause is the clause in unsat_core to keep and that resolves the conflict
     def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause): 
+        # import pdb; pdb.set_trace()
         # Verify that keep_clause is indeed a subset of unsat_core
         if keep_clause not in unsat_core: 
-            import pdb; pdb.set_trace()
+            raise ValueError (f'Keep clause ({keep_clause}) not in unsat_core({unsat_core})')
+
         assert(keep_clause in unsat_core)
 
         updated_constraints = list()
@@ -423,6 +425,7 @@ class QueryManager(object):
         return keep
 
     def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
+        # import pdb; pdb.set_trace()
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
@@ -491,6 +494,7 @@ class QueryManager(object):
 
                 fixed_ivs.append(iv_var)
 
+            # Is this fact about Interaction effects? 
             elif function == 'Interaction': 
                 # Get variable names
                 var_names = fact_dict['variables']
@@ -506,9 +510,15 @@ class QueryManager(object):
             elif function == 'Random': 
                 pass
 
+            # Is this fact about the Family distribution?
             elif 'Family' in function: 
                 family = function.split('Family')[0] # Get the family name alone 
-
+            
+            # Is this fact about the Link function? 
+            elif 'Transform' in function: 
+                link_function = function.split('Transform')[0] # Get the link function name alone
+                # link = function 
+                
             # elif ('Transform' in function) and (function != 'Transformation'): 
             #     assert('variable_name' in fact_dict)
             #     var_name = fact_dict['variable_name']
@@ -524,9 +534,42 @@ class QueryManager(object):
             statistical_model.set_interactions(interaction_ivs)   
         # output_obj.set_mixed_effects(mixed_effects)
 
-        if family is not None:            statistical_model.set_family(family=family)
+        if family is not None:            
+            statistical_model.set_family(family=family)
+        if link_function is not None: 
+            statistical_model.set_link_function(link_function=link_function)
 
         return statistical_model
+
+    # TODO: This returns a FuncRef even though Bool Refs are expected in QM.solve
+    # I think this has to do with parsing model 
+    def model_to_transformation_facts(self, model: z3.ModelRef, design: Design):
+        transform_name_to_constraint = {
+            'IdentityTransform' : IdentityTransform(design.dv.const),
+            'LogTransform' : LogTransform(design.dv.const),
+            'CLogLogTransform' : CLogLogTransform(design.dv.const),
+            'SquarerootTransform' : SquarerootTransform(design.dv.const),
+            'InverseTransform' : InverseTransform(design.dv.const),
+            'InverseSquaredTransform' : InverseSquaredTransform(design.dv.const),
+            'PowerTransform' : PowerTransform(design.dv.const),
+            'CauchyTransform' : CauchyTransform(design.dv.const),
+            'LogLogTransform' : LogLogTransform(design.dv.const),
+            'ProbitTransform' : ProbitTransform(design.dv.const),
+            'LogitTransform' : LogitTransform(design.dv.const),
+            'NegativeBinomialTransform' : NegativeBinomialTransform(design.dv.const),
+        }
+        facts = list()
+
+        for c in model:
+            # Is c a function that we care about?
+            if c.arity() > 0:
+                c_val = is_true(model[c].else_value())
+                if c_val:
+                    c_name = str(c)
+                    if 'Transform' in c_name:
+                        facts.append(transform_name_to_constraint[c_name])
+        
+        return facts
 
         
 # Global QueryManager

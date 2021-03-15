@@ -7,6 +7,7 @@ from tisane.smt.query_manager import QM
 
 from z3 import * 
 from itertools import chain, combinations
+from typing import List
 
 # Declare data type
 Object = DeclareSort('Object')
@@ -165,51 +166,57 @@ class Synthesizer(object):
         # TODO: Start with no vis 
         # TODO: Add in vis
 
+        family_fact = list()
+        # Re-create family fact based on statistical model fact
+        family = statistical_model.family
+        if family == 'Gaussian': 
+            family_fact.append(GaussianFamily(design.dv.const))
+        elif family == 'InverseGaussian': 
+            family_fact.append(InverseGaussianFamily(design.dv.const))
+        elif family == 'Poisson': 
+            family_fact.append(PoissonFamily(design.dv.const))
+        elif family == 'Gamma': 
+            family_fact.append(GammaFamily(design.dv.const))
+        elif family == 'Tweedie': 
+            family_fact.append(TweedieFamily(design.dv.const))
+        elif family == 'Binomial': 
+            family_fact.append(BinomialFamily(design.dv.const))
+        elif family == 'NegativeBinomial': 
+            family_fact.append(NegativeBinomialFamily(design.dv.const))
+        elif family == 'Multinomial': 
+            family_fact.append(MultinomialFamily(design.dv.const))
+
         # Ask for user-input 
         transform_data = InputInterface.ask_inclusion(subject='data transformations')
         
         if transform_data:
-            transformation_facts = list()
             dv = design.dv
             
-            # Depending on family, only some link functions make sense 
-            family = statistical_model.family.upper()
-            if family == 'GAUSSIAN': 
-                pass
-            elif family == 'INVERSEGAUSSIAN': 
-                pass
-            # elif family == ''
+            ##### Derive possible valid transforms from knowledge base
+            # Get rules
+            rules_dict = QM.collect_rules(output='TRANSFORMATION', dv_const=dv.const)
+            # Get rules for possible link functions
+            family_to_transformation_rules = rules_dict['family_to_transformation_rules']
 
-            # Get facts about data types
-            # Depending on variable data type, add more constraints for possible transformations
-            if isinstance(dv, Numeric): 
-                facts.append(NumericTransformation(var.const))
-                facts.append(LogTransform(var.const))
-                facts.append(SquarerootTransform(var.const))
-            elif isinstance(var, Nominal) or isinstance(var, Ordinal): 
-                facts.append(CategoricalTransformation(var.const))
-                facts.append(LogLogTransform(var.const))
-                facts.append(ProbitTransform(var.const))
-                # facts.append(LogitTransform(var.const)) # TODO: Might only make sense for binary data??                
+            # Solve fact + rules to get possible link functions
+            (res_model_transformations, res_facts_family) = QM.solve(facts=family_fact, rules={'family_to_transformation_rules': family_to_transformation_rules})
 
+            ##### Pick link/data transformation 
+            # Get link/data transformation rules
+            data_transformation_rules = rules_dict['data_transformation_rules']
             
-            # Get rules 
-            rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
-
-            # Solve constraints + rules
-            (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
-            
+            # Get link facts
+            transformation_candidate_facts = QM.model_to_transformation_facts(model=res_model_transformations, design=design)
+    
+            # Solve facts + rules
+            (res_model_link, res_facts_link) = QM.solve(facts=transformation_candidate_facts, rules={'data_transformation_rules': data_transformation_rules})
+        
             # Update result StatisticalModel based on user selection 
-            sm = QM.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+            statistical_model = QM.postprocess_to_statistical_model(model=res_model_link, facts=res_facts_link, graph=design.graph, statistical_model=statistical_model)
 
+            # Return statistical model
+            return statistical_model
 
-        # Collect rules about data types and possible transformations
-
-        # Solve facts + constraints 
-
-        # Update statistical model 
-
-        # Return updated statistical model 
 
     # Input: Design 
     # Output: StatisticalModel
@@ -230,12 +237,8 @@ class Synthesizer(object):
         # Link function    
         sm = self.generate_and_select_link(design=design, statistical_model=sm)
 
-        # Multicollinearity
-
-        # Diagnostics
-
         # TODO: Do we have a revision notion?
-        # Model construction 
+        # Diagnostics: Multicollinearity
 
     # Not yet necessary
     # Synthesizer generates possible variance functions based on the family

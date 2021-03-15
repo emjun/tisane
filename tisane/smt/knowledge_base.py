@@ -30,43 +30,32 @@ class KnowledgeBase(object):
         ]
 
     def ground_data_transformation_rules(self, dv_const: Const): 
-        self.family_transformation_rules = [
-            # Add the implies to derive possible transforms
-
-            # Then postprocess the possible transforms, assert them, and then resolve unsat
-        ]
-        self.data_transformation_rules = [
+        self.family_to_transformation_rules = [
             Implies(GaussianFamily(dv_const), LogTransform(dv_const)), 
             Implies(GaussianFamily(dv_const), SquarerootTransform(dv_const)),
             Implies(GaussianFamily(dv_const), IdentityTransform(dv_const)),
-            # Xor(IdentityTransform(dv_const), LogTransform(dv_const), SquarerootTransform(dv_const)),
             
             Implies(InverseGaussianFamily(dv_const), InverseSquaredTransform(dv_const)),
             Implies(InverseGaussianFamily(dv_const), InverseTransform(dv_const)), 
             Implies(InverseGaussianFamily(dv_const), LogTransform(dv_const)), 
             Implies(InverseGaussianFamily(dv_const), IdentityTransform(dv_const)),
-            # Xor(Xor(Xor(InverseSquaredTransform(dv_const), InverseTransform(dv_const)), LogTransform(dv_const)), IdentityTransform(dv_const)),
 
             Implies(PoissonFamily(dv_const), LogTransform(dv_const)),
             Implies(PoissonFamily(dv_const), SquarerootTransform(dv_const)),
             Implies(PoissonFamily(dv_const), Identity(dv_const)),
-            # Xor(Xor(LogTransform(dv_const), SquarerootTransform(dv_const)), Identity(dv_const)),
             
             Implies(GammaFamily(dv_const), LogTransform(dv_const)),
             Implies(GammaFamily(dv_const), InverseTransform(dv_const)),
             Implies(GammaFamily(dv_const), IdentityTransform(dv_const)),
-            # Xor(Xor(LogTransform(dv_const), InverseTransform(dv_const)), IdentityTransform(dv_const))
         
             Implies(TweedieFamily(dv_const), LogTransform(dv_const)),
             Implies(TweedieFamily(dv_const), PowerTransform(dv_const)),
-            # Xor(LogTransform(dv_const), PowerTransform(dv_const))
 
             Implies(BinomialFamily(dv_const), LogitTransform(dv_const)),
             Implies(BinomialFamily(dv_const), ProbitTransform(dv_const)),
             Implies(BinomialFamily(dv_const), CauchyTransform(dv_const)),
             Implies(BinomialFamily(dv_const), LogTransform(dv_const)),
             Implies(BinomialFamily(dv_const), CLogLogTransform(dv_const)),
-            # Xor(Xor(Xor(Xor(Xor(BinomialFamily(dv_const), LogitTransform(dv_const)), ProbitTransform(dv_const)), CauchyTransform(dv_const)), LogTransform(dv_const)), CLogLogTransform(dv_const)),
 
             Implies(NegativeBinomialFamily(dv_const), LogTransform(dv_const)),
             Implies(NegativeBinomialFamily(dv_const), CLogLogTransform(dv_const)),
@@ -76,30 +65,43 @@ class KnowledgeBase(object):
             # Implies(NegativeBinomialFamily(dv_const), PowerTransform(dv_const)),
             
             # Multinomial family is not supported in statsmodels
-            Implies(MultinomialFamily(dv_const), IdentityTransform(dv_const))
-
-            # Existence of transformation
-            # ForAll([x], Xor(Transformation(x), NoTransformation(x))),
-            # ForAll([x], Implies(NoTransformation(x), Not(Transformation(x)))),
-            # # Numeric transformation 
-            # Implies(NoTransformation(dv_const), IdentityTransform(dv_const)),
-            # Implies(NumericDataType(dv_const), Xor(LogTransform(dv_const), SquarerootTransform(dv_const), InverseTransform(dv_const)))
-            # ForAll([x], Implies(Identity(x), NumericDataType(x))),
-            # ForAll([x], Implies(LogTransform(x), NumericDataType(x))), 
-            # ForAll([x], Implies(SquarerootTransform(x), NumericDataType(x))),  # Sqrt is predefined in Z3
-            # # Categorical transformation 
-            # ForAll([x], Implies(LogLogTransform(x), CategoricalDataType(x))),
-            # ForAll([x], Implies(ProbitTransform(x), CategoricalDataType(x))), 
-            # ForAll([x], Implies(LogitTransform(x), CategoricalDataType(x))),
-            # # From data type to possible transformations...
-            # ForAll([x], Implies(Transformation(x), Xor(NumericTransformation(x), CategoricalTransformation(x)))),
-            # ForAll([x], Implies(NumericTransformation(x), Xor(LogTransform(x), SquarerootTransform(x)))),
-            # # Can be LogLog OR Probit OR Logit
-            # ForAll([x], Implies(CategoricalTransformation(x), Xor(LogLogTransform(x), ProbitTransform(x)))),
-            # ForAll([x], Implies(CategoricalTransformation(x), Xor(LogLogTransform(x), LogitTransform(x)))),
-            # ForAll([x], Implies(CategoricalTransformation(x), Xor(ProbitTransform(x), LogitTransform(x)))),
+            # Implies(MultinomialFamily(dv_const), IdentityTransform(dv_const))
         ]
-    
+
+        self.data_transformation_rules = [
+            # For Gaussian Family
+            Or(And([LogTransform(dv_const), Not(SquarerootTransform(dv_const)), Not(IdentityTransform(dv_const)), GaussianFamily(dv_const)]),
+                And([SquarerootTransform(dv_const), Not(LogTransform(dv_const)), Not(IdentityTransform(dv_const)), GaussianFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(SquarerootTransform(dv_const)), GaussianFamily(dv_const)])),
+            # For Inverse Gaussian Family
+            Or(And([LogTransform(dv_const), Not(InverseTransform(dv_const)), Not(InverseSquaredTransform(dv_const)), Not(IdentityTransform(dv_const)), InverseGaussianFamily(dv_const)]),
+                And([InverseTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseSquaredTransform(dv_const)), Not(IdentityTransform(dv_const)), InverseGaussianFamily(dv_const)]),
+                And([InverseSquaredTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseTransform(dv_const)), Not(IdentityTransform(dv_const)), InverseGaussianFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseSquaredTransform(dv_const)), Not(InverseTransform(dv_const)), InverseGaussianFamily(dv_const)])),
+            # For Poisson Family
+            Or(And([LogTransform(dv_const), Not(SquarerootTransform(dv_const)), Not(IdentityTransform(dv_const)), PoissonFamily(dv_const)]),
+                And([SquarerootTransform(dv_const), Not(LogTransform(dv_const)), Not(IdentityTransform(dv_const)), PoissonFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(SquarerootTransform(dv_const)), PoissonFamily(dv_const)])),
+            # For Gamma Family
+            Or(And([LogTransform(dv_const), Not(InverseTransform(dv_const)), Not(IdentityTransform(dv_const)), GammaFamily(dv_const)]),
+                And([InverseTransform(dv_const), Not(LogTransform(dv_const)), Not(IdentityTransform(dv_const)), GammaFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseTransform(dv_const)), GammaFamily(dv_const)])),
+            # For Tweedie Family
+            Or(And([LogTransform(dv_const), Not(PowerTransform(dv_const)), TweedieFamily(dv_const)]),
+                And([PowerTransform(dv_const), Not(LogTransform(dv_const)), TweedieFamily(dv_const)])),
+            # For Binomial Family
+            Or(And([LogTransform(dv_const), Not(ProbitTransform(dv_const)), Not(LogitTransform(dv_const)), Not(CauchyTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([ProbitTransform(dv_const), Not(LogTransform(dv_const)), Not(LogitTransform(dv_const)), Not(CauchyTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([LogitTransform(dv_const), Not(LogTransform(dv_const)), Not(ProbitTransform(dv_const)), Not(CauchyTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([CauchyTransform(dv_const), Not(LogTransform(dv_const)), Not(LogitTransform(dv_const)), Not(ProbitTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([CLogLogTransform(dv_const), Not(LogTransform(dv_const)), Not(ProbitTransform(dv_const)), Not(LogitTransform(dv_const)), Not(CauchyTransform(dv_const)), BinomialFamily(dv_const)])),
+            # For Negative Binomial Family
+            Or(And([LogTransform(dv_const), Not(NegativeBinomialTransform(dv_const)), Not(CLogLogTransform(dv_const)), Not(IdentityTransform(dv_const)), NegativeBinomialFamily(dv_const)]),
+                And([NegativeBinomialTransform(dv_const), Not(LogTransform(dv_const)), Not(CLogLogTransform(dv_const)), Not(IdentityTransform(dv_const)), NegativeBinomialFamily(dv_const)]),
+                And([CLogLogTransform(dv_const), Not(LogTransform(dv_const)), Not(NegativeBinomialTransform(dv_const)), Not(IdentityTransform(dv_const)), NegativeBinomialFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(NegativeBinomialTransform(dv_const)), Not(CLogLogTransform(dv_const)), NegativeBinomialFamily(dv_const)])),
+        ]
+        
     # Store all logical rules internally for now, may want to modularize in separate objects...
     def ground_rules(self, dv_const: Const, main_effects: SeqSort, interactions: SeqSort, **kwargs): 
         
