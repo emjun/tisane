@@ -356,7 +356,7 @@ class SynthesizerTest(unittest.TestCase):
 
         ts.synthesize_statistical_model(design=design)
 
-    @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
+    # @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_two_levels_random(self): 
         # Variables
         math = ts.Numeric('MathAchievement')

@@ -20,6 +20,12 @@ FixedEffect = Function('FixedEffect', Object, Object, BoolSort())
 NoFixedEffect = Function('NoFixedEffect', Object, Object, BoolSort())
 Interaction = Function('Interaction', SetSort(Object), BoolSort())
 NoInteraction = Function('NoInteraction', SetSort(Object), BoolSort())
+RandomSlope = Function('RandomSlope', Object, Object, BoolSort())
+NoRandomSlope = Function('NoRandomSlope', Object, Object, BoolSort())
+RandomIntercept = Function('RandomIntercept', Object, Object, BoolSort())
+NoRandomIntercept = Function('NoRandomIntercept', Object, Object, BoolSort())
+CorrelateRandomSlopeIntercept = Function('CorrelateRandomSlopeIntercept', Object, Object, BoolSort())
+NoCorrelateRandomSlopeIntercept = Function('NoCorrelateRandomSlopeIntercept', Object, Object, BoolSort())
 
 # TODO: Remove
 MainEffect = Function('MainEffect', Object, Object, BoolSort())

@@ -154,6 +154,25 @@ class Graph(object):
     def get_edges(self) -> List:
         return list(self._graph.edges(data=True))
 
+    # @return neighbors of @param variable with @param edge_type such that there is an edge of @param edge_type between @param to neighbor
+    # If @param edge_type == 'ALL' then return all neighbors
+    def get_neighbors(self, variable: AbstractVariable, edge_type: str='ALL'): 
+    
+        neighbors = self._graph.neighbors(variable.name) # nodes are referenced by their variable name
+
+        # List of variables with edge_type
+        neigh_list = list() 
+
+        if edge_type.upper() == 'ALL': 
+            return neighbors
+        else: 
+            for n in neighbors: 
+                n_var = self.get_variable(name=n)
+                if self.has_edge(start=variable, end=n_var, edge_type=edge_type): 
+                    neigh_list.append(n_var)
+        
+        return neigh_list
+
     # @param name is the name of the variable we are looking for
     # @return AbstractVariable in Graph with @param name, None otherwise
     def get_variable(self, name: str) -> AbstractVariable: 

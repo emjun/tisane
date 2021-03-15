@@ -85,28 +85,71 @@ class Synthesizer(object):
                     
                     interaction_seq = None 
 
-                # Get rules 
-                rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+                # Use rules from above
 
                 # Solve constraints + rules
                 (res_model_interaction, res_facts_interaction) = QM.solve(facts=interaction_facts, rules=rules_dict)
         
                 # Update result StatisticalModel based on user selection 
-            sm = QM.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
+                sm = QM.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
 
         ##### Random effects
         # Random slopes and intercepts are possible if there is more than one level in design 
+        # TODO: Update when move away from levels design
+        random_pairs = list()
         if design.get_number_of_levels() >= 2:
-            pass
+            random_facts = list()
+        
+            # TODO: Limitation of algo below: (i) What happens if there are >2
+            # levels? (ii) Does the number of nesting (1|g2/g1) matter on if
+            # end-user specifies which ones to include in study design? 
             # Look for "elbow" pattern in graph IR 
+            # Elbow pattern: Dv <- V <- ID1 -> ID2
+            for v in fixed_candidates: 
+                # Get 'has' predecessors 
+                has_predecesors = set()
+                v_pred = design.graph.get_predecessors(v)
+                for p in v_pred: 
+                    p_var = design.graph.get_variable(name=p)
+                    if design.graph.has_edge(start=p_var, end=v, edge_type='has'): 
+                        has_predecesors.add(p_var)
 
-            # Random slopes vs. Random intercepts 
+                # Of those 'has' predecessors of v, see if they are 'nested' in another level 
+                for h in has_predecesors: 
+                    parents = design.graph.get_neighbors(variable=h, edge_type='nest')
+                    for p in parents: 
+                        # Get facts
+                        random_facts.append(RandomSlope(v.const, p.const))        
+                        random_facts.append(NoRandomSlope(v.const, p.const))      
+                        random_facts.append(RandomIntercept(v.const, p.const))        
+                        random_facts.append(NoRandomIntercept(v.const, p.const))        
+                        # Keep track of pairs to ask about correlation below
+                        random_pairs.append((RandomSlope(v.const, p.const), RandomIntercept(v.const, p.const), v.const, p.const))
+                    
+            # Use rules from above
 
-            # Correlations
-            # Look for elbow 
+            # Solve constraints + rules
+            (res_model_random, res_facts_random) = QM.solve(facts=random_facts, rules=rules_dict)
+            
+            # Ask if random slopes and intercepts are correlated
+            # Get facts
+            random_correlation_facts = list()
+            for (slope, intercept, variable, parent) in random_pairs: 
+                if slope in res_facts_random and intercept in res_facts_random: 
+                    random_correlation_facts.append(CorrelateRandomSlopeIntercept(variable, parent))
+                    random_correlation_facts.append(NoCorrelateRandomSlopeIntercept(variable, parent))
+                    
+            # Use rules from above
 
-        # Return a Statistical Model obj with effects set
-        return sm
+            # Solve constraints + rules
+            (res_model_random, res_facts_random) = QM.solve(facts=random_correlation_facts, rules=rules_dict)
+
+            # Update result StatisticalModel based on user selections 
+            sm = QM.postprocess_to_statistical_model(model=res_model_random, facts=res_facts_random, graph=design.graph, statistical_model=sm)
+
+            
+            # Return a Statistical Model obj with effects set
+            return sm
     
     # Synthesizer generates statistical model properties that depend on data 
     # End-user interactively selects properties they want about their statistical model

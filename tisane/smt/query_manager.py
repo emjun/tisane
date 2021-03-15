@@ -507,8 +507,40 @@ class QueryManager(object):
 
                 interaction_ivs.append(tuple(variables))
                 
-            elif function == 'Random': 
-                pass
+            # Is this fact about Random effects (slopes and intercepts)? 
+            elif 'Random' in function: 
+                
+                # TODO: Make better classes for Random slope and Random intercept and Correlated? - might help with code gen later? 
+                if function == 'CorrelateRandomSlopeIntercept': 
+                    pass
+                    # Add both RandomSlope and RandomIntercept
+
+                elif function == 'NoCorrelateRandomSlopeIntercept': 
+                    pass
+                    # Add both RandomSlope and RandomIntercept
+
+                elif 'RandomSlope' in function: 
+                    # TODO: Check: already in random list??
+
+                    # Get variable names
+                    iv_name = fact_dict['start']
+                    group_name = fact_dict=['end']
+                    # Get variables 
+                    iv_var = graph.get_variable(iv_name)
+                    group_var = graph.get_variable(group_name)
+
+                    random_slopes.append(tuple(iv_var, group_var)) # TODO: Create a RandomSlope class? 
+                
+                elif 'RandomIntercept' in function: 
+                    # Get variable names
+                    iv_name = fact_dict['start']
+                    group_name = fact_dict=['end']
+                    # Get variables 
+                    iv_var = graph.get_variable(iv_name)
+                    group_var = graph.get_variable(group_name)
+
+                    random_intercepts.append(tuple(iv_var, group_var)) # TODO: Create a RandomSlope class? 
+                    
 
             # Is this fact about the Family distribution?
             elif 'Family' in function: 
@@ -518,7 +550,8 @@ class QueryManager(object):
             elif 'Transform' in function: 
                 link_function = function.split('Transform')[0] # Get the link function name alone
                 # link = function 
-                
+            
+            elif 
             # elif ('Transform' in function) and (function != 'Transformation'): 
             #     assert('variable_name' in fact_dict)
             #     var_name = fact_dict['variable_name']
