@@ -1,6 +1,5 @@
 from tisane.concept import Concept
 from tisane.statistical_model import StatisticalModel
-from tisane.asp.knowledge_base import KnowledgeBase
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 
 from enum import Enum 

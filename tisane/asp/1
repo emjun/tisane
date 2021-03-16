@@ -1,8 +1,0 @@
-regression :- normal_residuals(X, Y), homoscedastic_residuals(X, Y), numeric(Y).
-
-normal_residuals(X, Y) :- set_of_variables(X), variable(Y), #true.
-homoscedastic_residuals(X, Y) :- set_of_variables(X), variable(Y), #true.
-numeric(Y) :- variable(Y).
-
-set_of_variables(X) :- 1..X.
-
