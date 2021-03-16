@@ -1,3 +1,0 @@
-% ====== Output ======
-
-#show model/
