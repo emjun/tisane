@@ -4,7 +4,6 @@ from tisane.design import Design
 from tisane.graph import Graph 
 from tisane.random_effects import RandomSlope, RandomSlope, CorrelatedRandomSlopeAndIntercept
 
-from tisane.smt.declare_constraints import *
 from tisane.smt.rules import *
 from tisane.smt.knowledge_base import KB
 from tisane.smt.qm_helpers import *

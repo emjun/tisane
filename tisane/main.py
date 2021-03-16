@@ -6,7 +6,6 @@ from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.conceptual_model import ConceptualModel
 from tisane.smt.results import AllStatisticalResults
-from tisane.asp.knowledge_base import KB, KnowledgeBase
 import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
 from tisane.smt.synthesizer import Synthesizer

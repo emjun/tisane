@@ -1,5 +1,3 @@
-from tisane.smt.declare_constraints import *
-from tisane.smt.helpers import *
 from tisane.smt.rules import *
 
 from z3 import *
@@ -43,7 +41,7 @@ class KnowledgeBase(object):
 
             Implies(PoissonFamily(dv_const), LogTransform(dv_const)),
             Implies(PoissonFamily(dv_const), SquarerootTransform(dv_const)),
-            Implies(PoissonFamily(dv_const), Identity(dv_const)),
+            Implies(PoissonFamily(dv_const), IdentityTransform(dv_const)),
             
             Implies(GammaFamily(dv_const), LogTransform(dv_const)),
             Implies(GammaFamily(dv_const), InverseTransform(dv_const)),
@@ -132,7 +130,7 @@ class KnowledgeBase(object):
         ]
 
         self.data_transformation_rules = [
-            ForAll([x], Implies(Identity(x), NumericDataType(x))),
+            ForAll([x], Implies(IdentityTransform(x), NumericDataType(x))),
             ForAll([x], Implies(LogTransform(x), NumericDataType(x))), 
             ForAll([x], Implies(SquarerootTransform(x), NumericDataType(x))),  # Sqrt is predefined in Z3
             ForAll([x], Implies(LogLogTransform(x), CategoricalDataType(x))),
