@@ -1,6 +1,6 @@
 from tisane.concept import Concept
 from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
-from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept, CorrelatedRandomSlopeIntercept
+from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept, CorrelatedRandomSlopeAndIntercept
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
 from tisane.smt.knowledge_base import KB

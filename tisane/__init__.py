@@ -36,5 +36,5 @@ from tisane.level import (
 from tisane.random_effects import (
                                         RandomSlope,
                                         RandomIntercept,
-                                        CorrelatedRandomSlopeIntercept
+                                        CorrelatedRandomSlopeAndIntercept
 )

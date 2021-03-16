@@ -2,7 +2,7 @@ from tisane.variable import AbstractVariable
 from tisane.statistical_model import StatisticalModel
 from tisane.design import Design 
 from tisane.graph import Graph 
-from tisane.random_effects import RandomSlope, RandomSlope, CorrelatedRandomSlopeIntercept
+from tisane.random_effects import RandomSlope, RandomSlope, CorrelatedRandomSlopeAndIntercept
 
 from tisane.smt.declare_constraints import *
 from tisane.smt.rules import *
@@ -520,7 +520,7 @@ class QueryManager(object):
                     iv_var = graph.get_variable(iv_name)
                     group_var = graph.get_variable(group_name)
 
-                    cr = CorrelatedRandomSlopeIntercept(iv=iv-var, groups=group_var)
+                    cr = CorrelatedRandomSlopeAndIntercept(iv=iv-var, groups=group_var)
                     random_ivs.append(cr)
                     
                 # elif function == 'NoCorrelateRandomSlopeIntercept': 
