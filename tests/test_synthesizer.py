@@ -26,6 +26,82 @@ class SynthesizerTest(unittest.TestCase):
 
     def test_synth_one_level_fixed(self): 
         pass
+
+
+    # TODO: Start here!
+    @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
+    def test_generate_and_select_effects_sets_from_design_fixed_only(self, mock_increment0, mock_increment1): 
+        global dv, v1
+        
+        # Simulate end-user selecting between two options at a time repeatedly
+        mock_increment0.side_effect = ['y']
+        mock_increment1.side_effect = [FixedEffect(v1.const, dv.const)]
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = ts.Level(identifier='id', measures=[v1])
+        )
+
+        synth = Synthesizer()
+        sm = synth.generate_and_select_effects_sets_from_design(design=design)
+        self.assertTrue(v1 in sm.fixed_ivs)
+        self.assertEqual(sm.interactions, list())
+        self.assertEqual(sm.random_ivs, list())
+        self.assertIsNone(sm.family)
+        self.assertIsNone(sm.link_function)
+    
+    @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
+    def test_generate_and_select_effects_sets_from_design_fixed_interaction(self, mock_increment0, mock_increment1): 
+        global dv, v1, v2
+        
+        # Simulate end-user selecting between two options at a time repeatedly
+        mock_increment0.side_effect = ['y', 'y']
+        interaction_set = EmptySet(Object)
+        interaction_set = SetAdd(interaction_set, v1.const)
+        interaction_set = SetAdd(interaction_set, v2.const)
+        interaction = Unit(interaction_set)
+        mock_increment1.side_effect = [FixedEffect(v1.const, dv.const), FixedEffect(v2.const, dv.const), Interaction(interaction_set)]
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = ts.Level(identifier='id', measures=[v1, v2])
+        )
+
+        synth = Synthesizer()
+        sm = synth.generate_and_select_effects_sets_from_design(design=design)
+        self.assertTrue(v1 in sm.fixed_ivs)
+        self.assertTrue((v1, v2) in sm.interactions)
+        self.assertEqual(sm.random_ivs, list())
+        self.assertIsNone(sm.family)
+        self.assertIsNone(sm.link_function)
+    
+    @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
+    @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
+    def test_generate_and_select_effects_sets_from_design_random(self, mock_increment0, mock_increment1): 
+        global dv, v1, v2
+        
+        # Simulate end-user selecting between two options at a time repeatedly
+        mock_increment0.side_effect = ['y', 'y']
+        interaction_set = EmptySet(Object)
+        interaction_set = SetAdd(interaction_set, v1.const)
+        interaction_set = SetAdd(interaction_set, v2.const)
+        interaction = Unit(interaction_set)
+        mock_increment1.side_effect = [FixedEffect(v1.const, dv.const), FixedEffect(v2.const, dv.const), Interaction(interaction_set)]
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = ts.Level(identifier='id', measures=[v1, v2])
+        )
+
+        synth = Synthesizer()
+        sm = synth.generate_and_select_effects_sets_from_design(design=design)
+        self.assertTrue(v1 in sm.fixed_ivs)
+        self.assertTrue((v1, v2) in sm.interactions)
+        self.assertEqual(sm.random_ivs, list())
+        self.assertIsNone(sm.family)
+        self.assertIsNone(sm.link_function)
     
     def test_generate_family_numeric_dv(self): 
         global dv, gaussian_family, gamma_family

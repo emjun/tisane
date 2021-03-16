@@ -24,7 +24,7 @@ class Synthesizer(object):
         sm = StatisticalModel(dv=design.dv)
 
         ##### Fixed effects 
-        fixed_candidates = set() 
+        fixed_candidates = list() 
 
         # Find candidates based on predecessors to the @param design.dv
         # Get the predecessors to the DV 
@@ -32,7 +32,18 @@ class Synthesizer(object):
         for p in dv_pred: 
             p_var = design.graph.get_variable(name=p)
             if design.graph.has_edge(start=p_var, end=design.dv, edge_type='contribute'): 
-                fixed_candidates.add(p_var)
+                fixed_candidates.append(p_var)
+
+        # Control order
+        fixed_candidate_names = [v.name for v in fixed_candidates]
+        fixed_candidate_names.sort()
+        fixed_candidates_ordered = list()
+        for n in fixed_candidate_names:
+            for c in fixed_candidates:
+                if n == c.name: 
+                    fixed_candidates_ordered.append(c)
+                    break
+        fixed_candidates = fixed_candidates_ordered
         
         # Ask for user-input 
         include_fixed = InputInterface.ask_inclusion(subject='fixed effects')
@@ -147,8 +158,8 @@ class Synthesizer(object):
             # Update result StatisticalModel based on user selections 
             sm = QM.postprocess_to_statistical_model(model=res_model_random, facts=res_facts_random, graph=design.graph, statistical_model=sm)
             
-            # Return a Statistical Model obj with effects set
-            return sm
+        # Return a Statistical Model obj with effects set
+        return sm
     
     # Synthesizer generates statistical model properties that depend on data 
     # End-user interactively selects properties they want about their statistical model
@@ -281,6 +292,9 @@ class Synthesizer(object):
 
         # TODO: Do we have a revision notion?
         # Diagnostics: Multicollinearity
+
+
+
 
     # Not yet necessary
     # Synthesizer generates possible variance functions based on the family
