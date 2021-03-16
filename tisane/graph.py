@@ -216,33 +216,48 @@ class Graph(object):
             # Update the variable to have an identifier
             (node, node_data) = self.get_node(variable=identifier)    
             node_data['is_identifier'] = True
-        self._add_edge(start=identifier, end=variable, edge_type='has')
+        # Is this edge new? 
+        if not self.has_edge(start=identifier, end=variable, edge_type='has'): 
+            self._add_edge(start=identifier, end=variable, edge_type='has')
 
     # Add an ''associate'' edge to the graph 
     # Adds two edges, one in each direction 
     def associate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
-        self._add_edge(start=lhs, end=rhs, edge_type='associate')
-        self._add_edge(start=rhs, end=lhs, edge_type='associate')
+        # Is this edge new? 
+        if not self.has_edge(start=lhs, end=rhs, edge_type='associate'): 
+            assert(not self.has_edge(start=rhs, end=lhs, edge_type='associate'))
+            self._add_edge(start=lhs, end=rhs, edge_type='associate')
+            self._add_edge(start=rhs, end=lhs, edge_type='associate')
 
     # Add a causal edge to the graph 
     def cause(self, cause: AbstractVariable, effect: AbstractVariable): 
-        self._add_edge(start=cause, end=effect, edge_type='cause')
+        # Is this edge new? 
+        if not self.has_edge(start=cause, end=effect, edge_type='cause'): 
+            self._add_edge(start=cause, end=effect, edge_type='cause')
     
     # Add an ambiguous/contribute edge to the graph
     def contribute(self, lhs: AbstractVariable, rhs: AbstractVariable): 
-        self._add_edge(start=lhs, end=rhs, edge_type='contribute')
+        # Is this edge new? 
+        if not self.has_edge(start=lhs, end=rhs, edge_type='contribute'): 
+            self._add_edge(start=lhs, end=rhs, edge_type='contribute')
 
     # Add a 'treat' edge to the graph
     def treat(self, unit: AbstractVariable, treatment: AbstractVariable, treatment_obj: Treatment): 
-        self._add_edge(start=treatment, end=unit, edge_type='treat', edge_obj=treatment_obj)
+        # Is this edge new? 
+        if not self.has_edge(start=treatment, end=unit, edge_type='treat'): 
+            self._add_edge(start=treatment, end=unit, edge_type='treat', edge_obj=treatment_obj)
 
     # Add a 'nest' edge to the graph 
     def nest(self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest=None):
-        self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
+        # Is this edge new? 
+        if not self.has_edge(start=base, end=group, edge_type='nest'): 
+            self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
     
     # Add a 'repeat' edge to the graph
     def repeat(self, unit: AbstractVariable, response: AbstractVariable, repeat_obj: RepeatedMeasure): 
-        self._add_edge(start=unit, end=response, edge_type='repeat', edge_obj=repeat_obj)
+        # Is this edge new? 
+        if not self.has_edge(start=unit, end=response, edge_type='repeat'): 
+            self._add_edge(start=unit, end=response, edge_type='repeat', edge_obj=repeat_obj)
 
     # Generate Z3 consts that correspond to nodes in this graph 
     def generate_consts(self): 

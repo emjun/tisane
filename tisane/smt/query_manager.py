@@ -2,6 +2,7 @@ from tisane.variable import AbstractVariable
 from tisane.statistical_model import StatisticalModel
 from tisane.design import Design 
 from tisane.graph import Graph 
+from tisane.random_effects import RandomSlope, RandomSlope, CorrelatedRandomSlopeIntercept
 
 from tisane.smt.declare_constraints import *
 from tisane.smt.rules import *
@@ -474,8 +475,7 @@ class QueryManager(object):
     def postprocess_to_statistical_model(self, model: z3.ModelRef, facts: List, graph: Graph, statistical_model: StatisticalModel) -> StatisticalModel: 
         fixed_ivs = list()
         interaction_ivs = list()
-        random_slopes = list() 
-        random_intercepts = list()
+        random_ivs = list()
         family = None 
         link_function = None
         
@@ -512,16 +512,7 @@ class QueryManager(object):
                 
                 # TODO: Make better classes for Random slope and Random intercept and Correlated? - might help with code gen later? 
                 if function == 'CorrelateRandomSlopeIntercept': 
-                    pass
                     # Add both RandomSlope and RandomIntercept
-
-                elif function == 'NoCorrelateRandomSlopeIntercept': 
-                    pass
-                    # Add both RandomSlope and RandomIntercept
-
-                elif 'RandomSlope' in function: 
-                    # TODO: Check: already in random list??
-
                     # Get variable names
                     iv_name = fact_dict['start']
                     group_name = fact_dict=['end']
@@ -529,7 +520,31 @@ class QueryManager(object):
                     iv_var = graph.get_variable(iv_name)
                     group_var = graph.get_variable(group_name)
 
-                    random_slopes.append(tuple(iv_var, group_var)) # TODO: Create a RandomSlope class? 
+                    cr = CorrelatedRandomSlopeIntercept(iv=iv-var, groups=group_var)
+                    random_ivs.append(cr)
+                    
+                # elif function == 'NoCorrelateRandomSlopeIntercept': 
+                #     pass
+                #     # Add both RandomSlope and RandomIntercept
+
+                elif 'RandomSlope' in function: 
+                    # Get variable names
+                    iv_name = fact_dict['start']
+                    group_name = fact_dict=['end']
+                    # Get variables 
+                    iv_var = graph.get_variable(iv_name)
+                    group_var = graph.get_variable(group_name)
+
+                    already_have = False
+                    for e in random_ivs: 
+                        # Do we already have this RandomSlope? 
+                        if e.iv == iv_var and e.groups == group_var: 
+                            already_have = True
+                            break
+
+                    # Is this a new random effect? 
+                    if not already_have: 
+                        random_ivs.append(RandomSlope(iv=iv_var, groups=group_var))
                 
                 elif 'RandomIntercept' in function: 
                     # Get variable names
@@ -539,8 +554,16 @@ class QueryManager(object):
                     iv_var = graph.get_variable(iv_name)
                     group_var = graph.get_variable(group_name)
 
-                    random_intercepts.append(tuple(iv_var, group_var)) # TODO: Create a RandomSlope class? 
-                    
+                    already_have = False
+                    for e in random_ivs: 
+                        # Do we already have this RandomSlope? 
+                        if e.iv == iv_var and e.groups == group_var: 
+                            already_have = True
+                            break
+
+                    # Is this a new random effect? 
+                    if not already_have: 
+                        random_ivs.append(RandomIntercept(iv=iv_var, groups=group_var))
 
             # Is this fact about the Family distribution?
             elif 'Family' in function: 
@@ -551,7 +574,7 @@ class QueryManager(object):
                 link_function = function.split('Transform')[0] # Get the link function name alone
                 # link = function 
             
-            elif 
+            
             # elif ('Transform' in function) and (function != 'Transformation'): 
             #     assert('variable_name' in fact_dict)
             #     var_name = fact_dict['variable_name']
@@ -565,7 +588,8 @@ class QueryManager(object):
             statistical_model.set_fixed_ivs(fixed_ivs)
         if len(interaction_ivs) > 0: 
             statistical_model.set_interactions(interaction_ivs)   
-        # output_obj.set_mixed_effects(mixed_effects)
+        if len(random_ivs) > 0: 
+            statistical_model.set_random_ivs(random_ivs)
 
         if family is not None:            
             statistical_model.set_family(family=family)

@@ -174,8 +174,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.dv, dv)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertTrue(v2 in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gaussian')
         self.assertIsNone(sm.link_function)
@@ -198,8 +197,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.dv, dv)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertTrue(v2 in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gamma')
         self.assertIsNone(sm.link_function)
@@ -229,8 +227,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.dv, dv)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertTrue(v2 in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gaussian')
         self.assertIsNotNone(sm.link_function)
@@ -261,8 +258,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.dv, dv)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertTrue(v2 in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gaussian')
         self.assertIsNotNone(sm.link_function)
@@ -292,8 +288,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(sm.dv, dv)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertTrue(v2 in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertEqual(sm.family, 'Gaussian')
         self.assertIsNotNone(sm.link_function)
@@ -301,6 +296,9 @@ class SynthesizerTest(unittest.TestCase):
     
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
     def test_generate_and_select_link_binomial(self, input): 
+        pass
+
+    def test_genearate_and_select_random_effects(self): 
         pass
 
     @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
@@ -356,7 +354,7 @@ class SynthesizerTest(unittest.TestCase):
 
         ts.synthesize_statistical_model(design=design)
 
-    # @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
+    @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_two_levels_random(self): 
         # Variables
         math = ts.Numeric('MathAchievement')

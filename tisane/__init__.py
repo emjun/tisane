@@ -31,4 +31,10 @@ from tisane.conceptual_model import (
 
 from tisane.level import (
                                 Level
+) 
+
+from tisane.random_effects import (
+                                        RandomSlope,
+                                        RandomIntercept,
+                                        CorrelatedRandomSlopeIntercept
 )

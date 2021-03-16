@@ -65,24 +65,24 @@ class QueryManagerTest(unittest.TestCase):
         kb.ground_data_transformation_rules(dv_const=dv.const)
 
         self.assertIsInstance(rules, dict)
-        self.assertTrue('transformation_rules' in rules.keys())
-        self.assertEqual(rules['transformation_rules'], kb.data_transformation_rules)
+        self.assertTrue('data_transformation_rules' in rules.keys())
+        self.assertEqual(rules['data_transformation_rules'], kb.data_transformation_rules)
 
         s = Solver() 
-        res = s.check(rules['transformation_rules'])
+        res = s.check(rules['data_transformation_rules'])
         self.assertEqual(str(res), 'sat')
 
         s.add(GaussianFamily(dv.const))
-        res = s.check(rules['transformation_rules'])
+        res = s.check(rules['data_transformation_rules'])
         self.assertEqual(str(res), 'sat')
 
         s.add(IdentityTransform(dv.const))
-        res = s.check(rules['transformation_rules'])
+        res = s.check(rules['data_transformation_rules'])
         self.assertEqual(str(res), 'sat')
 
         s.add(LogTransform(dv.const))
         s.add(SquarerootTransform(dv.const))
-        res = s.check(rules['transformation_rules'])
+        res = s.check(rules['data_transformation_rules'])
         self.assertEqual(str(res), 'unsat')
     
     def test_update_clauses(self): 
@@ -182,11 +182,10 @@ class QueryManagerTest(unittest.TestCase):
         sm = QM.postprocess_to_statistical_model(model=model, facts=updated_facts, graph=graph, statistical_model=statistical_model)
         self.assertEqual(sm.dv, dv)
         self.assertTrue(iv in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
     @patch('tisane.smt.input_interface.InputInterface.resolve_unsat', return_value=interaction_effect)
     def test_postprocess_to_statistical_model_interaction(self, input): 
@@ -217,11 +216,10 @@ class QueryManagerTest(unittest.TestCase):
         self.assertEqual(sm.dv, dv)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertFalse(v2 in sm.fixed_ivs)
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual([(v1, v2)], sm.interactions)
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
     # @patch('tisane.smt.input_interface.InputInterface.resolve_unsat', return_value=gaussian_family)
     # def test_postprocess_to_statistical_model_family(self, input): 
@@ -256,11 +254,11 @@ class QueryManagerTest(unittest.TestCase):
     #     self.assertEqual(sm.dv, dv)
     #     self.assertTrue(v1 in sm.fixed_ivs)
     #     self.assertFalse(v2 in sm.fixed_ivs)
-    #     self.assertEqual(sm.random_slopes, list())
+    #     self.assertEqual(sm.random_ivs, list())
     #     self.assertEqual(sm.random_intercepts, list())
     #     self.assertEqual([(v1, v2)], sm.interactions)
     #     self.assertEqual(sm.family, 'Gaussian')
-    #     self.assertIsNone(sm.link_func)
+    #     self.assertIsNone(sm.link_function)
 
     # @patch('tisane.smt.input_interface.InputInterface.resolve_unsat', return_value=gamma_family)
     # def test_postprocess_to_statistical_model_family_gamma(self, input): 
@@ -295,11 +293,11 @@ class QueryManagerTest(unittest.TestCase):
     #     self.assertEqual(sm.dv, dv)
     #     self.assertTrue(v1 in sm.fixed_ivs)
     #     self.assertFalse(v2 in sm.fixed_ivs)
-    #     self.assertEqual(sm.random_slopes, list())
+    #     self.assertEqual(sm.random_ivs, list())
     #     self.assertEqual(sm.random_intercepts, list())
     #     self.assertEqual([(v1, v2)], sm.interactions)
     #     self.assertEqual(sm.family, 'Gamma')
-    #     self.assertIsNone(sm.link_func)
+    #     self.assertIsNone(sm.link_function)
 
 
 # Ordinal

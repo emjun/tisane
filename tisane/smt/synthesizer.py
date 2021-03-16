@@ -146,7 +146,6 @@ class Synthesizer(object):
 
             # Update result StatisticalModel based on user selections 
             sm = QM.postprocess_to_statistical_model(model=res_model_random, facts=res_facts_random, graph=design.graph, statistical_model=sm)
-
             
             # Return a Statistical Model obj with effects set
             return sm

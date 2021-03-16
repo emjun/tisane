@@ -20,11 +20,10 @@ class StatisticalModelTest(unittest.TestCase):
         )
 
         # Statistical Model has properties we expect
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertEqual(sm.interactions, list())
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
         for v in variables: 
@@ -49,16 +48,14 @@ class StatisticalModelTest(unittest.TestCase):
         sm = ts.StatisticalModel(
             dv=acc,
             fixed_ivs=[chronotype, composition, tod, qtype, group], 
-            random_slopes=None, 
-            random_intercepts=None,
+            random_ivs=None,
             interactions=[(qtype, tod)]
         )
 
         # Statistical Model has properties we expect
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
         self.assertEqual(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
@@ -96,16 +93,14 @@ class StatisticalModelTest(unittest.TestCase):
         sm = ts.StatisticalModel(
             dv=acc,
             fixed_ivs=[chronotype, composition, tod, qtype, group], 
-            random_slopes=None, 
-            random_intercepts=None,
+            random_ivs=None,
             interactions=[(qtype, tod, composition)]
         )
 
         # Statistical Model has properties we expect
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, list())
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
         self.assertEqual(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
@@ -129,7 +124,7 @@ class StatisticalModelTest(unittest.TestCase):
         # Interaction effects
         self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='contribute'))
     
-    def test_initialize_random_slopes_1(self): 
+    def test_initialize_random_ivs_1(self): 
         """ From Kreft and de Leeuw 1989
         """
         math = ts.Numeric('MathAchievement')
@@ -143,20 +138,18 @@ class StatisticalModelTest(unittest.TestCase):
         variables = [math, hw, race, mean_ses]
         identifiers = [student, school]
 
-        random_slopes = [(hw, school)]
+        random_ivs = [ts.RandomSlope(iv=hw, groups=school)]
         sm = ts.StatisticalModel(
             dv=math,
             fixed_ivs=[race, mean_ses], 
-            random_slopes=random_slopes, 
-            random_intercepts=None,
+            random_ivs=random_ivs, 
             interactions=[(hw, mean_ses)], 
         )
 
         # Statistical Model has properties we expect
-        self.assertEqual(sm.random_slopes, random_slopes)
-        self.assertEqual(sm.random_intercepts, list())
+        self.assertEqual(sm.random_ivs, random_ivs)
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
         self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random slopes + 1 interaction
@@ -191,7 +184,7 @@ class StatisticalModelTest(unittest.TestCase):
         # Nesting
         self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest'))
 
-    # def test_initialize_random_slopes_2(self): 
+    # def test_initialize_random_ivs_2(self): 
     #     pass
 
     # Note: Graph of Variable as a random Random Slope or Random Intercept are identical
@@ -209,20 +202,18 @@ class StatisticalModelTest(unittest.TestCase):
         variables = [math, hw, race, mean_ses]
         identifiers = [student, school]
 
-        random_intercepts = [(hw, school)]
+        random_intercepts = [ts.RandomIntercept(iv=hw, groups=school)]
         sm = ts.StatisticalModel(
             dv=math,
             fixed_ivs=[race, mean_ses], 
-            random_slopes=None,
-            random_intercepts=random_intercepts,
+            random_ivs=random_intercepts,
             interactions=[(hw, mean_ses)], 
         )
 
         # Statistical Model has properties we expect
-        self.assertEqual(sm.random_slopes, list())
-        self.assertEqual(sm.random_intercepts, random_intercepts)
+        self.assertEqual(sm.random_ivs, random_intercepts)
         self.assertIsNone(sm.family)
-        self.assertIsNone(sm.link_func)
+        self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
         self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random intercepts + 1 interaction
@@ -350,10 +341,10 @@ class StatisticalModelTest(unittest.TestCase):
     # def test_verify_with_study_design_interaction_false(self): 
     #     pass
     
-    # def test_verify_with_study_design_random_slopes_true(self): 
+    # def test_verify_with_study_design_random_ivs_true(self): 
     #     pass
 
-    # def test_verify_with_study_design_random_slopes_false(self): 
+    # def test_verify_with_study_design_random_ivs_false(self): 
     #     pass
 
     # def test_verify_with_study_design_random_intercepts_true(self): 

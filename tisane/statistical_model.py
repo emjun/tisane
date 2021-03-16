@@ -1,5 +1,6 @@
 from tisane.concept import Concept
 from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
+from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept, CorrelatedRandomSlopeIntercept
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
 from tisane.smt.knowledge_base import KB
@@ -27,8 +28,7 @@ class StatisticalModel(object):
 
     fixed_ivs: List[AbstractVariable]
     interactions: List[Tuple[AbstractVariable, ...]]
-    random_slopes: List[Tuple[AbstractVariable, ...]]
-    random_intercepts: List[Tuple[AbstractVariable, ...]]
+    random_ivs: List[RandomEffect]
     family: str
     link_function: str # maybe, not sure?
     variance_function: str # maybe, not sure?
@@ -38,7 +38,7 @@ class StatisticalModel(object):
     consts: dict # Z3 consts representing the model and its DV, fixed_ivs, etc. 
 
 
-    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_slopes: List[Tuple[AbstractVariable,...]]=None, random_intercepts: List[Tuple[AbstractVariable,...]]=None, family: str=None, link_func: str=None): 
+    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None): 
         self.dv = dv
 
         self.graph = Graph()
@@ -49,15 +49,20 @@ class StatisticalModel(object):
         else: 
             self.fixed_ivs = list()
 
-        if random_slopes is not None:
-            self.set_random_slopes(random_slopes=random_slopes)
-        else:
-            self.random_slopes = list()
+        # if random_slopes is not None:
+        #     self.set_random_slopes(random_slopes=random_slopes)
+        # else:
+        #     self.random_slopes = list()
         
-        if random_intercepts is not None:
-            self.set_random_intercepts(random_intercepts=random_intercepts)
-        else:
-            self.random_intercepts = list()
+        # if random_intercepts is not None:
+        #     self.set_random_intercepts(random_intercepts=random_intercepts)
+        # else:
+        #     self.random_intercepts = list()
+
+        if random_ivs is not None: 
+            self.set_random_ivs(random_ivs=random_ivs)
+        else: 
+            self.random_ivs = list()
 
         # Set interactions last in case Random Slope, Random Intercept adds identifier variables/relations we care about
         if interactions is not None: 
@@ -159,38 +164,56 @@ class StatisticalModel(object):
             for pi in pre_identifiers:
                 self.graph.has(identifier=pi, variable=ixn_var)
 
-    # Sets random slopes 
-    def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 
-        self.random_slopes = random_slopes
-        
+    # Sets random ivs 
+    def set_random_ivs(self, random_ivs: List[RandomEffect]): 
+        self.random_ivs = random_ivs
+
         # Update the Graph IR
-        for slope_for_each, slopes_vary_among in random_slopes: 
+        for re in random_ivs: 
+            iv = re.iv
+            groups = re.groups
             # Add unknown 'has'/identifier relation 
             unknown_id = Nominal('Unknown identifier')
-            self.graph.has(identifier=unknown_id, variable=slope_for_each)
+            self.graph.has(identifier=unknown_id, variable=iv)
 
             # Add the random slope to dv relation 
-            self.graph.contribute(lhs=slope_for_each, rhs=self.dv)
+            self.graph.contribute(lhs=iv, rhs=self.dv)
 
             # Add nesting relation 
-            self.graph.nest(base=unknown_id, group=slopes_vary_among)
+            self.graph.nest(base=unknown_id, group=groups)
+
+    # # Sets random slopes 
+    # def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 
+    #     self.random_slopes = random_slopes
+        
+    #     # Update the Graph IR
+    #     for slope_for_each, slopes_vary_among in random_slopes: 
+    #         # Add unknown 'has'/identifier relation 
+    #         unknown_id = Nominal('Unknown identifier')
+    #         self.graph.has(identifier=unknown_id, variable=slope_for_each)
+
+    #         # Add the random slope to dv relation 
+    #         self.graph.contribute(lhs=slope_for_each, rhs=self.dv)
+
+    #         # Add nesting relation 
+    #         self.graph.nest(base=unknown_id, group=slopes_vary_among)
             
 
-    # Sets random intercepts
-    def set_random_intercepts(self, random_intercepts: List[Tuple[AbstractVariable, ...]]): 
-        self.random_intercepts = random_intercepts
+    # # Sets random intercepts
+    # def set_random_intercepts(self, random_intercepts: List[Tuple[AbstractVariable, ...]]): 
+    #     self.random_intercepts = random_intercepts
 
-        # Update the Graph IR
-        for intercept_for_each, intercepts_vary_among in random_intercepts: 
-            # Add unknown 'has'/identifier relation 
-            unknown_id = Nominal('Unknown identifier')
-            self.graph.has(identifier=unknown_id, variable=intercept_for_each)
+    #     # Update the Graph IR
+    #     for intercept_for_each, intercepts_vary_among in random_intercepts: 
+    #         # Add unknown 'has'/identifier relation 
+    #         unknown_id = Nominal('Unknown identifier')
+    #         self.graph.has(identifier=unknown_id, variable=intercept_for_each)
 
-            # Add the random intercept to dv relation 
-            self.graph.contribute(lhs=intercept_for_each, rhs=self.dv)
+    #         # Add the random intercept to dv relation 
+    #         self.graph.contribute(lhs=intercept_for_each, rhs=self.dv)
 
-            # Add nesting relation 
-            self.graph.nest(base=unknown_id, group=intercepts_vary_among)
+    #         # Add nesting relation 
+    #         self.graph.nest(base=unknown_id, group=intercepts_vary_among)
 
     # Sets the family
     def set_family(self, family: str): 
