@@ -2,21 +2,6 @@ import pandas as pd
 
 from enum import Enum 
 from typing import Any
-# class DTYPE(Enum): 
-#     NOMINAL = 1
-#     ORDINAL = 2
-#     NUMERIC = 3
-    
-#     @classmethod
-#     def createDTYPE(self, type_str:str): 
-#         if type_str.upper() == 'NOMINAL':
-#             return DTYPE.NOMINAL
-#         elif type_str.upper() == 'ORDINAL': 
-#             return DTYPE.ORDINAL
-#         elif type_str.upper() == "NUMERIC": 
-#             return DTYPE.NUMERIC
-#         else: 
-#             raise ValueError(f"Data type {type_str} not supported! Try NOMINAL, ORDINAL, or NUMERIC")
 
 class Dataset(object): 
     data_vectors: dict
