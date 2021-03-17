@@ -1,179 +1,156 @@
-from tisane.smt.statistical_model import StatisticalModel
-from tisane.smt.property import *
-from tisane.smt.statistical_variable import StatVar
+from tisane.smt.rules import *
 
-import copy
+from z3 import *
 
-""" Properties 
-data_type(v, type): 
-"""
+class KnowledgeBase(object): 
+    def ground_effects_rules(self, dv_const: Const): 
+        self.effects_rules = [
+                ForAll([x], Xor(FixedEffect(x, dv_const), NoFixedEffect(x, dv_const))),
+                ForAll([xs], Xor(Interaction(xs), NoInteraction(xs))),
+                ForAll([x0, x1], Xor(RandomSlope(x0, x1), NoRandomSlope(x0, x1))),
+                ForAll([x0, x1], Xor(RandomIntercept(x0, x1), NoRandomIntercept(x0, x1))),
+                ForAll([x0, x1], Xor(CorrelateRandomSlopeIntercept(x0, x1), NoCorrelateRandomSlopeIntercept(x0, x1))),
+                ForAll([x0, x1], Implies(CorrelateRandomSlopeIntercept(x0, x1), And([RandomSlope(x0, x1), RandomIntercept(x0, x1)])))
+                # TODO: ADD RULE FOR CANT INTERACTION X with Y?
+            ]
 
-# TODO: Does it make sense for initialize_all_properties() to be in smt.property or here? 
+    def ground_family_rules(self, dv_const: Const): 
+        self.family_rules = [
+            # Xor(GaussianFamily(dv_const), InverseGaussianFamily(dv_const), PoissonFamily(dv_const), GammaFamily(dv_const), BinomialFamily(dv_const), NegativeBinomialFamily(dv_const), MultinomialFamily(dv_const))
+            Xor(GaussianFamily(dv_const), InverseGaussianFamily(dv_const)),
+            Xor(GaussianFamily(dv_const), PoissonFamily(dv_const)),
+            Xor(GaussianFamily(dv_const), GammaFamily(dv_const)),
+            # Xor(InverseGaussianFamily(dv_const), PoissonFamily(dv_const)),
+            # Xor(InverseGaussianFamily(dv_const), GammaFamily(dv_const)),
+            # Xor(PoissonFamily(dv_const), GammaFamily(dv_const))
+            # Xor(Xor(GaussianFamily(dv_const), InverseGaussianFamily(dv_const)), PoissonFamily(dv_const))
+            Xor(BinomialFamily(dv_const), NegativeBinomialFamily(dv_const)),
+            Xor(BinomialFamily(dv_const), MultinomialFamily(dv_const))
+        ]
 
-class KnowledgeBase(object):
-    all_stat_models: list
-    all_properties: dict
+    def ground_data_transformation_rules(self, dv_const: Const): 
+        self.family_to_transformation_rules = [
+            Implies(GaussianFamily(dv_const), LogTransform(dv_const)), 
+            Implies(GaussianFamily(dv_const), SquarerootTransform(dv_const)),
+            Implies(GaussianFamily(dv_const), IdentityTransform(dv_const)),
+            
+            Implies(InverseGaussianFamily(dv_const), InverseSquaredTransform(dv_const)),
+            Implies(InverseGaussianFamily(dv_const), InverseTransform(dv_const)), 
+            Implies(InverseGaussianFamily(dv_const), LogTransform(dv_const)), 
+            Implies(InverseGaussianFamily(dv_const), IdentityTransform(dv_const)),
 
-    sv_ivs: List[StatVar]
-    sv_dvs: List[StatVar]
-    
-    def __init__(self, ivs: list, dvs: list): 
-        self.all_stat_models = list()
-
-        self.sv_ivs = self.cast_vars(ivs)
-        self.sv_dvs = self.cast_vars(dvs)
+            Implies(PoissonFamily(dv_const), LogTransform(dv_const)),
+            Implies(PoissonFamily(dv_const), SquarerootTransform(dv_const)),
+            Implies(PoissonFamily(dv_const), IdentityTransform(dv_const)),
+            
+            Implies(GammaFamily(dv_const), LogTransform(dv_const)),
+            Implies(GammaFamily(dv_const), InverseTransform(dv_const)),
+            Implies(GammaFamily(dv_const), IdentityTransform(dv_const)),
         
-        self.all_properties = initialize_all_properties(self.sv_ivs, self.sv_dvs)
+            Implies(TweedieFamily(dv_const), LogTransform(dv_const)),
+            Implies(TweedieFamily(dv_const), PowerTransform(dv_const)),
+
+            Implies(BinomialFamily(dv_const), LogitTransform(dv_const)),
+            Implies(BinomialFamily(dv_const), ProbitTransform(dv_const)),
+            Implies(BinomialFamily(dv_const), CauchyTransform(dv_const)),
+            Implies(BinomialFamily(dv_const), LogTransform(dv_const)),
+            Implies(BinomialFamily(dv_const), CLogLogTransform(dv_const)),
+
+            Implies(NegativeBinomialFamily(dv_const), LogTransform(dv_const)),
+            Implies(NegativeBinomialFamily(dv_const), CLogLogTransform(dv_const)),
+            Implies(NegativeBinomialFamily(dv_const), NegativeBinomialTransform(dv_const)),
+            Implies(NegativeBinomialFamily(dv_const), IdentityTransform(dv_const)),
+            # Power not yet supported in statsmodels
+            # Implies(NegativeBinomialFamily(dv_const), PowerTransform(dv_const)),
+            
+            # Multinomial family is not supported in statsmodels
+            # Implies(MultinomialFamily(dv_const), IdentityTransform(dv_const))
+        ]
+
+        self.data_transformation_rules = [
+            # For Gaussian Family
+            Or(And([LogTransform(dv_const), Not(SquarerootTransform(dv_const)), Not(IdentityTransform(dv_const)), GaussianFamily(dv_const)]),
+                And([SquarerootTransform(dv_const), Not(LogTransform(dv_const)), Not(IdentityTransform(dv_const)), GaussianFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(SquarerootTransform(dv_const)), GaussianFamily(dv_const)])),
+            # For Inverse Gaussian Family
+            Or(And([LogTransform(dv_const), Not(InverseTransform(dv_const)), Not(InverseSquaredTransform(dv_const)), Not(IdentityTransform(dv_const)), InverseGaussianFamily(dv_const)]),
+                And([InverseTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseSquaredTransform(dv_const)), Not(IdentityTransform(dv_const)), InverseGaussianFamily(dv_const)]),
+                And([InverseSquaredTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseTransform(dv_const)), Not(IdentityTransform(dv_const)), InverseGaussianFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseSquaredTransform(dv_const)), Not(InverseTransform(dv_const)), InverseGaussianFamily(dv_const)])),
+            # For Poisson Family
+            Or(And([LogTransform(dv_const), Not(SquarerootTransform(dv_const)), Not(IdentityTransform(dv_const)), PoissonFamily(dv_const)]),
+                And([SquarerootTransform(dv_const), Not(LogTransform(dv_const)), Not(IdentityTransform(dv_const)), PoissonFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(SquarerootTransform(dv_const)), PoissonFamily(dv_const)])),
+            # For Gamma Family
+            Or(And([LogTransform(dv_const), Not(InverseTransform(dv_const)), Not(IdentityTransform(dv_const)), GammaFamily(dv_const)]),
+                And([InverseTransform(dv_const), Not(LogTransform(dv_const)), Not(IdentityTransform(dv_const)), GammaFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(InverseTransform(dv_const)), GammaFamily(dv_const)])),
+            # For Tweedie Family
+            Or(And([LogTransform(dv_const), Not(PowerTransform(dv_const)), TweedieFamily(dv_const)]),
+                And([PowerTransform(dv_const), Not(LogTransform(dv_const)), TweedieFamily(dv_const)])),
+            # For Binomial Family
+            Or(And([LogTransform(dv_const), Not(ProbitTransform(dv_const)), Not(LogitTransform(dv_const)), Not(CauchyTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([ProbitTransform(dv_const), Not(LogTransform(dv_const)), Not(LogitTransform(dv_const)), Not(CauchyTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([LogitTransform(dv_const), Not(LogTransform(dv_const)), Not(ProbitTransform(dv_const)), Not(CauchyTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([CauchyTransform(dv_const), Not(LogTransform(dv_const)), Not(LogitTransform(dv_const)), Not(ProbitTransform(dv_const)), Not(CLogLogTransform(dv_const)), BinomialFamily(dv_const)]),
+                And([CLogLogTransform(dv_const), Not(LogTransform(dv_const)), Not(ProbitTransform(dv_const)), Not(LogitTransform(dv_const)), Not(CauchyTransform(dv_const)), BinomialFamily(dv_const)])),
+            # For Negative Binomial Family
+            Or(And([LogTransform(dv_const), Not(NegativeBinomialTransform(dv_const)), Not(CLogLogTransform(dv_const)), Not(IdentityTransform(dv_const)), NegativeBinomialFamily(dv_const)]),
+                And([NegativeBinomialTransform(dv_const), Not(LogTransform(dv_const)), Not(CLogLogTransform(dv_const)), Not(IdentityTransform(dv_const)), NegativeBinomialFamily(dv_const)]),
+                And([CLogLogTransform(dv_const), Not(LogTransform(dv_const)), Not(NegativeBinomialTransform(dv_const)), Not(IdentityTransform(dv_const)), NegativeBinomialFamily(dv_const)]),
+                And([IdentityTransform(dv_const), Not(LogTransform(dv_const)), Not(NegativeBinomialTransform(dv_const)), Not(CLogLogTransform(dv_const)), NegativeBinomialFamily(dv_const)])),
+        ]
         
-        self.initialize_all_stat_models(self.sv_ivs, self.sv_dvs)
-
-    def cast_vars(self, vars_list: list): 
-        cast_vars_list = list()
-
-        for v in vars_list: 
-            cast_v = StatVar(v)
-
-            cast_vars_list.append(cast_v)
-
-        return cast_vars_list
-
-    def initialize_all_stat_models(self, ivs: list, dvs: list):
+    # Store all logical rules internally for now, may want to modularize in separate objects...
+    def ground_rules(self, dv_const: Const, main_effects: SeqSort, interactions: SeqSort, **kwargs): 
         
-        self.all_stat_models.append(
-            StatisticalModel(
-                name='Linear Regression', 
-                properties=[
-                    self.all_properties['numeric_dv'],
-                    self.all_properties['normal_distribution_residuals']
-                ]))
+        self.graph_rules = [
+            ForAll([x], Implies(Contains(main_effects, Unit(x)), Xor(Cause(x, dv_const), Correlate(x, dv_const)))),
+            ForAll([x0, x1], Implies(Cause(x0, x1), Not(Cause(x1, x0)))), # If x0 causes x1, x1 cannot cause x0
+            ForAll([x0, x1], Xor(Cause(x0, x1), Correlate(x0, x1))), # If x0 causes x1, x1 cannot cause x0
+        ]         
 
-        self.all_stat_models.append(
-            StatisticalModel(
-                name='Logistic Regression',
-                properties=[
-                    # TODO: create binary_dv
-                    # self.all_properties['binary_dv']
-                ]
-            )
-        )
+        self.data_type_rules = [
+            ForAll([x], Xor(CategoricalDataType(x), NumericDataType(x))), 
+            ForAll([x], Implies(CategoricalDataType(x), Xor(NominalDataType(x), OrdinalDataType(x)))),
 
-    def get_all_stat_models(self): 
-        return self.all_stat_models
+            # ForAll([x], Implies(NominalDataType(x), Not(OrdinalDataType(x)))),
+            # ForAll([x], Implies(NominalDataType(x), Not(NumericDataType(x)))),
+            # ForAll([x], Implies(NumericDataType(x), And(Not(OrdinalDataType(x), Not(NominalDataType(x)))))),
 
-    # Instantiate models with specific @param ivs and @param dvs
-    def apply_vars(self, ivs: list, dvs: list):
-        assert(len(dvs) == 1) # there is only one DV
-        for m in self.all_stat_models: 
-            m.__apply(ivs=ivs, dvs=dvs)
+            # ForAll([x], Implies(OrdinalDataType(x), CategoricalDataType(x))),
+            # ForAll([x], Implies(NominalDataType(x), CategoricalDataType(x))),
+            
+            # ForAll([x], Implies(CategoricalDataType(x), Xor(OrdinalDataType(x), NominalDataType(x)))),
+            ForAll([x], Implies(CategoricalDataType(x), Xor(BinaryDataType(x), Multinomial(x)))),
+            ForAll([x], Implies(BinaryDataType(x), CategoricalDataType(x))),
+            ForAll([x], Implies(Multinomial(x), CategoricalDataType(x))),
+            ForAll([x], Implies(NominalDataType(x), CategoricalDataType(x))),
+            ForAll([x], Implies(OrdinalDataType(x), CategoricalDataType(x))),
+        ]
 
-    # Adds assertions to the knowledge base that are used for solving for a query
-    def add_assertions(self, assertions: list): 
-        raise NotImplementedError
+        self.data_transformation_rules = [
+            ForAll([x], Implies(IdentityTransform(x), NumericDataType(x))),
+            ForAll([x], Implies(LogTransform(x), NumericDataType(x))), 
+            ForAll([x], Implies(SquarerootTransform(x), NumericDataType(x))),  # Sqrt is predefined in Z3
+            ForAll([x], Implies(LogLogTransform(x), CategoricalDataType(x))),
+            ForAll([x], Implies(ProbitTransform(x), CategoricalDataType(x))), 
+            ForAll([x], Implies(LogitTransform(x), CategoricalDataType(x))),
+            # From data type to possible transformations...
+            ForAll([x], Xor(Transformation(x), NoTransformation(x))),
+            ForAll([x], Implies(Transformation(x), Xor(NumericTransformation(x), CategoricalTransformation(x)))),
+            ForAll([x], Implies(NumericTransformation(x), Xor(LogTransform(x), SquarerootTransform(x)))),
+            # Can be LogLog OR Probit OR Logit
+            ForAll([x], Implies(CategoricalTransformation(x), Xor(LogLogTransform(x), ProbitTransform(x)))),
+            ForAll([x], Implies(CategoricalTransformation(x), Xor(LogLogTransform(x), LogitTransform(x)))),
+            ForAll([x], Implies(CategoricalTransformation(x), Xor(ProbitTransform(x), LogitTransform(x)))),
+            ForAll([x], Implies(NoTransformation(x), Not(Transformation(x)))),
+        ]
 
-    # Generic for looking up something in the knowledge base (should support dual sided reasoning eventually)
-    def query(self, ivs: list, dvs: list): 
-        pass
+        self.variance_functions_rules = [
+            ForAll([x], Implies(Gaussian(x), NumericDataType(x))),
+            ForAll([x], Implies(Binomial(x), BinaryDataType(x))),
+            ForAll([x], Implies(Multinomial(x), CategoricalDataType(x))),
+        ]
 
-    # Concepts -> Models
-    # Look up statistical models 
-    def find_statistical_models(self, **kwargs) -> List[StatisticalModel]: 
-        
-        ivs = self.sv_ivs
-        dvs = self.sv_dvs
-
-        # Are there any assertions to make before solving?
-        if 'assertions' in kwargs: 
-            assertions = kwargs['assertions']
-            self.add_assertions(assertions)
-
-        # TODO: SOLVE
-        valid_statistical_models = list() # TODO: May want a better data structure for representing all valid statistical models
-
-        solver = z3.Solver()
-
-        # all_vars = copy.deepcopy(ivs) + copy.deepcopy(dvs)
-        # for prop in self.all_properties: 
-        #     prop._update(len(all_vars))
-
-        # Apply all tests to the variables we are considering now in combined_data
-        for sm in self.get_all_stat_models(): 
-            sm.__apply__(ivs=ivs, dvs=dvs)
-
-        solver.push() # Create backtracking point
-        solver_model = None # Store model
-
-        # For each test, add it to the solver as a constraint. 
-        # Add the tests and their properties
-        for sm in self.get_all_stat_models():
-            solver.add(sm.__z3__ == z3.And(*sm.query()))
-            solver.add(sm.__z3__ == z3.BoolVal(True))
-        
-            # Check the model 
-            result = solver.check()
-            if result == z3.unsat:
-                solver.pop() 
-            elif result == z3.unknown:
-                print("failed to solve")
-                try:
-                    pass
-                except z3.Z3Exception:
-                    return
-            else:
-                model = solver.model()
-                if model and z3.is_true(model.evaluate(sm.__z3__)):
-                    # TODO implement this part
-                    pass
-
-        # Final check 
-        solver.check()
-        model = solver.model()  
-
-
-        # Create output
-        for sm in self.get_all_stat_models(): 
-            if model and z3.is_true(model.evaluate(sm.__z3__)):
-                # TODO: don't output just name but object? 
-                valid_statistical_models.append(sm.name)
-            elif not model: # No test applies
-                pass
-
-        # import pdb; pdb.set_trace()
-
-        # TODO: Output new result data structure!
-        return valid_statistical_models
-
-    # Models -> Concepts
-    def find_conceptual_models(self, stat_models: list):
-        # TODO: Translate stat_models into (set of) assertions
-        assertions = None
-
-        self.add_assertions(assertions)
-
-        # TODO: SOLVE 
-
-        return -99 
-
-# Concepts -> Models
-# Look up statistical models 
-def find_statistical_models(ivs: list, dvs: list, **kwargs): 
-    kb = KnowledgeBase(ivs=ivs, dvs=dvs)
-
-    return kb.find_statistical_models(**kwargs)
-
-# Models -> Concepts
-def find_conceptual_models(self, stat_models: list):
-    # TODO what do we pass to the KnowledgeBase in the case where we have stats models to solve for...
-    kb = KnowledgeBase()
-    # kb.
-
-    return kb.find_conceptual_models(stat_models)
-
-"""
-pearson_corr = StatisticalTest('pearson_corr', [x0, x1],
-                                        test_properties=
-                                        [bivariate],
-                                        properties_for_vars={
-                                            continuous: [[x0], [x1]],
-                                            normal: [[x0], [x1]]
-                                        })
-"""
+KB = KnowledgeBase()

@@ -1,9 +1,40 @@
 from tisane.main import (
-                            Tisane,
+                            # Tisane,
+                            infer_from,
+                            synthesize_statistical_model,
+                            verify
                             
 )
 
-# TODO: May want to replace this so that only ever interact with Tisane object, not Concepts, too
-from tisane.concept import (
-                                Concept
+from tisane.variable import (
+                                Nominal, 
+                                Ordinal,
+                                Numeric,
+                                Variable
+)
+
+from tisane.statistical_model import (
+                                        StatisticalModel,                                    
+)
+
+from tisane.design import (
+                                        Design,                                    
+)
+
+from tisane.graph import (
+                                        Graph,                                    
+)
+
+from tisane.conceptual_model import (
+                                        ConceptualModel
+)
+
+from tisane.level import (
+                                Level
+) 
+
+from tisane.random_effects import (
+                                        RandomSlope,
+                                        RandomIntercept,
+                                        CorrelatedRandomSlopeAndIntercept
 )

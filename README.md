@@ -16,3 +16,13 @@ DSL and Knowledge Base:
         - If have data: Visualization for all residual properties.
 4. Steps 1 and 2 generate constraints that are used to figure out the set of statistical models that hold. 
 5. Parse Knowledge Base output into statistical scripts for each set of effects! (Draco example: https://github.com/uwdata/draco/blob/master/js/src/asp2vl.ts)
+
+Important files: 
+tests/sample.py : Sample program. 
+
+# Design Rationale
+Design API
+- Definitions: https://docs.google.com/document/d/16b1u8WUQFcYdcswJJqIjKzV11VLG2p7ozFQkYX51JaI/edit
+- Early prototype feedback: https://gist.github.com/emjun/97acf6666ed6d4d457efa2edf55eee86 
+- Formative, related work: https://docs.google.com/document/d/1LGfZ3_WKsyGOeZecA-w-cFqDslFRYdqlKCyo6fgdexM/edit
+

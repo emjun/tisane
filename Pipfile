@@ -13,6 +13,8 @@ pytest = "*"
 z3-solver = "*"
 scipy = "*"
 more-itertools = "*"
+pydot = "*"
+pytest-cov = "*"
 
 [requires]
 python_version = "3.7"
