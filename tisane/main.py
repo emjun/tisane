@@ -18,6 +18,7 @@ import copy
 from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
+import streamlit as st
 
 
 ##### Functions that are not associated with a class/object
@@ -69,10 +70,11 @@ def infer_from(input_: Union[Design], output_: str):
 
 # @returns statistical model that reflects the study design 
 def synthesize_statistical_model(design: Design): 
+    st.write('Testing')
     # Invoke synthesizer
     synth = Synthesizer()
     return synth.synthesize_statistical_model(design=design)
-    # return QM.synthesize_statistical_model(dv=design.dv, graph=design.graph)
+    
 
 def verify(input_: Union[Design, ConceptualModel, StatisticalModel], output_: Union[Design, ConceptualModel, StatisticalModel]): 
     if isinstance(input_, Design) and isinstance(output_, ConceptualModel): 

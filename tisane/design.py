@@ -17,48 +17,25 @@ Relies on Class Treatment, Nest, RepeatedMeasure
 """
 class Design(object): 
     dv : AbstractVariable  
-    levels: typing.Union[Level, LevelSet]
+    ivs: List[AbstractVariable]
     graph : Graph # IR
     dataset: Dataset
 
-    def __init__(self, dv: AbstractVariable, ivs: typing.Union[Level, LevelSet], source: typing.Union[os.PathLike, pd.DataFrame]=None): 
+    def __init__(self, dv: AbstractVariable, ivs: List[AbstractVariable], source: typing.Union[os.PathLike, pd.DataFrame]=None): 
         self.dv = dv
         
         self.graph = Graph() # empty graph
         
-        if self.dv: 
-            # Add dv to graph
-            self.graph._add_variable(dv)
-        
-        self.levels = ivs
-        # Is there only one level of measurements?
-        if isinstance(ivs, Level): 
-            # Create variable for identifier
-            id_var = Nominal(ivs._id)
-            # Add identifier into graph with special 'is_identifier tag'
-            self.graph.add_identifier(identifier=id_var)
+        # Add all variables to the graph 
+        # Add dv 
+        self._add_variable_to_graph(self.dv)
+        # Add all ivs 
+        for v in ivs: 
+            self._add_variable_to_graph(v)
+        # Add any nesting relationships involving IVs that may be implicit
+        self._add_nesting_relationships_to_graph()
+        # TODO: Check that DV and IVs have relationships between them
 
-            self._add_level_to_graph(level=ivs, id_var=id_var)
-        # Are there multiple levels of measurements that are batched into a LevelSet?
-        else: 
-            assert(isinstance(ivs, LevelSet))
-            
-            levels = ivs.get_levels()
-            id_vars = list()
-            # Add each level on its own to graph
-            for level in levels:
-                # Create variable for identifier
-                id_var = Nominal(level._id)
-                # Add identifier into graph with special 'is_identifier tag'
-                self.graph.add_identifier(identifier=id_var)
-                self._add_level_to_graph(level=level, id_var=id_var)
-                id_vars.append(id_var)
-            
-            assert(len(levels) == len(id_vars))
-            # Add relations between levels in graph
-            for i in range(len(id_vars)): 
-                if i+1 < len(id_vars): 
-                    self.graph.nest(base=id_vars[i], group=id_vars[i+1])
 
         if source: 
             self.dataset = Dataset(source)
@@ -70,30 +47,36 @@ class Design(object):
         self.dataset = Dataset(source)
 
         return self
+    
+    def _add_variable_to_graph(self, variable: AbstractVariable): 
+        for r in variable.relationships: 
+            self.graph.add_relationship(relationship=r)
+    
+    def _add_nesting_relationships_to_graph(self): 
+        variables = self.graph.get_variables()
 
-    def _add_level_to_graph(self, level: Level, id_var: AbstractVariable): 
+        for v in variables: 
+            relationships = v.relationships
 
-        for m in level._measures: 
-            # Add has relation/edge with identifier
-            self.graph.has(identifier=id_var, variable=m)
-            # Add edge between measure and dv 
-            self.graph.contribute(lhs=m, rhs=self.dv)
+            for r in relationships: 
+                if isinstance(r, Nest): 
+                    self.graph.add_relationship(relationship=r)
 
-    def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
+    # def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]): 
         
-        for i in ivs: 
-            if isinstance(i, AbstractVariable): 
-                # TODO: Should the default be 'associate' instead of 'contribute'??
-                self.graph.contribute(lhs=i, rhs=self.dv)
+    #     for i in ivs: 
+    #         if isinstance(i, AbstractVariable): 
+    #             # TODO: Should the default be 'associate' instead of 'contribute'??
+    #             self.graph.contribute(lhs=i, rhs=self.dv)
             
-            elif isinstance(i, Treatment): 
-                unit = i.unit
-                treatment = i.treatment
+    #         elif isinstance(i, Treatment): 
+    #             unit = i.unit
+    #             treatment = i.treatment
 
-                self.graph.treat(unit=unit, treatment=treatment, treatment_obj=i)
+    #             self.graph.treat(unit=unit, treatment=treatment, treatment_obj=i)
                 
-                # Add treatment edge
-                self.graph.contribute(lhs=treatment, rhs=self.dv)
+    #             # Add treatment edge
+    #             self.graph.contribute(lhs=treatment, rhs=self.dv)
 
     def _add_groupings(self, groupings: List[typing.Union[Nest, RepeatedMeasure]]): 
         for g in groupings: 
@@ -395,7 +378,6 @@ class Design(object):
     # TODO: Update if move to more atomic API 
     # @returns the number of levels involved in this study design
     def get_number_of_levels(self): 
-        if isinstance(self.levels, Level): 
-            return 1 
-        elif isinstance(self.levels, LevelSet): 
-            return len(self.levels._level_set)
+        identifiers = self.graph.get_identifiers()
+
+        return len(identifiers)

@@ -1,4 +1,4 @@
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure, Has, Associate, Cause
 
 import networkx as nx
 import pydot
@@ -192,6 +192,20 @@ class Graph(object):
                 if n_var == var: 
                     return self._graph.predecessors(n) # pass node, not variable
 
+    # @return a list of identifiers
+    def get_identifiers(self) -> List[AbstractVariable]: 
+        identifiers = list() 
+
+        nodes = self.get_nodes()
+
+        for (n, data) in nodes: 
+            is_id = data['is_identifier']
+            n_var = data['variable']
+            if is_id: 
+                identifiers.append(n_var)
+        
+        return identifiers
+
     # Update the edge by first removing then adding
     def update_edge(self, start: AbstractVariable, end: AbstractVariable, new_edge_type: str): 
         start_node = self._get_variable_node(variable=start)
@@ -207,6 +221,24 @@ class Graph(object):
     # Add a node that identifies levels in the Graph    
     def add_identifier(self, identifier: AbstractVariable): 
         self._add_variable(variable=identifier, is_identifier=True)
+    
+    def add_relationship(self, relationship: Union[Has, Nest, Associate, Cause]): 
+        if isinstance(relationship, Has): 
+            identifier = relationship.variable
+            measure = relationship.measure
+            self.has(identifier, measure)
+        elif isinstance(relationship, Nest): 
+            base = relationship.base
+            group = relationship.group 
+            self.nest(base, group, relationship)
+        elif isinstance(relationship, Associate): 
+            lhs = relationship.lhs
+            rhs = relationship.rhs 
+            self.associate(lhs, rhs)
+        elif isinstance(relationship, Cause): 
+            cause = relationship.cause
+            effect = relationship.effect  
+            self.cause(cause, effect)
 
     # Add an edge that indicates that identifier 'has' the variable measurement
     def has(self, identifier: AbstractVariable, variable: AbstractVariable): 
@@ -252,7 +284,7 @@ class Graph(object):
         # Is this edge new? 
         if not self.has_edge(start=base, end=group, edge_type='nest'): 
             self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
-    
+        
     # Add a 'repeat' edge to the graph
     def repeat(self, unit: AbstractVariable, response: AbstractVariable, repeat_obj: RepeatedMeasure): 
         # Is this edge new? 

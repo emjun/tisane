@@ -5,3 +5,4 @@ z3-solver
 scipy
 more-itertools
 pydot
+streamlit

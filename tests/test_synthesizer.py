@@ -11,6 +11,7 @@ from random import randrange
 
 # Globals
 iv = ts.Nominal('IV')
+pid = ts.Nominal('PID')
 dv = ts.Numeric('DV')
 fixed_effect = FixedEffect(iv.const, dv.const)
 v1 = ts.Nominal('V1')
@@ -24,26 +25,28 @@ gamma_family = GammaFamily(dv.const)
 
 class SynthesizerTest(unittest.TestCase): 
 
-    def test_synth_one_level_fixed(self): 
-        pass
-
-
-    # TODO: Start here!
     @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
     def test_generate_and_select_effects_sets_from_design_fixed_only(self, mock_increment0, mock_increment1): 
-        global dv, v1
-        
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+
         # Simulate end-user selecting between two options at a time repeatedly
         mock_increment0.side_effect = ['y']
         mock_increment1.side_effect = [FixedEffect(v1.const, dv.const)]
 
+        # Conceptual relationships
+        v1.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1])
+            ivs = [v1]
         )
 
         synth = Synthesizer()
+        self.assertTrue(len(v1.relationships), 1)
         sm = synth.generate_and_select_effects_sets_from_design(design=design)
         self.assertTrue(v1 in sm.fixed_ivs)
         self.assertEqual(sm.interactions, list())
@@ -54,7 +57,9 @@ class SynthesizerTest(unittest.TestCase):
     @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
     def test_generate_and_select_effects_sets_from_design_fixed_interaction(self, mock_increment0, mock_increment1): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
         
         # Simulate end-user selecting between two options at a time repeatedly
         mock_increment0.side_effect = ['y', 'y']
@@ -64,9 +69,16 @@ class SynthesizerTest(unittest.TestCase):
         interaction = Unit(interaction_set)
         mock_increment1.side_effect = [FixedEffect(v1.const, dv.const), FixedEffect(v2.const, dv.const), Interaction(interaction_set)]
 
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -80,7 +92,9 @@ class SynthesizerTest(unittest.TestCase):
     @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
     def test_generate_and_select_effects_sets_from_design_random(self, mock_increment0, mock_increment1): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
         
         # Simulate end-user selecting between two options at a time repeatedly
         mock_increment0.side_effect = ['y', 'y']
@@ -90,9 +104,16 @@ class SynthesizerTest(unittest.TestCase):
         interaction = Unit(interaction_set)
         mock_increment1.side_effect = [FixedEffect(v1.const, dv.const), FixedEffect(v2.const, dv.const), Interaction(interaction_set)]
 
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -104,14 +125,24 @@ class SynthesizerTest(unittest.TestCase):
         self.assertIsNone(sm.link_function)
     
     def test_generate_family_numeric_dv(self): 
-        global dv, gaussian_family, gamma_family
+        global gaussian_family, gamma_family
+
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
 
         inverse_gaussian_family = InverseGaussianFamily(dv.const)
         poisson_family = PoissonFamily(dv.const)
         
+        # Conceptual relationships
+        v1.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -124,6 +155,9 @@ class SynthesizerTest(unittest.TestCase):
 
     def test_generate_family_ordinal_binary_dv(self): 
         o_dv = ts.Ordinal('Ordinal DV', cardinality=2)
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+        pid = ts.Nominal('PID')
 
         o_gaussian_family = GaussianFamily(o_dv.const)
         o_gamma_family = GammaFamily(o_dv.const)
@@ -133,9 +167,16 @@ class SynthesizerTest(unittest.TestCase):
         negative_binomial_family = NegativeBinomialFamily(o_dv.const)
         multinomial_family = MultinomialFamily(o_dv.const)
         
+        # Conceptual relationships
+        v1.causes(o_dv)
+        v2.causes(o_dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = o_dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -152,6 +193,9 @@ class SynthesizerTest(unittest.TestCase):
     def test_generate_family_ordinal_multi_dv(self): 
         n = randrange(3, 1000)
         o_dv = ts.Ordinal('Ordinal DV', cardinality=n)
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+        pid = ts.Nominal('PID')
 
         o_gaussian_family = GaussianFamily(o_dv.const)
         o_gamma_family = GammaFamily(o_dv.const)
@@ -161,9 +205,16 @@ class SynthesizerTest(unittest.TestCase):
         negative_binomial_family = NegativeBinomialFamily(o_dv.const)
         multinomial_family = MultinomialFamily(o_dv.const)
         
+        # Conceptual relationships
+        v1.causes(o_dv)
+        v2.causes(o_dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = o_dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -179,6 +230,9 @@ class SynthesizerTest(unittest.TestCase):
 
     def test_generate_family_nominal_binary_dv(self): 
         n_dv = ts.Nominal('Nominal DV', cardinality=2)
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+        pid = ts.Nominal('PID')
 
         n_gaussian_family = GaussianFamily(n_dv.const)
         n_gamma_family = GammaFamily(n_dv.const)
@@ -188,9 +242,16 @@ class SynthesizerTest(unittest.TestCase):
         negative_binomial_family = NegativeBinomialFamily(n_dv.const)
         multinomial_family = MultinomialFamily(n_dv.const)
         
+        # Conceptual relationships
+        v1.causes(n_dv)
+        v2.causes(n_dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = n_dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -207,6 +268,9 @@ class SynthesizerTest(unittest.TestCase):
     def test_generate_family_nominal_multi_dv(self): 
         n = randrange(3, 1000)
         n_dv = ts.Nominal('Nominal DV', cardinality=n)
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+        pid = ts.Nominal('PID')
 
         n_gaussian_family = GaussianFamily(n_dv.const)
         n_gamma_family = GammaFamily(n_dv.const)
@@ -216,9 +280,16 @@ class SynthesizerTest(unittest.TestCase):
         negative_binomial_family = NegativeBinomialFamily(n_dv.const)
         multinomial_family = MultinomialFamily(n_dv.const)
         
+        # Conceptual relationships
+        v1.causes(n_dv)
+        v2.causes(n_dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = n_dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         synth = Synthesizer()
@@ -234,11 +305,20 @@ class SynthesizerTest(unittest.TestCase):
 
     @patch('tisane.smt.input_interface.InputInterface.ask_family', return_value=gaussian_family)
     def test_generate_and_select_family_gaussian(self, input): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
 
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
         
         sm = ts.StatisticalModel(
@@ -257,17 +337,27 @@ class SynthesizerTest(unittest.TestCase):
     
     @patch('tisane.smt.input_interface.InputInterface.ask_family', return_value=gamma_family)
     def test_generate_and_select_family_gamma(self, input): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
 
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
         
         sm = ts.StatisticalModel(
             dv=dv,
             fixed_ivs=[v1, v2]
         )
+
         synth = Synthesizer()
         sm = synth.generate_and_select_family(design=design, statistical_model=sm)
         self.assertEqual(sm.dv, dv)
@@ -281,14 +371,23 @@ class SynthesizerTest(unittest.TestCase):
     @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
     def test_generate_and_select_link_gaussian_identity(self, input, mock_increment): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
 
         # Simulate end-user selecting between two options at a time repeatedly
         mock_increment.side_effect = [IdentityTransform(dv.const), IdentityTransform(dv.const)]
 
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         # StatisticalModel with all but link 
@@ -312,14 +411,23 @@ class SynthesizerTest(unittest.TestCase):
     @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
     def test_generate_and_select_link_gaussian_log(self, input, mock_increment): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
         
         # Simulate end-user selecting between two options at a time repeatedly
         mock_increment.side_effect = [LogTransform(dv.const), LogTransform(dv.const)]
 
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         # StatisticalModel with all but link 
@@ -343,13 +451,22 @@ class SynthesizerTest(unittest.TestCase):
     @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     @patch('tisane.smt.input_interface.InputInterface.ask_inclusion', return_value='y')
     def test_generate_and_select_link_gaussian_squareroot(self, input, mock_increment): 
-        global dv, v1, v2
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
 
         mock_increment.side_effect = [IdentityTransform(dv.const), SquarerootTransform(dv.const)]
 
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         # StatisticalModel with all but link 
@@ -386,26 +503,49 @@ class SynthesizerTest(unittest.TestCase):
         expl = ts.Nominal('explanation type')
         variables = [acc, expl]
 
+        # Conceptual relationships
+        expl.associates_with(acc)
+        # Data measurement relationships
+        expl.treats(pid)
+
+        design = ts.Design(
+            dv = acc, 
+            ivs = [expl]
+        )
+
         design = ts.Design(
             dv = acc, 
             ivs = ts.Level(identifier='id', measures=[expl])
         )
 
         ts.synthesize_statistical_model(design=design)
+        import pdb; pdb.set_trace()
     
     @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_one_level_fixed_interaction(self): 
         """
         Example from Kreft & de Leeuw, 1989
         """
+        student = ts.Nominal('Student')
+        school = ts.Nominal('School')
         math = ts.Numeric('MathAchievement')
         hw = ts.Numeric('HomeWork')
         race = ts.Nominal('Race')
         ses = ts.Numeric('SES')
 
+        # Conceptual relationships
+        hw.causes(math)
+        race.associates_with(math)
+        ses.associates_with(math) # TODO: Transitive cause should be something Tisane surface/suggests to user?
+
+        # Data measurement relationships
+        student.has(hw)
+        student.has(race)
+        student.has(ses)
+
         design = ts.Design(
             dv = math, 
-            ivs = ts.Level(identifier='student', measures=[hw, race, ses])
+            ivs = [hw, race, ses]
         )
 
         ts.synthesize_statistical_model(design=design)
@@ -413,19 +553,27 @@ class SynthesizerTest(unittest.TestCase):
     @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_two_levels_fixed_interaction(self): 
         # Variables
+        student = ts.Nominal('Student')
+        school = ts.Nominal('School')
         math = ts.Numeric('MathAchievement')
         hw = ts.Numeric('HomeWork')
         race = ts.Nominal('Race')
         mean_ses = ts.Numeric('MeanSES')
         variables = [math, hw, race, mean_ses]
 
-        # No need to create a separate variable for 'student' and 'school'
-        student_level = ts.Level(identifier='student', measures=[hw, race])
-        school_level = ts.Level(identifier='school', measures=[mean_ses])
+        # Conceptual relationships
+        hw.causes(math)
+        race.associates_with(math)
+        mean_ses.associates_with(math)
 
+        # Data measurement relationships
+        student.has(hw)
+        student.has(race)
+        school.has(mean_ses)
+        
         design = ts.Design(
-            dv=math, 
-            ivs=student_level.nest_under(school_level)
+            dv = math, 
+            ivs = [hw, race, mean_ses]
         )
 
         ts.synthesize_statistical_model(design=design)
@@ -433,19 +581,28 @@ class SynthesizerTest(unittest.TestCase):
     @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     def test_two_levels_random(self): 
         # Variables
+        student = ts.Nominal('Student')
+        school = ts.Nominal('School')
         math = ts.Numeric('MathAchievement')
         hw = ts.Numeric('HomeWork')
         race = ts.Nominal('Race')
         mean_ses = ts.Numeric('MeanSES')
         variables = [math, hw, race, mean_ses]
 
-        # No need to create a separate variable for 'student' and 'school'
-        student_level = ts.Level(identifier='student', measures=[hw, race])
-        school_level = ts.Level(identifier='school', measures=[mean_ses])
+        # Conceptual relationships
+        hw.causes(math)
+        race.associates_with(math)
+        mean_ses.associates_with(math)
 
+        # Data measurement relationships
+        student.has(hw)
+        student.has(race)
+        school.has(mean_ses)
+        
         design = ts.Design(
-            dv=math, 
-            ivs=student_level.nest_under(school_level)
+            dv = math, 
+            ivs = [hw, race, mean_ses]
         )
 
         ts.synthesize_statistical_model(design=design)
+        

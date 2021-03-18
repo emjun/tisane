@@ -1,6 +1,7 @@
 from tisane.variable import AbstractVariable
 
 from typing import List, Any
+# import streamlit as st
 
 class InputInterface(object): 
     
@@ -14,6 +15,8 @@ class InputInterface(object):
 
         while True: 
             ans = input(prompt + choices)
+            # st.text(prompt)
+            # ans = st.radio('Inclusion', ['y', 'n'])
 
             if ans.upper() == 'Y': 
                 return ans.upper()
@@ -46,6 +49,7 @@ class InputInterface(object):
         choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
         while True: 
             idx = int(input(prompt + choices))
+            # st.write()
 
             if idx in range(len(options)): 
                 # only keep the constraint that is selected. 

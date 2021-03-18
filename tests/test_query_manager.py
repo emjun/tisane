@@ -15,6 +15,7 @@ Object = DeclareSort('Object')
 
 # Globals
 iv = ts.Nominal('IV')
+pid = ts.Nominal('PID')
 dv = ts.Numeric('DV')
 fixed_effect = FixedEffect(iv.const, dv.const)
 v1 = ts.Nominal('V1')
@@ -158,10 +159,16 @@ class QueryManagerTest(unittest.TestCase):
     @patch('tisane.smt.input_interface.InputInterface.resolve_unsat', return_value=fixed_effect)
     def test_postprocess_to_statistical_model_fixed(self, input): 
         global iv, dv, fixed_effect
+        
+        # Conceptual relationships
+        iv.causes(dv)
+
+        # Data measurement relationships
+        pid.has(iv)
 
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[iv])
+            ivs = [iv]
         )
 
         fixed_facts = list()
@@ -191,9 +198,17 @@ class QueryManagerTest(unittest.TestCase):
     def test_postprocess_to_statistical_model_interaction(self, input): 
         global dv, v1, v2, interaction, interaction_effect
 
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.associates_with(dv)
+
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
         design = ts.Design(
             dv = dv, 
-            ivs = ts.Level(identifier='id', measures=[v1, v2])
+            ivs = [v1, v2]
         )
 
         facts = list()

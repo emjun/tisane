@@ -31,9 +31,11 @@ class Synthesizer(object):
         dv_pred = design.graph.get_predecessors(design.dv)
         for p in dv_pred: 
             p_var = design.graph.get_variable(name=p)
-            if design.graph.has_edge(start=p_var, end=design.dv, edge_type='contribute'): 
+            if design.graph.has_edge(start=p_var, end=design.dv, edge_type='cause'): 
                 fixed_candidates.append(p_var)
-
+            elif design.graph.has_edge(start=p_var, end=design.dv, edge_type='associate'): 
+                fixed_candidates.append(p_var)
+        
         # Control order
         fixed_candidate_names = [v.name for v in fixed_candidates]
         fixed_candidate_names.sort()
@@ -106,7 +108,6 @@ class Synthesizer(object):
 
         ##### Random effects
         # Random slopes and intercepts are possible if there is more than one level in design 
-        # TODO: Update when move away from levels design
         random_pairs = list()
         if design.get_number_of_levels() >= 2:
             random_facts = list()
