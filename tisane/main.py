@@ -10,16 +10,19 @@ import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
 from tisane.smt.synthesizer import Synthesizer
 
-
-
 from enum import Enum 
 from typing import List, Union
 import copy 
 from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
-import streamlit as st
 
+# import sys
+# from streamlit import cli as stcli
+# if __name__ == '__main__':
+# sys.argv = ["streamlit", "run", "/Users/emjun/Git/tisane/tisane/app_st.py"]
+# sys.exit(stcli.main())
+# subprocess.run(["streamlit run app_st"])
 
 ##### Functions that are not associated with a class/object
 def query(input_obj: Union[StatisticalModel, Design, Graph], output: str): 
@@ -70,8 +73,9 @@ def infer_from(input_: Union[Design], output_: str):
 
 # @returns statistical model that reflects the study design 
 def synthesize_statistical_model(design: Design): 
-    st.write('Testing')
-    # Invoke synthesizer
+    # st.write('Testing')
+    # from tisane.app import app
+    # app.run_server(debug=True)
     synth = Synthesizer()
     return synth.synthesize_statistical_model(design=design)
     
@@ -140,8 +144,3 @@ def verify_design_and_statistical_model(design: Design, sm: StatisticalModel):
     # Catches groupigns (mixed effects) that are in Statistical Model but missing in Design? 
 
     pass 
-
-
-
-
-    

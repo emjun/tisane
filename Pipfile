@@ -16,6 +16,7 @@ more-itertools = "*"
 pydot = "*"
 pytest-cov = "*"
 streamlit = "*"
+dash = "*"
 
 [requires]
 python_version = "3.7"

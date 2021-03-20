@@ -236,7 +236,6 @@ def postprocess_to_statistical_model(model: z3.ModelRef, facts: List, graph: Gra
             iv_var = graph.get_variable(start_name)
             dv_var = graph.get_variable(end_name)
             
-            assert(dv_var, dv)
             fixed_ivs.append(iv_var)
 
         # elif function == 'Interaction': 

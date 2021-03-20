@@ -1,8 +1,18 @@
 from tisane.variable import AbstractVariable
+from tisane.smt.app import add_inclusion_prompt
 
 from typing import List, Any
-# import streamlit as st
+import subprocess
+from subprocess import DEVNULL
+import os
+import sys
 
+
+dirname = os.path.dirname(__file__)
+filename = os.path.join(dirname, 'app.py')
+p = subprocess.Popen(['python', './tisane/smt/app.py'], cwd=os.getcwd(), stdout=DEVNULL, stderr=DEVNULL)
+
+        
 class InputInterface(object): 
     
     def get_input(self): 
@@ -10,14 +20,12 @@ class InputInterface(object):
     
     @classmethod
     def ask_inclusion_prompt(cls, subject: str) -> bool: 
+
         prompt = f'Would you like to include {subject}?'
         choices = f' Y or N: '
 
         while True: 
-            ans = input(prompt + choices)
-            # st.text(prompt)
-            # ans = st.radio('Inclusion', ['y', 'n'])
-
+            ans = add_inclusion_prompt(prompt=prompt, choices=choices)
             if ans.upper() == 'Y': 
                 return ans.upper()
             elif ans.upper() == 'N': 
@@ -27,10 +35,11 @@ class InputInterface(object):
     
     @classmethod
     def ask_inclusion(cls, subject: str) -> bool: 
-   
+    
         ans = cls.ask_inclusion_prompt(subject)
 
-        if ans.upper() == 'Y': 
+        if ans.upper() == 'Y':
+            # TODO: write to a file here 
             return True
         elif ans.upper() == 'N': 
             return False
