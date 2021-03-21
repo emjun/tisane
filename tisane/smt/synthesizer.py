@@ -1,13 +1,15 @@
 from tisane.variable import Nominal, Ordinal, Numeric
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
-from tisane.smt.input_interface import InputInterface
+# from tisane.smt.input_interface import InputInterface
 from tisane.smt.rules import *
-from tisane.smt.query_manager import QM
+# from tisane.smt.query_manager import QM
+from tisane.smt.rules import *
+from tisane.smt.knowledge_base import KB
 
 from z3 import * 
 from itertools import chain, combinations
-from typing import List
+from typing import List, Dict
 
 # Declare data type
 Object = DeclareSort('Object')
@@ -18,6 +20,153 @@ def powerset(iterable):
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 class Synthesizer(object): 
+
+    # @param outcome describes what the query result should be, can be a list of items, 
+    # including: statistical model, variable relationship graph, data schema, data collection procedure
+    # @return logical rules to consider during solving process
+    def collect_rules(self, output: str, **kwargs) -> Dict: 
+        # Get and manage the constraints that need to be considered from the rest of Knowledge Base     
+        rules_to_consider = dict()
+
+        if output.upper() == 'EFFECTS':
+            assert('dv_const' in kwargs)
+            KB.ground_effects_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['effects_rules'] = KB.effects_rules
+        elif output.upper() == 'FAMILY': 
+            assert('dv_const' in kwargs)
+            KB.ground_family_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['family_rules'] = KB.family_rules
+        elif output.upper() == 'TRANSFORMATION': 
+            assert('dv_const' in kwargs)
+            KB.ground_data_transformation_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['family_to_transformation_rules'] = KB.family_to_transformation_rules
+            rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
+        else: 
+            # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
+            if output.upper() == 'STATISTICAL MODEL': 
+                    rules_to_consider['data_type_rules'] = KB.data_type_rules
+                    rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
+                    rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
+            elif output.upper() == 'CONCEPTUAL MODEL': 
+                rules_to_consider['graph_rules'] = KB.graph_rules
+            # elif output.upper() == 'STUDY DESIGN': 
+            #     # import pdb; pdb.set_trace()
+            #     # TODO: Should allow separate queries for data schema and data collection?? probably not?
+            #     rules_to_consider['data_type_rules'] = KB.data_type_rules
+            #     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
+            #     rules_to_consider['variance_functions_rules'] = KB.variance_functions_rules
+
+            else: 
+                raise ValueError(f"Query output is not supported: {type(output_obj)}.")
+            
+        return rules_to_consider
+
+    def check_constraints(self, solver: Solver, assertions: list) -> List: 
+
+        state = solver.check(assertions)
+        if (state == unsat): 
+            unsat_core = solver.unsat_core() 
+            
+            if len(unsat_core) == 0: 
+                import pdb; pdb.set_trace()
+            assert(len(unsat_core) > 0)
+
+
+
+    def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
+        # import pdb; pdb.set_trace()
+        state = solver.check(assertions)
+        if (state == unsat): 
+            unsat_core = solver.unsat_core() 
+            
+            if len(unsat_core) == 0: 
+                import pdb; pdb.set_trace()
+            assert(len(unsat_core) > 0)
+
+            # Ask user for input
+            keep_constraint = InputInterface.resolve_unsat(facts=solver.assertions(), unsat_core=unsat_core)
+            # keep_constraint = self.elicit_user_input(solver.assertions(), unsat_core)
+            
+            # Modifies @param assertions
+            updated_assertions = self.update_clauses(assertions, unsat_core, keep_constraint)
+            assertions = updated_assertions
+
+            new_state = solver.check(assertions)
+
+            if new_state == sat: 
+                return (solver, assertions)
+            elif new_state == unsat: 
+                return self.check_update_constraints(solver=solver, assertions=assertions)
+            else: 
+                raise ValueError (f"After eliciting end-user input, solver state is neither SAT nor UNSAT: {new_state}")    
+        elif (state == sat): 
+            return (solver, assertions)
+        else:
+            raise ValueError(f"Initial solver state into check_update_constraints is {state}")
+            
+
+    # @param setting is 'interactive' 'default' (which is interactive), etc.?
+    def solve(self, facts: List, rules: dict, setting=None): 
+        s = Solver() # Z3 solver
+
+        for batch_name, rule_set in rules.items(): 
+            print(f'Adding {batch_name} rules.')
+            # Add rules
+            s.add(rule_set)
+            (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
+            # import pdb; pdb.set_trace()
+            facts = updated_facts        
+        
+        mdl =  s.model()
+        return (mdl, updated_facts)
+
+    def _generate_fixed_candidates(self, design: Design):
+        fixed_candidates = list() 
+
+        # Find candidates based on predecessors to the @param design.dv
+        # Get the predecessors to the DV 
+        dv_pred = design.graph.get_predecessors(design.dv)
+        for p in dv_pred: 
+            p_var = design.graph.get_variable(name=p)
+            if design.graph.has_edge(start=p_var, end=design.dv, edge_type='cause'): 
+                fixed_candidates.append(p_var)
+            elif design.graph.has_edge(start=p_var, end=design.dv, edge_type='associate'): 
+                fixed_candidates.append(p_var)
+        
+        # Control order
+        fixed_candidate_names = [v.name for v in fixed_candidates]
+        fixed_candidate_names.sort()
+        fixed_candidates_ordered = list()
+        for n in fixed_candidate_names:
+            for c in fixed_candidates:
+                if n == c.name: 
+                    fixed_candidates_ordered.append(c)
+                    break
+        fixed_candidates = fixed_candidates_ordered
+
+        return fixed_candidates
+    
+    def generate_main_effects(self, design: Design) -> Dict:
+        fixed_candidates = self._generate_fixed_candidates(design)
+
+        fixed_facts = dict()
+        dv = design.dv
+        
+        # Get facts
+        for f in fixed_candidates:
+            fixed_facts[f.name] = [FixedEffect(f.const,dv.const), NoFixedEffect(f.const,dv.const)]
+        
+        return fixed_facts
+        
+        # # Get rules 
+        # rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+
+        # # Solve constraints + rules
+        # (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
+        
+        # # Update result StatisticalModel based on user selection 
+        # sm = QM.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+
 
     # Synthesizer generates possible effects, End-user interactively selects single effect set they want
     def generate_and_select_effects_sets_from_design(self, design: Design): 
@@ -48,7 +197,7 @@ class Synthesizer(object):
         fixed_candidates = fixed_candidates_ordered
         
         # Ask for user-input 
-        include_fixed = InputInterface.ask_inclusion(subject='fixed effects')
+        include_fixed = self.input_interface.ask_inclusion(subject='fixed effects')
         if include_fixed: 
             fixed_facts = list()
             dv = design.dv
@@ -59,19 +208,19 @@ class Synthesizer(object):
                 fixed_facts.append(NoFixedEffect(f.const,dv.const))
             
             # Get rules 
-            rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+            rules_dict = self.collect_rules(output='effects', dv_const=dv.const)
 
             # Solve constraints + rules
-            (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
+            (res_model_fixed, res_facts_fixed) = self.solve(facts=fixed_facts, rules=rules_dict)
             
             # Update result StatisticalModel based on user selection 
-            sm = QM.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+            sm = self.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
 
         ##### Interaction effects
         # Do we have enough fixed effects to create interactions?
         if len(fixed_candidates) >= 2:
             # Ask for user-input
-            include_interactions = InputInterface.ask_inclusion(subject='interaction effects')
+            include_interactions = self.input_interface.ask_inclusion(subject='interaction effects')
             if include_interactions: 
                 interaction_facts = list() 
                 dv = design.dv
@@ -101,10 +250,10 @@ class Synthesizer(object):
                 # Use rules from above
 
                 # Solve constraints + rules
-                (res_model_interaction, res_facts_interaction) = QM.solve(facts=interaction_facts, rules=rules_dict)
+                (res_model_interaction, res_facts_interaction) = self.solve(facts=interaction_facts, rules=rules_dict)
         
                 # Update result StatisticalModel based on user selection 
-                sm = QM.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
+                sm = self.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
 
         ##### Random effects
         # Random slopes and intercepts are possible if there is more than one level in design 
@@ -141,7 +290,7 @@ class Synthesizer(object):
             # Use rules from above
 
             # Solve constraints + rules
-            (res_model_random, res_facts_random) = QM.solve(facts=random_facts, rules=rules_dict)
+            (res_model_random, res_facts_random) = self.solve(facts=random_facts, rules=rules_dict)
             
             # Ask if random slopes and intercepts are correlated
             # Get facts
@@ -154,10 +303,10 @@ class Synthesizer(object):
             # Use rules from above
 
             # Solve constraints + rules
-            (res_model_random, res_facts_random) = QM.solve(facts=random_correlation_facts, rules=rules_dict)
+            (res_model_random, res_facts_random) = self.solve(facts=random_correlation_facts, rules=rules_dict)
 
             # Update result StatisticalModel based on user selections 
-            sm = QM.postprocess_to_statistical_model(model=res_model_random, facts=res_facts_random, graph=design.graph, statistical_model=sm)
+            sm = self.postprocess_to_statistical_model(model=res_model_random, facts=res_facts_random, graph=design.graph, statistical_model=sm)
             
         # Return a Statistical Model obj with effects set
         return sm
@@ -199,16 +348,16 @@ class Synthesizer(object):
         dv = design.dv
 
         # End-user: Ask about which family 
-        selected_family_fact = [InputInterface.ask_family(options=family_facts, dv=design.dv)]
+        selected_family_fact = [self.input_interface.ask_family(options=family_facts, dv=design.dv)]
 
         # Get rules
-        rules_dict = QM.collect_rules(output='FAMILY', dv_const=dv.const)
+        rules_dict = self.collect_rules(output='FAMILY', dv_const=dv.const)
 
         # Solve constraints + rules
-        (res_model_family, res_facts_family) = QM.solve(facts=selected_family_fact, rules=rules_dict)
+        (res_model_family, res_facts_family) = self.solve(facts=selected_family_fact, rules=rules_dict)
         
         # Update result StatisticalModel based on user selection 
-        statistical_model = QM.postprocess_to_statistical_model(model=res_model_family, facts=res_facts_family, graph=design.graph, statistical_model=statistical_model)
+        statistical_model = self.postprocess_to_statistical_model(model=res_model_family, facts=res_facts_family, graph=design.graph, statistical_model=statistical_model)
 
         # Return updated StatisticalModel 
         return statistical_model
@@ -241,32 +390,32 @@ class Synthesizer(object):
             family_fact.append(MultinomialFamily(design.dv.const))
 
         # Ask for user-input 
-        transform_data = InputInterface.ask_inclusion(subject='data transformations')
+        transform_data = self.input_interface.ask_inclusion(subject='data transformations')
         
         if transform_data:
             dv = design.dv
             
             ##### Derive possible valid transforms from knowledge base
             # Get rules
-            rules_dict = QM.collect_rules(output='TRANSFORMATION', dv_const=dv.const)
+            rules_dict = self.collect_rules(output='TRANSFORMATION', dv_const=dv.const)
             # Get rules for possible link functions
             family_to_transformation_rules = rules_dict['family_to_transformation_rules']
 
             # Solve fact + rules to get possible link functions
-            (res_model_transformations, res_facts_family) = QM.solve(facts=family_fact, rules={'family_to_transformation_rules': family_to_transformation_rules})
+            (res_model_transformations, res_facts_family) = self.solve(facts=family_fact, rules={'family_to_transformation_rules': family_to_transformation_rules})
 
             ##### Pick link/data transformation 
             # Get link/data transformation rules
             data_transformation_rules = rules_dict['data_transformation_rules']
             
             # Get link facts
-            transformation_candidate_facts = QM.model_to_transformation_facts(model=res_model_transformations, design=design)
+            transformation_candidate_facts = self.model_to_transformation_facts(model=res_model_transformations, design=design)
     
             # Solve facts + rules
-            (res_model_link, res_facts_link) = QM.solve(facts=transformation_candidate_facts, rules={'data_transformation_rules': data_transformation_rules})
+            (res_model_link, res_facts_link) = self.solve(facts=transformation_candidate_facts, rules={'data_transformation_rules': data_transformation_rules})
         
             # Update result StatisticalModel based on user selection 
-            statistical_model = QM.postprocess_to_statistical_model(model=res_model_link, facts=res_facts_link, graph=design.graph, statistical_model=statistical_model)
+            statistical_model = self.postprocess_to_statistical_model(model=res_model_link, facts=res_facts_link, graph=design.graph, statistical_model=statistical_model)
 
             # Return statistical model
             return statistical_model
@@ -310,7 +459,7 @@ class Synthesizer(object):
         default_variance_func = None # TODO
 
         # Ask user if they want to change the default
-        InputInterface.ask_change_default(subject='variance function', default=default_variance_func)
+        self.input_interface.ask_change_default(subject='variance function', default=default_variance_func)
         
         variance_facts = list()
 
