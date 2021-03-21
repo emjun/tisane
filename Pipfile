@@ -17,6 +17,8 @@ pydot = "*"
 pytest-cov = "*"
 streamlit = "*"
 dash = "*"
+dash-daq = "*"
+dash-bootstrap-components = "*"
 
 [requires]
 python_version = "3.7"

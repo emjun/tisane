@@ -20,6 +20,12 @@ def powerset(iterable):
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 class Synthesizer(object): 
+    solver : z3.Solver
+    facts : List
+
+    def __init__(self): 
+        self.solver = Solver()
+        self.facts = list()
 
     # @param outcome describes what the query result should be, can be a list of items, 
     # including: statistical model, variable relationship graph, data schema, data collection procedure
@@ -61,15 +67,116 @@ class Synthesizer(object):
             
         return rules_to_consider
 
-    def check_constraints(self, solver: Solver, assertions: list) -> List: 
+    # Returns True if SAT, False otherwise
+    def check_constraints(self, facts: list, rule_set: str) -> bool: 
+        # Get rules 
+        rules_dict = self.collect_rules(output=rule_set, dv_const=dv.const)
 
-        state = solver.check(assertions)
-        if (state == unsat): 
-            unsat_core = solver.unsat_core() 
+        for batch_name, rule_set in rules.items(): 
+            print(f'Adding {batch_name} rules.')
+            # Add rules
+            self.solver.add(rule_set)
+        
+        state = self.solver.check(facts)
+
+        return state == sat
+
+        # if (state == unsat): 
+        #     # unsat_core = solver.unsat_core() 
             
-            if len(unsat_core) == 0: 
-                import pdb; pdb.set_trace()
-            assert(len(unsat_core) > 0)
+        #     # if len(unsat_core) == 0: 
+        #     #     import pdb; pdb.set_trace()
+        #     assert(len(unsat_core) > 0)
+        #     return (state, unsat_core)
+        # elif (state == sat): 
+        #     return state
+
+    def update_with_facts(self, facts: List, rule_set: str): 
+        # Get rules 
+        rules_dict = self.collect_rules(output=rule_set, dv_const=dv.const)
+
+        for batch_name, rule_set in rules.items(): 
+            print(f'Adding {batch_name} rules.')
+            # Add rules
+            if rule_set not in self.solver.assertions(): 
+                self.solver.add(rule_set)
+        
+        state = self.solver.check(facts)
+        assert(state == sat)
+
+        # Store facts
+        self.facts.append(facts)
+
+        # # Solve constraints + rules
+        # (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
+        
+        # # Update result StatisticalModel based on user selection 
+        # sm = QM.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+
+
+    # @param pushed_constraints are constraints that were added as constraints all at once but then caused a conflict
+    # @param unsat_core is the set of cosntraints that caused a conflict
+    # @param keep_clause is the clause in unsat_core to keep and that resolves the conflict
+    def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause): 
+        # import pdb; pdb.set_trace()
+        # Verify that keep_clause is indeed a subset of unsat_core
+        if keep_clause not in unsat_core: 
+            raise ValueError (f'Keep clause ({keep_clause}) not in unsat_core({unsat_core})')
+
+        assert(keep_clause in unsat_core)
+
+        updated_constraints = list()
+        # Add the keep clause
+        updated_constraints.append(keep_clause)
+
+        # If this keep clause is about Not Transforming data
+        # TODO: Probably revise this
+        if 'NoTransform' in str(keep_clause):
+            fact_dict = parse_fact(keep_clause)
+            assert('variable_name' in fact_dict)
+            var_name = fact_dict['variable_name']
+
+            for pc in pushed_constraints: 
+                # If pc is not keep_clause (already added to updated_constraints)
+                if str(pc) != str(keep_clause): 
+                    # Is the pushed consctr, aint about the same variable as the keep clause (NoTransform)?
+                    if var_name in str(pc): 
+                        # Keep the pushed constraint as long as it is not about
+                        # transforming the variable
+                        if 'Transform' not in str(pc):
+                            updated_constraints.append(pc)
+                    else: 
+                        updated_constraints.append(pc)
+        # elif 'NumericDataType' in str(keep_clause): 
+        #     fact_dict = parse_fact(keep_clause)
+        #     assert('variable_name' in fact_dict)
+        #     var_name = fact_dict['variable_name']
+
+        #     for pc in pushed_constraints: 
+        #         # If pc is not keep_clause (already added to updated_constraints)
+        #         if str(pc) != str(keep_clause): 
+        #             # Is the pushed consctraint about the same variable as the keep clause (NoTransform)?
+        #             if var_name in str(pc): 
+        #                 # Keep the pushed constraint as long as it is not about
+        #                 # categorical data types
+        #                 if 'CategoricalDataType' not in str(pc) and 'NominalDataType' not in str(pc) and 'OrdinalDataType' not in str(pc):
+        #                     updated_constraints.append(pc)
+        #             else: 
+        #                 updated_constraints.append(pc)
+        # If this keep clause is about anything else other than Not Transforming data
+        else: 
+            for pc in pushed_constraints: 
+                # If pc is not keep_clause (already added to updated_constraints)
+                if str(pc) != str(keep_clause):
+                    # Should we remove this constraint because it caused UNSAT?
+                    if pc in unsat_core:
+                        pass
+                    else: 
+                        updated_constraints.append(pc)
+
+        # TODO: This may not generalize to n-way interactions
+        # TODO: We want the end-user to provide hints towards interesting interactions
+        return updated_constraints
 
 
     def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
@@ -156,15 +263,85 @@ class Synthesizer(object):
             fixed_facts[f.name] = [FixedEffect(f.const,dv.const), NoFixedEffect(f.const,dv.const)]
         
         return fixed_facts
+    
+    def generate_interaction_effects(self, design: Design) -> Dict: 
+        fixed_candidates = self._generate_fixed_candidates(design)
         
-        # # Get rules 
-        # rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+        interaction_facts = dict() 
+        dv = design.dv
+
+        # Generate possible interaction candidates from fixed_candidates
+        interaction_candidates = [c for c in powerset(fixed_candidates) if len(c)>=2]
+        
+        # Get facts
+        interaction_seq = None 
+        for ixn in interaction_candidates: 
+            # Build interaction sequence
+            # interaction = EmptySet(Object)
+            # for v in ixn:   
+            #     interaction = SetAdd(interaction, v.const)
+
+            # Two-way interaction
+            if len(ixn) == 2: 
+                if 'two-way' not in interaction_facts.keys(): 
+                   interaction_facts['two-way'] = list()
+                
+                interaction_dict = dict()
+                interaction_name = list()
+                interaction = EmptySet(Object)
+                for v in ixn: 
+                    interaction_name.append(v.name)
+                    interaction = SetAdd(interaction, v.const)
+                interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
+                
+                interaction_facts['two-way'] = interaction_dict
+            
+            # Three-way interaction
+            # elif len(ixn) == 3: 
+            #     if 'three-way' not in interaction_facts.keys(): 
+            #        interaction_facts['three-way'] = list()
+                
+            #     interaction_dict = dict()
+            #     interaction_name = list()
+            #     interaction = EmptySet(Object)
+            #     for v in ixn: 
+            #         interaction_name.append(v.name)
+            #         interaction = SetAdd(interaction, v.const)
+            #     interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
+                
+            #     interaction_facts['three-way'] = interaction_dict
+            else: 
+                if 'n-way' not in interaction_facts.keys(): 
+                   interaction_facts['n-way'] = list()
+                
+                interaction_dict = dict()
+                interaction_name = list()
+                interaction = EmptySet(Object)
+                for v in ixn: 
+                    interaction_name.append(v.name)
+                    interaction = SetAdd(interaction, v.const)
+                interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
+                
+                interaction_facts['n-way'] = interaction_dict
+
+            # interaction_facts.append(Interaction(interaction))
+            # interaction_facts.append(NoInteraction(interaction))
+            
+            # interaction_seq = None 
+        
+        # if 'three-way' not in interaction_facts.keys(): 
+        #     interaction_facts['three-way'] = None
+        if 'n-way' not in interaction_facts.keys(): 
+            interaction_facts['n-way'] = None
+        return interaction_facts
+
+        # # Use rules from above
 
         # # Solve constraints + rules
-        # (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
-        
+        # (res_model_interaction, res_facts_interaction) = self.solve(facts=interaction_facts, rules=rules_dict)
+
         # # Update result StatisticalModel based on user selection 
-        # sm = QM.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+        # sm = self.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
 
 
     # Synthesizer generates possible effects, End-user interactively selects single effect set they want

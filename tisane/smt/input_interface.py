@@ -11,13 +11,15 @@ import os
 import sys
 
 import dash
+import dash_daq as daq
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
 
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 port = '8050' # default dash port
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
@@ -30,128 +32,95 @@ class InputInterface(object):
 
     def __init__(self, design: Design, synthesizer: Synthesizer):
         self.design = design
-        # self.statistical_model = statistical_model
         self.synthesizer = synthesizer
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+        main_heading = html.H1(children='Main Effects')
+        main_effects = self.populate_main_effects()
+        main_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "Save and lock main effects", "value": 'save'}
+                    ],
+                    value=[],
+                    id='main_effects_switch',
+                    switch=True,
+                ),
+            ],
+            id='main_effects_group'
+        )
+
+        interaction_heading = html.H1(children='Interaction Effects')
+        interaction_effects = self.populate_interaction_effects()
+        interaction_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "Save and lock interaction effects", "value": 'save'}
+                    ],
+                    value=[],
+                    id='interaction_effects_switch',
+                    switch=True,
+                ),
+            ],
+            id='interaction_effects_group'
+        )
+        
+        # TODO: Layout Main | Interaction in a visually appealing way
         
         # Create Dash App
-        app.layout = html.Div(
-            id='main_effects', 
-            children=[
-            # All elements from the top of the page
-            html.Div([
-                html.H1(children='Main Effects'),
-
-                html.Div( 
-                id='include_main_effects',
-                children=[            
-                    html.H3(children='Do you want to include main effects?'),
-
-                    dcc.RadioItems(
-                        id='include_main_effects_radio',
-                        options=[
-                            {'label': 'Yes', 'value': 'yes'},
-                            {'label': 'No', 'value': 'no'}
-                        ],
-                        value=None,
-                        labelStyle={'display': 'inline-block'}
-                    )  
-                ],
-                daq.ToggleSwitch(
-                    id='main_done',
-                    value=True,
-                    label='Editing main effects',
-                    labelPosition='bottom'
-                )
-                ),
-
-                html.Div(
-                    id='main_expand',
-                    children=[
-                        html.H1(children='add more here')
-                    ]
-                )
-            ]),
-            # New Div for all elements in the new 'row' of the page
-            html.Div([
-                html.H1(children='Interaction Effects'),
-
-                # html.Div(children='''
-                #     Dash: A web application framework for Python.
-                # '''),
-
-                # dcc.Graph(
-                #     id='graph2',
-                #     figure=fig
-                # ),  
-            ]),
-            # New Div for all elements in the new 'row' of the page
-            html.Div([
-                html.H1(children='Family Distribution'),
-
-                # html.Div(children='''
-                #     Dash: A web application framework for Python.
-                # '''),
-
-                # dcc.Graph(
-                #     id='graph2',
-                #     figure=fig
-                # ),  
-            ]),
-            # New Div for all elements in the new 'row' of the page
-            html.Div([
-                html.H1(children='Link functions'),
-
-                # html.Div(children='''
-                #     Dash: A web application framework for Python.
-                # '''),
-
-                # dcc.Graph(
-                #     id='graph2',
-                # ),  
-            ]),
+        app.layout = dbc.Container([
+            # html.Div([main_heading, main_switch]),
+            main_heading, 
+            main_switch,
+            main_effects,
+            # html.Div([interaction_heading, interaction_switch]),
+            interaction_heading,
+            interaction_switch,
+            interaction_effects,
         ])
         
-        @app.callback(  Output('main_expand', 'children'),
-                [Input('include_main_effects_radio', 'value')],
-                [State('main_expand','children')])
-        def expand_main_effects(radio_val, old_output):
-            if radio_val == 'yes':
-                output = list()
-                # Get possible main effects from synthesizer
-                possible_main_effects = self.synthesizer.generate_main_effects(design=design)
+        @app.callback(
+            Output('main_effects_options', 'labelStyle'),
+            [Input('main_effects_switch', 'value'),
+            Input('main_effects_options', 'options')]
 
-                # Present them 
-                html.Div(str("Main effects to include: "))
-                for (variable, facts) in possible_main_effects.items(): 
-                    output.append(html.Div([
-                        str(variable), 
-                        dcc.RadioItems(
-                            id=f'{variable}_inclusion',
-                            options=[
-                                {'label': 'Include', 'value': f'{facts[0]}'},
-                                {'label': 'Do not include', 'value': f'{facts[1]}'}
-                            ],
-                            value=f'{facts[0]}', # TODO: Replace with Tisane recommendations
-                            labelStyle={'display': 'inline-block'}
-                        )]))  
-                return output
-            if radio_val == 'no':
-                pass
+        )
+        def save_main_effects(main_effect_options, switch_value):
+            if switch_value == 'save': 
+                facts = list()
+                for o in main_effect_options: 
+                    facts.append(o['value'])
+                
+                is_sat = self.synthesizer.check_constraints(facts, rule_set='effects')
+                if is_sat: 
+                    self.synthesizer.update_with_facts(facts, rule_set='effects')
+                    # TODO: Lock the main effects options
+                    return {'disabled': True}
+                else: 
+                    # TODO: Start a modal?
+                    raise ValueError(f"Error in saving main effects!")
+            else: 
+                return {'disabled': False}
         
-        # When finished editing the main effects, validate the selections with synthesizer
-        @app.callback(Output('main_done', 'label'),
-                    Input('main_done', 'value'))
-        def save_main_effects(toggle): 
-            return 'Saved'
-            
-        def check_and_update_main_effects(): 
-            pass
-            rules = list()
+        @app.callback(
+            [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
+            [Input(f"{i}_toggle", "n_clicks") for i in ['two-way', 'n-way']],
+            [State(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
+        )
+        def toggle_accordion(n1, n2, is_open1, is_open2):
+            ctx = dash.callback_context
 
-            solve()
+            if not ctx.triggered:
+                return False, False
+            else:
+                button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
+            if button_id == "two-way_toggle" and n1:
+                return not is_open1, False
+            elif button_id == "n-way_toggle" and n2:
+                return False, not is_open2
+            return False, False
 
         # # Get rules 
                 # rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
@@ -180,9 +149,68 @@ class InputInterface(object):
         
         self.app = app
     
-    def get_input(self): 
-        pass
+    def populate_main_effects(self): 
+        output = list()
+        # Get possible main effects from synthesizer
+        possible_main_effects = self.synthesizer.generate_main_effects(design=self.design)
+
+        # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
+        # Lay them out
+        variable_options = list()
+        for (variable, facts) in possible_main_effects.items(): 
+            variable_options.append({'label': str(variable), 'value': f'{facts[0]}'})
+        output = dbc.FormGroup([
+            dbc.Checklist(
+                options=variable_options,
+                value=[],
+                id="main_effects_options",
+                labelStyle={'disabled': True}
+            ),
+        ])
+
+        return output
+
+    def populate_interaction_effects(self): 
+        output = list()
+        # Get possible main effects from synthesizer
+        possible_interaction_effects = self.synthesizer.generate_interaction_effects(design=self.design)
+
+        # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
+        # Lay them out
+        for (num_interactions, options) in possible_interaction_effects.items(): 
+            interaction_options = list()
+            for (name, fact) in options.items():
+                interaction_options.append({'label': name, 'value': str(fact)})
+            
+            output.append(self.make_interaction_card(title=num_interactions, options=interaction_options))
+            
+        return html.Div(output, className='accordion')
     
+    def make_interaction_card(self, title: str, options: List): 
+        card = dbc.Card([
+            dbc.CardHeader(
+                html.H2(
+                    dbc.Button(
+                        f"{title}",
+                        color="link",
+                        id=f"{title}_toggle",
+                    )
+                )
+            ),
+            dbc.Collapse(
+                dbc.FormGroup([
+                    dbc.Checklist(
+                        options=options,
+                        value=[],
+                        id=f"{title}_options",
+                        labelStyle={'disabled': True}
+                    ),
+                ]),
+                id=f'{title}_collapse'
+            )
+        ])
+        return card
+
     @classmethod
     def ask_inclusion_prompt(cls, subject: str) -> bool: 
 

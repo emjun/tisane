@@ -6,4 +6,5 @@ scipy
 more-itertools
 pydot
 dash
+dash_daq
 dash-bootstrap-components
