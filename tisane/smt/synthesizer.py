@@ -72,7 +72,6 @@ class Synthesizer(object):
             assert(len(unsat_core) > 0)
 
 
-
     def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
         # import pdb; pdb.set_trace()
         state = solver.check(assertions)

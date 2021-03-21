@@ -57,7 +57,14 @@ class InputInterface(object):
                         value=None,
                         labelStyle={'display': 'inline-block'}
                     )  
-                ]),
+                ],
+                daq.ToggleSwitch(
+                    id='main_done',
+                    value=True,
+                    label='Editing main effects',
+                    labelPosition='bottom'
+                )
+                ),
 
                 html.Div(
                     id='main_expand',
@@ -112,10 +119,9 @@ class InputInterface(object):
         def expand_main_effects(radio_val, old_output):
             if radio_val == 'yes':
                 output = list()
-                # This is where we would read the unsat queries, etc. 
+                # Get possible main effects from synthesizer
                 possible_main_effects = self.synthesizer.generate_main_effects(design=design)
 
-                # Might need to change how synthesizer generates the facts...
                 # Present them 
                 html.Div(str("Main effects to include: "))
                 for (variable, facts) in possible_main_effects.items(): 
@@ -130,7 +136,24 @@ class InputInterface(object):
                             value=f'{facts[0]}', # TODO: Replace with Tisane recommendations
                             labelStyle={'display': 'inline-block'}
                         )]))  
-                # # Get rules 
+                return output
+            if radio_val == 'no':
+                pass
+        
+        # When finished editing the main effects, validate the selections with synthesizer
+        @app.callback(Output('main_done', 'label'),
+                    Input('main_done', 'value'))
+        def save_main_effects(toggle): 
+            return 'Saved'
+            
+        def check_and_update_main_effects(): 
+            pass
+            rules = list()
+
+            solve()
+
+
+        # # Get rules 
                 # rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
 
                 # # Solve constraints + rules
@@ -151,12 +174,6 @@ class InputInterface(object):
                 # # Suggestions just get "*based on your conceptual model, ...." recommendation tag?
                 
                 # # App contains all the relationships...(visually show the conceptual relationships? under: show the measurement relationships)
-
-
-                return output
-            if radio_val == 'no':
-                # console.log('hi')
-                pass
         
         open_browser()
         app.run_server(debug=False, threaded=True)
