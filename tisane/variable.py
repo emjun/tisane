@@ -350,6 +350,9 @@ class Numeric(AbstractVariable):
         # TODO: Does this make sense to do?
         raise NotImplementedError
 
+class Count(AbstractVariable): 
+    pass
+
 class Unit(Nominal):
     def __init__(self, name: str):
         super(Unit, self).__init__(name)

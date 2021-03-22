@@ -37,7 +37,7 @@ class Design(object):
         # TODO: Check that DV and IVs have relationships between them
 
 
-        if source: 
+        if source is not None: 
             self.dataset = Dataset(source)
         else: 
             self.dataset = None
@@ -105,7 +105,7 @@ class Design(object):
         # Might have some logical facts "baked in" so would not have to ask for the same facts all the time...?
         # Could store some of this info in the edges? or as separate properties/piv? 
 
-        # TODO: Update rest of object in order to reflect updates to graph 
+        # TODO: Update rest of object in order to reflect updates to graph
 
     # @return IV and DV variables
     def get_variables(self): 
@@ -113,6 +113,16 @@ class Design(object):
         variables = self.ivs + [self.dv]
 
         return variables
+
+    def get_data(self, variable: AbstractVariable): 
+        
+        # Does design object have data?
+        if self.dataset is not None: 
+            return self.dataset.get_column(variable.name)
+        
+        return None
+        # Design object has no data, simulate data
+        # return simulate_data(variable)
 
     # def _create_graph(self, ivs: List[AbstractVariable], dv: AbstractVariable): 
     #     gr = Graph()

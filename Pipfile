@@ -19,6 +19,7 @@ streamlit = "*"
 dash = "*"
 dash-daq = "*"
 dash-bootstrap-components = "*"
+tweedie = "*"
 
 [requires]
 python_version = "3.7"

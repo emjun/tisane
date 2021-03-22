@@ -6,7 +6,6 @@ def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
 
 class Dataset(object): 
-    # data_vectors: dict
     dataset : pd.DataFrame
 
     # Takes input in either a CSV or a Pandas DataFrame
@@ -22,6 +21,12 @@ class Dataset(object):
         # TODO: post-processing? E.g., break up into DataVectors?
         self.dataset = df
 
+    def get_column(self, name: str): 
+        cols = self.dataset.columns
+        if name in cols: 
+            return self.dataset[name]
+        else: 
+            raise ValueError(f'Variable with name {name} is not part of the dataset. Columns: {cols}')
 
 class DataVector(object): 
     name: str

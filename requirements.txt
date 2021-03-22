@@ -8,3 +8,4 @@ pydot
 dash
 dash_daq
 dash-bootstrap-components
+tweedie

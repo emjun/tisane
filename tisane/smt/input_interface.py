@@ -2,7 +2,7 @@ from tisane.variable import AbstractVariable
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.smt.synthesizer import Synthesizer
-# from tisane.smt.app import add_inclusion_prompt
+from tisane.helpers import *
 
 from typing import List, Any
 import subprocess
@@ -10,6 +10,7 @@ from subprocess import DEVNULL
 import os
 import sys
 
+import plotly.figure_factory as ff
 import dash
 import dash_daq as daq
 import dash_bootstrap_components as dbc
@@ -66,6 +67,26 @@ class InputInterface(object):
             ],
             id='interaction_effects_group'
         )
+
+        random_heading = html.H1(children='Random Effects')
+        random_effects = self.populate_random_effects()
+        random_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "Save and lock random effects", "value": False}
+                    ],
+                    value=[],
+                    id='random_effects_switch',
+                    switch=True,
+                ),
+            ],
+            id='random_effects_group'
+        )
+
+        family_heading = html.H1(children='Family Distribution')
+        data_family = self.draw_data_dist()
+        family_options = self.populate_data_distributions()
+
         
         # TODO: Layout Main | Interaction in a visually appealing way
         
@@ -79,6 +100,12 @@ class InputInterface(object):
             interaction_heading,
             interaction_switch,
             interaction_effects,
+            random_heading,
+            random_switch,
+            random_effects,
+            family_heading, 
+            data_family,
+            family_options
         ])
         
         @app.callback(
@@ -219,6 +246,57 @@ class InputInterface(object):
             
         return html.Div(output, className='accordion')
     
+    def populate_random_effects(self): 
+        # Could be random slope OR random interaction 
+        output = list()
+        # Get possible main effects from synthesizer
+        possible_random_effects = self.synthesizer.generate_random_effects(design=self.design)
+
+        # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
+        # Lay them out
+        for (key, facts) in possible_random_effects.items(): 
+            output.append(self.make_random_checklist(label=key, options=facts))
+            
+            # TODO: correlate should only be an option if both are selected
+
+        # return output
+        return html.Div(output)
+    
+    def draw_data_dist(self): 
+        dv = self.design.dv
+        
+        data = self.design.get_data(variable=dv)
+        
+        if data is not None: 
+            hist_data = [data]
+            labels = [dv.name]
+        else: 
+            raise NotImplementedError
+
+        fig = ff.create_distplot(hist_data, labels)
+
+        fig_div = html.Div([dcc.Graph(figure=fig)])
+
+        return fig_div
+
+    def populate_data_distributions(self): 
+        output = list() 
+
+        dist_names = self.synthesizer.generate_family_distributions(design=self.design)
+
+        for dist in dist_names: 
+            data = [generate_data_dist_from_facts(fact=dist, design=self.design)]
+            labels = [self.design.dv.name]
+
+            fig = ff.create_distplot(data, labels)
+            output.append(html.Div([
+                html.H3(str(dist)),  
+                dcc.Graph(figure=fig)
+                ]))
+
+        return html.Div(output)
+
+
     def make_interaction_card(self, title: str, options: List): 
         card = dbc.Card([
             dbc.CardHeader(
@@ -244,6 +322,23 @@ class InputInterface(object):
         ])
         return card
 
+    def make_random_checklist(self, label: str, options: List): 
+        checklist = dbc.FormGroup([
+            dbc.Label(label),
+            dbc.Checklist(
+                options=[
+                    {'label': 'Random slope', 'value': f'{options[0]}'},
+                    {'label': 'Random intercept', 'value': f'{options[1]}'},
+                    {'label': 'Correlated random slope & intercept', 'value': f'{options[2]}'}
+                ],
+                value=[],
+                labelStyle={'display': 'inline-block'}
+            )  
+        ])
+        return checklist
+            # TODO: correlate should only be an option if both are selected
+
+    
     @classmethod
     def ask_inclusion_prompt(cls, subject: str) -> bool: 
 
