@@ -16,6 +16,7 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
 
@@ -41,7 +42,7 @@ class InputInterface(object):
         main_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
-                        {"label": "Save and lock main effects", "value": 'save'}
+                        {"label": "Save and lock main effects", "value": False}
                     ],
                     value=[],
                     id='main_effects_switch',
@@ -56,7 +57,7 @@ class InputInterface(object):
         interaction_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
-                        {"label": "Save and lock interaction effects", "value": 'save'}
+                        {"label": "Save and lock interaction effects", "value": False}
                     ],
                     value=[],
                     id='interaction_effects_switch',
@@ -81,28 +82,61 @@ class InputInterface(object):
         ])
         
         @app.callback(
-            Output('main_effects_options', 'labelStyle'),
+            Output('main_effects_options', 'options'),
             [Input('main_effects_switch', 'value'),
-            Input('main_effects_options', 'options')]
-
+            State('main_effects_options', 'options')],
+            # State('main_effects_options', 'options')
         )
-        def save_main_effects(main_effect_options, switch_value):
-            if switch_value == 'save': 
+        def save_main_effects(switch_value, main_effects_options):
+            output = list()
+            if switch_value: 
                 facts = list()
-                for o in main_effect_options: 
+                for o in main_effects_options: 
                     facts.append(o['value'])
-                
-                is_sat = self.synthesizer.check_constraints(facts, rule_set='effects')
+                    output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                    
+                is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
                 if is_sat: 
-                    self.synthesizer.update_with_facts(facts, rule_set='effects')
-                    # TODO: Lock the main effects options
+                    self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+                    return output
+                else: 
+                    # TODO: Start a modal?
+                    raise ValueError(f"Error in saving main effects!")
+            else: 
+                for o in main_effects_options: 
+                    output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+                
+                return output
+        
+        @app.callback(
+            Output('two-way_options', 'labelStyle'),
+            Output('n-way_options', 'labelStyle'),
+            [Input('interaction_effects_switch', 'value'),
+            Input('two-way_options', 'options'),
+            Input('n-way_options', 'options')]
+        )
+        def save_interaction_effects(two_way_options, n_way_options, switch_val):
+            if switch_val == 'save': 
+                facts = list()
+
+                for o in two_way_options: 
+                    facts.append(two_way_options['value'])
+                
+                for o in n_way_options: 
+                    facts.append(two_way_options['value'])
+                
+                is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+                # return html.Div(f"{is_sat}")
+                if is_sat: 
+                    self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+                    # TODO: Lock the interaction effects options
                     return {'disabled': True}
                 else: 
                     # TODO: Start a modal?
                     raise ValueError(f"Error in saving main effects!")
             else: 
-                return {'disabled': False}
-        
+                raise PreventUpdate
+                
         @app.callback(
             [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
             [Input(f"{i}_toggle", "n_clicks") for i in ['two-way', 'n-way']],
@@ -164,7 +198,6 @@ class InputInterface(object):
                 options=variable_options,
                 value=[],
                 id="main_effects_options",
-                labelStyle={'disabled': True}
             ),
         ])
 

@@ -19,6 +19,48 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
+def parse_fact(fact: z3.BoolRef) -> List[str]: 
+    fact_dict = dict()
+    tmp = str(fact).split('(')
+    func_name = tmp[0] 
+    fact_dict['function'] = func_name
+    
+    # Parse Interaction facts aware that the argument is a SetSort
+    if func_name == 'Interaction': 
+        set_arg = fact.arg(0)
+        arg_str = str(set_arg).split('False), ')
+
+        assert(len(arg_str) == 2)
+        arg_str = arg_str[1].split(',')
+
+        # This for loop should take care of n-way Interactions
+        variables = list()
+        for s in arg_str: 
+            if 'True' not in s: 
+                variables.append(s.strip())
+        fact_dict['variables'] = variables
+    else: 
+        variables = tmp[1].split(')')[0].split(',')
+    
+        if len(variables) == 1: 
+            fact_dict['variable_name'] = variables[0].strip()
+        elif len(variables) == 2: 
+            fact_dict['start'] = variables[0].strip()
+            fact_dict['end'] = variables[1].strip()
+        
+    return fact_dict
+
+def cast_facts(facts: list, design: Design) -> List: 
+        z3_facts = list()
+        for f in facts: 
+            fact_dict = parse_fact(f)
+            if fact_dict['function'] == 'FixedEffect': 
+                start_var = design.graph.get_variable(fact_dict['start'])
+                end_var = design.graph.get_variable(fact_dict['end'])
+                z3_facts.append(FixedEffect(start_var.const, end_var.const))
+
+        return z3_facts
+
 class Synthesizer(object): 
     solver : z3.Solver
     facts : List
@@ -68,16 +110,17 @@ class Synthesizer(object):
         return rules_to_consider
 
     # Returns True if SAT, False otherwise
-    def check_constraints(self, facts: list, rule_set: str) -> bool: 
+    def check_constraints(self, facts: list, rule_set: str, design: Design) -> bool: 
         # Get rules 
-        rules_dict = self.collect_rules(output=rule_set, dv_const=dv.const)
+        rules_dict = self.collect_rules(output=rule_set, dv_const=design.dv.const)
 
-        for batch_name, rule_set in rules.items(): 
+        for batch_name, rules in rules_dict.items(): 
             print(f'Adding {batch_name} rules.')
             # Add rules
-            self.solver.add(rule_set)
+            self.solver.add(rules)
         
-        state = self.solver.check(facts)
+        z3_facts = cast_facts(facts=facts, design=design)
+        state = self.solver.check(z3_facts)
 
         return state == sat
 
@@ -91,21 +134,23 @@ class Synthesizer(object):
         # elif (state == sat): 
         #     return state
 
-    def update_with_facts(self, facts: List, rule_set: str): 
+    def update_with_facts(self, facts: List, rule_set: str, design: Design): 
         # Get rules 
-        rules_dict = self.collect_rules(output=rule_set, dv_const=dv.const)
+        rules_dict = self.collect_rules(output=rule_set, dv_const=design.dv.const)
 
-        for batch_name, rule_set in rules.items(): 
+        for batch_name, rules in rules_dict.items(): 
             print(f'Adding {batch_name} rules.')
-            # Add rules
-            if rule_set not in self.solver.assertions(): 
-                self.solver.add(rule_set)
+            # Add rules incrementally
+            for r in rules: 
+                if r not in self.solver.assertions(): 
+                    self.solver.add(r)
         
-        state = self.solver.check(facts)
+        z3_facts = cast_facts(facts=facts, design=design)
+        state = self.solver.check(z3_facts)
         assert(state == sat)
 
         # Store facts
-        self.facts.append(facts)
+        self.facts.append(z3_facts)
 
         # # Solve constraints + rules
         # (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
