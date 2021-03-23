@@ -26,6 +26,7 @@ port = '8050' # default dash port
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
 
+__value_to_z3__ = dict() # Global map between vals and z3 facts
         
 class InputInterface(object): 
     design: Design 
@@ -88,6 +89,10 @@ class InputInterface(object):
         family_dist_div = self.populate_compound_family_div()
         # family_options = self.populate_data_distributions()
 
+        family_link_controls = self.make_family_link_options()
+        link_chart = self.draw_data_dist()
+        link_div = self.populate_link_div()
+
         
         # TODO: Layout Main | Interaction in a visually appealing way
         
@@ -106,7 +111,8 @@ class InputInterface(object):
             random_effects,
             family_heading, 
             family_dist_div,
-            # family_options
+            link_div,
+            family_link_controls
         ])
         
         @app.callback(
@@ -184,28 +190,34 @@ class InputInterface(object):
                 return False, not is_open2
             return False, False
 
-        # # Get rules 
-                # rules_dict = QM.collect_rules(output='effects', dv_const=dv.const)
+        @app.callback(
+            Output('link_choice', 'options'),
+            [
+                Input('family_choice', 'value'),
+                Input('link_choice', 'options'),
+            ],
+        )
+        def update_link_options(family, old_options): 
+            global __value_to_z3__
+            
+            new_options = list()
 
-                # # Solve constraints + rules
-                # (res_model_fixed, res_facts_fixed) = QM.solve(facts=fixed_facts, rules=rules_dict)
-                
-                # # Update result StatisticalModel based on user selection 
-                # sm = QM.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+            if family is not None: 
+                # Get link options
+                family_name = str(family)
+                assert(family_name in __value_to_z3__.keys())
+                family_fact = __value_to_z3__[family_name]
+                link_options = self.get_link_options(family_fact)
 
-                # # Design 1
-                # # main_effects = from synth
-                # # conflicts = from synth
-                # # update div based on conflict 
-                # # Callback where div selection "resolves conflict"
-                # # Then lock the choice.
+                for link in link_options: 
+                    __value_to_z3__[str(link)] = link
+                    new_options.append({'label': str(link), 'value': str(link)})                    
 
-                # # Design 2
-                # # better design -> temporary storage with user selected choices. Then at the end update/check for SAT
-                # # Suggestions just get "*based on your conceptual model, ...." recommendation tag?
-                
-                # # App contains all the relationships...(visually show the conceptual relationships? under: show the measurement relationships)
-        
+                return new_options
+            else: 
+                raise PreventUpdate
+            
+            
         open_browser()
         app.run_server(debug=False, threaded=True)
         
@@ -232,6 +244,8 @@ class InputInterface(object):
         return output
 
     def populate_interaction_effects(self): 
+        global __value_to_z3__
+
         output = list()
         # Get possible main effects from synthesizer
         possible_interaction_effects = self.synthesizer.generate_interaction_effects(design=self.design)
@@ -241,6 +255,7 @@ class InputInterface(object):
         for (num_interactions, options) in possible_interaction_effects.items(): 
             interaction_options = list()
             for (name, fact) in options.items():
+                __value_to_z3__[str(fact)] = fact
                 interaction_options.append({'label': name, 'value': str(fact)})
             
             output.append(self.make_interaction_card(title=num_interactions, options=interaction_options))
@@ -279,7 +294,7 @@ class InputInterface(object):
     def draw_dist(self, hist_data, labels): 
         fig = ff.create_distplot(hist_data, labels)
 
-        fig_elt = dcc.Graph(figure=fig)
+        fig_elt = dcc.Graph(id='data_dist', figure=fig)
 
         return fig_elt
         
@@ -333,21 +348,91 @@ class InputInterface(object):
 
         return fig_div
 
-    def populate_link_div(self): 
-        (curr_data_dist, curr_data_label) = self.get_data_dist()
-
     # TODO: Need to add callbacks to this...
-    def make_link_options(self): 
+    def populate_link_div(self): 
+        output = list()
+
+        # Get Family: Link functions
+        dist_link_dict = dict()
+        dist_names = self.synthesizer.generate_family_distributions(design=self.design)
+        for dist in dist_names: 
+            dist_link_dict[dist] = self.get_link_options(dist)
+
+        for family, links in dist_link_dict.items(): 
+            options = list() 
+            for l in links: 
+                default = None # TODO: Start at default (Identity usually)
+                options.append({'label': f'{str(l)}', 'value': str(l)})
+
+            # Create HTML div
+            output.append(dbc.FormGroup(
+                [
+                    dbc.Label(f'{str(family)}', 
+                        # style={'visibility': 'hidden'}
+                    ),
+                    dbc.RadioItems(
+                        id=f'{str(family)}_link_options',
+                        options=options,
+                        value=None, # TODO: Start at default (Identity usually)
+                        inline=True,
+                        # style={'visibility': 'hidden'}
+                    ),
+                ]
+            ))
+        return html.Div(output)
+
+    def update_data_with_link(self): 
+        pass
+
+    def get_link_options(self, family_fact: z3.BoolRef): 
+         
+        link_functions = self.synthesizer.generate_link_functions(design=self.design, family_fact=family_fact)
+
+        return link_functions
+    
+    def make_family_options(self): 
+        global __value_to_z3__ 
+
+        options = list()
+
         dist_names = self.synthesizer.generate_family_distributions(design=self.design)
 
-        link_functions = list()
-
-        # Make a dict with 'family name': [link_functions]
+        for d in dist_names: 
+            __value_to_z3__[str(d)] = d
+            options.append({'label': str(d), 'value': str(d)})
         
+        return options
 
+    def make_family_link_options(self): 
+        family_options = self.make_family_options()
 
+        controls = dbc.Card(
+            [
+                dbc.FormGroup(
+                    [
+                        dbc.Label('Family'),
+                        dcc.Dropdown(
+                            id='family_choice',
+                            options=family_options,
+                            value=None,
+                        ),
+                    ]
+                ),
+                dbc.FormGroup(
+                    [
+                        dbc.Label('Link function'),
+                        dcc.Dropdown(
+                            id='link_choice',
+                            options=[],
+                            value=None,
+                        ),
+                    ]
+                )
+            ],
+            body=True,
+        )
 
-
+        return controls
 
     def make_interaction_card(self, title: str, options: List): 
         card = dbc.Card([

@@ -264,12 +264,11 @@ class Synthesizer(object):
             print(f'Adding {batch_name} rules.')
             # Add rules
             s.add(rule_set)
-            (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
-            # import pdb; pdb.set_trace()
-            facts = updated_facts        
-        
+            
+        s.check(facts)
         mdl =  s.model()
-        return (mdl, updated_facts)
+
+        return mdl
 
     def _generate_fixed_candidates(self, design: Design):
         fixed_candidates = list() 
@@ -424,7 +423,7 @@ class Synthesizer(object):
                 
         return random_dict
     
-    def generate_family_distributions(self, design: Design): 
+    def generate_family_distributions(self, design: Design) -> List[z3.BoolRef]: 
         family_facts = list() 
 
         # Get facts from data types
@@ -447,6 +446,51 @@ class Synthesizer(object):
                 pass
 
         return family_facts
+
+    def generate_link_functions(self, design: Design, family_fact: z3.BoolRef): 
+        
+        # Find possible link functions
+        dv = design.dv
+        # Get rules for families and valid data transformations/link functions
+        rules_dict = self.collect_rules(output='TRANSFORMATION', dv_const=dv.const)
+        family_to_transformation_rules = rules_dict['family_to_transformation_rules']
+        # Solve fact + rules to get possible link functions
+        res_model_transformations = self.solve(facts=family_fact, rules={'family_to_transformation_rules': family_to_transformation_rules})
+        # Get link facts
+        transformation_candidate_facts = self.model_to_transformation_facts(model=res_model_transformations, design=design)
+
+        return transformation_candidate_facts
+
+
+    def model_to_transformation_facts(self, model: z3.ModelRef, design: Design):
+        transform_name_to_constraint = {
+            'IdentityTransform' : IdentityTransform(design.dv.const),
+            'LogTransform' : LogTransform(design.dv.const),
+            'CLogLogTransform' : CLogLogTransform(design.dv.const),
+            'SquarerootTransform' : SquarerootTransform(design.dv.const),
+            'InverseTransform' : InverseTransform(design.dv.const),
+            'InverseSquaredTransform' : InverseSquaredTransform(design.dv.const),
+            'PowerTransform' : PowerTransform(design.dv.const),
+            'CauchyTransform' : CauchyTransform(design.dv.const),
+            'LogLogTransform' : LogLogTransform(design.dv.const),
+            'ProbitTransform' : ProbitTransform(design.dv.const),
+            'LogitTransform' : LogitTransform(design.dv.const),
+            'NegativeBinomialTransform' : NegativeBinomialTransform(design.dv.const),
+        }
+        facts = list()
+
+        for c in model:
+            # Is c a function that we care about?
+            if c.arity() > 0:
+                c_val = is_true(model[c].else_value())
+                if c_val:
+                    c_name = str(c)
+                    if 'Transform' in c_name:
+                        facts.append(transform_name_to_constraint[c_name])
+        
+        return facts
+
+        
         
     def generate_and_select_family(self, design: Design, statistical_model: StatisticalModel): 
         family_facts = self.generate_family(design=design)
