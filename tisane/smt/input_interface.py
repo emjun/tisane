@@ -84,8 +84,9 @@ class InputInterface(object):
         )
 
         family_heading = html.H1(children='Family Distribution')
-        data_family = self.draw_data_dist()
-        family_options = self.populate_data_distributions()
+        # data_dist = self.draw_data_dist()
+        family_dist_div = self.populate_compound_family_div()
+        # family_options = self.populate_data_distributions()
 
         
         # TODO: Layout Main | Interaction in a visually appealing way
@@ -104,8 +105,8 @@ class InputInterface(object):
             random_switch,
             random_effects,
             family_heading, 
-            data_family,
-            family_options
+            family_dist_div,
+            # family_options
         ])
         
         @app.callback(
@@ -262,7 +263,7 @@ class InputInterface(object):
         # return output
         return html.Div(output)
     
-    def draw_data_dist(self): 
+    def get_data_dist(self): 
         dv = self.design.dv
         
         data = self.design.get_data(variable=dv)
@@ -272,29 +273,80 @@ class InputInterface(object):
             labels = [dv.name]
         else: 
             raise NotImplementedError
+        
+        return (hist_data, labels)
 
+    def draw_dist(self, hist_data, labels): 
         fig = ff.create_distplot(hist_data, labels)
 
-        fig_div = html.Div([dcc.Graph(figure=fig)])
+        fig_elt = dcc.Graph(figure=fig)
 
-        return fig_div
+        return fig_elt
+        
+    def draw_data_dist(self): 
+        (hist_data, labels) = self.get_data_dist()
+
+        return self.draw_dist(hist_data, labels)
 
     def populate_data_distributions(self): 
         output = list() 
 
-        dist_names = self.synthesizer.generate_family_distributions(design=self.design)
+        (data, labels) = self.get_possible_family_distributions()
 
-        for dist in dist_names: 
-            data = [generate_data_dist_from_facts(fact=dist, design=self.design)]
-            labels = [self.design.dv.name]
+        # fig = px.histogram(family_data, x=f"{Value of self.design.dv.name}", y="frequency", color="dist", marginal="rug",
+        #                 hover_data=df.columns)
 
-            fig = ff.create_distplot(data, labels)
-            output.append(html.Div([
-                html.H3(str(dist)),  
-                dcc.Graph(figure=fig)
-                ]))
+        fig = ff.create_distplot(data, labels, showlegend=False)
+        output.append(html.Div([
+            html.H3(str(dist)),  
+            dcc.Graph(figure=fig)
+            ]))
 
         return html.Div(output)
+    
+    def get_possible_family_distributions(self): 
+        dist_names = self.synthesizer.generate_family_distributions(design=self.design)
+
+        data = list()
+        labels = list()
+        for dist in dist_names: 
+            data.append(generate_data_dist_from_facts(fact=dist, design=self.design))
+            labels.append(f'{self.design.dv.name} with {dist}')
+
+        return (data, labels)        
+
+    def populate_compound_family_div(self): 
+
+        (curr_data_dist, curr_data_label) = self.get_data_dist()
+
+        (possible_family_dists, possible_family_labels) = self.get_possible_family_distributions()
+
+        # Combine data
+        data = curr_data_dist + possible_family_dists
+        labels = curr_data_label + possible_family_labels 
+
+        fig = ff.create_distplot(data, labels)
+        fig_div = html.Div([
+            # html.H3(str(dist)),  
+            dcc.Graph(figure=fig)
+            ])
+
+        return fig_div
+
+    def populate_link_div(self): 
+        (curr_data_dist, curr_data_label) = self.get_data_dist()
+
+    # TODO: Need to add callbacks to this...
+    def make_link_options(self): 
+        dist_names = self.synthesizer.generate_family_distributions(design=self.design)
+
+        link_functions = list()
+
+        # Make a dict with 'family name': [link_functions]
+        
+
+
+
 
 
     def make_interaction_card(self, title: str, options: List): 
