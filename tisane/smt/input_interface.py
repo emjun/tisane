@@ -18,7 +18,7 @@ import dash_daq as daq
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Output, Input, State, ALL
+from dash.dependencies import Output, Input, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
@@ -273,6 +273,7 @@ class InputInterface(object):
                 output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
                 
             return output
+        
         @app.callback(
             [Output({'type': 'random_slope', 'index': ALL}, 'options'),
             Output({'type': 'random_intercept', 'index': ALL}, 'options')],
@@ -310,6 +311,57 @@ class InputInterface(object):
                 o = option[0]
                 intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}]) 
             return slope_output, intercept_output
+
+        # TODO next: Correlated --> Individual slope, intercept 
+        # TODO next: Uncorrelated --> Individual slope, intercept
+        @app.callback(
+            [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
+            Output({'type': 'random_intercept', 'index': MATCH}, 'value')],
+            [Input({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value'),
+            Input({'type': 'random_slope', 'index': MATCH}, 'options'),
+            Input({'type': 'random_intercept', 'index': MATCH}, 'options')]
+        )
+        def sync_correlated_random_effects(corr_value, slope_options, intercept_options):             
+            # TODO: Use the cache rather than string comparisons here?
+            if corr_value is not None and 'Correlated' in corr_value: 
+                selected = list()
+                for so in slope_options: 
+                    selected.append(so['value'])
+                for io in intercept_options: 
+                    selected.append(io['value'])
+                return selected
+            elif corr_value is not None and 'Uncorrelated' in corr_value: 
+                selected = list()
+                for so in slope_options: 
+                    selected.append(so['value'])
+                for io in intercept_options: 
+                    selected.append(io['value'])
+                return selected
+            else:
+                raise PreventUpdate
+
+        # Individual slope, intercept --> Uncorrelated
+        # @app.callback(
+        #     [Output({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
+        #     [Input({'type': 'random_slope', 'index': MATCH}, 'value'),
+        #     Input({'type': 'random_intercept', 'index': MATCH}, 'value')],
+        #     [State({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
+        # )
+        # def sync_random_slope_intercept_correlation(random_slope, random_intercept, old_correlated_value):
+        #     options = list() 
+
+        #     ctx = dash.callback_context
+        #     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
+        #     import pdb; pdb.set_trace()
+        #     # if input_id == "city-checklist":
+        #     #     all_selected = ["All"] if set(cities_selected) == set(all_cities) else []
+        #     # else:
+        #     #     cities_selected = all_cities if all_selected else []
+        #     # return cities_selected, all_selected
+
+            
+        #     return [old_correlated_value]
+
                 
         @app.callback(
             [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
@@ -469,9 +521,13 @@ class InputInterface(object):
         for (key, facts) in possible_random_effects.items():
             slope = self.make_random_slope_card(variables=key, value=facts[0])
             intercept = self.make_random_intercept_card(variables=key, value=facts[1])
+            # TODO: Generate Correlated and Uncorrelated in synthesizer???
+            corr_options = dbc.RadioItems(options=[{'label': 'Correlated random slope and intercept', 'value': f'Correlated({slope}, {intercept})'}, {'label': 'Uncorrelated random slope and intercept', 'value': f'Uncorrelated({slope}, {intercept})'}], id={'type': 'correlated_random_slope_intercept', 'index': f'{key}'}, inline=True)
             div = html.Div([
-                dbc.Row([html.H5(f'{key}')]),
-                dbc.Row([dbc.Col(slope, className='w-50'), dbc.Col(intercept, className='w-50')])
+                html.H5(f'{key}'),
+                # dbc.Row([dbc.Col(children=[html.H5(f'{key}')], align='start'), corr_options]),
+                dbc.Row([dbc.Col(slope, className='w-50'), dbc.Col(intercept, className='w-50')]),
+                dbc.Row([dbc.Col(corr_options)], justify='end'),
             ])
             output.append(div)
                 # output.append(dbc.Row([dbc.Col(slope, width=4), dbc.Col(intercept, width=4)]))
@@ -688,7 +744,7 @@ class InputInterface(object):
         base = var_names[0]
         group = var_names[1]
         card = dbc.Card([
-            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random slope', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{value}_slope'})]),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random slope', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{variables}'})]),
             dbc.CardBody([
                 html.P(f'Does each {base} within {group} differ in their impact on the dependent variable?'),
                 # dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_slope')
@@ -702,7 +758,7 @@ class InputInterface(object):
         base = var_names[0]
         group = var_names[1]
         card = dbc.Card([
-            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random intercept', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{value}_slope'})]),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random intercept', 'value': f'{value}'}], id={'type': 'random_intercept', 'index': f'{variables}'})]),
             dbc.CardBody([
                 html.P(f'Does each {base} within {group} differ on average on the dependent variable?')
             ])
