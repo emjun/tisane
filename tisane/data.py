@@ -28,6 +28,12 @@ class Dataset(object):
         else: 
             raise ValueError(f'Variable with name {name} is not part of the dataset. Columns: {cols}')
 
+    def get_length(self): 
+        if self.dataset is not None: 
+            return len(self.dataset.index)
+        # else: 
+            return 0
+
 class DataVector(object): 
     name: str
     values: pd.DataFrame 

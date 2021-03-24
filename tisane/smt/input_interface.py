@@ -10,7 +10,9 @@ from subprocess import DEVNULL
 import os
 import sys
 
+import pandas as pd
 import plotly.figure_factory as ff
+import plotly.express as px
 import dash
 import dash_daq as daq
 import dash_bootstrap_components as dbc
@@ -85,10 +87,6 @@ class InputInterface(object):
         )
 
         family_heading = html.H1(children='Family Distribution')
-        # data_dist = self.draw_data_dist()
-        family_dist_div = self.populate_compound_family_div()
-        # family_options = self.populate_data_distributions()
-
         family_link_controls = self.make_family_link_options()
         link_chart = self.draw_data_dist()
         link_div = self.populate_link_div()
@@ -110,8 +108,7 @@ class InputInterface(object):
             random_switch,
             random_effects,
             family_heading, 
-            family_dist_div,
-            link_div,
+            link_chart,
             family_link_controls
         ])
         
@@ -217,6 +214,55 @@ class InputInterface(object):
             else: 
                 raise PreventUpdate
             
+        @app.callback(
+            Output('data_dist', 'figure'),
+            [
+                Input('family_choice', 'value'),
+                Input('link_choice', 'value')
+            ],
+            State('data_dist', 'figure')
+        )
+        def update_chart_family(family, link, old_data): 
+            global __value_to_z3__
+            
+            if family is not None: 
+                assert(isinstance(family, str))
+                family_fact = __value_to_z3__[family]
+
+                # Get current data 
+                (curr_data, curr_label) = self.get_data_dist()
+
+                # Get data for family
+                key = f'{family}_data'
+                
+                # Do we need to generate data?
+                if key not in __value_to_z3__.keys(): 
+                    family_data = generate_data_dist_from_facts(fact=family_fact, design=self.design)
+                    # Store data for family in __value_to_z3__ cache
+                    __value_to_z3__[key] = family_data
+                # We already have the data generated in our "cache"
+                else: 
+                    family_data = __value_to_z3__[key]
+
+                if link is not None: 
+                    assert(isinstance(link, str))
+                    link_fact = __value_to_z3__[link]
+                    # Transform the data 
+                    transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
+
+                    # Create a new dataframe
+                    # Generate figure 
+                    fig = go.Figure()
+                    fig.add_trace(go.Histogram(x=curr_data, name=f'{self.design.dv.name}',))
+                    fig.add_trace(go.Histogram(x=transformed_data, name=f'Simulated {family} distribution, {link} transformation.'))
+                    fig.update_layout(barmode='overlay')
+                    fig.update_traces(opacity=0.75)
+
+                    return fig
+                else: 
+                    raise PreventUpdate
+            else: 
+                raise PreventUpdate
             
         open_browser()
         app.run_server(debug=False, threaded=True)
@@ -284,15 +330,18 @@ class InputInterface(object):
         data = self.design.get_data(variable=dv)
         
         if data is not None: 
-            hist_data = [data]
-            labels = [dv.name]
+            hist_data = data
+            labels = dv.name
         else: 
             raise NotImplementedError
         
         return (hist_data, labels)
 
-    def draw_dist(self, hist_data, labels): 
-        fig = ff.create_distplot(hist_data, labels)
+    def draw_dist(self, hist_data, label): 
+        data = pd.DataFrame(hist_data, columns=[label])
+
+        fig = px.histogram(data, x=label)
+        # fig = ff.create_distplot(hist_data, labels)
 
         fig_elt = dcc.Graph(id='data_dist', figure=fig)
 
@@ -328,7 +377,18 @@ class InputInterface(object):
             data.append(generate_data_dist_from_facts(fact=dist, design=self.design))
             labels.append(f'{self.design.dv.name} with {dist}')
 
-        return (data, labels)        
+        return (data, labels)    
+
+    def get_data_for_family_distribution(self, family_fact: z3.BoolRef): 
+        global __value_to_z3__
+
+        key = f'{str(family_fact)}_data'
+        if key in __value_to_z3__.keys(): 
+            return __value_to_z3__[key]
+        else: 
+            val = generate_data_dist_from_facts(fact=family_fact, design=self.design)
+            __value_to_z3__[key] = val
+            return val
 
     def populate_compound_family_div(self): 
 
