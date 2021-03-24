@@ -19,16 +19,14 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
-def parse_fact(fact: z3.BoolRef) -> List[str]: 
+def parse_fact(fact: str) -> Dict[str, str]:
     fact_dict = dict()
     tmp = str(fact).split('(')
     func_name = tmp[0] 
     fact_dict['function'] = func_name
-    
-    # Parse Interaction facts aware that the argument is a SetSort
-    if func_name == 'Interaction': 
-        set_arg = fact.arg(0)
-        arg_str = str(set_arg).split('False), ')
+
+    if func_name == 'Interaction':
+        arg_str = str(fact).split('False), ')
 
         assert(len(arg_str) == 2)
         arg_str = arg_str[1].split(',')

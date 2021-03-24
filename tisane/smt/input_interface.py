@@ -18,7 +18,7 @@ import dash_daq as daq
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Output, Input, State, ALL
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
@@ -206,33 +206,110 @@ class InputInterface(object):
                 return output
         
         @app.callback(
-            Output('two-way_options', 'labelStyle'),
-            Output('n-way_options', 'labelStyle'),
+            Output('two-way_options', 'options'),
             [Input('interaction_effects_switch', 'value'),
-            Input('two-way_options', 'options'),
-            Input('n-way_options', 'options')]
+            Input('two-way_options', 'value')],
+            State('two-way_options', 'options')
         )
-        def save_interaction_effects(two_way_options, n_way_options, switch_val):
-            if switch_val == 'save': 
-                facts = list()
-
-                for o in two_way_options: 
-                    facts.append(two_way_options['value'])
-                
-                for o in n_way_options: 
-                    facts.append(two_way_options['value'])
-                
-                is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
-                # return html.Div(f"{is_sat}")
-                if is_sat: 
-                    self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
-                    # TODO: Lock the interaction effects options
-                    return {'disabled': True}
+        def save_two_way_interaction_effects(switch_value, two_way_values, two_way_options): 
+            output = list()
+            if switch_value: 
+                # Do we have any selected interaction effects to save? 
+                if len(two_way_values) > 0: 
+                    facts = list()
+                    for o in two_way_options: 
+                        facts.append(o['value'])
+                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                        return output
+                    
+                    # TODO: Save interaction effects somewhere!
+                    # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+                    # if is_sat: 
+                    #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+                    #     return output
+                    # else: 
+                    #     # TODO: Start a modal?
+                    #     raise ValueError(f"Error in saving two-way interaction effects!")
+                # No selected interaction effects to save
                 else: 
-                    # TODO: Start a modal?
-                    raise ValueError(f"Error in saving main effects!")
-            else: 
-                raise PreventUpdate
+                    for o in two_way_options: 
+                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                    return output
+            for o in two_way_options: 
+                output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+            
+            return output
+        
+        @app.callback(
+            Output('n-way_options', 'options'),
+            [Input('interaction_effects_switch', 'value'),
+            Input('n-way_options', 'value')],
+            State('n-way_options', 'options')
+        )
+        def save_n_way_interaction_effects(switch_value, n_way_values, n_way_options): 
+            output = list()
+            if switch_value: 
+                # Do we have any selected interaction effects to save? 
+                if len(n_way_values) > 0: 
+                    facts = list()
+                    for o in n_way_options: 
+                        facts.append(o['value'])
+                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                        return output
+                    # TODO: Save and verify interaction effect facts somewhere
+                    # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+                    # if is_sat: 
+                    #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+                    #     return output
+                    # else: 
+                    #     # TODO: Start a modal?
+                    #     raise ValueError(f"Error in saving n-way interaction effects!")
+                # No selected interaction effects to save
+                else: 
+                    for o in n_way_options: 
+                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})        
+                    return output
+            for o in n_way_options: 
+                output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+                
+            return output
+        @app.callback(
+            [Output({'type': 'random_slope', 'index': ALL}, 'options'),
+            Output({'type': 'random_intercept', 'index': ALL}, 'options')],
+            [Input('random_effects_switch', 'value'),
+            Input({'type': 'random_slope', 'index': ALL}, 'value'),
+            Input({'type': 'random_intercept', 'index': ALL}, 'value')],
+            [State({'type': 'random_slope', 'index': ALL}, 'options'),
+            State({'type': 'random_intercept', 'index': ALL}, 'options')]
+        )
+        def save_random_effects(switch_value, random_slope_values, random_intercept_values, random_slope_options, random_intercept_options): 
+            slope_output = list()
+            intercept_output = list()
+            if switch_value: 
+                # Do we have any selected random slopes to save? 
+                if len(random_slope_values) > 0: 
+                    # TODO: Store (and verify) random slope values
+                    pass
+                for option in random_slope_options: 
+                    o = option[0]
+                    slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])
+
+                # Do we have any selected random intercepts to save? 
+                if len(random_intercept_values) > 0: 
+                    # TODO: Store (and verify) random slope values
+                    pass
+                for option in random_intercept_options: 
+                    o = option[0]
+                    intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])    
+                return slope_output, intercept_output
+            # else
+            for option in random_slope_options: 
+                o = option[0]
+                slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}])       
+            for option in random_intercept_options: 
+                o = option[0]
+                intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}]) 
+            return slope_output, intercept_output
                 
         @app.callback(
             [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
@@ -393,7 +470,7 @@ class InputInterface(object):
             slope = self.make_random_slope_card(variables=key, value=facts[0])
             intercept = self.make_random_intercept_card(variables=key, value=facts[1])
             div = html.Div([
-                html.H5(f'{key}'),
+                dbc.Row([html.H5(f'{key}')]),
                 dbc.Row([dbc.Col(slope, className='w-50'), dbc.Col(intercept, className='w-50')])
             ])
             output.append(div)
@@ -403,7 +480,7 @@ class InputInterface(object):
             # TODO: correlate should only be an option if both are selected
 
         # return output
-        return html.Div(output)
+        return html.Div(id='random_effects_div', children=output)
     
     def get_data_dist(self): 
         dv = self.design.dv
@@ -611,10 +688,10 @@ class InputInterface(object):
         base = var_names[0]
         group = var_names[1]
         card = dbc.Card([
-            dbc.CardHeader('Random slope'),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random slope', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{value}_slope'})]),
             dbc.CardBody([
                 html.P(f'Does each {base} within {group} differ in their impact on the dependent variable?'),
-                dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_slope')
+                # dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_slope')
             ])
         ])
 
@@ -625,10 +702,9 @@ class InputInterface(object):
         base = var_names[0]
         group = var_names[1]
         card = dbc.Card([
-            dbc.CardHeader('Random intercept'),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random intercept', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{value}_slope'})]),
             dbc.CardBody([
-                html.P(f'Does each {base} within {group} differ on average on the dependent variable?'),
-                dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_intercept')
+                html.P(f'Does each {base} within {group} differ on average on the dependent variable?')
             ])
         ])
 
