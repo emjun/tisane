@@ -46,11 +46,12 @@ class InputInterface(object):
         main_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
-                        {"label": "Save and lock main effects", "value": False}
+                        {"label": "🔐", "value": False}
                     ],
                     value=[],
                     id='main_effects_switch',
                     switch=True,
+                    style={'float': 'right'}
                 ),
             ],
             id='main_effects_group'
@@ -61,11 +62,13 @@ class InputInterface(object):
         interaction_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
-                        {"label": "Save and lock interaction effects", "value": False}
+                        {"label": "🔐", "value": False}
+                        # {"label": "Save and lock interaction effects", "value": False}
                     ],
                     value=[],
                     id='interaction_effects_switch',
                     switch=True,
+                    style={'float': 'right'}
                 ),
             ],
             id='interaction_effects_group'
@@ -76,41 +79,104 @@ class InputInterface(object):
         random_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
-                        {"label": "Save and lock random effects", "value": False}
+                        {"label": "🔐", "value": False}
+                        # {"label": "Save and lock random effects", "value": False}
                     ],
                     value=[],
                     id='random_effects_switch',
                     switch=True,
+                    style={'float': 'right'}
                 ),
             ],
             id='random_effects_group'
         )
 
-        family_heading = html.H1(children='Family Distribution')
         family_link_controls = self.make_family_link_options()
-        link_chart = self.draw_data_dist()
-        link_div = self.populate_link_div()
+        family_link_chart = self.draw_data_dist()
+        family_link_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "🔐", "value": False}
+                        # {"label": "Save and lock random effects", "value": False}
+                    ],
+                    value=[],
+                    id='family_link_switch',
+                    switch=True,
+                    style={'float': 'right'}
+                ),
+            ],
+            id='family_link_group'
+        )
 
         
         # TODO: Layout Main | Interaction in a visually appealing way
-        
+        main_effects_card = dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H3("Main effects"),
+                    main_effects,
+                    main_switch
+                ]
+            ),
+            color='light',
+            outline=True
+        )
+
+        interaction_effects_card = dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H3("Interaction effects"),
+                    interaction_effects,
+                    interaction_switch
+                ]
+            ),
+            color='light',
+            outline=True
+        )
+
+        random_effects_card = dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H3("Random effects"),
+                    random_effects,
+                    random_switch
+                ]
+            ),
+            color='light',
+            outline=True
+        )
+
+        family_and_link_card = dbc.Card(
+            dbc.CardBody(
+                [
+                    html.H3("Family and link functions"),
+                    dbc.Row(
+                        [
+                            dbc.Col(family_link_chart, md=8),
+                            dbc.Col(family_link_controls, md=4),
+                        ],
+                        align="center",
+                    ),
+                    family_link_switch
+                ]
+            ),
+            color='light',
+            outline=True
+        )
+
+        script_download_button = dbc.Button("Download script", color="primary", block=True, disabled=True)
+
+
         # Create Dash App
         app.layout = dbc.Container([
-            # html.Div([main_heading, main_switch]),
-            main_heading, 
-            main_switch,
-            main_effects,
-            # html.Div([interaction_heading, interaction_switch]),
-            interaction_heading,
-            interaction_switch,
-            interaction_effects,
-            random_heading,
-            random_switch,
-            random_effects,
-            family_heading, 
-            link_chart,
-            family_link_controls
-        ])
+            dbc.Row([dbc.Col(main_effects_card, width=8)], justify='center'),
+            dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
+            dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
+            dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
+            dbc.Row([dbc.Col(script_download_button, width=8)], justify='center')
+        ],
+        fluid=True
+        )
         
         @app.callback(
             Output('main_effects_options', 'options'),
@@ -257,6 +323,13 @@ class InputInterface(object):
                     fig.add_trace(go.Histogram(x=transformed_data, name=f'Simulated {family} distribution, {link} transformation.'))
                     fig.update_layout(barmode='overlay')
                     fig.update_traces(opacity=0.75)
+                    fig.update_layout(legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.02,
+                        xanchor="right",
+                        x=1
+                    ))
 
                     return fig
                 else: 
@@ -316,8 +389,16 @@ class InputInterface(object):
 
         # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
         # Lay them out
-        for (key, facts) in possible_random_effects.items(): 
-            output.append(self.make_random_checklist(label=key, options=facts))
+        for (key, facts) in possible_random_effects.items():
+            slope = self.make_random_slope_card(variables=key, value=facts[0])
+            intercept = self.make_random_intercept_card(variables=key, value=facts[1])
+            div = html.Div([
+                html.H5(f'{key}'),
+                dbc.Row([dbc.Col(slope, className='w-50'), dbc.Col(intercept, className='w-50')])
+            ])
+            output.append(div)
+                # output.append(dbc.Row([dbc.Col(slope, width=4), dbc.Col(intercept, width=4)]))
+                # output.append(self.make_random_checklist(label=key, options=facts))
             
             # TODO: correlate should only be an option if both are selected
 
@@ -341,7 +422,13 @@ class InputInterface(object):
         data = pd.DataFrame(hist_data, columns=[label])
 
         fig = px.histogram(data, x=label)
-        # fig = ff.create_distplot(hist_data, labels)
+        fig.update_layout(legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        ))
 
         fig_elt = dcc.Graph(id='data_dist', figure=fig)
 
@@ -517,6 +604,34 @@ class InputInterface(object):
                 id=f'{title}_collapse'
             )
         ])
+        return card
+
+    def make_random_slope_card(self, variables: str, value: str):
+        var_names = variables.split(',')
+        base = var_names[0]
+        group = var_names[1]
+        card = dbc.Card([
+            dbc.CardHeader('Random slope'),
+            dbc.CardBody([
+                html.P(f'Does each {base} within {group} differ in their impact on the dependent variable?'),
+                dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_slope')
+            ])
+        ])
+
+        return card
+    
+    def make_random_intercept_card(self, variables: str, value: str):
+        var_names = variables.split(',')
+        base = var_names[0]
+        group = var_names[1]
+        card = dbc.Card([
+            dbc.CardHeader('Random intercept'),
+            dbc.CardBody([
+                html.P(f'Does each {base} within {group} differ on average on the dependent variable?'),
+                dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_intercept')
+            ])
+        ])
+
         return card
 
     def make_random_checklist(self, label: str, options: List): 
