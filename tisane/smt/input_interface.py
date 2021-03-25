@@ -183,6 +183,7 @@ class InputInterface(object):
         fluid=True
         )
         
+        # TODO: Start here - save the values we care about into intermediate storage div; test that first
         @app.callback(
             Output('main_effects_options', 'options'),
             [Input('main_effects_switch', 'value'),
@@ -468,6 +469,63 @@ class InputInterface(object):
                 raise PreventUpdate
 
         @app.callback(
+            Output('data_dist', 'figure'),
+            [
+                Input('family_link_options', 'value'),
+                Input('link_choice', 'value')
+            ],
+            State('data_dist', 'figure')
+        )
+        def update_chart_family(family, link, old_data): 
+            global __value_to_z3__
+            
+            if family is not None: 
+                assert(isinstance(family, str))
+                family_fact = __value_to_z3__[family]
+
+                # Get current data 
+                (curr_data, curr_label) = self.get_data_dist()
+
+                # Get data for family
+                key = f'{family}_data'
+                
+                # Do we need to generate data?
+                if key not in __value_to_z3__.keys(): 
+                    family_data = generate_data_dist_from_facts(fact=family_fact, design=self.design)
+                    # Store data for family in __value_to_z3__ cache
+                    __value_to_z3__[key] = family_data
+                # We already have the data generated in our "cache"
+                else: 
+                    family_data = __value_to_z3__[key]
+
+                if link is not None: 
+                    assert(isinstance(link, str))
+                    link_fact = __value_to_z3__[link]
+                    # Transform the data 
+                    transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
+
+                    # Create a new dataframe
+                    # Generate figure 
+                    fig = go.Figure()
+                    fig.add_trace(go.Histogram(x=curr_data, name=f'{self.design.dv.name}',))
+                    fig.add_trace(go.Histogram(x=transformed_data, name=f'Simulated {family} distribution, {link} transformation.'))
+                    fig.update_layout(barmode='overlay')
+                    fig.update_traces(opacity=0.75)
+                    fig.update_layout(legend=dict(
+                        orientation="h",
+                        yanchor="bottom",
+                        y=1.02,
+                        xanchor="right",
+                        x=1
+                    ))
+
+                    return fig
+                else: 
+                    raise PreventUpdate
+            else: 
+                raise PreventUpdate
+
+        @app.callback(
             Output('generate_code', 'disabled'),
             [Input('main_effects_switch', 'value'),
             Input('interaction_effects_switch', 'value'),
@@ -675,8 +733,7 @@ class InputInterface(object):
             ))
         return html.Div(output)
 
-    def update_data_with_link(self): 
-        pass
+    
 
     def get_link_options(self, family_fact: z3.BoolRef): 
          
