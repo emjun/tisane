@@ -189,6 +189,8 @@ class StatisticalModel(object):
         with open('model.py', 'w') as f: 
             f.write(code_snippet)
 
+        return f.name 
+
     def assign_data(self, source: typing.Union[str, pd.DataFrame]): 
         self.dataset = Dataset(source)
 

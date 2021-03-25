@@ -272,7 +272,11 @@ class StatisticalModelTest(unittest.TestCase):
             interactions=None
         ).assign_data(df)
         
-        sm.generate_statsmodel_code()
+        script = sm.generate_statsmodel_code()
+        
+        # Add test case about script that is generated.
+        with open(script, 'r') as f: 
+            pass
         
     def test_generate_mlr(self): 
         math = ts.Numeric('MathAchievement')
