@@ -3,15 +3,20 @@ from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept, CorrelatedRandomSlopeAndIntercept
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
+from tisane.data import Dataset
 from tisane.smt.knowledge_base import KB
 # from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
 from tisane.smt.rules import *
 # from tisane.smt.query_manager import QM
 
 from abc import abstractmethod
-import pandas as pd
 from typing import List, Any, Tuple
+import typing
 from itertools import chain, combinations
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+
 
 from z3 import *
 
@@ -37,8 +42,10 @@ class StatisticalModel(object):
 
     consts: dict # Z3 consts representing the model and its DV, fixed_ivs, etc. 
 
+    dataset: Dataset
 
-    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None): 
+
+    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None, data: Dataset=None): 
         self.dv = dv
 
         self.graph = Graph()
@@ -74,7 +81,9 @@ class StatisticalModel(object):
         self.link_function = link_func
         # self.variance_func = variance_func
 
-        self.consts = dict()
+        self.consts = dict() 
+
+        self.dataset = data
 
     # TODO: Should be class method? 
     def create_from(graph: Graph): 
@@ -121,8 +130,83 @@ class StatisticalModel(object):
         equation = y + ' = ' + '+'.join(xs)
         return equation
     
-    def generate_statsmodel_code(self): 
-        pass
+    def generate_statsmodel_code(self, **kwargs):  
+        code_snippet = ''
+        ##### Add import statements 
+        code_snippet += 'import pandas as pd\nimport statsmodels.api as sm\nimport statsmodels.formula.api as smf\n'
+        code_snippet += '\n' # Extra line
+
+        ##### Figure out statistical model to construct
+        estimator = sm.OLS
+        if 'estimator' in kwargs: 
+            # GLS is useful for when the residuals are correlated
+            if 'GLS' == kwargs['estimator'].upper(): 
+                estimator = sm.GLS
+            elif 'WLS' == kwargs['estimator'].upper(): 
+                estimator = sm.WLS
+
+        y = self.dataset.get_column(self.dv.name)
+        # xs = None
+        data_code = list()
+        xs_names_code = None
+        for f in self.fixed_ivs: 
+            # Get IV data
+            data = self.dataset.get_column(f.name)
+            data_code.append(f'"{f.name}" : ' + f'{data.to_list()}')
+
+            # Join IV
+            # if xs_names_code is None: 
+            #     xs_names_code = f'xs = df[{f.name}]\n'
+            # else: 
+            #     xs_names_code += f'xs.join({f.name})\n'
+            # xs_names_code.append('df[{f.name}]')
+        
+        ##### Add dataframe
+        y_data_code = 'y = pd.DataFrame({' + f'"{self.dv.name}" : ' + f'{y.to_list()}' + '})'
+        xs_data_code = 'xs = pd.DataFrame({' + f'{",".join(data_code)}' + '})'
+
+            # # Is this the first fixed variable we have?
+            # if xs is None: 
+            #     xs = self.dataset.get_column(f.name)
+            # # Do we already have a set of fixed variables we are adding to?
+            # else: 
+            #     assert(isinstance(xs, pd.DataFrame))
+            #     xs.join(self.dataset.get_column(f.name))
+        
+        # TODO: Walk Python AST to find and use existing variables (e.g., for data)
+        ##### Create dataframe with data for statistical model 
+        # data_code = list()
+        # data_code.append(f'"{f.name}" : ' + f'{data.to_list(0)}')
+        
+        # df_code = 'df = pd.DataFrame({' + f'{','.join(data_code)}' + '})'
+        # code_snippet += df_code
+
+        code_snippet += y_data_code + '\n'
+        code_snippet += xs_data_code + '\n'
+
+        ##### Add code snippet for statistical model
+        # y_var_code += f'y = df[{self.dv.name}]'
+        # xs_var_code += 'xs = ' + f'df[{f.name}]
+
+        model_code = f'model = sm.{estimator.__name__}(endog=y, exog=xs)'
+        code_snippet += model_code 
+
+        code_snippet += '\n' # Extra space
+        
+        ##### Add code for fitting model and generating results
+        results_code = 'results = model.fit()\n'
+        results_code += 'print(results.summary())'
+
+        code_snippet += results_code + '\n'
+
+        ##### Write out code snippet to file 
+        with open('model.py', 'w') as f: 
+            f.write(code_snippet)
+
+    def assign_data(self, source: typing.Union[str, pd.DataFrame]): 
+        self.dataset = Dataset(source)
+
+        return self
 
     # Sets main effects to @param fixed_ivs
     def set_fixed_ivs(self, fixed_ivs: List[AbstractVariable]): 

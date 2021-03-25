@@ -17,6 +17,7 @@ pydot = "*"
 pytest-cov = "*"
 streamlit = "*"
 dash = "*"
+statsmodels = "*"
 
 [requires]
 python_version = "3.7"
