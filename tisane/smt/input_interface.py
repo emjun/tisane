@@ -358,7 +358,6 @@ class InputInterface(object):
                 if len(trigger_val) > 0: 
                     if len(intercept_value) > 0: 
                         new_corr_value = corr_options[0]['value']
-                        import pdb; pdb.set_trace()
                         return slope_value, intercept_value, new_corr_value
                     return slope_value, list(), None
                 else:
@@ -376,7 +375,6 @@ class InputInterface(object):
             elif correlated_type in trigger_id:
                 new_slope_value = slope_options[0]['value']
                 new_intercept_value = intercept_options[0]['value']
-                # import pdb; pdb.set_trace()
                 return [new_slope_value], [new_intercept_value], old_corr_value
 
             # Nothing is selected
