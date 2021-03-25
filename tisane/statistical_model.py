@@ -120,6 +120,9 @@ class StatisticalModel(object):
         
         equation = y + ' = ' + '+'.join(xs)
         return equation
+    
+    def generate_statsmodel_code(self): 
+        pass
 
     # Sets main effects to @param fixed_ivs
     def set_fixed_ivs(self, fixed_ivs: List[AbstractVariable]): 

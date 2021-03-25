@@ -1,16 +1,11 @@
 from tisane.variable import AbstractVariable
-from tisane.smt.app import add_inclusion_prompt
+# from tisane.smt.app import add_inclusion_prompt
 
 from typing import List, Any
 import subprocess
 from subprocess import DEVNULL
 import os
 import sys
-
-
-dirname = os.path.dirname(__file__)
-filename = os.path.join(dirname, 'app.py')
-p = subprocess.Popen(['python', './tisane/smt/app.py'], cwd=os.getcwd(), stdout=DEVNULL, stderr=DEVNULL)
 
         
 class InputInterface(object): 
@@ -25,7 +20,7 @@ class InputInterface(object):
         choices = f' Y or N: '
 
         while True: 
-            ans = add_inclusion_prompt(prompt=prompt, choices=choices)
+            ans = input(prompt + choices)
             if ans.upper() == 'Y': 
                 return ans.upper()
             elif ans.upper() == 'N': 
