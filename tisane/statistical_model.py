@@ -156,7 +156,7 @@ class StatisticalModel(object):
 
         ##### Add dataframe
         # Add comment 
-        code_snippet += '# Load data'
+        code_snippet += '# Load data\n'
         y_data_code = 'y = pd.DataFrame({' + f'"{self.dv.name}" : ' + f'{y.to_list()}' + '})'
         xs_data_code = 'xs = pd.DataFrame({' + f'{",".join(data_code)}' + '})'
 
@@ -164,13 +164,14 @@ class StatisticalModel(object):
         ##### Create dataframe with data for statistical model 
         code_snippet += y_data_code + '\n'
         code_snippet += xs_data_code + '\n'
+        code_snippet += '\n' # Add extra space
 
         ##### Add code snippet for statistical model
         # y_var_code += f'y = df[{self.dv.name}]'
         # xs_var_code += 'xs = ' + f'df[{f.name}]
 
         # Add comment 
-        code_snippet += '# Specify model that Tisane synthesized'
+        code_snippet += '# Specify model that Tisane synthesized\n'
         model_code = f'model = sm.{estimator.__name__}(endog=y, exog=xs)'
         code_snippet += model_code 
 
@@ -178,7 +179,7 @@ class StatisticalModel(object):
         
         ##### Add code for fitting model and generating results
         # Add comment 
-        code_snippet += '# Fit/run model, see output'
+        code_snippet += '# Fit/run model, see output\n'
         results_code = 'results = model.fit()\n'
         results_code += 'print(results.summary())'
 
