@@ -276,16 +276,20 @@ class InputInterface(object):
         
         @app.callback(
             [Output({'type': 'random_slope', 'index': ALL}, 'options'),
-            Output({'type': 'random_intercept', 'index': ALL}, 'options')],
+            Output({'type': 'random_intercept', 'index': ALL}, 'options'),
+            Output({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'options')],
             [Input('random_effects_switch', 'value'),
             Input({'type': 'random_slope', 'index': ALL}, 'value'),
-            Input({'type': 'random_intercept', 'index': ALL}, 'value')],
+            Input({'type': 'random_intercept', 'index': ALL}, 'value'),
+            Input({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'value')],
             [State({'type': 'random_slope', 'index': ALL}, 'options'),
-            State({'type': 'random_intercept', 'index': ALL}, 'options')]
+            State({'type': 'random_intercept', 'index': ALL}, 'options'),
+            State({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'options')]
         )
-        def save_random_effects(switch_value, random_slope_values, random_intercept_values, random_slope_options, random_intercept_options): 
+        def save_random_effects(switch_value, random_slope_values, random_intercept_values, correlation_value, random_slope_options, random_intercept_options, correlation_options): 
             slope_output = list()
             intercept_output = list()
+            correlation_output = list()
             if switch_value: 
                 # Do we have any selected random slopes to save? 
                 if len(random_slope_values) > 0: 
@@ -302,7 +306,15 @@ class InputInterface(object):
                 for option in random_intercept_options: 
                     o = option[0]
                     intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])    
-                return slope_output, intercept_output
+                
+                # Do we have any selected correlations for random effects to save? 
+                if correlation_value is not None: 
+                    # TODO: Store (and verify) random slope values
+                    pass
+                for option in correlation_options: 
+                    o = option[0]
+                    correlation_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])
+                return slope_output, intercept_output, correlation_output
             # else
             for option in random_slope_options: 
                 o = option[0]
@@ -310,58 +322,63 @@ class InputInterface(object):
             for option in random_intercept_options: 
                 o = option[0]
                 intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}]) 
-            return slope_output, intercept_output
+            for option in correlation_options: 
+                assert(len(option) == 2)
+                tmp_options = list()
+                o = option[0]
+                tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+                o = option[1]
+                tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+                correlation_output.append(tmp_options)
+            return slope_output, intercept_output, correlation_output
 
-        # TODO next: Correlated --> Individual slope, intercept 
-        # TODO next: Uncorrelated --> Individual slope, intercept
         @app.callback(
             [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
-            Output({'type': 'random_intercept', 'index': MATCH}, 'value')],
-            [Input({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value'),
-            Input({'type': 'random_slope', 'index': MATCH}, 'options'),
-            Input({'type': 'random_intercept', 'index': MATCH}, 'options')]
+            Output({'type': 'random_intercept', 'index': MATCH}, 'value'),
+            Output({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
+            [Input({'type': 'random_slope', 'index': MATCH}, 'value'),
+            Input({'type': 'random_intercept', 'index': MATCH}, 'value'),
+            Input({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
+            [State({'type': 'random_slope', 'index': MATCH}, 'options'),
+            State({'type': 'random_intercept', 'index': MATCH}, 'options'),
+            State({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'options')]
         )
-        def sync_correlated_random_effects(corr_value, slope_options, intercept_options):             
+        def sync_correlated_random_effects(slope_value, intercept_value, old_corr_value, slope_options, intercept_options, corr_options): 
             # TODO: Use the cache rather than string comparisons here?
-            if corr_value is not None and 'Correlated' in corr_value: 
-                selected = list()
-                for so in slope_options: 
-                    selected.append(so['value'])
-                for io in intercept_options: 
-                    selected.append(io['value'])
-                return selected
-            elif corr_value is not None and 'Uncorrelated' in corr_value: 
-                selected = list()
-                for so in slope_options: 
-                    selected.append(so['value'])
-                for io in intercept_options: 
-                    selected.append(io['value'])
-                return selected
-            else:
-                raise PreventUpdate
+            ctx = dash.callback_context
+            trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            trigger_val = ctx.triggered[0]['value']
 
-        # Individual slope, intercept --> Uncorrelated
-        # @app.callback(
-        #     [Output({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
-        #     [Input({'type': 'random_slope', 'index': MATCH}, 'value'),
-        #     Input({'type': 'random_intercept', 'index': MATCH}, 'value')],
-        #     [State({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
-        # )
-        # def sync_random_slope_intercept_correlation(random_slope, random_intercept, old_correlated_value):
-        #     options = list() 
-
-        #     ctx = dash.callback_context
-        #     input_id = ctx.triggered[0]["prop_id"].split(".")[0]
-        #     import pdb; pdb.set_trace()
-        #     # if input_id == "city-checklist":
-        #     #     all_selected = ["All"] if set(cities_selected) == set(all_cities) else []
-        #     # else:
-        #     #     cities_selected = all_cities if all_selected else []
-        #     # return cities_selected, all_selected
-
+            slope_type = '"type":"random_slope"'
+            intercept_type = '"type":"random_intercept"'
+            correlated_type = '"type":"correlated_random_slope_intercept"'
             
-        #     return [old_correlated_value]
+            # Updated the slope selection 
+            if slope_type in trigger_id:
+                if len(trigger_val) > 0: 
+                    if len(intercept_value) > 0: 
+                        new_corr_value = corr_options[0]['value']
+                        return slope_value, intercept_value, new_corr_value
+                    return slope_value, list(), None
+                else:
+                    return slope_value, intercept_value, None
+            elif intercept_type in trigger_id: 
+                if len(trigger_val) > 0: 
+                    assert(intercept_value is not None)
+                    if len(slope_value) > 0: 
+                        new_corr_value = corr_options[0]['value']
+                        return slope_value, intercept_value, new_corr_value
+                    else: 
+                        return list(), intercept_value, None
+                else: 
+                    return slope_value, intercept_value, None
+            elif correlated_type in trigger_id:
+                new_slope_value = slope_options[0]['value']
+                new_intercept_value = intercept_options[0]['value']
+                return new_slope_value, new_intercept_value, old_corr_value
 
+            # Nothing is selected
+            raise PreventUpdate
                 
         @app.callback(
             [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
@@ -744,7 +761,7 @@ class InputInterface(object):
         base = var_names[0]
         group = var_names[1]
         card = dbc.Card([
-            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random slope', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{variables}'})]),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random slope', 'value': f'{value}'}], id={'type': 'random_slope', 'index': f'{variables}'}, value=[])]),
             dbc.CardBody([
                 html.P(f'Does each {base} within {group} differ in their impact on the dependent variable?'),
                 # dbc.Checklist(options=[{'label': 'Include', 'value': f'{value}'}], id=f'{value}_slope')
@@ -758,7 +775,7 @@ class InputInterface(object):
         base = var_names[0]
         group = var_names[1]
         card = dbc.Card([
-            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random intercept', 'value': f'{value}'}], id={'type': 'random_intercept', 'index': f'{variables}'})]),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': 'Random intercept', 'value': f'{value}'}], id={'type': 'random_intercept', 'index': f'{variables}'}, value=[])]),
             dbc.CardBody([
                 html.P(f'Does each {base} within {group} differ on average on the dependent variable?')
             ])
