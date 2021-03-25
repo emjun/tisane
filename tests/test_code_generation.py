@@ -51,12 +51,28 @@ class TestCodeGeneration(unittest.TestCase):
         with open(script, 'r') as f: 
             pass
         
-    def test_generate_slr_with_interaction(self): 
-        pass
-
     def test_generate_mlr_with_interaction(self): 
-        pass
+        math = ts.Numeric('MathAchievement')
+        # Student-level variables 
+        student = ts.Nominal('id')
+        hw = ts.Numeric('HomeWork')
+        ses = ts.Numeric('SES')
+        race = ts.Nominal('Race')
 
+        sm = ts.StatisticalModel(
+            dv=math,
+            fixed_ivs=[hw, ses, race], 
+            random_ivs=None, 
+            interactions=[(hw, race)]
+        ).assign_data(DataForTests.df)
+
+        script = generate_statsmodel_code(sm, file_name='mlr_interaction_model.py')
+        
+        # Add test case about script that is generated.
+        with open(script, 'r') as f: 
+            pass
+
+    
 class DataForTests(): 
     def random_float_list(lb: int, ub: int, num: int): 
         rlist = list() 
@@ -69,11 +85,12 @@ class DataForTests():
         return rlist
 
     math = random_float_list(lb=0, ub=101, num=50)
+    race = random.choices(['White', 'Hispanic', 'Black', 'Asian', 'Indigenous'], k=50)
     df =  pd.DataFrame({
                 'MathAchievement': math,
                 'HomeWork': np.random.randint(0, 24, 50),
-                'SES': np.random.randint(10000, 150000, 50)}
-                # 'Race': ,
+                'SES': np.random.randint(10000, 150000, 50),
+                'Race': race
                 # 'SES': ,
                 # 'MeanSES': 
-            )
+    })

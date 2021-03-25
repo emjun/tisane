@@ -18,6 +18,7 @@ pytest-cov = "*"
 streamlit = "*"
 dash = "*"
 statsmodels = "*"
+black = "*"
 
 [requires]
 python_version = "3.7"
