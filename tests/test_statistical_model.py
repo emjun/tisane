@@ -250,54 +250,6 @@ class StatisticalModelTest(unittest.TestCase):
         # Nesting
         self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest'))
 
-    def test_generate_slr(self): 
-        math = ts.Numeric('MathAchievement')
-        # Student-level variables 
-        student = ts.Nominal('id')
-        hw = ts.Numeric('HomeWork')
-        race = ts.Nominal('Race')
-
-        df =  pd.DataFrame({
-                'MathAchievement': np.random.randn(50),
-                'HomeWork': np.random.randn(50)+1},
-                # 'Race': ,
-                # 'SES': ,
-                # 'MeanSES': 
-            )
-
-        sm = ts.StatisticalModel(
-            dv=math,
-            fixed_ivs=[hw], 
-            random_ivs=None, 
-            interactions=None
-        ).assign_data(df)
-        
-        script = sm.generate_statsmodel_code()
-        
-        # Add test case about script that is generated.
-        with open(script, 'r') as f: 
-            pass
-        
-    def test_generate_mlr(self): 
-        math = ts.Numeric('MathAchievement')
-        # Student-level variables 
-        student = ts.Nominal('id')
-        hw = ts.Numeric('HomeWork')
-        race = ts.Nominal('Race')
-
-        sm = ts.StatisticalModel(
-            dv=math,
-            fixed_ivs=[hw, race], 
-            random_ivs=None, 
-            interactions=None
-        )
-
-    def test_generate_slr_with_interaction(self): 
-        pass
-
-    def test_generate_mlr_with_interaction(self): 
-        pass
-
     # def test_initialize_random_intercepts_2(self): 
     #     pos_aff = ts.Numeric('Positive Affect')
     #     es = ts.Numeric('Emotional Suppression')
