@@ -337,6 +337,38 @@ class InputInterface(object):
             return slope_output, intercept_output, correlation_output
 
         @app.callback(
+            Output('family_link_options', 'options'),
+            [Input('family_link_switch', 'value'),
+            State('family_link_options', 'options')],
+        )
+        def save_family_link(switch_value, family_link_options): 
+            output = list() 
+            if switch_value: 
+                facts = list() 
+                if family_link_options is not None: 
+                    for o in family_link_options: 
+                        facts.append(o['value'])
+                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                    return output
+                else: 
+                    return family_link_options
+                # check for SAT...
+                # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+                # if is_sat: 
+                #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+                #     return output
+                # else: 
+                #     # TODO: Start a modal?
+                #     raise ValueError(f"Error in saving main effects!")
+            else: 
+                if family_link_options is not None: 
+                    for o in family_link_options: 
+                        output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+
+                    return output
+                return family_link_options
+
+        @app.callback(
             [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
             Output({'type': 'random_intercept', 'index': MATCH}, 'value'),
             Output({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
@@ -406,7 +438,7 @@ class InputInterface(object):
         @app.callback(
             Output('link_choice', 'options'),
             [
-                Input('family_choice', 'value'),
+                Input('family_link_options', 'value'),
                 Input('link_choice', 'options'),
             ],
         )
@@ -433,7 +465,7 @@ class InputInterface(object):
         @app.callback(
             Output('data_dist', 'figure'),
             [
-                Input('family_choice', 'value'),
+                Input('family_link_options', 'value'),
                 Input('link_choice', 'value')
             ],
             State('data_dist', 'figure')
@@ -713,7 +745,7 @@ class InputInterface(object):
                     [
                         dbc.Label('Family'),
                         dcc.Dropdown(
-                            id='family_choice',
+                            id='family_link_options',
                             options=family_options,
                             value=None,
                         ),
