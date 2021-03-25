@@ -169,11 +169,16 @@ class InputInterface(object):
 
         # Create Dash App
         app.layout = dbc.Container([
+            dcc.Store(id='session_store', storage_type='session'),
             dbc.Row([dbc.Col(main_effects_card, width=8)], justify='center'),
             dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
             dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
             dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
-            dbc.Row([dbc.Col(script_download_button, width=8)], justify='center')
+            dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
+
+            # Hidden div for storing intermediate state before updating session
+            # store and eventually checking with synthesizer
+            html.Div(id='intermediate_store', hidden=True)
         ],
         fluid=True
         )
