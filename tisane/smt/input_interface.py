@@ -472,8 +472,8 @@ class InputInterface(object):
         def enable_code_generation(me_switch, i_switch, re_switch, fl_switch): 
             # If all the switches are turned on/True
             if me_switch and i_switch and re_switch and fl_switch: 
-                return False
-            return True
+                return False # disabled: False
+            return True # disable: True
 
         open_browser()
         app.run_server(debug=False, threaded=True)
