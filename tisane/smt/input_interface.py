@@ -312,8 +312,12 @@ class InputInterface(object):
                     # TODO: Store (and verify) random slope values
                     pass
                 for option in correlation_options: 
+                    tmp_options = list()
                     o = option[0]
-                    correlation_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])
+                    tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                    o = option[1]
+                    tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+                    correlation_output.append(tmp_options)
                 return slope_output, intercept_output, correlation_output
             # else
             for option in random_slope_options: 
