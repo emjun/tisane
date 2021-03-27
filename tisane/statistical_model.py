@@ -45,7 +45,7 @@ class StatisticalModel(object):
     dataset: Dataset
 
 
-    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None, data: Dataset=None): 
+    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_function: str=None, data: Dataset=None): 
         self.dv = dv
 
         self.graph = Graph()
@@ -78,7 +78,7 @@ class StatisticalModel(object):
             self.interactions = list()
 
         self.family = family
-        self.link_function = link_func
+        self.link_function = link_function
         # self.variance_func = variance_func
 
         self.consts = dict() 
