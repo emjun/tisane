@@ -78,6 +78,17 @@ def synthesize_statistical_model(design: Design):
     # app.run_server(debug=True)
     synth = Synthesizer()
     return synth.synthesize_statistical_model(design=design)
+
+# Compile to a statistical model 
+def construct_statistical_model(dv: AbstractVariable, ivs: List[AbstractVariable], dataset: Union[os.PathLike, pd.DataFrame]=None):
+    # Construct a Design from variables
+    design = Design(dv=dv, ivs=ivs, dataset=dataset)
+    
+    # Construct graph based on variables
+    gr = design.graph
+
+    
+
     
 
 def verify(input_: Union[Design, ConceptualModel, StatisticalModel], output_: Union[Design, ConceptualModel, StatisticalModel]): 

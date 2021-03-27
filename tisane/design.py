@@ -21,7 +21,7 @@ class Design(object):
     graph : Graph # IR
     dataset: Dataset
 
-    def __init__(self, dv: AbstractVariable, ivs: List[AbstractVariable], source: typing.Union[os.PathLike, pd.DataFrame]=None): 
+    def __init__(self, dv: AbstractVariable, ivs: List[AbstractVariable], dataset: typing.Union[os.PathLike, pd.DataFrame]=None): 
         self.dv = dv
         
         self.graph = Graph() # empty graph
@@ -37,14 +37,14 @@ class Design(object):
         # TODO: Check that DV and IVs have relationships between them
 
 
-        if source: 
-            self.dataset = Dataset(source)
+        if dataset: 
+            self.dataset = Dataset(dataset)
         else: 
             self.dataset = None
 
     # Associate this Study Design with a Dataset
-    def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]): 
-        self.dataset = Dataset(source)
+    def assign_data(self, dataset: typing.Union[os.PathLike, pd.DataFrame]): 
+        self.dataset = Dataset(dataset)
 
         return self
     

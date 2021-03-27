@@ -88,6 +88,19 @@ class TestCodeGeneration(unittest.TestCase):
         # Add test case about script that is generated.
         with open(script, 'r') as f: 
             pass
+    
+    # TODO: Find examples, etc.
+    def test_generate_slogistic(self): 
+        pass
+
+    def test_generate_mlogistic(self): 
+        pass
+
+    def test_generate_mlogistic_interaction(self): 
+        pass
+
+    # def test_multinomial(self):
+    #     pass
 
 class DataForTests(): 
     def random_float_list(lb: int, ub: int, num: int): 
