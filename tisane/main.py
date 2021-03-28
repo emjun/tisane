@@ -67,7 +67,23 @@ def infer_from(input_: Union[Design], output_: str):
 
 # @returns statistical model that reflects the study design 
 def synthesize_statistical_model(design: Design): 
+    ### Initial conceptual checks
+    # TODO: Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    # TODO: Check that the DV does not cause one or more IVs
     synth = Synthesizer()
+
+    ### Generate possible effects, family, and link based on input design (graph)
+    main_effects_options = synth.generate_main_effects(design=design)
+    interaction_effects_options = synth.generate_interaction_effects(design=design)
+    random_effects_options = synth.generate_random_effects(design=design)
+    # May want to load a dictionary of family to link
+    family_options = synth.generate_family_distributions(design=design)
+    link_options = synth.generate_link_functions(design=design)
+
+    # Change to:
+    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
+    # spec is SM or some json dump -> SM -> code generated
+    
     input_cli = InputInterface(design=design, synthesizer=synth)
     return synth.synthesize_statistical_model(design=design)
     

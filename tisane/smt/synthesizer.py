@@ -1,4 +1,5 @@
-from tisane.variable import Nominal, Ordinal, Numeric
+from tisane.graph import Graph
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 # from tisane.smt.input_interface import InputInterface
@@ -8,6 +9,7 @@ from tisane.smt.rules import *
 from tisane.smt.knowledge_base import KB
 
 from z3 import * 
+import networkx as nx
 from itertools import chain, combinations
 from typing import List, Dict
 
@@ -18,6 +20,22 @@ def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+# Order the variables according to @param policy
+# @param policy can be: 'alpha'
+# @returns new list with @param variables ordered according to @param policy
+def order_variables(variables: List[AbstractVariable], policy: str='alpha'):
+    variables_names = [v.name for v in variables]
+    variables_names.sort()
+
+    variables_ordered = list()
+    for n in variables_names:
+        for v in variables:
+            if n == v.name: 
+                variables_ordered.append(v)
+                break
+    
+    return variables_ordered
 
 def parse_fact(fact: str) -> Dict[str, str]:
     fact_dict = dict()
@@ -268,43 +286,62 @@ class Synthesizer(object):
 
         return mdl
 
-    def _generate_fixed_candidates(self, design: Design):
-        fixed_candidates = list() 
+    def _generate_fixed_candidates(self, design: Design) -> Dict:
+        fixed_candidates = dict()
+        # fixed_candidates = list() 
 
-        # Find candidates based on predecessors to the @param design.dv
+        ### Add candidates that are directly part of design
+        fixed_candidates['input'] = order_variables(design.ivs)
+
+        ### Find candidates based on predecessors to the @param design.dv
+        direct_pred_candidates = list()
         # Get the predecessors to the DV 
         dv_pred = design.graph.get_predecessors(design.dv)
         for p in dv_pred: 
             p_var = design.graph.get_variable(name=p)
             if design.graph.has_edge(start=p_var, end=design.dv, edge_type='cause'): 
-                fixed_candidates.append(p_var)
+                direct_pred_candidates.append(p_var)
             elif design.graph.has_edge(start=p_var, end=design.dv, edge_type='associate'): 
-                fixed_candidates.append(p_var)
+                direct_pred_candidates.append(p_var)
+        # Filter out any candidates that were already part of the input set and therefore already part of fixed_candidates
+        direct_pred_filtered = list()
+        for c in direct_pred_candidates:
+            if c not in fixed_candidates['input']:
+                direct_pred_filtered.append(c)
+        fixed_candidates['recommended_direct'] = order_variables(direct_pred_filtered)
         
-        # Control order
-        fixed_candidate_names = [v.name for v in fixed_candidates]
-        fixed_candidate_names.sort()
-        fixed_candidates_ordered = list()
-        for n in fixed_candidate_names:
-            for c in fixed_candidates:
-                if n == c.name: 
-                    fixed_candidates_ordered.append(c)
-                    break
-        fixed_candidates = fixed_candidates_ordered
+        ### Find candidates based on transitive conceptual relationships
+        """
+        Two use cases: 
+        (1) X1 -> X2 -> Y => X1, X2 are fixed candidates
+        (2) X1 -> Y, X2 -> Y, X3 -> X1, X3 -> X2 => X1, X2, X3 are fixed candidates
+        """
+        # Get transitive closure of graph
+        gr = design.graph._graph
+        tc = nx.transitive_closure_dag(design.graph._graph)
+        transitive_pred_candidates = list()
+        # Get the predecessors to the DV 
+        dv_node = design.graph.get_node(design.dv) # Returns tuple: (name, data{variable, is_identifier})
+        dv_pred = tc.predecessors(dv_node[0])
+        for p in dv_pred: 
+            p_var = design.graph.get_variable(name=p)
+            # If the variable was not part of the original graph
+            p_node = design.graph.get_node(p_var)
+            # If the variable is not an identifier
+            if not p_node[1]['is_identifier']:
+                if p_var not in direct_pred_candidates:
+                    transitive_pred_candidates.append(p_var)
+        fixed_candidates['recommended_transitive'] = order_variables(transitive_pred_candidates)
 
         return fixed_candidates
     
     def generate_main_effects(self, design: Design) -> Dict:
         fixed_candidates = self._generate_fixed_candidates(design)
+       
+        return fixed_candidates
 
-        fixed_facts = dict()
-        dv = design.dv
-        
-        # Get facts
-        for f in fixed_candidates:
-            fixed_facts[f.name] = [FixedEffect(f.const,dv.const), NoFixedEffect(f.const,dv.const)]
-        
-        return fixed_facts
+    def generate_fixed_effects_candidates(self, design: Design) -> Dict:
+        fixed_candidates = self._generate_fixed_candidates(design)
     
     def generate_interaction_effects(self, design: Design) -> Dict: 
         fixed_candidates = self._generate_fixed_candidates(design)
@@ -491,7 +528,7 @@ class Synthesizer(object):
         
         
     def generate_and_select_family(self, design: Design, statistical_model: StatisticalModel): 
-        family_facts = self.generate_family(design=design)
+        family_facts = self.generate_family_distributions(design=design)
         dv = design.dv
 
         # End-user: Ask about which family 

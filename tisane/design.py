@@ -23,6 +23,8 @@ class Design(object):
 
     def __init__(self, dv: AbstractVariable, ivs: List[AbstractVariable], source: typing.Union[os.PathLike, pd.DataFrame]=None): 
         self.dv = dv
+
+        self.ivs = ivs # TODO: May want to replace this if move away from Design as Query object
         
         self.graph = Graph() # empty graph
         
