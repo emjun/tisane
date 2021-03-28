@@ -24,7 +24,7 @@ import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-port = '8080' # default dash port
+port = '8080' # FYI: default dash port is 8050
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
 
@@ -40,173 +40,31 @@ class InputInterface(object):
         self.synthesizer = synthesizer
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-        
-        input_fg, derived_direct_fg, derived_transitive_fg = self.populate_main_effects(main_effects)
-        main_switch = dbc.FormGroup([
-                dbc.Checklist(
-                    options=[
-                        {"label": "🔐", "value": False}
-                    ],
-                    value=[],
-                    id='main_effects_switch',
-                    switch=True,
-                    style={'float': 'right'}
-                ),
-            ],
-            id='main_effects_group'
-        )
 
-        interaction_heading = html.H1(children='Interaction Effects')
-        interaction_effects = self.populate_interaction_effects(interaction_effects)
-        interaction_switch = dbc.FormGroup([
-                dbc.Checklist(
-                    options=[
-                        {"label": "🔐", "value": False}
-                        # {"label": "Save and lock interaction effects", "value": False}
-                    ],
-                    value=[],
-                    id='interaction_effects_switch',
-                    switch=True,
-                    style={'float': 'right'}
-                ),
-            ],
-            id='interaction_effects_group'
-        )
-
-        random_heading = html.H1(children='Random Effects')
-        # random_effects = self.populate_random_effects()
-        random_switch = dbc.FormGroup([
-                dbc.Checklist(
-                    options=[
-                        {"label": "🔐", "value": False}
-                        # {"label": "Save and lock random effects", "value": False}
-                    ],
-                    value=[],
-                    id='random_effects_switch',
-                    switch=True,
-                    style={'float': 'right'}
-                ),
-            ],
-            id='random_effects_group'
-        )
-
-        family_link_controls = self.make_family_link_options()
-        family_link_chart = self.draw_data_dist()
-        family_link_switch = dbc.FormGroup([
-                dbc.Checklist(
-                    options=[
-                        {"label": "🔐", "value": False}
-                        # {"label": "Save and lock random effects", "value": False}
-                    ],
-                    value=[],
-                    id='family_link_switch',
-                    switch=True,
-                    style={'float': 'right'}
-                ),
-            ],
-            id='family_link_group'
-        )
-
-        
-        # TODO: Layout Main | Interaction in a visually appealing way
-        main_title = html.Div([
-            html.H3('Main effects'),
-            dbc.Alert(
-                "TODO: Explanation of main effects", className="mb-0",
-                id="main_alert",
-                dismissable=True,
-                fade=True, 
-                is_open=True
-            )
-        ])
-
-        main_effects_div = self.create_main_effects_div(input_fg, derived_direct_fg, derived_transitive_fg, main_title, main_switch)
-
-        main_effects_card = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.H3("Main effects"),
-                    main_effects,
-                    main_switch
-                ]
-            ),
-            color='light',
-            outline=True
-        )
-
-        interaction_title = html.Div([
-            html.H3('Interaction effects'),
-            dbc.Alert(
-                "TODO: Explanation of main effects", className="mb-0",
-                id="interaction_alert",
-                dismissable=True,
-                fade=True, 
-                is_open=True
-            )
-        ])
-
-        # interaction_effects_div = self.create_interaction_effects_div(interaction_title, interaction_switch)
-
-        interaction_effects_card = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.H3("Interaction effects"),
-                    interaction_effects,
-                    interaction_switch
-                ]
-            ),
-            color='light',
-            outline=True
-        )
-
-        random_effects_card = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.H3("Random effects"),
-                    # random_effects,
-                    random_switch
-                ]
-            ),
-            color='light',
-            outline=True
-        )
-
-        family_and_link_card = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.H3("Family and link functions"),
-                    dbc.Row(
-                        [
-                            dbc.Col(family_link_chart, md=8),
-                            dbc.Col(family_link_controls, md=4),
-                        ],
-                        align="center",
-                    ),
-                    family_link_switch
-                ]
-            ),
-            color='light',
-            outline=True
-        )
-
+        ##### Layout main aspects of UI
+        main_effects_div = self.layout_main_effects_div(main_effects)
+        interaction_effects_div = self.layout_interaction_effects_div(interaction_effects)
+        # random_effects_div = self.layout_random_effects_div(random_effects)
         script_download_button = dbc.Button("Generate code snippet and model diagnostics", id='generate_code', color="primary", block=True, disabled=True)
-
 
         # Create Dash App
         app.layout = dbc.Container([
-            dcc.Store(id='session_store', storage_type='session'),
-            dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
-            dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
-            # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
-            # dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
-            # dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
+                dcc.Store(id='session_store', storage_type='session'),
+                dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
+                dbc.Row([dbc.Col(interaction_effects_div, width=8)], justify='center'),
+                # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
+                # dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
+                dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
 
-            # Hidden div for storing intermediate state before updating session
-            # store and eventually checking with synthesizer
-            html.Div(id='intermediate_store', hidden=True)
-        ],
-        fluid=True
+                # Hidden div for storing intermediate state before updating session
+                # store and eventually checking with synthesizer
+                html.Div(id='intermediate_store', hidden=True)
+            ],
+            fluid=True
         )
+        
+        # TODO: Move outside ctor?
+        ##### Add callbacks for interactions
         
         # TODO: Start here - save the values we care about into intermediate storage div; test that first
         @app.callback(
@@ -563,11 +421,189 @@ class InputInterface(object):
                 return False # disabled: False
             return True # disable: True
 
+        ##### Start and run app on local server
+        self.app = app
         open_browser()
         app.run_server(debug=False, threaded=True, port=8080)
         
-        self.app = app
+    def create_switch(self, switch_id: str, form_group_id: str): 
+        switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "🔐", "value": False}
+                    ],
+                    value=[],
+                    id=switch_id,
+                    switch=True,
+                    style={'float': 'right'}
+                ),
+            ],
+            id=form_group_id
+        )
+
+        return switch
+        
+    def layout_main_effects_div(self, main_effects: Dict[str, List[AbstractVariable]]): 
+        ##### Collect all elements
+        # Create main effects title 
+        main_title = html.Div([
+            html.H3('Main effects'),
+            dbc.Alert(
+                "TODO: Explanation of main effects", className="mb-0",
+                id="main_alert",
+                dismissable=True,
+                fade=True, 
+                is_open=True
+            )
+        ])
+        
+        # Get form groups for each set of main effects options
+        input_fg, derived_direct_fg, derived_transitive_fg = self.populate_main_effects(main_effects)
+        
+        # Create main effects switch
+        main_switch = self.create_switch(switch_id='main_effects_switch', form_group_id='main_effects_group')
+        
+        ##### Combine all elements
+        # Create div 
+        labels = list() 
+        fg_combo = list()
+        if len(input_fg.children[0].options) > 0: 
+            labels.append(dbc.Col(self.create_label_tooltip('Specified', 'End-user has already specified these variables as independent variables.'), width=2))
+            fg_combo.append(dbc.Col(input_fg, width=2))
+        if len(derived_direct_fg.children[0].options) > 0: 
+            labels.append(dbc.Col(self.create_label_tooltip('Derived directly', 'These are indepepdent variables that also cause or are associated with the dependent variable but were not specified.'), width=2))
+            fg_combo.append(dbc.Col(derived_direct_fg, width=2))
+        if len(derived_transitive_fg.children[0].options) > 0: 
+            labels.append(dbc.Col(self.create_label_tooltip('Derived transitively', 'These are independent variables that may underlie independent variables that are already specified.'), width=2))
+            fg_combo.append(dbc.Col(derived_transitive_fg, width=2))
+
+        main_effects_div = html.Div([
+                main_title,
+                dbc.Row(labels),
+                dbc.Row(fg_combo),
+                main_switch
+        ])
+
+        ##### Return div
+        return main_effects_div
+
+    def layout_interaction_effects_div(self, interaction_effects): 
+        ##### Collect all elements
+        # Create interaction effects title 
+        interaction_effects_title = html.Div([
+            html.H3('Interaction effects'),
+            dbc.Alert(
+                "TODO: Explanation of interaction effects", className="mb-0",
+                id="interaction_alert",
+                dismissable=True,
+                fade=True, 
+                is_open=True
+            )
+        ])
+        
+        # Get accordion for the interaction effects (two-way, n-way)
+        interaction_effects = self.populate_interaction_effects(interaction_effects)
+        
+        # Get chart for visualizing interactions
+        two_way_interaction_vis = self.create_two_way_interaction_chart(('HomeWork', 'Race'), self.design.dv, self.design.dataset.dataset)
+
+        # Create interaction effects switch
+        interaction_switch = self.create_switch(switch_id='interaction_effects_switch', form_group_id='interaction_effects_group')
+        
+        
+        ##### Combine all elements
+        # Create div 
+
+        # interaction_effects_card = dbc.Card(
+        #     dbc.CardBody(
+        #         [
+        #             html.H3("Interaction effects"),
+        #             interaction_effects,
+        #             interaction_switch
+        #         ]
+        #     ),
+        #     color='light',
+        #     outline=True
+        # )
+
+        interaction_effects_div = html.Div([
+            interaction_effects_title, 
+            interaction_effects,
+            two_way_interaction_vis,
+            interaction_switch
+        ])
+
+        ##### Return div
+        return interaction_effects_div
+
+    def layout_random_effects_div(self, random_effects): 
+        random_heading = html.H1(children='Random Effects')
+        # random_effects = self.populate_random_effects()
+        random_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "🔐", "value": False}
+                        # {"label": "Save and lock random effects", "value": False}
+                    ],
+                    value=[],
+                    id='random_effects_switch',
+                    switch=True,
+                    style={'float': 'right'}
+                ),
+            ],
+            id='random_effects_group'
+        )
     
+        random_effects_card = dbc.Card(
+                dbc.CardBody(
+                    [
+                        html.H3("Random effects"),
+                        # random_effects,
+                        random_switch
+                    ]
+                ),
+                color='light',
+                outline=True
+            )
+
+
+
+    def layout_family_link_div(self): 
+        family_link_controls = self.make_family_link_options()
+        family_link_chart = self.draw_data_dist()
+        family_link_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "🔐", "value": False}
+                        # {"label": "Save and lock random effects", "value": False}
+                    ],
+                    value=[],
+                    id='family_link_switch',
+                    switch=True,
+                    style={'float': 'right'}
+                ),
+            ],
+            id='family_link_group'
+        )    
+
+        family_and_link_card = dbc.Card(
+                dbc.CardBody(
+                    [
+                        html.H3("Family and link functions"),
+                        dbc.Row(
+                            [
+                                dbc.Col(family_link_chart, md=8),
+                                dbc.Col(family_link_controls, md=4),
+                            ],
+                            align="center",
+                        ),
+                        family_link_switch
+                    ]
+                ),
+                color='light',
+                outline=True
+            )
+        
     # @param main_effects is a dictionary of pre-generated possible main effects
     def populate_main_effects(self, main_effects: Dict[str, List[AbstractVariable]]): 
         dv = self.design.dv # Might want to get rid of this
@@ -616,11 +652,8 @@ class InputInterface(object):
         return input_fg, derived_direct_fg, derived_transitive_fg
 
     def populate_interaction_effects(self, interaction_effects: List[Tuple[AbstractVariable, ...]]): 
-        # global __value_to_z3__
-
         output = list()
 
-        # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
         # Lay them out
         for (num_interactions, options) in interaction_effects.items(): 
             interaction_options = list()
@@ -634,6 +667,17 @@ class InputInterface(object):
             
         return html.Div(output, className='accordion')
     
+    def create_two_way_interaction_chart(self, interaction: Tuple[str, str], dv: AbstractVariable, data: pd.DataFrame):
+        assert(len(interaction) == 2)
+        x = interaction[0]
+        color_group = interaction[1]
+        import pdb; pdb.set_trace()
+        fig = px.line(data, x=x, y=dv.name, color=color_group)
+
+        fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x}_{color_group}', figure=fig)        
+        
+        return fig_elt
+
     def populate_random_effects(self): 
         # Could be random slope OR random interaction 
         output = list()
