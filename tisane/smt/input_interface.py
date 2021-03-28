@@ -811,13 +811,14 @@ class InputInterface(object):
         labels = list() 
         fg_combo = list()
         if len(input_fg.children[0].options) > 0: 
+            # TODO: Start here: Add tooltips to all 
             labels.append(dbc.Col(self.create_label_tooltip('Specified', 'End-user has already specified these variables as independent variables.'), width=2))
             fg_combo.append(dbc.Col(input_fg, width=2))
         if len(derived_direct_fg.children[0].options) > 0: 
-            labels.append(dbc.Col(html.P('Derived direct:'), width=2))
+            labels.append(dbc.Col(self.create_label_tooltip('Derived directly', 'These are indepepdent variables that also cause or are associated with the dependent variable but were not specified.'), width=2))
             fg_combo.append(dbc.Col(derived_direct_fg, width=2))
         if len(derived_transitive_fg.children[0].options) > 0: 
-            labels.append(dbc.Col(html.P('Derived transitive:'), width=2))
+            labels.append(dbc.Col(self.create_label_tooltip('Derived transitively', 'These are independent variables that may underlie independent variables that are already specified.'), width=2))
             fg_combo.append(dbc.Col(derived_transitive_fg, width=2))
 
         main_effects_div = html.Div([
