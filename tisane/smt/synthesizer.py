@@ -342,6 +342,8 @@ class Synthesizer(object):
 
     def generate_fixed_effects_candidates(self, design: Design) -> Dict:
         fixed_candidates = self._generate_fixed_candidates(design)
+
+        return fixed_candidates
     
     def generate_interaction_effects(self, design: Design) -> Dict: 
         fixed_candidates = self._generate_fixed_candidates(design)
