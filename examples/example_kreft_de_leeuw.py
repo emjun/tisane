@@ -30,14 +30,15 @@ student.has(ses)
 
 math_data = np.random.randn(1, 50)
 hw_data = np.random.randn(1,50) + 1
+ses_data = np.random.randn(1,50) * 10000
 race_data = random.choices(['White', 'Hispanic', 'Black', 'Asian', 'Indigenous'], k=50)
 # import pdb; pdb.set_trace()
 # Data source, use synthetic data
 data =  pd.DataFrame({
     'MathAchievement': math_data.tolist()[0],
     'HomeWork': hw_data.tolist()[0],
-    'Race': race_data}
-    # 'SES': ,
+    'Race': race_data,
+    'SES': ses_data[0]}
     # 'MeanSES': 
     )
 

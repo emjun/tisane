@@ -24,7 +24,7 @@ import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-port = '8080' # FYI: default dash port is 8050
+port = '8081' # FYI: default dash port is 8081
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
 
@@ -424,7 +424,7 @@ class InputInterface(object):
         ##### Start and run app on local server
         self.app = app
         open_browser()
-        app.run_server(debug=False, threaded=True, port=8080)
+        app.run_server(debug=False, threaded=True, port=8081)
         
     def create_switch(self, switch_id: str, form_group_id: str): 
         switch = dbc.FormGroup([
@@ -506,6 +506,7 @@ class InputInterface(object):
         
         # Get chart for visualizing interactions
         two_way_interaction_vis = self.create_two_way_interaction_chart(('HomeWork', 'Race'), self.design.dv, self.design.dataset.dataset)
+        three_way_interaction_vis = self.create_three_way_interaction_chart(('HomeWork', 'Race', 'SES'), self.design.dv, self.design.dataset.dataset)
 
         # Create interaction effects switch
         interaction_switch = self.create_switch(switch_id='interaction_effects_switch', form_group_id='interaction_effects_group')
@@ -530,6 +531,7 @@ class InputInterface(object):
             interaction_effects_title, 
             interaction_effects,
             two_way_interaction_vis,
+            three_way_interaction_vis,
             interaction_switch
         ])
 
@@ -675,6 +677,17 @@ class InputInterface(object):
         fig = px.line(data, x=x, y=dv.name, color=color_group)
 
         fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x}_{color_group}', figure=fig)        
+        
+        return fig_elt
+
+    def create_three_way_interaction_chart(self, interaction: Tuple[str, str, str], dv: AbstractVariable, data: pd.DataFrame):
+        assert(len(interaction) == 3)
+        x = interaction[0]
+        color_group = interaction[1]
+        facet = interaction[2]
+        fig = px.line(data, x=x, y=dv.name, color=color_group, facet_col=facet)
+
+        fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x}_{color_group}', figure=fig)        
         
         return fig_elt
 
