@@ -40,8 +40,7 @@ class InputInterface(object):
         self.synthesizer = synthesizer
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-        main_heading = html.H1(children='Main Effects')
+        
         input_fg, derived_direct_fg, derived_transitive_fg = self.populate_main_effects(main_effects)
         main_switch = dbc.FormGroup([
                 dbc.Checklist(
@@ -197,7 +196,7 @@ class InputInterface(object):
         app.layout = dbc.Container([
             dcc.Store(id='session_store', storage_type='session'),
             dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
-            # dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
+            dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
             # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
             # dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
             # dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
@@ -462,9 +461,9 @@ class InputInterface(object):
                 button_id = ctx.triggered[0]["prop_id"].split(".")[0]
 
             if button_id == "two-way_toggle" and n1:
-                return not is_open1, False
+                return not is_open1, is_open2
             elif button_id == "n-way_toggle" and n2:
-                return False, not is_open2
+                return is_open1, not is_open2
             return False, False
 
         @app.callback(
