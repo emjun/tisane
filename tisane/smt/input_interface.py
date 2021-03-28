@@ -787,20 +787,21 @@ class InputInterface(object):
         return html.Div(output)
 
     def create_label_tooltip(self, label: str, description: str): 
+        name = label.replace(' ', '_')
         tooltip = html.Div(
             [
                 html.P(
                     [
                         html.Span(
                             label,
-                            id=f'{label}_tooltip_target',
+                            id=f'{name}_tooltip_target',
                             style={"textDecoration": "underline", "cursor": "pointer"},
                         )
                     ]
                 ),
                 dbc.Tooltip(
                     description,
-                    target=f'{label}_tooltip_target',
+                    target=f'{name}_tooltip_target',
                 )
             ]
         )   
