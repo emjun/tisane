@@ -450,10 +450,9 @@ class Synthesizer(object):
 
         # Generate possible interaction candidates from fixed_candidates
         interaction_candidates = [c for c in powerset(fixed_candidates_list) if len(c)>=2]
-
         interaction_facts['two-way'] = [c for c in interaction_candidates if len(c) == 2]
         interaction_facts['n-way'] = [c for c in interaction_candidates if len(c) > 2]
-    
+        
         return interaction_facts
     
     def generate_random_effects(self, design: Design): 

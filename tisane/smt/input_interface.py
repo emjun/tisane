@@ -24,7 +24,7 @@ import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-port = '8050' # default dash port
+port = '8080' # default dash port
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
 
@@ -113,26 +113,13 @@ class InputInterface(object):
             html.H3('Main effects'),
             dbc.Alert(
                 "TODO: Explanation of main effects", className="mb-0",
-                id="main_toast",
+                id="main_alert",
                 dismissable=True,
                 fade=True, 
                 is_open=True
             )
         ])
-        # main_effects_div = html.Div([
-        #         main_title,
-        #         dbc.Row([
-        #             dbc.Col(html.P('Included:'), width=2),
-        #             dbc.Col(html.P('Derived direct:'), width=2),
-        #             dbc.Col(html.P('Derived transitive:'), width=2),
-        #         ]),
-        #         dbc.Row([
-        #             dbc.Col(main_input, width=2),
-        #             dbc.Col(main_derived_direct, width=2),
-        #             dbc.Col(main_derived_transitive, width=2)
-        #         ]),
-        #         main_switch
-        # ])
+
         main_effects_div = self.create_main_effects_div(input_fg, derived_direct_fg, derived_transitive_fg, main_title, main_switch)
 
         main_effects_card = dbc.Card(
@@ -146,6 +133,19 @@ class InputInterface(object):
             color='light',
             outline=True
         )
+
+        interaction_title = html.Div([
+            html.H3('Interaction effects'),
+            dbc.Alert(
+                "TODO: Explanation of main effects", className="mb-0",
+                id="interaction_alert",
+                dismissable=True,
+                fade=True, 
+                is_open=True
+            )
+        ])
+
+        # interaction_effects_div = self.create_interaction_effects_div(interaction_title, interaction_switch)
 
         interaction_effects_card = dbc.Card(
             dbc.CardBody(
@@ -564,7 +564,7 @@ class InputInterface(object):
             return True # disable: True
 
         open_browser()
-        app.run_server(debug=False, threaded=True)
+        app.run_server(debug=False, threaded=True, port=8080)
         
         self.app = app
     
