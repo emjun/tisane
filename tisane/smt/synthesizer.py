@@ -424,6 +424,24 @@ class Synthesizer(object):
         # # Update result StatisticalModel based on user selection 
         # sm = self.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
 
+    def generate_interaction_effects(self, design: Design):
+        interaction_facts = dict() 
+        dv = design.dv
+
+        fixed_candidates = self._generate_fixed_candidates(design) # Returns a dict
+        # Collapse fixed_candidates dict into list
+        fixed_candidates_list = list()
+        for (key, value) in fixed_candidates.items():
+            fixed_candidates_list += value
+
+        # Generate possible interaction candidates from fixed_candidates
+        interaction_candidates = [c for c in powerset(fixed_candidates_list) if len(c)>=2]
+
+        interaction_facts['two-way'] = [c for c in interaction_candidates if len(c) == 2]
+        interaction_facts['n-way'] = [c for c in interaction_candidates if len(c) > 2]
+    
+        return interaction_facts
+    
     def generate_random_effects(self, design: Design): 
         fixed_candidates = self._generate_fixed_candidates(design)
 

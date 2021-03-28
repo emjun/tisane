@@ -177,6 +177,37 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(len(me_candidates['recommended_transitive']), 1)
         self.assertTrue(v3 in me_candidates['recommended_transitive'])
 
+    def test_generate_interaction_effects(self):
+        dv = ts.Numeric('DV')
+        v1 = ts.Nominal('V1')
+        v2 = ts.Nominal('V2')
+        pid = ts.Nominal('PID') 
+
+        # Conceptual relationships
+        v1.causes(dv)
+        v2.causes(dv)
+        # Data measurement relationships
+        pid.has(v1)
+        pid.has(v2)
+
+        design = ts.Design(
+            dv = dv, 
+            ivs = [v1, v2]
+        )
+
+        synth = Synthesizer()
+        self.assertTrue(len(v1.relationships), 1)
+        ixn_candidates = synth.generate_interaction_effects(design)
+        two_way = ixn_candidates['two-way']
+        n_way = ixn_candidates['n-way']
+        self.assertIsInstance(two_way, list)
+        self.assertIsInstance(n_way, list)
+        self.assertEqual(len(two_way), 1)
+        self.assertEqual(len(n_way), 0)
+        self.assertTrue((v1, v2) in two_way)
+        
+
+
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     # @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
     # def test_generate_and_select_effects_sets_from_design_fixed_only(self, mock_increment0, mock_increment1): 
