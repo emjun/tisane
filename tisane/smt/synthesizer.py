@@ -12,6 +12,7 @@ from z3 import *
 import networkx as nx
 from itertools import chain, combinations
 from typing import List, Dict
+from copy import deepcopy
 
 # Declare data type
 Object = DeclareSort('Object')
@@ -285,6 +286,18 @@ class Synthesizer(object):
         mdl =  s.model()
 
         return mdl
+    
+    # Reduce the graph associated with @param Design 
+    # Remove cycles in graph based on the DV
+    def reduce_graph(self, design: Design):
+        gr_copy = deepcopy(design.graph._graph)
+        dv_name = design.dv.name
+
+        # Iterate over outgoing edges from design.dv
+        for n in design.graph._graph.neighbors(dv_name):
+            gr_copy.remove_edge(dv_name, n)
+        
+        return gr_copy
 
     def _generate_fixed_candidates(self, design: Design) -> Dict:
         fixed_candidates = dict()
@@ -308,7 +321,7 @@ class Synthesizer(object):
         for c in direct_pred_candidates:
             if c not in fixed_candidates['input']:
                 direct_pred_filtered.append(c)
-        fixed_candidates['recommended_direct'] = order_variables(direct_pred_filtered)
+        fixed_candidates['derived_direct'] = order_variables(direct_pred_filtered)
         
         ### Find candidates based on transitive conceptual relationships
         """
@@ -316,9 +329,10 @@ class Synthesizer(object):
         (1) X1 -> X2 -> Y => X1, X2 are fixed candidates
         (2) X1 -> Y, X2 -> Y, X3 -> X1, X3 -> X2 => X1, X2, X3 are fixed candidates
         """
-        # Get transitive closure of graph
+        # Get transitive closure of graph with reduced graph (remove cycles)
         gr = design.graph._graph
-        tc = nx.transitive_closure_dag(design.graph._graph)
+        reduced_gr = self.reduce_graph(design)
+        tc = nx.transitive_closure_dag(reduced_gr)
         transitive_pred_candidates = list()
         # Get the predecessors to the DV 
         dv_node = design.graph.get_node(design.dv) # Returns tuple: (name, data{variable, is_identifier})
@@ -331,7 +345,7 @@ class Synthesizer(object):
             if not p_node[1]['is_identifier']:
                 if p_var not in direct_pred_candidates:
                     transitive_pred_candidates.append(p_var)
-        fixed_candidates['recommended_transitive'] = order_variables(transitive_pred_candidates)
+        fixed_candidates['derived_transitive'] = order_variables(transitive_pred_candidates)
 
         return fixed_candidates
     

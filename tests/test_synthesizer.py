@@ -47,8 +47,8 @@ class SynthesizerTest(unittest.TestCase):
         self.assertIsInstance(me_candidates['input'], list)
         self.assertEqual(len(me_candidates['input']), 1)
         self.assertTrue(v1 in me_candidates['input'])
-        self.assertEqual(len(me_candidates['recommended_direct']), 0)
-        self.assertEqual(len(me_candidates['recommended_transitive']), 0)
+        self.assertEqual(len(me_candidates['derived_direct']), 0)
+        self.assertEqual(len(me_candidates['derived_transitive']), 0)
 
     def test_generate_main_effects_all_in_query_2(self):
         dv = ts.Numeric('DV')
@@ -76,8 +76,8 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(len(me_candidates['input']), 2)
         self.assertTrue(v1 in me_candidates['input'])
         self.assertTrue(v2 in me_candidates['input'])
-        self.assertEqual(len(me_candidates['recommended_direct']), 0)
-        self.assertEqual(len(me_candidates['recommended_transitive']), 0)
+        self.assertEqual(len(me_candidates['derived_direct']), 0)
+        self.assertEqual(len(me_candidates['derived_transitive']), 0)
 
     def test_generate_main_effects_infer_direct(self):
         dv = ts.Numeric('DV')
@@ -107,9 +107,9 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(len(me_candidates['input']), 2)
         self.assertTrue(v1 in me_candidates['input'])
         self.assertTrue(v2 in me_candidates['input'])
-        self.assertEqual(len(me_candidates['recommended_direct']), 1)
-        self.assertTrue(v3 in me_candidates['recommended_direct'])
-        self.assertEqual(len(me_candidates['recommended_transitive']), 0)
+        self.assertEqual(len(me_candidates['derived_direct']), 1)
+        self.assertTrue(v3 in me_candidates['derived_direct'])
+        self.assertEqual(len(me_candidates['derived_transitive']), 0)
 
     def test_generate_main_effects_infer_transitive_1(self):
         dv = ts.Numeric('DV')
@@ -139,9 +139,9 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(len(me_candidates['input']), 2)
         self.assertTrue(v1 in me_candidates['input'])
         self.assertTrue(v2 in me_candidates['input'])
-        self.assertEqual(len(me_candidates['recommended_direct']), 0)
-        self.assertEqual(len(me_candidates['recommended_transitive']), 1)
-        self.assertTrue(v3 in me_candidates['recommended_transitive'])
+        self.assertEqual(len(me_candidates['derived_direct']), 0)
+        self.assertEqual(len(me_candidates['derived_transitive']), 1)
+        self.assertTrue(v3 in me_candidates['derived_transitive'])
 
     def test_generate_main_effects_infer_transitive_2(self):
         dv = ts.Numeric('DV')
@@ -173,9 +173,9 @@ class SynthesizerTest(unittest.TestCase):
         self.assertEqual(len(me_candidates['input']), 2)
         self.assertTrue(v1 in me_candidates['input'])
         self.assertTrue(v2 in me_candidates['input'])
-        self.assertEqual(len(me_candidates['recommended_direct']), 0)
-        self.assertEqual(len(me_candidates['recommended_transitive']), 1)
-        self.assertTrue(v3 in me_candidates['recommended_transitive'])
+        self.assertEqual(len(me_candidates['derived_direct']), 0)
+        self.assertEqual(len(me_candidates['derived_transitive']), 1)
+        self.assertTrue(v3 in me_candidates['derived_transitive'])
 
     def test_generate_interaction_effects_1(self):
         dv = ts.Numeric('DV')

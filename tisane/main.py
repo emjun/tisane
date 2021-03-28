@@ -75,16 +75,16 @@ def synthesize_statistical_model(design: Design):
     ### Generate possible effects, family, and link based on input design (graph)
     main_effects_options = synth.generate_main_effects(design=design)
     interaction_effects_options = synth.generate_interaction_effects(design=design)
-    random_effects_options = synth.generate_random_effects(design=design)
+    # random_effects_options = synth.generate_random_effects(design=design)
     # May want to load a dictionary of family to link
-    family_options = synth.generate_family_distributions(design=design)
-    link_options = synth.generate_link_functions(design=design)
+    # family_options = synth.generate_family_distributions(design=design)
+    # link_options = synth.generate_link_functions(design=design)
 
     # Change to:
     # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
     # spec is SM or some json dump -> SM -> code generated
     
-    input_cli = InputInterface(design=design, synthesizer=synth)
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, design=design, synthesizer=synth)
     return synth.synthesize_statistical_model(design=design)
     
 

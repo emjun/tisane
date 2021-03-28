@@ -4,7 +4,7 @@ from tisane.statistical_model import StatisticalModel
 from tisane.smt.synthesizer import Synthesizer
 from tisane.helpers import *
 
-from typing import List, Any
+from typing import List, Any, Tuple
 import subprocess
 from subprocess import DEVNULL
 import os
@@ -35,14 +35,14 @@ class InputInterface(object):
     statistical_model: StatisticalModel
     app: dash.Dash
 
-    def __init__(self, design: Design, synthesizer: Synthesizer):
+    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], design: Design, synthesizer: Synthesizer):
         self.design = design
         self.synthesizer = synthesizer
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
         main_heading = html.H1(children='Main Effects')
-        main_effects = self.populate_main_effects()
+        input_fg, derived_direct_fg, derived_transitive_fg = self.populate_main_effects(main_effects)
         main_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
@@ -58,7 +58,7 @@ class InputInterface(object):
         )
 
         interaction_heading = html.H1(children='Interaction Effects')
-        interaction_effects = self.populate_interaction_effects()
+        interaction_effects = self.populate_interaction_effects(interaction_effects)
         interaction_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
@@ -75,7 +75,7 @@ class InputInterface(object):
         )
 
         random_heading = html.H1(children='Random Effects')
-        random_effects = self.populate_random_effects()
+        # random_effects = self.populate_random_effects()
         random_switch = dbc.FormGroup([
                 dbc.Checklist(
                     options=[
@@ -110,6 +110,32 @@ class InputInterface(object):
 
         
         # TODO: Layout Main | Interaction in a visually appealing way
+        main_title = html.Div([
+            html.H3('Main effects'),
+            dbc.Alert(
+                "TODO: Explanation of main effects", className="mb-0",
+                id="main_toast",
+                dismissable=True,
+                fade=True, 
+                is_open=True
+            )
+        ])
+        # main_effects_div = html.Div([
+        #         main_title,
+        #         dbc.Row([
+        #             dbc.Col(html.P('Included:'), width=2),
+        #             dbc.Col(html.P('Derived direct:'), width=2),
+        #             dbc.Col(html.P('Derived transitive:'), width=2),
+        #         ]),
+        #         dbc.Row([
+        #             dbc.Col(main_input, width=2),
+        #             dbc.Col(main_derived_direct, width=2),
+        #             dbc.Col(main_derived_transitive, width=2)
+        #         ]),
+        #         main_switch
+        # ])
+        main_effects_div = self.create_main_effects_div(input_fg, derived_direct_fg, derived_transitive_fg, main_title, main_switch)
+
         main_effects_card = dbc.Card(
             dbc.CardBody(
                 [
@@ -138,7 +164,7 @@ class InputInterface(object):
             dbc.CardBody(
                 [
                     html.H3("Random effects"),
-                    random_effects,
+                    # random_effects,
                     random_switch
                 ]
             ),
@@ -170,11 +196,11 @@ class InputInterface(object):
         # Create Dash App
         app.layout = dbc.Container([
             dcc.Store(id='session_store', storage_type='session'),
-            dbc.Row([dbc.Col(main_effects_card, width=8)], justify='center'),
-            dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
-            dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
-            dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
-            dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
+            dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
+            # dbc.Row([dbc.Col(interaction_effects_card, width=8)], justify='center'),
+            # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
+            # dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
+            # dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
 
             # Hidden div for storing intermediate state before updating session
             # store and eventually checking with synthesizer
@@ -543,40 +569,67 @@ class InputInterface(object):
         
         self.app = app
     
-    def populate_main_effects(self): 
+    # @param main_effects is a dictionary of pre-generated possible main effects
+    def populate_main_effects(self, main_effects: Dict[str, List[AbstractVariable]]): 
+        dv = self.design.dv # Might want to get rid of this
         output = list()
-        # Get possible main effects from synthesizer
-        possible_main_effects = self.synthesizer.generate_main_effects(design=self.design)
 
         # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
-        # Lay them out
-        variable_options = list()
-        for (variable, facts) in possible_main_effects.items(): 
-            variable_options.append({'label': str(variable), 'value': f'{facts[0]}'})
-        output = dbc.FormGroup([
+        # Lay main_effects options out
+        input_options = list()
+        input_selected = list()
+        derived_direct_options = list()
+        derived_transitive_options = list()
+        for (tag, variables) in main_effects.items(): 
+            for v in variables:
+                # variable_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                if tag == 'input':
+                    input_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                    input_selected.append(f'{FixedEffect(v.const, dv.const)}')
+                elif tag == 'derived_direct':
+                    derived_direct_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                elif tag == 'derived_transitive':
+                    derived_transitive_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                # variable_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.name, dv.name)}'})
+        
+        input_fg = dbc.FormGroup([
             dbc.Checklist(
-                options=variable_options,
-                value=[],
-                id="main_effects_options",
+                options=input_options,
+                value=input_selected,
+                id="main_effects_options"
             ),
         ])
+        derived_direct_fg = dbc.FormGroup([
+            dbc.Checklist(
+                options=derived_direct_options, 
+                value=[],
+                id='derived_direct_options'
+            )
+        ])
+        derived_transitive_fg = dbc.FormGroup([
+            dbc.Checklist(
+                options=derived_transitive_options, 
+                value=[],
+                id='derived_transitive_options'
+            )
+        ])
 
-        return output
+        return input_fg, derived_direct_fg, derived_transitive_fg
 
-    def populate_interaction_effects(self): 
-        global __value_to_z3__
+    def populate_interaction_effects(self, interaction_effects: List[Tuple[AbstractVariable, ...]]): 
+        # global __value_to_z3__
 
         output = list()
-        # Get possible main effects from synthesizer
-        possible_interaction_effects = self.synthesizer.generate_interaction_effects(design=self.design)
 
         # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
         # Lay them out
-        for (num_interactions, options) in possible_interaction_effects.items(): 
+        for (num_interactions, options) in interaction_effects.items(): 
             interaction_options = list()
-            for (name, fact) in options.items():
-                __value_to_z3__[str(fact)] = fact
-                interaction_options.append({'label': name, 'value': str(fact)})
+            for ixn in options:
+                # __value_to_z3__[str(fact)] = fact
+                ixn_names = [v.name for v in ixn]
+                name = '*'.join(ixn_names)
+                interaction_options.append({'label': name, 'value': str(name)}) # TODO: Update the value
             
             output.append(self.make_interaction_card(title=num_interactions, options=interaction_options))
             
@@ -733,7 +786,48 @@ class InputInterface(object):
             ))
         return html.Div(output)
 
-    
+    def create_label_tooltip(self, label: str, description: str): 
+        tooltip = html.Div(
+            [
+                html.P(
+                    [
+                        html.Span(
+                            label,
+                            id=f'{label}_tooltip_target',
+                            style={"textDecoration": "underline", "cursor": "pointer"},
+                        )
+                    ]
+                ),
+                dbc.Tooltip(
+                    description,
+                    target=f'{label}_tooltip_target',
+                )
+            ]
+        )   
+
+        return tooltip
+
+    def create_main_effects_div(self, input_fg, derived_direct_fg, derived_transitive_fg, main_title, main_switch): 
+        labels = list() 
+        fg_combo = list()
+        if len(input_fg.children[0].options) > 0: 
+            labels.append(dbc.Col(self.create_label_tooltip('Specified', 'End-user has already specified these variables as independent variables.'), width=2))
+            fg_combo.append(dbc.Col(input_fg, width=2))
+        if len(derived_direct_fg.children[0].options) > 0: 
+            labels.append(dbc.Col(html.P('Derived direct:'), width=2))
+            fg_combo.append(dbc.Col(derived_direct_fg, width=2))
+        if len(derived_transitive_fg.children[0].options) > 0: 
+            labels.append(dbc.Col(html.P('Derived transitive:'), width=2))
+            fg_combo.append(dbc.Col(derived_transitive_fg, width=2))
+
+        main_effects_div = html.Div([
+                main_title,
+                dbc.Row(labels),
+                dbc.Row(fg_combo),
+                main_switch
+        ])
+
+        return main_effects_div
 
     def get_link_options(self, family_fact: z3.BoolRef): 
          
