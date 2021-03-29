@@ -2,14 +2,18 @@ from tisane.variable import AbstractVariable, Numeric, Nominal, Ordinal
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.smt.synthesizer import Synthesizer
+from tisane.smt.rules import *
 from tisane.helpers import *
 
+from z3 import *
 from typing import List, Any, Tuple
 import subprocess
 from subprocess import DEVNULL
 import os
 import sys
+from flask import request
 
+import json
 import pandas as pd
 import plotly.figure_factory as ff
 import plotly.express as px
@@ -39,6 +43,11 @@ def open_browser():
     global port
     webbrowser.open_new("http://localhost:{}".format(port))
 
+# Write data to a file
+def write_data(data: dict): 
+    with open('model_spec.json', 'w') as f: 
+        f.write(json.dumps(data))
+
 class InputInterface(object): 
     design: Design 
     statistical_model: StatisticalModel
@@ -47,9 +56,9 @@ class InputInterface(object):
     def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design, synthesizer: Synthesizer):
         global port 
 
+        # Save necessary data
         self.design = design
         self.synthesizer = synthesizer
-
         for family, links in family_link.items(): 
             key = str(family) 
             __str_to_z3__[key] = family # str to Z3 fact
@@ -63,7 +72,21 @@ class InputInterface(object):
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-        ##### Layout main aspects of UI
+        ##### Layout UI
+        # Hidden modals
+        code_gen_modal = dbc.Modal(
+            [
+                dbc.ModalHeader("Downloading generated script!"),
+                dbc.ModalBody("Tisane is generating a script based on your input script and UI selections."),
+                dbc.ModalFooter([
+                    dbc.Button("Close GUI", id="close", color='danger', className="ml-auto"),
+                    dbc.Button("Keep GUI open", id="keep_open", className="ml-auto")
+                ]),
+            ],
+            id="code_gen_modal",
+        )
+
+        # Main components 
         main_effects_div = self.layout_main_effects_div(main_effects)
         interaction_effects_div = self.layout_interaction_effects_div(interaction_effects)
         family_link_div = self.layout_family_link_div(family_link)
@@ -73,6 +96,9 @@ class InputInterface(object):
         # Create Dash App
         app.layout = dbc.Container([
                 dcc.Store(id='session_store', storage_type='session'),
+                code_gen_modal,
+                
+                # Body
                 dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
                 dbc.Row([dbc.Col(interaction_effects_div, width=8)], justify='center'),
                 # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
@@ -474,19 +500,71 @@ class InputInterface(object):
         #     else: 
         #         raise PreventUpdate
 
-        # @app.callback(
-        #     Output('generate_code', 'disabled'),
-        #     [Input('main_effects_switch', 'value'),
-        #     Input('interaction_effects_switch', 'value'),
-        #     Input('random_effects_switch', 'value'),
-        #     Input('family_link_switch', 'value'),]
-        # )
-        # def enable_code_generation(me_switch, i_switch, re_switch, fl_switch): 
-        #     # If all the switches are turned on/True
-        #     if me_switch and i_switch and re_switch and fl_switch: 
-        #         return False # disabled: False
-        #     return True # disable: True
+        @app.callback(
+            [Output('generate_code', 'disabled'),
+            Output('session_store', 'data')],
+            [Input('main_effects_switch', 'value'),
+            Input('interaction_effects_switch', 'value'),
+            # Input('random_effects_switch', 'value'),
+            Input('family_link_switch', 'value'),
+            Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
+            Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
+            Input('family_options', 'value'), 
+            Input('link_options', 'value')]
+        )
+        def enable_code_generation(me_switch, i_switch, fl_switch, main_effects, interaction_effects, family, link): 
+            global __str_to_z3__
 
+            model_spec = dict()
+            # If all the switches are turned on/True
+            if me_switch and i_switch and fl_switch: 
+                
+                # Get all the values
+                main_facts = list()
+                for m_list in main_effects: 
+                    assert(isinstance(m_list, list))
+                    for m in m_list: 
+                        fact = __str_to_z3__[m]
+                        main_facts.append(str(fact))
+                model_spec['main_effects'] = main_facts
+
+                ixn_facts = list()
+                for i_list in interaction_effects: 
+                    assert(isinstance(i_list, list))
+                    for i in i_list: 
+                        fact = __str_to_z3__[i]
+                        ixn_facts.append(str(fact))
+                model_spec['interaction_effects'] = ixn_facts
+
+                model_spec['family'] = str(__str_to_z3__[family])
+                model_spec['link'] = str(__str_to_z3__[link])
+
+                # TODO: Check that there is enough info to create a statistical model
+            
+                # Write ou all the values 
+                json_model_spec = json.dumps(model_spec)
+                return False, json_model_spec
+                
+            json_model_spec = json.dumps(model_spec)
+            return True, json_model_spec # disable: True
+
+        @app.callback(
+            Output('code_gen_modal', 'is_open'),
+            [Input('generate_code', 'n_clicks'),
+            Input('close', 'n_clicks'),
+            Input('keep_open', 'n_clicks'),
+            Input('session_store', 'data')],
+            State('code_gen_modal', 'is_open')
+        )
+        def generate_code(generate_code_click, close_click, keep_open_click, model_spec, is_open): 
+            if generate_code_click or close_click or keep_open_click:
+                # Write out a model spec!
+                write_data(model_spec)
+                if close_click: 
+                    self.shutdown()
+                return not is_open
+            return is_open
+        
         ##### Start and run app on local server
         self.app = app
         open_browser()
@@ -674,6 +752,8 @@ class InputInterface(object):
 
     # @param main_effects is a dictionary of pre-generated possible main effects
     def populate_main_effects(self, main_effects: Dict[str, List[AbstractVariable]]): 
+        global __str_to_z3__
+
         dv = self.design.dv # Might want to get rid of this
         output = list()
 
@@ -685,14 +765,18 @@ class InputInterface(object):
         derived_transitive_options = list()
         for (tag, variables) in main_effects.items(): 
             for v in variables:
-                # variable_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                
+                # Add to global map of str to z3 facts
+                fact = FixedEffect(v.const, dv.const)
+                __str_to_z3__[str(fact)] = fact
+
                 if tag == 'input':
-                    input_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
-                    input_selected.append(f'{FixedEffect(v.const, dv.const)}')
+                    input_options.append({'label': str(v.name), 'value': f'{str(fact)}'})
+                    input_selected.append(f'{str(fact)}')
                 elif tag == 'derived_direct':
-                    derived_direct_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                    derived_direct_options.append({'label': str(v.name), 'value': f'{str(fact)}'})
                 elif tag == 'derived_transitive':
-                    derived_transitive_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.const, dv.const)}'})
+                    derived_transitive_options.append({'label': str(v.name), 'value': f'{str(fact)}'})
                 # variable_options.append({'label': str(v.name), 'value': f'{FixedEffect(v.name, dv.name)}'})
         
         input_fg = dbc.FormGroup([
@@ -720,10 +804,12 @@ class InputInterface(object):
         return input_fg, derived_direct_fg, derived_transitive_fg
 
     def populate_interaction_effects(self, interaction_effects: List[Tuple[AbstractVariable, ...]]): 
+        global __str_to_z3__
+
         vis_charts = list()
         output = list()
 
-        # Build Summary checklist
+        # TODO: Build Summary checklist
 
         # Lay them out
         for (num_interactions, options) in interaction_effects.items(): 
@@ -731,7 +817,14 @@ class InputInterface(object):
             for ixn in options:
                 ixn_names = [v.name for v in ixn]
                 name = '*'.join(ixn_names)
-                interaction_options.append({'label': name, 'value': str(name)}) # TODO: Update the value
+                interaction_options.append({'label': name, 'value': name}) # TODO: Update the value
+
+                # Add to global map of str to z3 facts
+                # Create set for interaction
+                fact = EmptySet(Object)
+                for v in ixn:
+                    fact = SetAdd(fact, v.const)
+                __str_to_z3__[name] = fact
             
             # output.append(self.make_interaction_card(title=num_interactions, options=interaction_options))
                 
