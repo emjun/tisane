@@ -68,30 +68,37 @@ class InputInterface(object):
         
         # TODO: Start here - save the values we care about into intermediate storage div; test that first
         @app.callback(
-            Output('main_effects_options', 'options'),
-            [Input('main_effects_switch', 'value'),
-            State('main_effects_options', 'options')],
-            # State('main_effects_options', 'options')
+            Output({'type': 'main_effects_options', 'index': ALL}, 'options'),
+            Input('main_effects_switch', 'value'),
+            State({'type': 'main_effects_options', 'index': ALL}, 'options')
         )
         def save_main_effects(switch_value, main_effects_options):
             output = list()
             if switch_value: 
                 facts = list()
-                for o in main_effects_options: 
-                    facts.append(o['value'])
-                    output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    
-                is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
-                if is_sat: 
-                    self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
-                    return output
-                else: 
-                    # TODO: Start a modal?
-                    raise ValueError(f"Error in saving main effects!")
-            else: 
-                for o in main_effects_options: 
-                    output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
                 
+                for i, options in enumerate(main_effects_options): 
+                    cluster = list()        
+                    for o in options:
+                        facts.append(o['value'])
+                        cluster.append({'label': o['label'], 'value': o['value'], 'disabled': True}) 
+                    output.append(cluster)
+
+                return output
+                # TODO: Save main effects somewhere!
+                # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+                # if is_sat: 
+                #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+                #     return output
+                # else: 
+                #     # TODO: Start a modal?
+                #     raise ValueError(f"Error in saving main effects!")
+            else: 
+                for i, options in enumerate(main_effects_options): 
+                    cluster = list()
+                    for o in options: 
+                        cluster.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+                    output.append(cluster)
                 return output
         
         @app.callback(
@@ -631,21 +638,21 @@ class InputInterface(object):
             dbc.Checklist(
                 options=input_options,
                 value=input_selected,
-                id="main_effects_options"
+                id={'type': 'main_effects_options', 'index': 'input_options'}
             ),
         ])
         derived_direct_fg = dbc.FormGroup([
             dbc.Checklist(
                 options=derived_direct_options, 
                 value=[],
-                id='derived_direct_options'
+                id={'type': 'main_effects_options', 'index': 'derived_direct_options'}
             )
         ])
         derived_transitive_fg = dbc.FormGroup([
             dbc.Checklist(
                 options=derived_transitive_options, 
                 value=[],
-                id='derived_transitive_options'
+                id={'type': 'main_effects_options', 'index': 'derived_transitive_options'}
             )
         ])
 
