@@ -347,7 +347,6 @@ class Numeric(AbstractVariable):
         return f"NumericVariable: data:{self.data}"
     
     def get_cardinality(self): 
-        # TODO: Does this make sense to do?
         raise NotImplementedError
 
 class Count(AbstractVariable): 

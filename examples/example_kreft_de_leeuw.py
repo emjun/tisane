@@ -29,7 +29,8 @@ student.has(ses)
 # student.nest_under(school)
 
 math_data = np.random.randn(1, 50)
-hw_data = np.random.randn(1,50) + 1
+# hw_data = np.random.randint(1,50) + 1
+hw_data = np.random.randint(0, 24, size=50)
 ses_data = np.random.randn(1,50) * 10000
 mean_ses_data = np.random.randn(1,50) * 10000
 race_data = random.choices(['White', 'Hispanic', 'Black', 'Asian', 'Indigenous'], k=50)
@@ -37,7 +38,7 @@ race_data = random.choices(['White', 'Hispanic', 'Black', 'Asian', 'Indigenous']
 # Data source, use synthetic data
 data =  pd.DataFrame({
     'MathAchievement': math_data.tolist()[0],
-    'HomeWork': hw_data.tolist()[0],
+    'HomeWork': hw_data.tolist(),
     'Race': race_data,
     'SES': ses_data[0],
     'MeanSES': mean_ses_data[0]}

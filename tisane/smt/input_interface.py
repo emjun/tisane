@@ -1,4 +1,4 @@
-from tisane.variable import AbstractVariable
+from tisane.variable import AbstractVariable, Numeric, Nominal, Ordinal
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.smt.synthesizer import Synthesizer
@@ -693,9 +693,39 @@ class InputInterface(object):
     
     def create_two_way_interaction_chart(self, interaction: Tuple[AbstractVariable, AbstractVariable], dv: AbstractVariable, data: pd.DataFrame):
         assert(len(interaction) == 2)
-        x = interaction[0]
-        color_group = interaction[1]
-        # import pdb; pdb.set_trace()
+        (x1, x2) = interaction 
+        if isinstance(x1, Numeric) and isinstance(x2, Nominal): 
+            x = x1
+            color_group = x2
+        elif isinstance(x1, Numeric) and isinstance(x2, Ordinal): 
+            x = x1
+            color_group = x2
+        elif isinstance(x1, Numeric) and isinstance(x2, Numeric): 
+            x1_data = self.design.get_data(x1)
+            x2_data = self.design.get_data(x2)
+            
+            if x1_data.count() <= x2_data.count(): 
+                x = x2
+                color_group = x1
+            else: 
+                x = x1
+                color_group = x2
+        elif isinstance(x1, Nominal) and isinstance(x2, Numeric):
+            x = x2
+            color_group = x1
+        elif isinstance(x1, Nominal) and isinstance(x2, Ordinal): 
+            x = x2
+            color_group = x1
+        elif isinstance(x1, Ordinal) and isinstance(x2, Numeric): 
+            x = x1
+            color_group = x2
+        elif isinstance(x1, Ordinal) and isinstance(x2, Ordinal): 
+            x = x1
+            color_group = x2
+        else: 
+            x = x1
+            color_group = x2
+        
         fig = px.line(data, x=x.name, y=dv.name, color=color_group.name)
 
         fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
