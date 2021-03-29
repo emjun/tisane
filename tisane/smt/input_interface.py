@@ -352,7 +352,7 @@ class InputInterface(object):
             Input('link_options', 'options'),
             Input('family_link_switch', 'value')]
         )
-        def update_link_options(family, family_options, link_options, fl_switch): 
+        def update_and_save_family_link_options(family, family_options, link_options, fl_switch): 
             global __str_to_z3__
             
             ctx = dash.callback_context
