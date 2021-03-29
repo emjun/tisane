@@ -505,8 +505,8 @@ class InputInterface(object):
         interaction_effects = self.populate_interaction_effects(interaction_effects)
         
         # Get chart for visualizing interactions
-        two_way_interaction_vis = self.create_two_way_interaction_chart(('HomeWork', 'Race'), self.design.dv, self.design.dataset.dataset)
-        three_way_interaction_vis = self.create_three_way_interaction_chart(('HomeWork', 'Race', 'SES'), self.design.dv, self.design.dataset.dataset)
+        # two_way_interaction_vis = self.create_two_way_interaction_chart(('HomeWork', 'Race'), self.design.dv, self.design.dataset.dataset)
+        # three_way_interaction_vis = self.create_three_way_interaction_chart(('HomeWork', 'Race', 'SES'), self.design.dv, self.design.dataset.dataset)
 
         # Create interaction effects switch
         interaction_switch = self.create_switch(switch_id='interaction_effects_switch', form_group_id='interaction_effects_group')
@@ -530,8 +530,6 @@ class InputInterface(object):
         interaction_effects_div = html.Div([
             interaction_effects_title, 
             interaction_effects,
-            two_way_interaction_vis,
-            three_way_interaction_vis,
             interaction_switch
         ])
 
@@ -654,40 +652,64 @@ class InputInterface(object):
         return input_fg, derived_direct_fg, derived_transitive_fg
 
     def populate_interaction_effects(self, interaction_effects: List[Tuple[AbstractVariable, ...]]): 
+        vis_charts = list()
         output = list()
+
+        # Build Summary checklist
 
         # Lay them out
         for (num_interactions, options) in interaction_effects.items(): 
             interaction_options = list()
             for ixn in options:
-                # __value_to_z3__[str(fact)] = fact
                 ixn_names = [v.name for v in ixn]
                 name = '*'.join(ixn_names)
                 interaction_options.append({'label': name, 'value': str(name)}) # TODO: Update the value
             
-            output.append(self.make_interaction_card(title=num_interactions, options=interaction_options))
+            # output.append(self.make_interaction_card(title=num_interactions, options=interaction_options))
+                
+                chart = self.make_interaction_vis(title=f'{num_interactions} visualized', interaction=ixn)
+                # vis_charts.append(chart)
+                vis_charts.append(dbc.Col(chart, className='w-50'))
             
-        return html.Div(output, className='accordion')
+            # summary_card = self.make_interaction_summary_card(title=num_interactions, options=interaction_options)
+            # vis_card = self.make_interaction_vis_card(title=num_interactions, vis_cards=vis_charts)
+            # output.append(summary_card)
+            # output.append(vis_card)
+            # output.append(vis_charts)
+
+        # Format vis_chars to so that there are only two per row
+        chart_rows = list()
+        i = 0 
+        while i in range(len(vis_charts)): 
+            if i + 1 < len(vis_charts): 
+                row = dbc.Row([vis_charts[i], vis_charts[i+1]])
+                i+=2
+            else: 
+                row = dbc.Row([vis_charts[i]])
+                i+=1
+            chart_rows.append(row)
+            
+        return html.Div(chart_rows)
     
-    def create_two_way_interaction_chart(self, interaction: Tuple[str, str], dv: AbstractVariable, data: pd.DataFrame):
+    def create_two_way_interaction_chart(self, interaction: Tuple[AbstractVariable, AbstractVariable], dv: AbstractVariable, data: pd.DataFrame):
         assert(len(interaction) == 2)
         x = interaction[0]
         color_group = interaction[1]
-        import pdb; pdb.set_trace()
-        fig = px.line(data, x=x, y=dv.name, color=color_group)
+        # import pdb; pdb.set_trace()
+        fig = px.line(data, x=x.name, y=dv.name, color=color_group.name)
 
-        fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x}_{color_group}', figure=fig)        
+        fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
         
         return fig_elt
 
-    def create_three_way_interaction_chart(self, interaction: Tuple[str, str, str], dv: AbstractVariable, data: pd.DataFrame):
+    def create_three_way_interaction_chart(self, interaction: Tuple[AbstractVariable, AbstractVariable, AbstractVariable], dv: AbstractVariable, data: pd.DataFrame):
         assert(len(interaction) == 3)
         x = interaction[0]
         color_group = interaction[1]
         facet = interaction[2]
-        fig = px.line(data, x=x, y=dv.name, color=color_group, facet_col=facet)
+        fig = px.line(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name)
 
-        fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x}_{color_group}', figure=fig)        
+        fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet.name}', figure=fig)        
         
         return fig_elt
 
@@ -937,7 +959,25 @@ class InputInterface(object):
 
         return controls
 
-    def make_interaction_card(self, title: str, options: List): 
+    def make_interaction_vis_card(self, title: str, vis_cards: List[dbc.Card]): 
+        card = dbc.Card([
+            dbc.CardHeader(
+                html.H2(
+                    dbc.Button(
+                        f"{title}",
+                        color="link",
+                        id=f"{title}_vis_toggle",
+                    )
+                )
+            ),
+            dbc.Collapse(
+                vis_cards,
+                id=f'{title}_vis_collapse'
+            )
+        ])
+        return card
+
+    def make_interaction_summary_card(self, title: str, options: List): 
         card = dbc.Card([
             dbc.CardHeader(
                 html.H2(
@@ -960,6 +1000,29 @@ class InputInterface(object):
                 id=f'{title}_collapse'
             )
         ])
+        return card
+
+    def make_interaction_vis(self, title: str, interaction: Tuple[AbstractVariable, ...]): 
+        # Create vis 
+        fig = None
+        if len(interaction) == 2: 
+            fig = self.create_two_way_interaction_chart(interaction, self.design.dv, self.design.dataset.dataset)
+        elif len(interaction) == 3: 
+            fig = self.create_three_way_interaction_chart(interaction, self.design.dv, self.design.dataset.dataset)
+        else: 
+            pass
+            # fig = None
+
+        # Add it to cards 
+        names = [v.name for v in interaction]
+        interaction_name = '*'.join(names)
+        card = dbc.Card([
+            dbc.CardHeader([dbc.Checklist(options=[{'label': f'{interaction_name}', 'value': f'{interaction_name}'}], id={'type': 'interaction_vis', 'index': f'{interaction_name}'}, value=[])]),
+            dbc.CardBody([
+                fig
+            ])
+        ])
+
         return card
 
     def make_random_slope_card(self, variables: str, value: str):
