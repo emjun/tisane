@@ -28,7 +28,7 @@ port = '8050' # FYI: default dash port is 8050
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
 
-__value_to_z3__ = dict() # Global map between vals and z3 facts
+__str_to_z3__ = dict() # Global map between vals and z3 facts
         
 class InputInterface(object): 
     design: Design 
@@ -38,6 +38,16 @@ class InputInterface(object):
     def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], design: Design, synthesizer: Synthesizer):
         self.design = design
         self.synthesizer = synthesizer
+
+        for family, links in family_link.items(): 
+            key = str(family) 
+            __str_to_z3__[key] = family # str to Z3 fact
+
+            for l in links: 
+                key = str(l) 
+                __str_to_z3__[key] = l # str to Z3 fact
+
+        self.family_link_options = family_link
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -353,32 +363,28 @@ class InputInterface(object):
         #         return is_open1, not is_open2
         #     return False, False
 
-        # @app.callback(
-        #     Output('link_choice', 'options'),
-        #     [
-        #         Input('family_link_options', 'value'),
-        #         Input('link_choice', 'options'),
-        #     ],
-        # )
-        # def update_link_options(family, old_options): 
-        #     global __value_to_z3__
+        @app.callback(
+            Output('link_options', 'options'),
+            [Input('family_options', 'value'),
+            Input('link_options', 'options')],
+        )
+        def update_link_options(family, old_options): 
+            global __str_to_z3__
             
-        #     new_options = list()
+            new_options = list()
 
-        #     if family is not None: 
-        #         # Get link options
-        #         family_name = str(family)
-        #         assert(family_name in __value_to_z3__.keys())
-        #         family_fact = __value_to_z3__[family_name]
-        #         link_options = self.get_link_options(family_fact)
+            if family is not None: 
+                # Get link options
+                assert(family in __str_to_z3__.keys())
+                family_fact = __str_to_z3__[family]
+                link_options = self.family_link_options[family_fact]
 
-        #         for link in link_options: 
-        #             __value_to_z3__[str(link)] = link
-        #             new_options.append({'label': str(link), 'value': str(link)})                    
+                for link in link_options: 
+                    new_options.append({'label': str(link), 'value': str(link)})                    
 
-        #         return new_options
-        #     else: 
-        #         raise PreventUpdate
+                return new_options
+            else: 
+                raise PreventUpdate
 
         # @app.callback(
         #     Output('data_dist', 'figure'),
@@ -990,10 +996,17 @@ class InputInterface(object):
     #     return options
 
     def make_family_link_options(self, family_link_options): 
+        global __str_to_z3__
+
         family_options = list()
         
         for f in family_link_options.keys(): 
-            family_options.append({'label': str(f), 'value': str(f)})
+            label = str(f)
+            label = str(f).split('Family')[0]
+            if label == 'InverseGaussian': 
+                label = 'Inverse Gaussian' # add a space
+
+            family_options.append({'label': label, 'value': str(f)})
 
         controls = dbc.Card(
             [
@@ -1001,7 +1014,7 @@ class InputInterface(object):
                     [
                         dbc.Label('Family'),
                         dcc.Dropdown(
-                            id='family_link_options',
+                            id='family_options',
                             options=family_options,
                             value=None,
                         ),
@@ -1011,7 +1024,7 @@ class InputInterface(object):
                     [
                         dbc.Label('Link function'),
                         dcc.Dropdown(
-                            id='link_choice',
+                            id='link_options',
                             options=[],
                             value=None,
                         ),
