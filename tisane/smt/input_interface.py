@@ -22,20 +22,31 @@ from dash.dependencies import Output, Input, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
 import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
+import socket # For finding next available socket
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-port = '8050' # FYI: default dash port is 8050
-def open_browser():
-	webbrowser.open_new("http://localhost:{}".format(port))
-
 __str_to_z3__ = dict() # Global map between vals and z3 facts
-        
+
+# Find socket info 
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('', 0))
+addr = s.getsockname()
+port = addr[1]
+s.close()
+
+# port = '0' # FYI: default dash port is 8050
+def open_browser():
+    global port
+    webbrowser.open_new("http://localhost:{}".format(port))
+
 class InputInterface(object): 
     design: Design 
     statistical_model: StatisticalModel
     app: dash.Dash
 
     def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design, synthesizer: Synthesizer):
+        global port 
+
         self.design = design
         self.synthesizer = synthesizer
 
@@ -265,38 +276,7 @@ class InputInterface(object):
         #         correlation_output.append(tmp_options)
         #     return slope_output, intercept_output, correlation_output
 
-        # @app.callback(
-        #     Output('family_link_options', 'options'),
-        #     [Input('family_link_switch', 'value'),
-        #     State('family_link_options', 'options')],
-        # )
-        # def save_family_link(switch_value, family_link_options): 
-        #     output = list() 
-        #     if switch_value: 
-        #         facts = list() 
-        #         if family_link_options is not None: 
-        #             for o in family_link_options: 
-        #                 facts.append(o['value'])
-        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-        #             return output
-        #         else: 
-        #             return family_link_options
-        #         # check for SAT...
-        #         # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
-        #         # if is_sat: 
-        #         #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
-        #         #     return output
-        #         # else: 
-        #         #     # TODO: Start a modal?
-        #         #     raise ValueError(f"Error in saving main effects!")
-        #     else: 
-        #         if family_link_options is not None: 
-        #             for o in family_link_options: 
-        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-
-        #             return output
-        #         return family_link_options
-
+            
         # @app.callback(
         #     [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
         #     Output({'type': 'random_intercept', 'index': MATCH}, 'value'),
@@ -365,35 +345,74 @@ class InputInterface(object):
         #     return False, False
 
         @app.callback(
-            Output('link_options', 'options'),
-            # Output('link_options', 'value'),
+            [Output('family_options', 'options'),
+            Output('link_options', 'options')],
             [Input('family_options', 'value'),
-            Input('link_options', 'options')],
+            Input('family_options', 'options'),
+            Input('link_options', 'options'),
+            Input('family_link_switch', 'value')]
         )
-        def update_link_options(family, old_options): 
+        def update_link_options(family, family_options, link_options, fl_switch): 
             global __str_to_z3__
             
-            new_options = list()
+            ctx = dash.callback_context
 
-            if family is not None: 
-                # Get link options
-                assert(family in __str_to_z3__.keys())
-                family_fact = __str_to_z3__[family]
-                link_options = self.family_link_options[family_fact]
+            if not ctx.triggered:
+                return family_options, link_options
+            # else
+            trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            if trigger_id == 'family_options':
+                new_options = list()
+
+                if family is not None: 
+                    # Get link options
+                    assert(family in __str_to_z3__.keys())
+                    family_fact = __str_to_z3__[family]
+                    link_options = self.family_link_options[family_fact]
+                    
+                    for link in link_options: 
+                        # "Prettify" link names before rendering
+                        label = str(link).split('Transform')[0]
+                        # label += ' link'
+
+                        # Is the link the default for this family? 
+                        assert(self.default_family_link[family_fact])
+                        if link in self.default_family_link[family_fact]: 
+                            label += '(default)'
+
+                        new_options.append({'label': label, 'value': str(link)})                    
+                    
+                    return family_options, new_options
+                else: 
+                    print(trigger_id)
+            elif trigger_id == 'family_link_switch': 
+                trigger_val = ctx.triggered[0]['value']
                 
-                for link in link_options: 
-                    # "Prettify" link names before rendering
-                    label = str(link).split('Transform')[0]
-                    # label += ' link'
+                # Did we lock? 
+                if trigger_val:
+                    new_family_options = list() 
+                    new_link_options = list() 
 
-                    # Is the link the default for this family? 
-                    assert(self.default_family_link[family_fact])
-                    if link in self.default_family_link[family_fact]: 
-                        label += '(default)'
+                    for f in family_options:
+                        new_family_options.append({'label': f['label'], 'value': f['value'], 'disabled': True}) 
+                    
+                    for l in link_options:
+                        new_link_options.append({'label': l['label'], 'value': l['value'], 'disabled': True}) 
+                    
+                    return new_family_options, new_link_options
+                # Did we unlock?
+                else: 
+                    
+                    new_family_options = list() 
+                    new_link_options = list() 
 
-                    new_options.append({'label': label, 'value': str(link)})                    
-                
-                return new_options
+                    for f in family_options:
+                        new_family_options.append({'label': f['label'], 'value': f['value'], 'disabled': False}) 
+                    
+                    for l in link_options:
+                        new_link_options.append({'label': l['label'], 'value': l['value'], 'disabled': False}) 
+                    
+                    return new_family_options, new_link_options
             else: 
                 raise PreventUpdate
 
@@ -470,7 +489,7 @@ class InputInterface(object):
         ##### Start and run app on local server
         self.app = app
         open_browser()
-        app.run_server(debug=False, threaded=True, port=8050)
+        app.run_server(debug=False, threaded=True, port=port)
         
     def create_switch(self, switch_id: str, form_group_id: str): 
         switch = dbc.FormGroup([
@@ -1025,6 +1044,7 @@ class InputInterface(object):
                     [
                         dbc.Label('Family'),
                         dcc.Dropdown(
+                            # id={'type': 'family_link_options', 'index': 'family_options'},
                             id='family_options',
                             options=family_options,
                             value=None,
@@ -1035,6 +1055,7 @@ class InputInterface(object):
                     [
                         dbc.Label('Link function'),
                         dcc.Dropdown(
+                            # id={'type': 'family_link_options', 'index': 'link_options'},
                             id='link_options',
                             options=[],
                             value=None,
@@ -1043,6 +1064,7 @@ class InputInterface(object):
                 )
             ],
             body=True,
+            id={'type': 'family_link_options', 'index': 'family_link_options'},
         )
 
         return controls
@@ -1156,109 +1178,116 @@ class InputInterface(object):
         return checklist
             # TODO: correlate should only be an option if both are selected
 
+    def shutdown(self):
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
+
     
-    @classmethod
-    def ask_inclusion_prompt(cls, subject: str) -> bool: 
+    # @classmethod
+    # def ask_inclusion_prompt(cls, subject: str) -> bool: 
 
-        prompt = f'Would you like to include {subject}?'
-        choices = f' Y or N: '
+    #     prompt = f'Would you like to include {subject}?'
+    #     choices = f' Y or N: '
 
-        while True: 
-            ans = add_inclusion_prompt(prompt=prompt, choices=choices)
-            if ans.upper() == 'Y': 
-                return ans.upper()
-            elif ans.upper() == 'N': 
-                return ans.upper()
-            else: 
-                pass
+    #     while True: 
+    #         ans = add_inclusion_prompt(prompt=prompt, choices=choices)
+    #         if ans.upper() == 'Y': 
+    #             return ans.upper()
+    #         elif ans.upper() == 'N': 
+    #             return ans.upper()
+    #         else: 
+    #             pass
     
-    @classmethod
-    def ask_inclusion(cls, subject: str) -> bool: 
+    # @classmethod
+    # def ask_inclusion(cls, subject: str) -> bool: 
     
-        ans = cls.ask_inclusion_prompt(subject)
+    #     ans = cls.ask_inclusion_prompt(subject)
 
-        if ans.upper() == 'Y':
-            # TODO: write to a file here 
-            return True
-        elif ans.upper() == 'N': 
-            return False
-        else: 
-            pass
+    #     if ans.upper() == 'Y':
+    #         # TODO: write to a file here 
+    #         return True
+    #     elif ans.upper() == 'N': 
+    #         return False
+    #     else: 
+    #         pass
     
-    # TODO: Format the interactions to be more readable
-    @classmethod 
-    def format_options(cls, options: List) -> List: 
-        return options
-
-    @classmethod
-    def ask_multiple_choice_prompt(cls, options: List) -> Any: 
-        prompt = f'These cannot be true simultaneously.'
-        formatted_options = cls.format_options(options)
-        choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
-        while True: 
-            idx = int(input(prompt + choices))
-            # st.write()
-
-            if idx in range(len(options)): 
-                # only keep the constraint that is selected. 
-                constraint = options[idx] 
-                print(f'Ok, going to add {constraint} and remove the others.')
-                return idx
-            else:
-                print(f'Pick a value in range')
-                pass
-    
-    @classmethod
-    def resolve_unsat(cls, facts: List, unsat_core: List) -> List: 
-        idx = cls.ask_multiple_choice_prompt(options=unsat_core)
-    
-        return unsat_core[idx]
-
-    # TODO: Format options for specifying family of a distribution
-    @classmethod
-    def format_family(cls, options: List): 
-        return options
-    
-    @classmethod
-    def ask_family_prompt(cls, options: List, dv: AbstractVariable): 
-        prompt = f'Which distribution best approximates your dependent variable {dv}?'
-        formatted_options = cls.format_options(options)
-        choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
-
-        while True: 
-            idx = int(input(prompt + choices))
-
-            if idx in range(len(options)): 
-                # only keep the constraint that is selected. 
-                constraint = options[idx] 
-                print(f'Ok, going to add {constraint} and remove the others.')
-                return idx
-            else:
-                print(f'Pick a value in range')
-                pass
-    
-    @classmethod
-    def ask_family(cls, options: List, dv: AbstractVariable): 
-        idx = cls.ask_family_prompt(options=options, dv=dv)
-
-        return options[idx]
-
-    @classmethod
-    def ask_link_prompt(cls, options: List, dv: AbstractVariable): 
-        prompt = f'W'
-
-
-    @classmethod
-    def ask_link(cls, options: List, dv: AbstractVariable): 
-        idx = cls.ask_link_prompt(options=options, dv=dv)
-
-        return options[idx]
+    # # TODO: Format the interactions to be more readable
+    # @classmethod 
+    # def format_options(cls, options: List) -> List: 
+    #     return options
 
     # @classmethod
-    # def ask_change_default_prompt(cls, subject: str, default: str, options: List): 
-    #     prompt = f'The default {subject} is {default}. Would you like to change it to one of {options}?'
+    # def ask_multiple_choice_prompt(cls, options: List) -> Any: 
+    #     prompt = f'These cannot be true simultaneously.'
+    #     formatted_options = cls.format_options(options)
+    #     choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
+    #     while True: 
+    #         idx = int(input(prompt + choices))
+    #         # st.write()
+
+    #         if idx in range(len(options)): 
+    #             # only keep the constraint that is selected. 
+    #             constraint = options[idx] 
+    #             print(f'Ok, going to add {constraint} and remove the others.')
+    #             return idx
+    #         else:
+    #             print(f'Pick a value in range')
+    #             pass
+    
+    # @classmethod
+    # def resolve_unsat(cls, facts: List, unsat_core: List) -> List: 
+    #     idx = cls.ask_multiple_choice_prompt(options=unsat_core)
+    
+    #     return unsat_core[idx]
+
+    # # TODO: Format options for specifying family of a distribution
+    # @classmethod
+    # def format_family(cls, options: List): 
+    #     return options
+    
+    # @classmethod
+    # def ask_family_prompt(cls, options: List, dv: AbstractVariable): 
+    #     prompt = f'Which distribution best approximates your dependent variable {dv}?'
+    #     formatted_options = cls.format_options(options)
+    #     choices = f' Pick index (starting at 0) to select option in: {formatted_options}: '
+
+    #     while True: 
+    #         idx = int(input(prompt + choices))
+
+    #         if idx in range(len(options)): 
+    #             # only keep the constraint that is selected. 
+    #             constraint = options[idx] 
+    #             print(f'Ok, going to add {constraint} and remove the others.')
+    #             return idx
+    #         else:
+    #             print(f'Pick a value in range')
+    #             pass
+    
+    # @classmethod
+    # def ask_family(cls, options: List, dv: AbstractVariable): 
+    #     idx = cls.ask_family_prompt(options=options, dv=dv)
+
+    #     return options[idx]
 
     # @classmethod
-    # def ask_change_default(cls, subject: str, default: str, options: List): 
-    #     idx = cls.ask_change_default_prompt(subject=subject, default=default, options=options)
-    #     pass
+    # def ask_link_prompt(cls, options: List, dv: AbstractVariable): 
+    #     prompt = f'W'
+
+
+    # @classmethod
+    # def ask_link(cls, options: List, dv: AbstractVariable): 
+    #     idx = cls.ask_link_prompt(options=options, dv=dv)
+
+    #     return options[idx]
+
+    # # @classmethod
+    # # def ask_change_default_prompt(cls, subject: str, default: str, options: List): 
+    # #     prompt = f'The default {subject} is {default}. Would you like to change it to one of {options}?'
+
+    # # @classmethod
+    # # def ask_change_default(cls, subject: str, default: str, options: List): 
+    # #     idx = cls.ask_change_default_prompt(subject=subject, default=default, options=options)
+    # #     pass
+    
