@@ -35,7 +35,7 @@ class InputInterface(object):
     statistical_model: StatisticalModel
     app: dash.Dash
 
-    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], design: Design, synthesizer: Synthesizer):
+    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], design: Design, synthesizer: Synthesizer):
         self.design = design
         self.synthesizer = synthesizer
         
@@ -44,6 +44,7 @@ class InputInterface(object):
         ##### Layout main aspects of UI
         main_effects_div = self.layout_main_effects_div(main_effects)
         interaction_effects_div = self.layout_interaction_effects_div(interaction_effects)
+        family_link_div = self.layout_family_link_div(family_link)
         # random_effects_div = self.layout_random_effects_div(random_effects)
         script_download_button = dbc.Button("Generate code snippet and model diagnostics", id='generate_code', color="primary", block=True, disabled=True)
 
@@ -53,7 +54,7 @@ class InputInterface(object):
                 dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
                 dbc.Row([dbc.Col(interaction_effects_div, width=8)], justify='center'),
                 # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
-                # dbc.Row([dbc.Col(family_and_link_card, width=8)], justify='center'),
+                dbc.Row([dbc.Col(family_link_div, width=8)], justify='center'),
                 dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
 
                 # Hidden div for storing intermediate state before updating session
@@ -596,42 +597,44 @@ class InputInterface(object):
 
 
 
-    def layout_family_link_div(self): 
-        family_link_controls = self.make_family_link_options()
-        family_link_chart = self.draw_data_dist()
-        family_link_switch = dbc.FormGroup([
-                dbc.Checklist(
-                    options=[
-                        {"label": "🔐", "value": False}
-                        # {"label": "Save and lock random effects", "value": False}
-                    ],
-                    value=[],
-                    id='family_link_switch',
-                    switch=True,
-                    style={'float': 'right'}
-                ),
-            ],
-            id='family_link_group'
-        )    
-
-        family_and_link_card = dbc.Card(
-                dbc.CardBody(
-                    [
-                        html.H3("Family and link functions"),
-                        dbc.Row(
-                            [
-                                dbc.Col(family_link_chart, md=8),
-                                dbc.Col(family_link_controls, md=4),
-                            ],
-                            align="center",
-                        ),
-                        family_link_switch
-                    ]
-                ),
-                color='light',
-                outline=True
+    def layout_family_link_div(self, family_link: Dict[z3.BoolRef, List[z3.BoolRef]]): 
+        ##### Collect all elements
+        # Create family and link title 
+        family_link_title = html.Div([
+            html.H3('Family and Link: Data distributions'),
+            dbc.Alert(
+                "TODO: Explanation of family and link functions", className="mb-0",
+                id='family_link_alert',
+                dismissable=True,
+                fade=True, 
+                is_open=True
             )
+        ])
         
+        # Get form groups for family link div
+        family_link_chart = self.draw_data_dist()
+        family_link_controls = self.make_family_link_options(family_link)
+
+        # Create main effects switch
+        family_link_switch = self.create_switch(switch_id='family_link_switch', form_group_id='family_link_group')
+        
+        ##### Combine all elements
+        # Create div
+        family_and_link_div = html.Div([
+            family_link_title,
+            dbc.Row(
+                [
+                    dbc.Col(family_link_chart, md=8),
+                    dbc.Col(family_link_controls, md=4),
+                ],
+                align="center",
+            ),
+            family_link_switch
+        ])
+        
+        ##### Return div
+        return family_and_link_div 
+
     # @param main_effects is a dictionary of pre-generated possible main effects
     def populate_main_effects(self, main_effects: Dict[str, List[AbstractVariable]]): 
         dv = self.design.dv # Might want to get rid of this
@@ -973,21 +976,24 @@ class InputInterface(object):
 
         return link_functions
     
-    def make_family_options(self): 
-        global __value_to_z3__ 
+    # def make_family_options(self): 
+    #     global __value_to_z3__ 
 
-        options = list()
+    #     options = list()
 
-        dist_names = self.synthesizer.generate_family_distributions(design=self.design)
+    #     dist_names = self.synthesizer.generate_family_distributions(design=self.design)
 
-        for d in dist_names: 
-            __value_to_z3__[str(d)] = d
-            options.append({'label': str(d), 'value': str(d)})
+    #     for d in dist_names: 
+    #         __value_to_z3__[str(d)] = d
+    #         options.append({'label': str(d), 'value': str(d)})
         
-        return options
+    #     return options
 
-    def make_family_link_options(self): 
-        family_options = self.make_family_options()
+    def make_family_link_options(self, family_link_options): 
+        family_options = list()
+        
+        for f in family_link_options.keys(): 
+            family_options.append({'label': str(f), 'value': str(f)})
 
         controls = dbc.Card(
             [

@@ -11,7 +11,7 @@ from tisane.smt.knowledge_base import KB
 from z3 import * 
 import networkx as nx
 from itertools import chain, combinations
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from copy import deepcopy
 
 # Declare data type
@@ -490,6 +490,14 @@ class Synthesizer(object):
                     random_facts = list()
                 
         return random_dict
+
+    def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 
+        family_link = dict()
+
+        for family_fact in self.generate_family_distributions(design): 
+            family_link[family_fact] = self.generate_link_functions(design=design, family_fact=family_fact)
+            
+        return family_link
     
     def generate_family_distributions(self, design: Design) -> List[z3.BoolRef]: 
         family_facts = list() 
