@@ -24,7 +24,7 @@ import plotly.graph_objects as go
 import webbrowser # For autoamtically opening the browser for the CLI
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
-port = '8081' # FYI: default dash port is 8081
+port = '8050' # FYI: default dash port is 8050
 def open_browser():
 	webbrowser.open_new("http://localhost:{}".format(port))
 
@@ -101,337 +101,358 @@ class InputInterface(object):
                     output.append(cluster)
                 return output
         
-        @app.callback(
-            Output('two-way_options', 'options'),
-            [Input('interaction_effects_switch', 'value'),
-            Input('two-way_options', 'value')],
-            State('two-way_options', 'options')
-        )
-        def save_two_way_interaction_effects(switch_value, two_way_values, two_way_options): 
-            output = list()
-            if switch_value: 
-                # Do we have any selected interaction effects to save? 
-                if len(two_way_values) > 0: 
-                    facts = list()
-                    for o in two_way_options: 
-                        facts.append(o['value'])
-                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                        return output
+        # @app.callback(
+        #     Output('two-way_options', 'options'),
+        #     [Input('interaction_effects_switch', 'value'),
+        #     Input('two-way_options', 'value')],
+        #     State('two-way_options', 'options')
+        # )
+        # def save_two_way_interaction_effects(switch_value, two_way_values, two_way_options): 
+        #     output = list()
+        #     if switch_value: 
+        #         # Do we have any selected interaction effects to save? 
+        #         if len(two_way_values) > 0: 
+        #             facts = list()
+        #             for o in two_way_options: 
+        #                 facts.append(o['value'])
+        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+        #                 return output
                     
-                    # TODO: Save interaction effects somewhere!
-                    # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
-                    # if is_sat: 
-                    #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
-                    #     return output
-                    # else: 
-                    #     # TODO: Start a modal?
-                    #     raise ValueError(f"Error in saving two-way interaction effects!")
-                # No selected interaction effects to save
-                else: 
-                    for o in two_way_options: 
-                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    return output
-            for o in two_way_options: 
-                output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+        #             # TODO: Save interaction effects somewhere!
+        #             # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+        #             # if is_sat: 
+        #             #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+        #             #     return output
+        #             # else: 
+        #             #     # TODO: Start a modal?
+        #             #     raise ValueError(f"Error in saving two-way interaction effects!")
+        #         # No selected interaction effects to save
+        #         else: 
+        #             for o in two_way_options: 
+        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+        #             return output
+        #     for o in two_way_options: 
+        #         output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
             
-            return output
+        #     return output
         
         @app.callback(
-            Output('n-way_options', 'options'),
-            [Input('interaction_effects_switch', 'value'),
-            Input('n-way_options', 'value')],
-            State('n-way_options', 'options')
+            Output({'type': 'interaction_effects_options', 'index': ALL}, 'options'),
+            Input('interaction_effects_switch', 'value'),
+            State({'type': 'interaction_effects_options', 'index': ALL}, 'options')
         )
-        def save_n_way_interaction_effects(switch_value, n_way_values, n_way_options): 
+        def save_interaction_effects(switch_value, interaction_effects_options): 
             output = list()
             if switch_value: 
-                # Do we have any selected interaction effects to save? 
-                if len(n_way_values) > 0: 
-                    facts = list()
-                    for o in n_way_options: 
-                        facts.append(o['value'])
-                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                        return output
-                    # TODO: Save and verify interaction effect facts somewhere
-                    # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
-                    # if is_sat: 
-                    #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
-                    #     return output
-                    # else: 
-                    #     # TODO: Start a modal?
-                    #     raise ValueError(f"Error in saving n-way interaction effects!")
-                # No selected interaction effects to save
-                else: 
-                    for o in n_way_options: 
-                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})        
-                    return output
-            for o in n_way_options: 
-                output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-                
-            return output
-        
-        @app.callback(
-            [Output({'type': 'random_slope', 'index': ALL}, 'options'),
-            Output({'type': 'random_intercept', 'index': ALL}, 'options'),
-            Output({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'options')],
-            [Input('random_effects_switch', 'value'),
-            Input({'type': 'random_slope', 'index': ALL}, 'value'),
-            Input({'type': 'random_intercept', 'index': ALL}, 'value'),
-            Input({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'value')],
-            [State({'type': 'random_slope', 'index': ALL}, 'options'),
-            State({'type': 'random_intercept', 'index': ALL}, 'options'),
-            State({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'options')]
-        )
-        def save_random_effects(switch_value, random_slope_values, random_intercept_values, correlation_value, random_slope_options, random_intercept_options, correlation_options): 
-            slope_output = list()
-            intercept_output = list()
-            correlation_output = list()
-            if switch_value: 
-                # Do we have any selected random slopes to save? 
-                if len(random_slope_values) > 0: 
-                    # TODO: Store (and verify) random slope values
-                    pass
-                for option in random_slope_options: 
-                    o = option[0]
-                    slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])
-
-                # Do we have any selected random intercepts to save? 
-                if len(random_intercept_values) > 0: 
-                    # TODO: Store (and verify) random slope values
-                    pass
-                for option in random_intercept_options: 
-                    o = option[0]
-                    intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])    
-                
-                # Do we have any selected correlations for random effects to save? 
-                if correlation_value is not None: 
-                    # TODO: Store (and verify) random slope values
-                    pass
-                for option in correlation_options: 
-                    tmp_options = list()
-                    o = option[0]
-                    tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    o = option[1]
-                    tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    correlation_output.append(tmp_options)
-                return slope_output, intercept_output, correlation_output
+                for i, options in enumerate(interaction_effects_options): 
+                    cluster = list() 
+                    for o in options: 
+                        cluster.append({'label': o['label'], 'value': o['value'], 'disabled': True})    
+                    output.append(cluster)
+                return output                
             # else
-            for option in random_slope_options: 
-                o = option[0]
-                slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}])       
-            for option in random_intercept_options: 
-                o = option[0]
-                intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}]) 
-            for option in correlation_options: 
-                assert(len(option) == 2)
-                tmp_options = list()
-                o = option[0]
-                tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-                o = option[1]
-                tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-                correlation_output.append(tmp_options)
-            return slope_output, intercept_output, correlation_output
-
-        @app.callback(
-            Output('family_link_options', 'options'),
-            [Input('family_link_switch', 'value'),
-            State('family_link_options', 'options')],
-        )
-        def save_family_link(switch_value, family_link_options): 
-            output = list() 
-            if switch_value: 
-                facts = list() 
-                if family_link_options is not None: 
-                    for o in family_link_options: 
-                        facts.append(o['value'])
-                        output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    return output
-                else: 
-                    return family_link_options
-                # check for SAT...
-                # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
-                # if is_sat: 
-                #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
-                #     return output
-                # else: 
-                #     # TODO: Start a modal?
-                #     raise ValueError(f"Error in saving main effects!")
-            else: 
-                if family_link_options is not None: 
-                    for o in family_link_options: 
-                        output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-
-                    return output
-                return family_link_options
-
-        @app.callback(
-            [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
-            Output({'type': 'random_intercept', 'index': MATCH}, 'value'),
-            Output({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
-            [Input({'type': 'random_slope', 'index': MATCH}, 'value'),
-            Input({'type': 'random_intercept', 'index': MATCH}, 'value'),
-            Input({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
-            [State({'type': 'random_slope', 'index': MATCH}, 'options'),
-            State({'type': 'random_intercept', 'index': MATCH}, 'options'),
-            State({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'options')]
-        )
-        def sync_correlated_random_effects(slope_value, intercept_value, old_corr_value, slope_options, intercept_options, corr_options): 
-            # TODO: Use the cache rather than string comparisons here?
-            ctx = dash.callback_context
-            trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
-            trigger_val = ctx.triggered[0]['value']
-
-            slope_type = '"type":"random_slope"'
-            intercept_type = '"type":"random_intercept"'
-            correlated_type = '"type":"correlated_random_slope_intercept"'
-            
-            # Updated the slope selection 
-            if slope_type in trigger_id:
-                if len(trigger_val) > 0: 
-                    if len(intercept_value) > 0: 
-                        new_corr_value = corr_options[0]['value']
-                        return slope_value, intercept_value, new_corr_value
-                    return slope_value, list(), None
-                else:
-                    return slope_value, intercept_value, None
-            elif intercept_type in trigger_id: 
-                if len(trigger_val) > 0: 
-                    assert(intercept_value is not None)
-                    if len(slope_value) > 0: 
-                        new_corr_value = corr_options[0]['value']
-                        return slope_value, intercept_value, new_corr_value
-                    else: 
-                        return list(), intercept_value, None
-                else: 
-                    return slope_value, intercept_value, None
-            elif correlated_type in trigger_id:
-                new_slope_value = slope_options[0]['value']
-                new_intercept_value = intercept_options[0]['value']
-                return [new_slope_value], [new_intercept_value], old_corr_value
-
-            # Nothing is selected
-            raise PreventUpdate
+            for i, options in enumerate(interaction_effects_options): 
+                cluster = list() 
+                for o in options: 
+                    cluster.append({'label': o['label'], 'value': o['value'], 'disabled': False})    
+                output.append(cluster)
+            return output                
+        # @app.callback(
+        #     Output('n-way_options', 'options'),
+        #     [Input('interaction_effects_switch', 'value'),
+        #     Input('n-way_options', 'value')],
+        #     State('n-way_options', 'options')
+        # )
+        # def save_n_way_interaction_effects(switch_value, n_way_values, n_way_options): 
+        #     output = list()
+        #     if switch_value: 
+        #         # Do we have any selected interaction effects to save? 
+        #         if len(n_way_values) > 0: 
+        #             facts = list()
+        #             for o in n_way_options: 
+        #                 facts.append(o['value'])
+        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+        #                 return output
+        #             # TODO: Save and verify interaction effect facts somewhere
+        #             # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+        #             # if is_sat: 
+        #             #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+        #             #     return output
+        #             # else: 
+        #             #     # TODO: Start a modal?
+        #             #     raise ValueError(f"Error in saving n-way interaction effects!")
+        #         # No selected interaction effects to save
+        #         else: 
+        #             for o in n_way_options: 
+        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': True})        
+        #             return output
+        #     for o in n_way_options: 
+        #         output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
                 
-        @app.callback(
-            [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
-            [Input(f"{i}_toggle", "n_clicks") for i in ['two-way', 'n-way']],
-            [State(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
-        )
-        def toggle_accordion(n1, n2, is_open1, is_open2):
-            ctx = dash.callback_context
+        #     return output
+        
+        # @app.callback(
+        #     [Output({'type': 'random_slope', 'index': ALL}, 'options'),
+        #     Output({'type': 'random_intercept', 'index': ALL}, 'options'),
+        #     Output({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'options')],
+        #     [Input('random_effects_switch', 'value'),
+        #     Input({'type': 'random_slope', 'index': ALL}, 'value'),
+        #     Input({'type': 'random_intercept', 'index': ALL}, 'value'),
+        #     Input({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'value')],
+        #     [State({'type': 'random_slope', 'index': ALL}, 'options'),
+        #     State({'type': 'random_intercept', 'index': ALL}, 'options'),
+        #     State({'type': 'correlated_random_slope_intercept', 'index': ALL}, 'options')]
+        # )
+        # def save_random_effects(switch_value, random_slope_values, random_intercept_values, correlation_value, random_slope_options, random_intercept_options, correlation_options): 
+        #     slope_output = list()
+        #     intercept_output = list()
+        #     correlation_output = list()
+        #     if switch_value: 
+        #         # Do we have any selected random slopes to save? 
+        #         if len(random_slope_values) > 0: 
+        #             # TODO: Store (and verify) random slope values
+        #             pass
+        #         for option in random_slope_options: 
+        #             o = option[0]
+        #             slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])
 
-            if not ctx.triggered:
-                return False, False
-            else:
-                button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-            if button_id == "two-way_toggle" and n1:
-                return not is_open1, is_open2
-            elif button_id == "n-way_toggle" and n2:
-                return is_open1, not is_open2
-            return False, False
-
-        @app.callback(
-            Output('link_choice', 'options'),
-            [
-                Input('family_link_options', 'value'),
-                Input('link_choice', 'options'),
-            ],
-        )
-        def update_link_options(family, old_options): 
-            global __value_to_z3__
-            
-            new_options = list()
-
-            if family is not None: 
-                # Get link options
-                family_name = str(family)
-                assert(family_name in __value_to_z3__.keys())
-                family_fact = __value_to_z3__[family_name]
-                link_options = self.get_link_options(family_fact)
-
-                for link in link_options: 
-                    __value_to_z3__[str(link)] = link
-                    new_options.append({'label': str(link), 'value': str(link)})                    
-
-                return new_options
-            else: 
-                raise PreventUpdate
-
-        @app.callback(
-            Output('data_dist', 'figure'),
-            [
-                Input('family_link_options', 'value'),
-                Input('link_choice', 'value')
-            ],
-            State('data_dist', 'figure')
-        )
-        def update_chart_family(family, link, old_data): 
-            global __value_to_z3__
-            
-            if family is not None: 
-                assert(isinstance(family, str))
-                family_fact = __value_to_z3__[family]
-
-                # Get current data 
-                (curr_data, curr_label) = self.get_data_dist()
-
-                # Get data for family
-                key = f'{family}_data'
+        #         # Do we have any selected random intercepts to save? 
+        #         if len(random_intercept_values) > 0: 
+        #             # TODO: Store (and verify) random slope values
+        #             pass
+        #         for option in random_intercept_options: 
+        #             o = option[0]
+        #             intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])    
                 
-                # Do we need to generate data?
-                if key not in __value_to_z3__.keys(): 
-                    family_data = generate_data_dist_from_facts(fact=family_fact, design=self.design)
-                    # Store data for family in __value_to_z3__ cache
-                    __value_to_z3__[key] = family_data
-                # We already have the data generated in our "cache"
-                else: 
-                    family_data = __value_to_z3__[key]
+        #         # Do we have any selected correlations for random effects to save? 
+        #         if correlation_value is not None: 
+        #             # TODO: Store (and verify) random slope values
+        #             pass
+        #         for option in correlation_options: 
+        #             tmp_options = list()
+        #             o = option[0]
+        #             tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+        #             o = option[1]
+        #             tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+        #             correlation_output.append(tmp_options)
+        #         return slope_output, intercept_output, correlation_output
+        #     # else
+        #     for option in random_slope_options: 
+        #         o = option[0]
+        #         slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}])       
+        #     for option in random_intercept_options: 
+        #         o = option[0]
+        #         intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}]) 
+        #     for option in correlation_options: 
+        #         assert(len(option) == 2)
+        #         tmp_options = list()
+        #         o = option[0]
+        #         tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+        #         o = option[1]
+        #         tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
+        #         correlation_output.append(tmp_options)
+        #     return slope_output, intercept_output, correlation_output
 
-                if link is not None: 
-                    assert(isinstance(link, str))
-                    link_fact = __value_to_z3__[link]
-                    # Transform the data 
-                    transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
+        # @app.callback(
+        #     Output('family_link_options', 'options'),
+        #     [Input('family_link_switch', 'value'),
+        #     State('family_link_options', 'options')],
+        # )
+        # def save_family_link(switch_value, family_link_options): 
+        #     output = list() 
+        #     if switch_value: 
+        #         facts = list() 
+        #         if family_link_options is not None: 
+        #             for o in family_link_options: 
+        #                 facts.append(o['value'])
+        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': True})
+        #             return output
+        #         else: 
+        #             return family_link_options
+        #         # check for SAT...
+        #         # is_sat = self.synthesizer.check_constraints(facts, rule_set='effects', design=self.design)
+        #         # if is_sat: 
+        #         #     self.synthesizer.update_with_facts(facts, rule_set='effects', design=self.design)
+        #         #     return output
+        #         # else: 
+        #         #     # TODO: Start a modal?
+        #         #     raise ValueError(f"Error in saving main effects!")
+        #     else: 
+        #         if family_link_options is not None: 
+        #             for o in family_link_options: 
+        #                 output.append({'label': o['label'], 'value': o['value'], 'disabled': False})
 
-                    # Create a new dataframe
-                    # Generate figure 
-                    fig = go.Figure()
-                    fig.add_trace(go.Histogram(x=curr_data, name=f'{self.design.dv.name}',))
-                    fig.add_trace(go.Histogram(x=transformed_data, name=f'Simulated {family} distribution, {link} transformation.'))
-                    fig.update_layout(barmode='overlay')
-                    fig.update_traces(opacity=0.75)
-                    fig.update_layout(legend=dict(
-                        orientation="h",
-                        yanchor="bottom",
-                        y=1.02,
-                        xanchor="right",
-                        x=1
-                    ))
+        #             return output
+        #         return family_link_options
 
-                    return fig
-                else: 
-                    raise PreventUpdate
-            else: 
-                raise PreventUpdate
+        # @app.callback(
+        #     [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
+        #     Output({'type': 'random_intercept', 'index': MATCH}, 'value'),
+        #     Output({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
+        #     [Input({'type': 'random_slope', 'index': MATCH}, 'value'),
+        #     Input({'type': 'random_intercept', 'index': MATCH}, 'value'),
+        #     Input({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'value')],
+        #     [State({'type': 'random_slope', 'index': MATCH}, 'options'),
+        #     State({'type': 'random_intercept', 'index': MATCH}, 'options'),
+        #     State({'type': 'correlated_random_slope_intercept', 'index': MATCH}, 'options')]
+        # )
+        # def sync_correlated_random_effects(slope_value, intercept_value, old_corr_value, slope_options, intercept_options, corr_options): 
+        #     # TODO: Use the cache rather than string comparisons here?
+        #     ctx = dash.callback_context
+        #     trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        #     trigger_val = ctx.triggered[0]['value']
 
-        @app.callback(
-            Output('generate_code', 'disabled'),
-            [Input('main_effects_switch', 'value'),
-            Input('interaction_effects_switch', 'value'),
-            Input('random_effects_switch', 'value'),
-            Input('family_link_switch', 'value'),]
-        )
-        def enable_code_generation(me_switch, i_switch, re_switch, fl_switch): 
-            # If all the switches are turned on/True
-            if me_switch and i_switch and re_switch and fl_switch: 
-                return False # disabled: False
-            return True # disable: True
+        #     slope_type = '"type":"random_slope"'
+        #     intercept_type = '"type":"random_intercept"'
+        #     correlated_type = '"type":"correlated_random_slope_intercept"'
+            
+        #     # Updated the slope selection 
+        #     if slope_type in trigger_id:
+        #         if len(trigger_val) > 0: 
+        #             if len(intercept_value) > 0: 
+        #                 new_corr_value = corr_options[0]['value']
+        #                 return slope_value, intercept_value, new_corr_value
+        #             return slope_value, list(), None
+        #         else:
+        #             return slope_value, intercept_value, None
+        #     elif intercept_type in trigger_id: 
+        #         if len(trigger_val) > 0: 
+        #             assert(intercept_value is not None)
+        #             if len(slope_value) > 0: 
+        #                 new_corr_value = corr_options[0]['value']
+        #                 return slope_value, intercept_value, new_corr_value
+        #             else: 
+        #                 return list(), intercept_value, None
+        #         else: 
+        #             return slope_value, intercept_value, None
+        #     elif correlated_type in trigger_id:
+        #         new_slope_value = slope_options[0]['value']
+        #         new_intercept_value = intercept_options[0]['value']
+        #         return [new_slope_value], [new_intercept_value], old_corr_value
+
+        #     # Nothing is selected
+        #     raise PreventUpdate
+                
+        # @app.callback(
+        #     [Output(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
+        #     [Input(f"{i}_toggle", "n_clicks") for i in ['two-way', 'n-way']],
+        #     [State(f"{i}_collapse", "is_open") for i in ['two-way', 'n-way']],
+        # )
+        # def toggle_accordion(n1, n2, is_open1, is_open2):
+        #     ctx = dash.callback_context
+
+        #     if not ctx.triggered:
+        #         return False, False
+        #     else:
+        #         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
+
+        #     if button_id == "two-way_toggle" and n1:
+        #         return not is_open1, is_open2
+        #     elif button_id == "n-way_toggle" and n2:
+        #         return is_open1, not is_open2
+        #     return False, False
+
+        # @app.callback(
+        #     Output('link_choice', 'options'),
+        #     [
+        #         Input('family_link_options', 'value'),
+        #         Input('link_choice', 'options'),
+        #     ],
+        # )
+        # def update_link_options(family, old_options): 
+        #     global __value_to_z3__
+            
+        #     new_options = list()
+
+        #     if family is not None: 
+        #         # Get link options
+        #         family_name = str(family)
+        #         assert(family_name in __value_to_z3__.keys())
+        #         family_fact = __value_to_z3__[family_name]
+        #         link_options = self.get_link_options(family_fact)
+
+        #         for link in link_options: 
+        #             __value_to_z3__[str(link)] = link
+        #             new_options.append({'label': str(link), 'value': str(link)})                    
+
+        #         return new_options
+        #     else: 
+        #         raise PreventUpdate
+
+        # @app.callback(
+        #     Output('data_dist', 'figure'),
+        #     [
+        #         Input('family_link_options', 'value'),
+        #         Input('link_choice', 'value')
+        #     ],
+        #     State('data_dist', 'figure')
+        # )
+        # def update_chart_family(family, link, old_data): 
+        #     global __value_to_z3__
+            
+        #     if family is not None: 
+        #         assert(isinstance(family, str))
+        #         family_fact = __value_to_z3__[family]
+
+        #         # Get current data 
+        #         (curr_data, curr_label) = self.get_data_dist()
+
+        #         # Get data for family
+        #         key = f'{family}_data'
+                
+        #         # Do we need to generate data?
+        #         if key not in __value_to_z3__.keys(): 
+        #             family_data = generate_data_dist_from_facts(fact=family_fact, design=self.design)
+        #             # Store data for family in __value_to_z3__ cache
+        #             __value_to_z3__[key] = family_data
+        #         # We already have the data generated in our "cache"
+        #         else: 
+        #             family_data = __value_to_z3__[key]
+
+        #         if link is not None: 
+        #             assert(isinstance(link, str))
+        #             link_fact = __value_to_z3__[link]
+        #             # Transform the data 
+        #             transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
+
+        #             # Create a new dataframe
+        #             # Generate figure 
+        #             fig = go.Figure()
+        #             fig.add_trace(go.Histogram(x=curr_data, name=f'{self.design.dv.name}',))
+        #             fig.add_trace(go.Histogram(x=transformed_data, name=f'Simulated {family} distribution, {link} transformation.'))
+        #             fig.update_layout(barmode='overlay')
+        #             fig.update_traces(opacity=0.75)
+        #             fig.update_layout(legend=dict(
+        #                 orientation="h",
+        #                 yanchor="bottom",
+        #                 y=1.02,
+        #                 xanchor="right",
+        #                 x=1
+        #             ))
+
+        #             return fig
+        #         else: 
+        #             raise PreventUpdate
+        #     else: 
+        #         raise PreventUpdate
+
+        # @app.callback(
+        #     Output('generate_code', 'disabled'),
+        #     [Input('main_effects_switch', 'value'),
+        #     Input('interaction_effects_switch', 'value'),
+        #     Input('random_effects_switch', 'value'),
+        #     Input('family_link_switch', 'value'),]
+        # )
+        # def enable_code_generation(me_switch, i_switch, re_switch, fl_switch): 
+        #     # If all the switches are turned on/True
+        #     if me_switch and i_switch and re_switch and fl_switch: 
+        #         return False # disabled: False
+        #     return True # disable: True
 
         ##### Start and run app on local server
         self.app = app
         open_browser()
-        app.run_server(debug=False, threaded=True, port=8081)
+        app.run_server(debug=False, threaded=True, port=8050)
         
     def create_switch(self, switch_id: str, form_group_id: str): 
         switch = dbc.FormGroup([
@@ -1054,7 +1075,7 @@ class InputInterface(object):
         names = [v.name for v in interaction]
         interaction_name = '*'.join(names)
         card = dbc.Card([
-            dbc.CardHeader([dbc.Checklist(options=[{'label': f'{interaction_name}', 'value': f'{interaction_name}'}], id={'type': 'interaction_vis', 'index': f'{interaction_name}'}, value=[])]),
+            dbc.CardHeader([dbc.Checklist(options=[{'label': f'{interaction_name}', 'value': f'{interaction_name}'}], id={'type': 'interaction_effects_options', 'index': f'{interaction_name}'}, value=[])]),
             dbc.CardBody([
                 fig
             ])
