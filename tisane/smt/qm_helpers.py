@@ -168,7 +168,7 @@ def elicit_treatment_facts(gr: Graph, dv: AbstractVariable, variables: List[Abst
                         if idx in range(len(variable_options)): 
                             var_unit = variable_options[idx]
                             # TODO: Update this when create Graph IR!
-                            import pdb; pdb.set_trace()
+                            
                             gr._add_edge(start=n0_var, end=var_unit, edge_type='treat')
                         else: 
                             raise ValueError (f"Picked an index out of bounds!")
@@ -179,7 +179,8 @@ def elicit_treatment_facts(gr: Graph, dv: AbstractVariable, variables: List[Abst
                 raise ValueError
         else: 
             # TODO: This might happen for a mixed effect? 
-            import pdb; pdb.set_trace()
+            raise NotImplementedError
+            
 
 
 ##### FOR POSTPROCESSING QUERY RESULTS #####

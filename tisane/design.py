@@ -160,7 +160,7 @@ class Design(object):
         main_seq = None
         interaction_seq = None
         # Get variable names
-        import pdb; pdb.set_trace()
+        
         start_name = fact_dict['start']
         end_name = fact_dict['end']
         # Get variables

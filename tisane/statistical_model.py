@@ -160,7 +160,7 @@ class StatisticalModel(object):
                             pre_identifiers.append(p_var)
             
             # if len(pre_identifiers) > 0: 
-            #     import pdb; pdb.set_trace()
+            #     
             for pi in pre_identifiers:
                 self.graph.has(identifier=pi, variable=ixn_var)
 
@@ -504,7 +504,7 @@ class StatisticalModel(object):
         else: 
             raise ValueError(f"Query is not supported: {outcome}. Try the following: 'STATISTICAL MODEL', 'VARIABLE RELATIONSHIP GRAPH', 'DATA SCHEMA', 'DATA COLLECTION PROCEDURE'")
 
-        # import pdb; pdb.set_trace()
+        # 
         return facts
 
     # #TODO: @return a DataSet object with data schema info only 

@@ -31,7 +31,7 @@ def update_clauses(pushed_constraints: list, unsat_core: list, keep_clause: list
                 # pass
             else: 
                 updated_constraints.append(pc)
-        # import pdb; pdb.set_trace()
+        # 
         return updated_constraints
         
     # @param current_constraints are constraints that are currently SAT before adding @param unsat_core
@@ -60,7 +60,7 @@ def check_update_constraints(solver: Solver, assertions: list):
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
-            import pdb; pdb.set_trace()
+            
             assert(len(unsat_core) > 0)
 
 
@@ -79,12 +79,12 @@ def check_update_constraints(solver: Solver, assertions: list):
 
         # Double check that the new_assertions do not cause UNSAT
         new_state = solver.check(assertions)
-        import pdb; pdb.set_trace()
+        
         if new_state == sat: 
             # return (solver, assertions)
             return solver
         elif new_state == unsat: 
-            import pdb; pdb.set_trace()
+            
             return check_update_constraints(solver=solver, assertions=assertions)
         else: 
             raise ValueError (f"Solver state is neither SAT nor UNSAT: {new_state}")

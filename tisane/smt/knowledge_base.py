@@ -29,6 +29,22 @@ class KnowledgeBase(object):
         ]
 
     def ground_data_transformation_rules(self, dv_const: Const): 
+        self.default_family_to_transformation = [
+            Implies(GaussianFamily(dv_const), IdentityTransform(dv_const)),
+
+            Implies(InverseGaussianFamily(dv_const), InverseSquaredTransform(dv_const)),
+
+            Implies(PoissonFamily(dv_const), LogTransform(dv_const)),
+
+            Implies(GammaFamily(dv_const), InverseTransform(dv_const)),
+            
+            Implies(TweedieFamily(dv_const), LogTransform(dv_const)),
+
+            Implies(BinomialFamily(dv_const), LogitTransform(dv_const)),
+
+            Implies(NegativeBinomialFamily(dv_const), LogTransform(dv_const)),
+        ]
+
         self.family_to_transformation_rules = [
             Implies(GaussianFamily(dv_const), LogTransform(dv_const)), 
             Implies(GaussianFamily(dv_const), SquarerootTransform(dv_const)),
@@ -63,7 +79,7 @@ class KnowledgeBase(object):
             # Power not yet supported in statsmodels
             # Implies(NegativeBinomialFamily(dv_const), PowerTransform(dv_const)),
             
-            # Multinomial family is not supported in statsmodels
+            # Multinomial family is not supported in statsmodels for GLM
             # Implies(MultinomialFamily(dv_const), IdentityTransform(dv_const))
         ]
 

@@ -35,7 +35,7 @@ class InputInterface(object):
     statistical_model: StatisticalModel
     app: dash.Dash
 
-    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], design: Design, synthesizer: Synthesizer):
+    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design, synthesizer: Synthesizer):
         self.design = design
         self.synthesizer = synthesizer
 
@@ -48,6 +48,7 @@ class InputInterface(object):
                 __str_to_z3__[key] = l # str to Z3 fact
 
         self.family_link_options = family_link
+        self.default_family_link = default_family_link
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -365,6 +366,7 @@ class InputInterface(object):
 
         @app.callback(
             Output('link_options', 'options'),
+            # Output('link_options', 'value'),
             [Input('family_options', 'value'),
             Input('link_options', 'options')],
         )
@@ -382,9 +384,15 @@ class InputInterface(object):
                 for link in link_options: 
                     # "Prettify" link names before rendering
                     label = str(link).split('Transform')[0]
-                    label += ' link'
-                    new_options.append({'label': label, 'value': str(link)})                    
+                    # label += ' link'
 
+                    # Is the link the default for this family? 
+                    assert(self.default_family_link[family_fact])
+                    if link in self.default_family_link[family_fact]: 
+                        label += '(default)'
+
+                    new_options.append({'label': label, 'value': str(link)})                    
+                
                 return new_options
             else: 
                 raise PreventUpdate

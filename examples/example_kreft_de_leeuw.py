@@ -34,7 +34,7 @@ hw_data = np.random.randint(0, 24, size=50)
 ses_data = np.random.randn(1,50) * 10000
 mean_ses_data = np.random.randn(1,50) * 10000
 race_data = random.choices(['White', 'Hispanic', 'Black', 'Asian', 'Indigenous'], k=50)
-# import pdb; pdb.set_trace()
+# 
 # Data source, use synthetic data
 data =  pd.DataFrame({
     'MathAchievement': math_data.tolist()[0],

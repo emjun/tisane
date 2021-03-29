@@ -106,6 +106,10 @@ class Synthesizer(object):
             KB.ground_data_transformation_rules(dv_const=kwargs['dv_const'])
             rules_to_consider['family_to_transformation_rules'] = KB.family_to_transformation_rules
             rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
+        elif output.upper() == 'DEFAULT_FAMILY_LINK': 
+            assert('dv_const' in kwargs)
+            KB.ground_data_transformation_rules(dv_const=kwargs['dv_const'])
+            rules_to_consider['default_family_to_transformation'] = KB.default_family_to_transformation
         else: 
             # TODO: Clean up further so only create Z3 rules/functions for the rules that are added?
             if output.upper() == 'STATISTICAL MODEL': 
@@ -115,7 +119,7 @@ class Synthesizer(object):
             elif output.upper() == 'CONCEPTUAL MODEL': 
                 rules_to_consider['graph_rules'] = KB.graph_rules
             # elif output.upper() == 'STUDY DESIGN': 
-            #     # import pdb; pdb.set_trace()
+            #     # 
             #     # TODO: Should allow separate queries for data schema and data collection?? probably not?
             #     rules_to_consider['data_type_rules'] = KB.data_type_rules
             #     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
@@ -145,7 +149,7 @@ class Synthesizer(object):
         #     # unsat_core = solver.unsat_core() 
             
         #     # if len(unsat_core) == 0: 
-        #     #     import pdb; pdb.set_trace()
+        #     #     
         #     assert(len(unsat_core) > 0)
         #     return (state, unsat_core)
         # elif (state == sat): 
@@ -180,7 +184,7 @@ class Synthesizer(object):
     # @param unsat_core is the set of cosntraints that caused a conflict
     # @param keep_clause is the clause in unsat_core to keep and that resolves the conflict
     def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause): 
-        # import pdb; pdb.set_trace()
+        # 
         # Verify that keep_clause is indeed a subset of unsat_core
         if keep_clause not in unsat_core: 
             raise ValueError (f'Keep clause ({keep_clause}) not in unsat_core({unsat_core})')
@@ -242,13 +246,13 @@ class Synthesizer(object):
 
 
     def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
-        # import pdb; pdb.set_trace()
+        # 
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
             
             if len(unsat_core) == 0: 
-                import pdb; pdb.set_trace()
+                raise ValueError(f'Unsat core: {unsat_core} is len==0')
             assert(len(unsat_core) > 0)
 
             # Ask user for input
@@ -537,6 +541,27 @@ class Synthesizer(object):
 
         return transformation_candidate_facts
 
+    def generate_default_family_link(self, design: Design): 
+        default_family_to_link = dict() 
+
+        dv = design.dv
+        # Get rules for families and valid data transformations/link functions
+        rules_dict = self.collect_rules(output='DEFAULT_FAMILY_LINK', dv_const=dv.const)
+        default_family_to_transformation_rules = rules_dict['default_family_to_transformation']
+
+        for family_fact in self.generate_family_distributions(design): 
+            # Solve fact + rules to get possible link functions
+            res_model_transformations = self.solve(facts=family_fact, rules={'default_family_to_transformation': default_family_to_transformation_rules})
+            # Get link facts
+            default_transformation_fact = self.model_to_transformation_facts(model=res_model_transformations, design=design)
+
+            default_family_to_link[family_fact] = default_transformation_fact 
+
+        
+        return default_family_to_link
+
+        
+
 
     def model_to_transformation_facts(self, model: z3.ModelRef, design: Design):
         transform_name_to_constraint = {
@@ -770,7 +795,7 @@ class Synthesizer(object):
                         interaction = SetAdd(interaction, v.const)
                     # if interaction_seq is None: 
                     #     interaction_seq = Unit(interaction)
-                    #     import pdb; pdb.set_trace()
+                    #     
                     # else: 
                     #     interaction_seq = Concat(Unit(interaction), interaction_seq)
                 

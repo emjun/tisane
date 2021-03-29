@@ -53,7 +53,7 @@ def infer_from(input_: Union[Design], output_: str):
     elif isinstance(input_, StatisticalModel):
         if output_.upper() == 'STUDY DESIGN': 
             design = query(input_obj=input_, output=output_)
-            import pdb; pdb.set_trace()
+            
             return design 
         elif output_.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
             gr = query(input_obj=input_, output=output_)
@@ -78,6 +78,7 @@ def synthesize_statistical_model(design: Design):
     # random_effects_options = synth.generate_random_effects(design=design)
     # May want to load a dictionary of family to link
     family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
     # family_options = synth.generate_family_distributions(design=design)
     # link_options = synth.generate_link_functions(design=design)
 
@@ -85,7 +86,7 @@ def synthesize_statistical_model(design: Design):
     # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
     # spec is SM or some json dump -> SM -> code generated
     
-    input_cli = InputInterface(main_effects_options, interaction_effects_options, family_link_options, design=design, synthesizer=synth)
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
     return synth.synthesize_statistical_model(design=design)
     
 

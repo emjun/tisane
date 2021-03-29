@@ -201,7 +201,7 @@ class AbstractVariable(object):
     # @return RepeatedMeasure
     def repeat(self, response: 'AbstractVariable', according_to: 'AbstractVariable'): 
         repeat_relat = RepeatedMeasure(unit=self, response=response, according_to=according_to)
-        import pdb; pdb.set_trace()
+        
     
     def repeats(self, response: 'AbstractVariable', according_to: 'AbstractVariable'):
         return RepeatedMeasure(unit=self, response=response, according_to=according_to)

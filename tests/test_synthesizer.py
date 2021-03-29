@@ -736,7 +736,7 @@ class SynthesizerTest(unittest.TestCase):
     #     )
 
     #     ts.synthesize_statistical_model(design=design)
-    #     import pdb; pdb.set_trace()
+    #     
     
     # @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     # def test_one_level_fixed_interaction(self): 
