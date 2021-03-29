@@ -378,9 +378,12 @@ class InputInterface(object):
                 assert(family in __str_to_z3__.keys())
                 family_fact = __str_to_z3__[family]
                 link_options = self.family_link_options[family_fact]
-
+                
                 for link in link_options: 
-                    new_options.append({'label': str(link), 'value': str(link)})                    
+                    # "Prettify" link names before rendering
+                    label = str(link).split('Transform')[0]
+                    label += ' link'
+                    new_options.append({'label': label, 'value': str(link)})                    
 
                 return new_options
             else: 
