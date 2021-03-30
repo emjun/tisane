@@ -87,6 +87,13 @@ def synthesize_statistical_model(design: Design):
     # spec is SM or some json dump -> SM -> code generated
     
     input_cli = InputInterface(main_effects_options, interaction_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    import pdb; pdb.set_trace()
+    # Read JSON file 
+
+    # Construct StatisticalModel from JSON spec
+    
+    # return scipt (TODO: look into replacing the code snippet in original program)
+    
     return synth.synthesize_statistical_model(design=design)
     
 

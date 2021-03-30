@@ -85,6 +85,37 @@ class InputInterface(object):
             ],
             id="code_gen_modal",
         )
+        model_spec_issue_ivs_modal = dbc.Modal(
+            [
+                dbc.ModalHeader("Issue! Please specify at least one independent variable!"),
+                # dbc.ModalBody("Tisane is generating a script based on your input script and UI selections."),
+                dbc.ModalFooter([
+                    dbc.Button("Got it!", id="got_it_ivs", className="ml-auto")                ]),
+            ],
+            id="model_spec_issue_ivs",
+        )
+        model_spec_issue_family_modal = dbc.Modal(
+            [
+                dbc.ModalHeader("Issue! You must select a family distribution for your data!"),
+                # dbc.ModalBody("Tisane is generating a script based on your input script and UI selections."),
+                dbc.ModalFooter([
+                    dbc.Button("Got it!", id="got_it_family", className="ml-auto"),
+                ]),
+            ],
+            id="model_spec_issue_family",
+        )
+        model_spec_issue_link_modal = dbc.Modal(
+            [
+                dbc.ModalHeader("Issue! You must specify a link function. Consider using the default for a family!"),
+                # dbc.ModalBody("Tisane is generating a script based on your input script and UI selections."),
+                dbc.ModalFooter([
+                    dbc.Button("Got it!", id="got_it_link", className="ml-auto")
+                ]),
+            ],
+            id="model_spec_issue_link",
+        )
+
+
 
         # Main components 
         main_effects_div = self.layout_main_effects_div(main_effects)
@@ -97,6 +128,9 @@ class InputInterface(object):
         app.layout = dbc.Container([
                 dcc.Store(id='session_store', storage_type='session'),
                 code_gen_modal,
+                model_spec_issue_ivs_modal,
+                model_spec_issue_family_modal,
+                model_spec_issue_link_modal,
                 
                 # Body
                 dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
@@ -536,10 +570,14 @@ class InputInterface(object):
                         ixn_facts.append(str(fact))
                 model_spec['interaction_effects'] = ixn_facts
 
-                model_spec['family'] = str(__str_to_z3__[family])
-                model_spec['link'] = str(__str_to_z3__[link])
-
-                # TODO: Check that there is enough info to create a statistical model
+                if family is not None: 
+                    model_spec['family'] = str(__str_to_z3__[family])
+                else: 
+                    model_spec['family'] = None
+                if link is not None: 
+                    model_spec['link'] = str(__str_to_z3__[link])
+                else: 
+                    model_spec['link'] = None
             
                 # Write ou all the values 
                 json_model_spec = json.dumps(model_spec)
@@ -549,21 +587,38 @@ class InputInterface(object):
             return True, json_model_spec # disable: True
 
         @app.callback(
-            Output('code_gen_modal', 'is_open'),
+            [Output('code_gen_modal', 'is_open'),
+            Output('model_spec_issue_ivs', 'is_open'),
+            Output('model_spec_issue_family', 'is_open'),
+            Output('model_spec_issue_link', 'is_open')],
             [Input('generate_code', 'n_clicks'),
             Input('close', 'n_clicks'),
             Input('keep_open', 'n_clicks'),
+            Input('got_it_ivs', 'n_clicks'),
+            Input('got_it_family', 'n_clicks'),
+            Input('got_it_link', 'n_clicks'),
             Input('session_store', 'data')],
             State('code_gen_modal', 'is_open')
         )
-        def generate_code(generate_code_click, close_click, keep_open_click, model_spec, is_open): 
-            if generate_code_click or close_click or keep_open_click:
-                # Write out a model spec!
-                write_data(model_spec)
+        def generate_code(generate_code_click, close_click, keep_open_click, got_it_ivs, got_it_family, got_it_link, model_spec, is_open): 
+            if generate_code_click or close_click or keep_open_click or got_it_ivs or got_it_family or got_it_link:
+                # Check that there is enough info to create a statistical model
+                (is_valid_model, problem) = self.check_model_specification(model_spec)
+                
+                if is_valid_model: 
+                    # Write out a model spec!
+                    write_data(model_spec)
+                else: 
+                    if problem == 'independent variables': 
+                        return not is_open, not is_open, not is_open, not is_open 
+                    elif problem == 'family': 
+                        return not is_open, not is_open, not is_open, not is_open 
+                    elif problem == 'link': 
+                        return not is_open, not is_open, not is_open, not is_open 
                 if close_click: 
                     self.shutdown()
-                return not is_open
-            return is_open
+                return not is_open, False, False, False
+            return is_open, False, False, False
         
         ##### Start and run app on local server
         self.app = app
@@ -1271,6 +1326,35 @@ class InputInterface(object):
         ])
         return checklist
             # TODO: correlate should only be an option if both are selected
+
+    # @returns True if this specification is for a valid model
+    # otherwise returns string indicating which aspect is not specified
+    # @param spec is a JSON object specifying a statistical model
+    def check_model_specification(self, spec: str): 
+        spec = json.loads(spec) # JSON -> dict
+        
+        ivs = list() 
+        if 'main_effects' in spec: 
+            ivs = spec['main_effects']
+        if 'interaction_effects' in spec: 
+            ivs += spec['interaction_effects']
+        family = None
+        if 'family' in spec: 
+            family = spec['family']
+        link = None
+        if 'link' in spec: 
+            link = spec['link'] 
+
+        if len(ivs) > 0: 
+            if family: 
+                if link: 
+                    return (True, None)
+                else: 
+                    return (False, 'link')
+            else: 
+                return (False, 'family')
+        else: 
+            return (False, 'independent variables')
 
     def shutdown(self):
         func = request.environ.get('werkzeug.server.shutdown')
