@@ -11,46 +11,66 @@ from typing import List
 
 from z3 import *
 
-def generate_data_dist_from_facts(fact: z3.BoolRef, design: Design):
+def update_dist(fact: z3.BoolRef, design: Design, **kwargs):
     size = design.dataset.get_length()
     if 'GaussianFamily' in str(fact) and 'Inverse' not in str(fact):
-        mean = 0.0
-        std = 1.0
+        mean = kwargs['mean']
+        std = kwargs['std']
         return np.random.default_rng().normal(loc=mean, scale=std, size=size)
+    else: 
+        raise NotImplementedError
+
+# The values are default values that can be manipulated/updated in the UI
+def generate_data_dist_from_facts(fact: z3.BoolRef, design: Design):
+    dv = design.dv
+    size = design.dataset.get_length()
+
+    if 'GaussianFamily' in str(fact) and 'Inverse' not in str(fact):
+        if design.dataset is not None: 
+            mean = design.dataset.get_column(dv.name).mean()
+            std = design.dataset.get_column(dv.name).std() # np default = 1
+        else: 
+            mean = 0 
+            std = 1
+
+        return np.random.default_rng().normal(loc=mean, scale=std, size=size), (mean, std)
     elif 'InverseGaussianFamily' in str(fact):
-        mean = .5 # TODO 
-        std = 1.0
-        
+        if design.dataset is not None: 
+            mean = design.dataset.dataset.mean() # should be > 0
+            std = design.dataset.dataset.std() # should be >= 0
+        else: 
+            mean = 1
+            std = 1
+
         return np.random.default_rng().wald(mean=mean, scale=std, size=size)
     elif 'PoissonFamily' in str(fact):
-        lam = 1.0
-        
+        lam = 1.0 # np default
         return np.random.default_rng().poisson(lam=lam, size=size)
     elif 'GammaFamily' in str(fact):
-        shape = 2.0 # Can calculate from mean? 
-        scale = 1.0 # Can calculate from std?
+        shape = 2.0 # k, >= 0
+        scale = 1.0 # theta, np default, >= 0 
         
         return np.random.default_rng().gamma(shape=shape, scale=scale, size=size)
     elif 'TweedieFamily' in str(fact):
-        mean = 10 # These are random values
-        p = 1.5 # These are random values
-        phi = 20 # These are random values
-        n = 1000
+        mean = design.dataset.dataset.mean()
+        p = 1.5 # Can be changed to update to other familiar distributions: https://en.wikipedia.org/wiki/Tweedie_distribution
+        phi = 20 # this can be reset
+        n = size
         return tweedie.tweedie(mu=mean, p=p, phi=phi).rvs(n)
     elif 'BinomialFamily' in str(fact) and 'Negative' not in str(fact):
-        n = 1000 # number of trials 
-        p = .5 # probability of success
+        n = size # number of trials  >= 0
+        p = .5 # probability of success [0, 1]
         
         return np.random.default_rng().binomial(n=n, p=p, size=size)
     elif 'NegativeBinomialFamily' in str(fact):
-        n = 1000 # number of successes
-        p = .5 # probability of success
+        n = size # number of successes, > 0 
+        p = .5 # probability of success [0, 1]
         
         return np.random.default_rng().negative_binomial(n=n, p=p, size=size)
     elif 'MultinomialFamily' in str(fact):
         dv = design.dv
         assert(dv.cardinality > 2)
-        n = 1000 # number of trials/experiments
+        n = size # number of trials/experiments, > 0 
         pvals = (1./dv.cardinality) # probability of each case 
         
         return np.random.default_rng().multinomial(n=n, pvals=pvals, size=size)
