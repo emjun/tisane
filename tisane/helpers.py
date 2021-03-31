@@ -11,15 +11,6 @@ from typing import List
 
 from z3 import *
 
-def update_dist(fact: z3.BoolRef, design: Design, **kwargs):
-    size = design.dataset.get_length()
-    if 'GaussianFamily' in str(fact) and 'Inverse' not in str(fact):
-        mean = kwargs['mean']
-        std = kwargs['std']
-        return np.random.default_rng().normal(loc=mean, scale=std, size=size)
-    else: 
-        raise NotImplementedError
-
 # The values are default values that can be manipulated/updated in the UI
 def generate_data_dist_from_facts(fact: z3.BoolRef, design: Design):
     dv = design.dv
@@ -33,11 +24,15 @@ def generate_data_dist_from_facts(fact: z3.BoolRef, design: Design):
             mean = 0 
             std = 1
 
-        return np.random.default_rng().normal(loc=mean, scale=std, size=size), (mean, std)
+        return np.random.default_rng().normal(loc=mean, scale=std, size=size)
     elif 'InverseGaussianFamily' in str(fact):
         if design.dataset is not None: 
-            mean = design.dataset.dataset.mean() # should be > 0
-            std = design.dataset.dataset.std() # should be >= 0
+            mean = design.dataset.get_column(dv.name).mean() # should be > 0
+            std = design.dataset.get_column(dv.name).std() # should be >= 0
+            if mean <= 0 or std < 0: 
+                mean = 1
+                std = 1
+                
         else: 
             mean = 1
             std = 1
@@ -52,7 +47,7 @@ def generate_data_dist_from_facts(fact: z3.BoolRef, design: Design):
         
         return np.random.default_rng().gamma(shape=shape, scale=scale, size=size)
     elif 'TweedieFamily' in str(fact):
-        mean = design.dataset.dataset.mean()
+        mean = design.dataset.get_column(dv.name).mean()
         p = 1.5 # Can be changed to update to other familiar distributions: https://en.wikipedia.org/wiki/Tweedie_distribution
         phi = 20 # this can be reset
         n = size

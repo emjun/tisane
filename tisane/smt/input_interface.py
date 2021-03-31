@@ -477,62 +477,57 @@ class InputInterface(object):
             else: 
                 raise PreventUpdate
 
-        # @app.callback(
-        #     Output('data_dist', 'figure'),
-        #     [
-        #         Input('family_link_options', 'value'),
-        #         Input('link_choice', 'value')
-        #     ],
-        #     State('data_dist', 'figure')
-        # )
-        # def update_chart_family(family, link, old_data): 
-        #     global __value_to_z3__
+        @app.callback(
+            Output('data_dist', 'figure'),
+            Input('family_options', 'value'),
+            State('data_dist', 'figure')
+        )
+        def update_chart_family(family, link): 
+            global __str_to_z3__
             
-        #     if family is not None: 
-        #         assert(isinstance(family, str))
-        #         family_fact = __value_to_z3__[family]
+            if family is not None: 
+                assert(isinstance(family, str))
+                family_fact = __str_to_z3__[family]
 
-        #         # Get current data 
-        #         (curr_data, curr_label) = self.get_data_dist()
+                # Get current data 
+                (curr_data, curr_label) = self.get_data_dist()
 
-        #         # Get data for family
-        #         key = f'{family}_data'
+                # Get data for family
+                key = f'{family}_data'
                 
-        #         # Do we need to generate data?
-        #         if key not in __value_to_z3__.keys(): 
-        #             family_data = generate_data_dist_from_facts(fact=family_fact, design=self.design)
-        #             # Store data for family in __value_to_z3__ cache
-        #             __value_to_z3__[key] = family_data
-        #         # We already have the data generated in our "cache"
-        #         else: 
-        #             family_data = __value_to_z3__[key]
+                # Do we need to generate data?
+                if key not in __str_to_z3__.keys(): 
+                    family_data = generate_data_dist_from_facts(fact=family_fact, design=self.design)
+                    # Store data for family in __str_to_z3__ cache
+                    __str_to_z3__[key] = family_data
+                # We already have the data generated in our "cache"
+                else: 
+                    family_data = __str_to_z3__[key]
 
-        #         if link is not None: 
-        #             assert(isinstance(link, str))
-        #             link_fact = __value_to_z3__[link]
-        #             # Transform the data 
-        #             transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
+                # if link is not None: 
+                #     assert(isinstance(link, str))
+                #     link_fact = __str_to_z3__[link]
+                #     # Transform the data 
+                #     transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
 
-        #             # Create a new dataframe
-        #             # Generate figure 
-        #             fig = go.Figure()
-        #             fig.add_trace(go.Histogram(x=curr_data, name=f'{self.design.dv.name}',))
-        #             fig.add_trace(go.Histogram(x=transformed_data, name=f'Simulated {family} distribution, {link} transformation.'))
-        #             fig.update_layout(barmode='overlay')
-        #             fig.update_traces(opacity=0.75)
-        #             fig.update_layout(legend=dict(
-        #                 orientation="h",
-        #                 yanchor="bottom",
-        #                 y=1.02,
-        #                 xanchor="right",
-        #                 x=1
-        #             ))
+                # Generate figure 
+                fig = go.Figure()
+                fig.add_trace(go.Histogram(x=curr_data, name=f'{self.design.dv.name}',))
+                fig.add_trace(go.Histogram(x=family_data, name=f'Simulated {family} distribution.'))
+                fig.update_layout(barmode='overlay')
+                fig.update_traces(opacity=0.75)
+                fig.update_layout(legend=dict(
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                ))
 
-        #             return fig
-        #         else: 
-        #             raise PreventUpdate
-        #     else: 
-        #         raise PreventUpdate
+                return fig
+                
+            else: 
+                raise PreventUpdate
 
         @app.callback(
             [Output('generate_code', 'disabled'),
@@ -1049,14 +1044,14 @@ class InputInterface(object):
         return (data, labels)    
 
     def get_data_for_family_distribution(self, family_fact: z3.BoolRef): 
-        global __value_to_z3__
+        global __str_to_z3__
 
         key = f'{str(family_fact)}_data'
-        if key in __value_to_z3__.keys(): 
-            return __value_to_z3__[key]
+        if key in __str_to_z3__.keys(): 
+            return __str_to_z3__[key]
         else: 
             val = generate_data_dist_from_facts(fact=family_fact, design=self.design)
-            __value_to_z3__[key] = val
+            __str_to_z3__[key] = val
             return val
 
     def populate_compound_family_div(self): 
@@ -1162,14 +1157,14 @@ class InputInterface(object):
         return link_functions
     
     # def make_family_options(self): 
-    #     global __value_to_z3__ 
+    #     global __str_to_z3__ 
 
     #     options = list()
 
     #     dist_names = self.synthesizer.generate_family_distributions(design=self.design)
 
     #     for d in dist_names: 
-    #         __value_to_z3__[str(d)] = d
+    #         __str_to_z3__[str(d)] = d
     #         options.append({'label': str(d), 'value': str(d)})
         
     #     return options
