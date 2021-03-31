@@ -1,5 +1,5 @@
 from tisane.graph import Graph
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Time, Count
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 # from tisane.smt.input_interface import InputInterface
@@ -511,9 +511,12 @@ class Synthesizer(object):
         if isinstance(dv, Numeric) or isinstance(dv, Ordinal): 
             family_facts.append(GaussianFamily(dv.const))
             family_facts.append(InverseGaussianFamily(dv.const))
+        if isinstance(dv, Count): 
             family_facts.append(PoissonFamily(dv.const))
+        if isinstance(dv, Time): 
+            # Expontential distribution would go here
             family_facts.append(GammaFamily(dv.const))
-            family_facts.append(TweedieFamily(dv.const)) # TODO: Add test
+            family_facts.append(TweedieFamily(dv.const)) 
         if isinstance(dv, Nominal) or isinstance(dv, Ordinal): 
             if dv.cardinality is not None: 
                 if dv.cardinality == 2:
