@@ -350,7 +350,15 @@ class Numeric(AbstractVariable):
         raise NotImplementedError
 
 class Count(AbstractVariable): 
-    pass
+    def __init(self, name: str, data=None, **kwargs): 
+        super(Count, self).__init__(name)
+        self.data = data 
+
+class Time(AbstractVariable): 
+    def __init(self, name: str, data=None, **kwargs): 
+        super(Time, self).__init__(name)
+        self.data = data 
+
 
 class Unit(Nominal):
     def __init__(self, name: str):
