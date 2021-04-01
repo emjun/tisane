@@ -997,9 +997,11 @@ class InputInterface(object):
         # Create table rows with the information
         for variables, effects in re_dict.items(): 
             badges = list()
+            correlated_radio_items = list()
             for e in effects: 
                 if 'RandomSlope' in str(e): 
                     badges.append(rs_badge)
+                    correlated_radio_items = self.create_correlated_radio_items(e)
                 elif 'RandomIntercept' in str(e):
                     badges.append(ri_badge) # TODO: Add unit!
 
@@ -1015,10 +1017,14 @@ class InputInterface(object):
                         names += f'{v.name}'
                         if i+1 < len(variables): 
                             names += ', '
-        
+
+                
                 content = names + badges
 
-            rows.append(html.Tr(html.Td(html.P(children=content))))
+            if len(correlated_radio_items) > 0: 
+                rows.append(html.Tr(children=[html.Td(html.P(children=content)), html.Td(correlated_radio_items)]))
+            else: 
+                rows.append(html.Tr(html.Td(html.P(children=content))))
         
         # TODO: Add correlated or not options
 
@@ -1028,6 +1034,23 @@ class InputInterface(object):
         # return output
         return html.Div(id='random_effects_div', children=table)
     
+    def create_correlated_radio_items(self, effect: z3.BoolRef): 
+        corr_radioitems = dbc.FormGroup(
+            [
+                dbc.RadioItems(
+                    options=[
+                        {"label": "Correlated", "value": f'Correlated({str(effect)})'},
+                        {"label": "Uncorrelated", "value": f'Uncorrelated({str(effect)})'},
+                    ],
+                    value=f'Correlated({str(effect)})',
+                    id=f"{str(effect)}_correlated_choice",
+                    inline=True,
+                ),
+            ]
+        )
+
+        return corr_radioitems
+
     def get_data_dist(self): 
         hist_data = None 
         labels = None 
