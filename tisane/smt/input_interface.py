@@ -277,152 +277,157 @@ class InputInterface(object):
         #     return output
         
         @app.callback(
-            Output('random_effects_table', 'children')
+            Output('random_effects_table', 'children'),
             [Input('random_effects_switch', 'value'),
             Input('random_effects_table', 'children')],
         )
-        def save_random_effects(switch_value, random_slope_values, random_intercept_values, correlation_value, random_slope_options, random_intercept_options, correlation_options): 
-            slope_output = list()
-            intercept_output = list()
-            correlation_output = list()
-            if switch_value: 
-                # Do we have any selected random slopes to save? 
-                if len(random_slope_values) > 0: 
-                    # TODO: Store (and verify) random slope values
-                    pass
-                for option in random_slope_options: 
-                    o = option[0]
-                    slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])
-
-                # Do we have any selected random intercepts to save? 
-                if len(random_intercept_values) > 0: 
-                    # TODO: Store (and verify) random slope values
-                    pass
-                for option in random_intercept_options: 
-                    o = option[0]
-                    intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': True}])    
-                
-                # Do we have any selected correlations for random effects to save? 
-                if correlation_value is not None: 
-                    # TODO: Store (and verify) random slope values
-                    pass
-                for option in correlation_options: 
-                    tmp_options = list()
-                    o = option[0]
-                    tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    o = option[1]
-                    tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': True})
-                    correlation_output.append(tmp_options)
-                return slope_output, intercept_output, correlation_output
-            # else
-            for option in random_slope_options: 
-                o = option[0]
-                slope_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}])       
-            for option in random_intercept_options: 
-                o = option[0]
-                intercept_output.append([{'label': o['label'], 'value': o['value'], 'disabled': False}]) 
-            for option in correlation_options: 
-                assert(len(option) == 2)
-                tmp_options = list()
-                o = option[0]
-                tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-                o = option[1]
-                tmp_options.append({'label': o['label'], 'value': o['value'], 'disabled': False})
-                correlation_output.append(tmp_options)
-            return slope_output, intercept_output, correlation_output
-
+        def save_random_effects(switch_value, random_effects_table):
             
-        @app.callback(
-            # Output({'type': 'random_effects_list', 'index': ALL}, 'children'),
-            Output('random_effects_table', 'children'),
-            Input('main_effects_switch', 'value'),
-            Input('interaction_effects_switch', 'value'),
-            Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
-            Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
-            # State({'type': 'random_effects_list', 'index': ALL}, 'children')
-            State('random_effects_table', 'children')
-        )
-        def sync_random_effects(main_switch, interaction_switch, main_effects, interaction_effects, random_effects): 
-            output = list() 
-            rows = list()
+            ctx = dash.callback_context
 
-            # Keep track of which random_effects to add as hidden afterwards 
-            all_re = list()
-            table_body = random_effects[0] # Tbody(rows)
-            for row in table_body['props']['children']: 
-                var_names = row['props']['id'].split('_random_effects')[0]
-                all_re.append(var_names)
-            added_re = list()
+            if not ctx.triggered: 
+                return random_effects_table 
+            #else: 
+            trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-            if main_switch:     
-                for m_list in main_effects: 
-                    assert(isinstance(m_list, list))
-                    # Is the main effect selected? 
-                    if len(m_list) > 0: 
-                        for m in m_list: 
-                            # If so, leave main effect in the random effects table
-                            # If not, hide main effect in the random effects table 
-                            var_name = m.split('FixedEffect(')[1]
-                            var_name = var_name.split(',')[0]
-                            table_body = random_effects[0] # Tbody(rows)
+            if trigger_id == 'random_effects_switch': 
+                output = list() 
+                new_rows = list() 
+
+                table_body = random_effects_table[0]
+                table_rows = table_body['props']['children']
+
+                if switch_value: 
+                    for row in table_rows: 
+                        # Is the row visible? 
+                        if row['props']['hidden'] is False: 
+                            new_row = copy.deepcopy(row)
+                            # Turn off 
+                            new_row['props']['style'] = {'color': '#808080'}
+
+                            # Does this row have Correlated radio button children?
+                            if len(row['props']['children']) == 2: 
+                                radioItems = new_row['props']['children'][1]
+                                radioItems = radioItems['props']['children']['props']['children']
+                                print(radioItems)
+                                options = radioItems[0]['props']['options']
+                                for o in options: 
+                                    o['disabled'] = True
+                            new_rows.append(new_row)
+                        #
+                else: 
+                    for row in table_rows: 
+                        # Is the row visible? 
+                        if row['props']['hidden'] is False: 
+                            new_row = copy.deepcopy(row)
+                            # Remove "off" styling
+                            new_row['props']['style'] = {}
+
+                            # Does this row have Correlated radio button children?
+                            if len(row['props']['children']) == 2: 
+                                radioItems = new_row['props']['children'][1]
+                                radioItems = radioItems['props']['children']['props']['children']
+                                print(radioItems)
+                                options = radioItems[0]['props']['options']
+                                for o in options: 
+                                    o['disabled'] = False
+                            new_rows.append(new_row)
+                    
+                output = [html.Tbody(children=new_rows)]
+                return output
+        
+            
+        # @app.callback(
+        #     # Output({'type': 'random_effects_list', 'index': ALL}, 'children'),
+        #     Output('random_effects_table', 'children'),
+        #     Input('main_effects_switch', 'value'),
+        #     Input('interaction_effects_switch', 'value'),
+        #     Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
+        #     Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
+        #     # State({'type': 'random_effects_list', 'index': ALL}, 'children')
+        #     State('random_effects_table', 'children')
+        # )
+        # def sync_random_effects(main_switch, interaction_switch, main_effects, interaction_effects, random_effects): 
+        #     output = list() 
+        #     rows = list()
+
+        #     # Keep track of which random_effects to add as hidden afterwards 
+        #     all_re = list()
+        #     table_body = random_effects[0] # Tbody(rows)
+        #     for row in table_body['props']['children']: 
+        #         var_names = row['props']['id'].split('_random_effects')[0]
+        #         all_re.append(var_names)
+        #     added_re = list()
+
+        #     if main_switch:     
+        #         for m_list in main_effects: 
+        #             assert(isinstance(m_list, list))
+        #             # Is the main effect selected? 
+        #             if len(m_list) > 0: 
+        #                 for m in m_list: 
+        #                     # If so, leave main effect in the random effects table
+        #                     # If not, hide main effect in the random effects table 
+        #                     var_name = m.split('FixedEffect(')[1]
+        #                     var_name = var_name.split(',')[0]
+        #                     table_body = random_effects[0] # Tbody(rows)
                             
-                            for row in table_body['props']['children']: 
-                                # Does this row pertain to the main effect being considered?
-                                re_var_names = row['props']['id'].split('_random_effects')[0]
-                                if var_name in re_var_names: 
-                                    new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=False)
-                                # else: 
-                                #     new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=False)
-                                    if new_row not in rows: 
-                                        rows.append(new_row)
-                                        assert(re_var_names not in added_re)
-                                        added_re.append(re_var_names)
+        #                     for row in table_body['props']['children']: 
+        #                         # Does this row pertain to the main effect being considered?
+        #                         re_var_names = row['props']['id'].split('_random_effects')[0]
+        #                         if var_name in re_var_names: 
+        #                             new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=False)
+        #                         # else: 
+        #                         #     new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=False)
+        #                             if new_row not in rows: 
+        #                                 rows.append(new_row)
+        #                                 assert(re_var_names not in added_re)
+        #                                 added_re.append(re_var_names)
 
                         
-                        for m in m_list: 
-                            if m not in added_re: 
-                                table_body = random_effects[0] # Tbody(rows)
-                                for row in table_body['props']['children']: 
-                                    re_var_names = row['props']['id'].split('_random_effects')[0]
-                                    if m in re_var_names: 
-                                        new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=True)
-                                    if new_row not in rows: 
-                                        rows.append(new_row)
-                                        assert(re_var_names not in added_re)
-                                        added_re.append(re_var_names)
+        #                 for m in m_list: 
+        #                     if m not in added_re: 
+        #                         table_body = random_effects[0] # Tbody(rows)
+        #                         for row in table_body['props']['children']: 
+        #                             re_var_names = row['props']['id'].split('_random_effects')[0]
+        #                             if m in re_var_names: 
+        #                                 new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=True)
+        #                             if new_row not in rows: 
+        #                                 rows.append(new_row)
+        #                                 assert(re_var_names not in added_re)
+        #                                 added_re.append(re_var_names)
                               
-                    # # If there are no main effects selected, hide all rows
-                    # else:
-                    #     table_body = random_effects[0] # Tbody(rows)
+        #             # # If there are no main effects selected, hide all rows
+        #             # else:
+        #             #     table_body = random_effects[0] # Tbody(rows)
                         
-                    #     for row in table_body['props']['children']: 
-                    #         new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=True)
-                    #         rows.append(new_row)
+        #             #     for row in table_body['props']['children']: 
+        #             #         new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=True)
+        #             #         rows.append(new_row)
             
-            table_body = random_effects[0] # Tbody(rows)
-            for r in all_re: 
-                if r not in added_re: 
-                    print(r)
-                    for row in table_body['props']['children']: 
-                        re_var_names = row['props']['id'].split('_random_effects')[0]
-                        if r in re_var_names: 
-                            new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=False)
-                            rows.append(new_row)
+        #     table_body = random_effects[0] # Tbody(rows)
+        #     for r in all_re: 
+        #         if r not in added_re: 
+        #             print(r)
+        #             for row in table_body['props']['children']: 
+        #                 re_var_names = row['props']['id'].split('_random_effects')[0]
+        #                 if r in re_var_names: 
+        #                     new_row = html.Tr(children=row['props']['children'], id=row['props']['id'], hidden=False)
+        #                     rows.append(new_row)
                 
-            if interaction_switch: 
-                pass
+        #     if interaction_switch: 
+        #         pass
             
-            if not main_switch and not interaction_switch: 
-                raise PreventUpdate
+        #     if not main_switch and not interaction_switch: 
+        #         raise PreventUpdate
 
 
-            # print(rows)
-            if len(rows) == 0: 
-                print(main_effects)
-                print(random_effects)
-                print(rows)
-            output = [html.Tbody(children=rows)]
-            return output
+        #     # print(rows)
+        #     if len(rows) == 0: 
+        #         print(main_effects)
+        #         print(random_effects)
+        #         print(rows)
+        #     output = [html.Tbody(children=rows)]
+        #     return output
     
 
         # @app.callback(
@@ -1163,8 +1168,8 @@ class InputInterface(object):
             [
                 dbc.RadioItems(
                     options=[
-                        {"label": "Correlated", "value": f'Correlated({str(effect)})'},
-                        {"label": "Uncorrelated", "value": f'Uncorrelated({str(effect)})'},
+                        {"label": "Correlated", "value": f'Correlated({str(effect)})', 'disabled': False},
+                        {"label": "Uncorrelated", "value": f'Uncorrelated({str(effect)})', 'disabled': False},
                     ],
                     value=f'Correlated({str(effect)})',
                     id=f"{str(effect)}_correlated_choice",
