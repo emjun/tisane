@@ -53,22 +53,26 @@ class InputInterface(object):
     statistical_model: StatisticalModel
     app: dash.Dash
 
-    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], random_effects: List[z3.BoolRef], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design, synthesizer: Synthesizer):
+    def __init__(self, main_effects: Dict[str, List[AbstractVariable]]=None, interaction_effects: Dict[str, Tuple[AbstractVariable, ...]]=None, random_effects: List[z3.BoolRef]=None, family_link: Dict[z3.BoolRef, List[z3.BoolRef]]=None, default_family_link: Dict[z3.BoolRef, z3.BoolRef]=None, design: Design=None, synthesizer: Synthesizer=None):
         global port 
 
-        # Save necessary data
-        self.design = design
-        self.synthesizer = synthesizer
-        for family, links in family_link.items(): 
-            key = str(family) 
-            __str_to_z3__[key] = family # str to Z3 fact
+        if design:
+            # Save necessary data
+            self.design = design
+        if family_link:
+            # self.synthesizer = synthesizer
+            for family, links in family_link.items(): 
+                key = str(family) 
+                __str_to_z3__[key] = family # str to Z3 fact
 
-            for l in links: 
-                key = str(l) 
-                __str_to_z3__[key] = l # str to Z3 fact
+                for l in links: 
+                    key = str(l) 
+                    __str_to_z3__[key] = l # str to Z3 fact
 
         self.family_link_options = family_link
         self.default_family_link = default_family_link
+    
+    def start_app(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], random_effects: List[z3.BoolRef], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design):
         
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -309,7 +313,7 @@ class InputInterface(object):
                             if len(row['props']['children']) == 2: 
                                 radioItems = new_row['props']['children'][1]
                                 radioItems = radioItems['props']['children']['props']['children']
-                                print(radioItems)
+                                # print(radioItems)
                                 options = radioItems[0]['props']['options']
                                 for o in options: 
                                     o['disabled'] = True
@@ -327,7 +331,7 @@ class InputInterface(object):
                             if len(row['props']['children']) == 2: 
                                 radioItems = new_row['props']['children'][1]
                                 radioItems = radioItems['props']['children']['props']['children']
-                                print(radioItems)
+                                # print(radioItems)
                                 options = radioItems[0]['props']['options']
                                 for o in options: 
                                     o['disabled'] = False
@@ -631,10 +635,11 @@ class InputInterface(object):
             Input('family_link_switch', 'value'),
             Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
             Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
+            Input('random_effects_table', 'children'),
             Input('family_options', 'value'), 
             Input('link_options', 'value')]
         )
-        def enable_code_generation(me_switch, i_switch, re_switch, fl_switch, main_effects, interaction_effects, family, link): 
+        def enable_code_generation(me_switch, i_switch, re_switch, fl_switch, main_effects, interaction_effects, random_effects, family, link): 
             global __str_to_z3__
 
             model_spec = dict()
@@ -657,6 +662,13 @@ class InputInterface(object):
                         fact = __str_to_z3__[i]
                         ixn_facts.append(str(fact))
                 model_spec['interaction_effects'] = ixn_facts
+
+                re_facts = list() 
+                random_effects_values = self.get_random_effects_values_from_table(random_effects)
+                for re in random_effects_values: 
+                    fact = __str_to_z3__[re]
+                    re_facts.append(str(fact))
+                model_spec['random_effects'] = re_facts
 
                 if family is not None: 
                     model_spec['family'] = str(__str_to_z3__[family])
@@ -1055,20 +1067,10 @@ class InputInterface(object):
         return fig_elt
 
     def populate_random_effects(self, random_effects: List): 
+        global __str_to_z3__
+
         output = list()
-
-        # Create list or table? 
-        # row1 = html.Tr([html.Td("Arthur"), html.Td("Dent")])
-        # row2 = html.Tr([html.Td("Ford"), html.Td("Prefect")])
-        # row3 = html.Tr([html.Td("Zaphod"), html.Td("Beeblebrox")])
-        # row4 = html.Tr([html.Td("Trillian"), html.Td("Astra")])
-
-        # table_body = [html.Tbody([row1, row2, row3, row4])]
-        
-
-        rs_badge = dbc.Badge("Random slope", pill=True, color="primary", className="mr-1")
-        ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1")
-        
+    
         rows = list()
         # Organzie random effects by variable
         re_dict = dict()
@@ -1092,14 +1094,22 @@ class InputInterface(object):
             badges = list()
             correlated_radio_items = list()
             for e in effects: 
+                assert(isinstance(e, z3.BoolRef))
                 if 'RandomSlope' in str(e): 
+                    # Add random effect fact to global map
+                    fact = e
+                    __str_to_z3__[str(fact)] = fact
+                    rs_badge = dbc.Badge("Random slope", pill=True, color="primary", className="mr-1", id=f'{e}')
                     badges.append(rs_badge)
                     correlated_radio_items = self.create_correlated_radio_items(e)
                 elif 'RandomIntercept' in str(e):
+                    fact = e
+                    __str_to_z3__[str(fact)] = fact
+                    ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1", id=f'{e}')
                     badges.append(ri_badge) # TODO: Add unit!
 
             if isinstance(variables, AbstractVariable): 
-                content = [variables.name] + badges
+                content = [html.P(variables.name)] + badges
             else:
                 names = [v.name for v in variables]
                 names = list()
@@ -1122,7 +1132,7 @@ class InputInterface(object):
                     var_names = [v.name for v in variables]
                     var_names ='_'.join(var_names)
                 row = html.Tr(
-                    children=[html.Td(html.P(children=content)), html.Td(correlated_radio_items)],
+                    children=[html.Td(children=content), html.Td(correlated_radio_items)],
                     hidden=False,
                     id=f'{var_names}_random_effects'
                 )
@@ -1144,7 +1154,7 @@ class InputInterface(object):
                     var_names = [v.name for v in variables]
                     var_names ='_'.join(var_names)
                 row = html.Tr(
-                    children=[html.Td(html.P(children=content))],
+                    children=[html.Td(children=content)],
                     hidden=False,
                     id=f'{var_names}_random_effects'
                 )
@@ -1179,6 +1189,34 @@ class InputInterface(object):
         )
 
         return corr_radioitems
+
+    def get_random_effects_values_from_table(self, random_effects_table): 
+        re_values = list() 
+
+        table_body = random_effects_table[0]
+        # import pdb; pdb.set_trace()
+        table_rows = table_body['props']['children']
+
+        for row in table_rows: 
+            # Is the row visible? 
+            if row['props']['hidden'] is False: 
+                row_c = row['props']['children']
+                row_c = row_c[0] # Get the html.Td wrapping around the label and badges
+                content = row_c['props']['children'] # Get to the content
+
+                if len(content) == 2:
+                    badges = content[1]
+                    # Get id, which contains fact for random effect
+                    fact = badges['props']['id']
+                    re_values.append(fact)
+                elif len(content) == 3:
+                    badges = [content[1], content[2]]
+                    for b in badges:
+                        # Get id, which contains fact for random effect
+                        fact = b['props']['id']
+                        re_values.append(fact)
+        
+        return re_values 
 
     def get_data_dist(self): 
         hist_data = None 

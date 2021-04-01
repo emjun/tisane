@@ -89,6 +89,7 @@ def synthesize_statistical_model(design: Design):
     # spec is SM or some json dump -> SM -> code generated
     
     input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
     
     # Read JSON file 
     sm = None
