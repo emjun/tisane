@@ -240,7 +240,8 @@ class InputInterface(object):
                 for o in options: 
                     cluster.append({'label': o['label'], 'value': o['value'], 'disabled': False})    
                 output.append(cluster)
-            return output                
+            return output
+            
         # @app.callback(
         #     Output('n-way_options', 'options'),
         #     [Input('interaction_effects_switch', 'value'),
@@ -338,6 +339,37 @@ class InputInterface(object):
         #     return slope_output, intercept_output, correlation_output
 
             
+        # @app.callback(
+        #     Output('random_effects_table', 'children'),
+        #     Input('main_effects_switch', 'value'),
+        #     Input('main_effects_options', 'value'),
+        #     Input('interaction_effects_switch', 'value'),
+        #     Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
+        #     Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
+        #     State('random_effects_table', 'children')
+        # )
+        # def sync_random_effects(main_switch, interaction_switch, main_effects, interaction_effects, table_rows): 
+        #     output = list() 
+
+        #     if main_switch: 
+        #         for m_list in main_effects: 
+        #             assert(isinstance(m_list, list))
+        #             for m in m_list: 
+        #                 # Is the main effect selected? 
+        #                 # If so, leave main effect in the random effects table
+        #                 # If not, hide main effect in the random effects table 
+                    
+        #                 main_facts.append(str(fact))
+            
+        #     if interaction_switch: 
+        #         pass
+            
+        #     if not main_switch and not interaction_switch: 
+        #         raise PreventUpdate
+
+        #     return output
+    
+
         # @app.callback(
         #     [Output({'type': 'random_slope', 'index': MATCH}, 'value'),
         #     Output({'type': 'random_intercept', 'index': MATCH}, 'value'),
@@ -535,19 +567,19 @@ class InputInterface(object):
             Output('session_store', 'data')],
             [Input('main_effects_switch', 'value'),
             Input('interaction_effects_switch', 'value'),
-            # Input('random_effects_switch', 'value'),
+            Input('random_effects_switch', 'value'),
             Input('family_link_switch', 'value'),
             Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
             Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
             Input('family_options', 'value'), 
             Input('link_options', 'value')]
         )
-        def enable_code_generation(me_switch, i_switch, fl_switch, main_effects, interaction_effects, family, link): 
+        def enable_code_generation(me_switch, i_switch, re_switch, fl_switch, main_effects, interaction_effects, family, link): 
             global __str_to_z3__
 
             model_spec = dict()
             # If all the switches are turned on/True
-            if me_switch and i_switch and fl_switch: 
+            if me_switch and i_switch and re_switch and fl_switch: 
                 
                 # Get all the values
                 main_facts = list()
@@ -748,7 +780,7 @@ class InputInterface(object):
         # Create description 
         random_descrip = dcc.Markdown('''
         ##### Based on the relationships you specified in your program, Tisane has identified the following random effects.
-        __These constitute the maximal effects sturcture for your model.__
+        *These constitute the maximal effects sturcture for your model.*
         ''')
     
         # Create interaction effects switch
@@ -762,7 +794,8 @@ class InputInterface(object):
         random_effects_div = html.Div([
             random_effects_title, 
             random_descrip, 
-            table
+            table,
+            random_switch
         ])
 
         ##### Return div
@@ -1026,10 +1059,8 @@ class InputInterface(object):
             else: 
                 rows.append(html.Tr(html.Td(html.P(children=content))))
         
-        # TODO: Add correlated or not options
-
         table_body = [html.Tbody(rows)]
-        table = dbc.Table(table_body, striped=True, bordered=False, hover=True)
+        table = dbc.Table(children=table_body, striped=True, bordered=False, id='random_effects_table')
 
         # return output
         return html.Div(id='random_effects_div', children=table)
