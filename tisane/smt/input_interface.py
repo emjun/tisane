@@ -53,7 +53,7 @@ class InputInterface(object):
     statistical_model: StatisticalModel
     app: dash.Dash
 
-    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design, synthesizer: Synthesizer):
+    def __init__(self, main_effects: Dict[str, List[AbstractVariable]], interaction_effects: Dict[str, Tuple[AbstractVariable, ...]], random_effects: List[z3.BoolRef], family_link: Dict[z3.BoolRef, List[z3.BoolRef]], default_family_link: Dict[z3.BoolRef, z3.BoolRef], design: Design, synthesizer: Synthesizer):
         global port 
 
         # Save necessary data
@@ -121,7 +121,7 @@ class InputInterface(object):
         main_effects_div = self.layout_main_effects_div(main_effects)
         interaction_effects_div = self.layout_interaction_effects_div(interaction_effects)
         family_link_div = self.layout_family_link_div(family_link)
-        # random_effects_div = self.layout_random_effects_div(random_effects)
+        random_effects_div = self.layout_random_effects_div(random_effects)
         script_download_button = dbc.Button("Generate code snippet and model diagnostics", id='generate_code', color="primary", block=True, disabled=True)
 
         # Create Dash App
@@ -136,6 +136,7 @@ class InputInterface(object):
                 dbc.Row([dbc.Col(main_effects_div, width=8)], justify='center'),
                 dbc.Row([dbc.Col(interaction_effects_div, width=8)], justify='center'),
                 # dbc.Row([dbc.Col(random_effects_card, width=8)], justify='center'),
+                dbc.Row([dbc.Col(random_effects_div, width=8)], justify='center'),
                 dbc.Row([dbc.Col(family_link_div, width=8)], justify='center'),
                 dbc.Row([dbc.Col(script_download_button, width=8)], justify='center'),
 
@@ -731,35 +732,41 @@ class InputInterface(object):
         return interaction_effects_div
 
     def layout_random_effects_div(self, random_effects): 
-        random_heading = html.H1(children='Random Effects')
-        # random_effects = self.populate_random_effects()
-        random_switch = dbc.FormGroup([
-                dbc.Checklist(
-                    options=[
-                        {"label": "🔐", "value": False}
-                        # {"label": "Save and lock random effects", "value": False}
-                    ],
-                    value=[],
-                    id='random_effects_switch',
-                    switch=True,
-                    style={'float': 'right'}
-                ),
-            ],
-            id='random_effects_group'
-        )
-    
-        random_effects_card = dbc.Card(
-                dbc.CardBody(
-                    [
-                        html.H3("Random effects"),
-                        # random_effects,
-                        random_switch
-                    ]
-                ),
-                color='light',
-                outline=True
+        ##### Collect all elements
+        # Create random effects title 
+        random_effects_title = html.Div([
+            html.H3('Random effects'),
+            dbc.Alert(
+                "TODO: Explanation of random effects", className="mb-0",
+                id="random_alert",
+                dismissable=True,
+                fade=True, 
+                is_open=True
             )
+        ])
 
+        # Create description 
+        random_descrip = dcc.Markdown('''
+        ##### Based on the relationships you specified in your program, Tisane has identified the following random effects.
+        __These constitute the maximal effects sturcture for your model.__
+        ''')
+    
+        # Create interaction effects switch
+        random_switch = self.create_switch(switch_id='random_effects_switch', form_group_id='random_effects_group')
+
+        ##### Combine all elements
+        # Create table: 
+        table = self.populate_random_effects(random_effects)
+
+        # Create div 
+        random_effects_div = html.Div([
+            random_effects_title, 
+            random_descrip, 
+            table
+        ])
+
+        ##### Return div
+        return random_effects_div
 
 
     def layout_family_link_div(self, family_link: Dict[z3.BoolRef, List[z3.BoolRef]]): 
@@ -778,7 +785,7 @@ class InputInterface(object):
         
         # Get form groups for family link div
         family_link_chart = self.draw_data_dist()
-        family_link_controls = self.make_family_link_options(family_link)
+        family_link_controls = self.make_family_link_options(family_link)    
 
         # Create main effects switch
         family_link_switch = self.create_switch(switch_id='family_link_switch', form_group_id='family_link_group')
@@ -954,35 +961,77 @@ class InputInterface(object):
         
         return fig_elt
 
-    def populate_random_effects(self): 
-        # Could be random slope OR random interaction 
+    def populate_random_effects(self, random_effects: List): 
         output = list()
-        # Get possible main effects from synthesizer
-        possible_random_effects = self.synthesizer.generate_random_effects(design=self.design)
 
-        # TODO: We could lay them out in separate divs for query | Tisane recommended | not included.
-        # Lay them out
-        for (key, facts) in possible_random_effects.items():
-            slope = self.make_random_slope_card(variables=key, value=facts[0])
-            intercept = self.make_random_intercept_card(variables=key, value=facts[1])
-            # TODO: Generate Correlated and Uncorrelated in synthesizer???
-            corr_options = dbc.RadioItems(options=[{'label': 'Correlated random slope and intercept', 'value': f'Correlated({slope}, {intercept})'}, {'label': 'Uncorrelated random slope and intercept', 'value': f'Uncorrelated({slope}, {intercept})'}], id={'type': 'correlated_random_slope_intercept', 'index': f'{key}'}, inline=True)
-            div = html.Div([
-                html.H5(f'{key}'),
-                # dbc.Row([dbc.Col(children=[html.H5(f'{key}')], align='start'), corr_options]),
-                dbc.Row([dbc.Col(slope, className='w-50'), dbc.Col(intercept, className='w-50')]),
-                dbc.Row([dbc.Col(corr_options)], justify='end'),
-            ])
-            output.append(div)
-                # output.append(dbc.Row([dbc.Col(slope, width=4), dbc.Col(intercept, width=4)]))
-                # output.append(self.make_random_checklist(label=key, options=facts))
-            
-            # TODO: correlate should only be an option if both are selected
+        # Create list or table? 
+        # row1 = html.Tr([html.Td("Arthur"), html.Td("Dent")])
+        # row2 = html.Tr([html.Td("Ford"), html.Td("Prefect")])
+        # row3 = html.Tr([html.Td("Zaphod"), html.Td("Beeblebrox")])
+        # row4 = html.Tr([html.Td("Trillian"), html.Td("Astra")])
+
+        # table_body = [html.Tbody([row1, row2, row3, row4])]
+        
+
+        rs_badge = dbc.Badge("Random slope", pill=True, color="primary", className="mr-1")
+        ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1")
+        
+        rows = list()
+        # Organzie random effects by variable
+        re_dict = dict()
+        for (re, variables) in random_effects: 
+            # Create badges
+            if 'RandomSlope' in str(re): 
+                x = variables[0]
+                identifier = variables[1]
+                if variables not in re_dict.keys(): 
+                    re_dict[variables] = set()   
+                re_dict[variables].add(re) 
+
+            elif 'RandomIntercept' in str(re):
+                if variables not in re_dict.keys(): 
+                    re_dict[variables] = set()
+                    re_dict[variables].add(re)
+                    
+        
+        # Create table rows with the information
+        for variables, effects in re_dict.items(): 
+            badges = list()
+            for e in effects: 
+                if 'RandomSlope' in str(e): 
+                    badges.append(rs_badge)
+                elif 'RandomIntercept' in str(e):
+                    badges.append(ri_badge) # TODO: Add unit!
+
+            if isinstance(variables, AbstractVariable): 
+                content = [variables.name] + badges
+            else:
+                names = [v.name for v in variables]
+                names = list()
+                for i, v in enumerate(variables): 
+                    if i == 0: 
+                        names += v.name + ' within '
+                    else: 
+                        names += f'{v.name}'
+                        if i+1 < len(variables): 
+                            names += ', '
+        
+                content = names + badges
+
+            rows.append(html.Tr(html.Td(html.P(children=content))))
+        
+        # TODO: Add correlated or not options
+
+        table_body = [html.Tbody(rows)]
+        table = dbc.Table(table_body, striped=True, bordered=False, hover=True)
 
         # return output
-        return html.Div(id='random_effects_div', children=output)
+        return html.Div(id='random_effects_div', children=table)
     
     def get_data_dist(self): 
+        hist_data = None 
+        labels = None 
+
         dv = self.design.dv
         
         data = self.design.get_data(variable=dv)
@@ -990,30 +1039,43 @@ class InputInterface(object):
         if data is not None: 
             hist_data = data
             labels = dv.name
-        else: 
-            raise NotImplementedError
         
         return (hist_data, labels)
 
     def draw_dist(self, hist_data, label): 
-        data = pd.DataFrame(hist_data, columns=[label])
+        # Make sure that there is data to draw
+        # Hist_data is not None and labels is not None
+        if hist_data and label: 
+            data = pd.DataFrame(hist_data, columns=[label])
 
-        fig = px.histogram(data, x=label)
-        fig.update_layout(legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
-        ))
+            fig = px.histogram(data, x=label)
+            fig.update_layout(legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            ))
 
-        fig_elt = dcc.Graph(id='data_dist', figure=fig)
+            fig_elt = dcc.Graph(id='data_dist', figure=fig)
+        else: 
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=[-1, 3, 5, 10, 12],
+                y=[10, 8, 5, 4, 0],
+                mode="markers+text",
+                # name="Markers and Text",
+                text=['', 'No data supplied!', 'Imagine how your data will look when you collect it...', '...by looking at possible distributions  -->. :]',''],
+                textposition="bottom center"
+            ))
 
+            fig_elt = dcc.Graph(id='data_dist', figure=fig)
+            
         return fig_elt
         
     def draw_data_dist(self): 
         (hist_data, labels) = self.get_data_dist()
-
+        
         return self.draw_dist(hist_data, labels)
 
     def populate_data_distributions(self): 

@@ -43,6 +43,10 @@ class Graph(object):
         
     # @returns tuple representing edge or None if edge is not found in graph
     def get_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> Union[Tuple, None]: 
+        if not isinstance(start, AbstractVariable): 
+            import pdb; pdb.set_trace()
+        if not isinstance(end, AbstractVariable): 
+            import pdb; pdb.set_trace()
         edges = self.get_edges()
 
         for (n0, n1, edge_data) in edges: 
@@ -70,7 +74,7 @@ class Graph(object):
 
     # Add edge to graph
     # If nodes aren't already in the graph, add them
-    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
+    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, repetitions: int=1, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
 
         # If the variables aren't in the graph, add nodes first.
         start_node = None
@@ -92,13 +96,13 @@ class Graph(object):
         # up the actual variable objects 
         # Add edge using NetworkGraph's API
         if edge_type == 'treat': 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
         elif edge_type == 'nest': 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
         elif edge_type == 'repeat': 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
         else: 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
 
     # @returns pydot object (representing DOT graph)representing conceptual graph info
     # Iterates through internal graph object and constructs vis
@@ -222,11 +226,18 @@ class Graph(object):
     def add_identifier(self, identifier: AbstractVariable): 
         self._add_variable(variable=identifier, is_identifier=True)
     
-    def add_relationship(self, relationship: Union[Has, Nest, Associate, Cause]): 
+    # TODO: Add repetitions for between/within; I think make repetitions an int not a variable
+    def add_relationship(self, relationship: Union[Has, Treatment, Nest, Associate, Cause]): 
         if isinstance(relationship, Has): 
             identifier = relationship.variable
             measure = relationship.measure
-            self.has(identifier, measure)
+            repetitions = relationship.repetitions
+            self.has(identifier, measure, relationship, repetitions)
+        elif isinstance(relationship, Treatment): 
+            identifier = relationship.unit
+            treatment = relationship.treatment
+            repetitions = relationship.num_assignments
+            import pdb; pdb.set_trace() # TODO: Create a new edge??
         elif isinstance(relationship, Nest): 
             base = relationship.base
             group = relationship.group 
@@ -239,9 +250,11 @@ class Graph(object):
             cause = relationship.cause
             effect = relationship.effect  
             self.cause(cause, effect)
+        elif isinstance(relationship, RepeatedMeasure):  #TODO: Rename to Repeat? 
+            raise NotImplementedError
 
     # Add an edge that indicates that identifier 'has' the variable measurement
-    def has(self, identifier: AbstractVariable, variable: AbstractVariable): 
+    def has(self, identifier: AbstractVariable, variable: AbstractVariable, has_obj: Has, repetitions: int): 
         if not self.has_variable(identifier): 
             self._add_variable(variable=identifier, is_identifier=True)
         else: 
@@ -250,7 +263,7 @@ class Graph(object):
             node_data['is_identifier'] = True
         # Is this edge new? 
         if not self.has_edge(start=identifier, end=variable, edge_type='has'): 
-            self._add_edge(start=identifier, end=variable, edge_type='has')
+            self._add_edge(start=identifier, end=variable, edge_type='has', edge_obj=has_obj, repetitions=repetitions)
 
     # Add an ''associate'' edge to the graph 
     # Adds two edges, one in each direction 

@@ -17,6 +17,7 @@ import copy
 from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
+import json
 
 ##### Functions that are not associated with a class/object
 def query(input_obj: Union[StatisticalModel, Design, Graph], output: str): 
@@ -75,7 +76,8 @@ def synthesize_statistical_model(design: Design):
     ### Generate possible effects, family, and link based on input design (graph)
     main_effects_options = synth.generate_main_effects(design=design)
     interaction_effects_options = synth.generate_interaction_effects(design=design)
-    # random_effects_options = synth.generate_random_effects(design=design)
+    random_effects_options = synth.generate_random_effects(design=design)
+    # random_effects_options = list()
     # May want to load a dictionary of family to link
     family_link_options = synth.generate_family_link(design=design)
     default_family_link = synth.generate_default_family_link(design=design)
@@ -86,11 +88,13 @@ def synthesize_statistical_model(design: Design):
     # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
     # spec is SM or some json dump -> SM -> code generated
     
-    input_cli = InputInterface(main_effects_options, interaction_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
-    import pdb; pdb.set_trace()
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    
     # Read JSON file 
-
+    sm = None
+    f = open('model_spec.json', 'r') 
     # Construct StatisticalModel from JSON spec
+    # sm = StatsticalModel().from_json(f.read()) # TODO: ADD THIS TO STATISTICAL METHOD
     
     # return scipt (TODO: look into replacing the code snippet in original program)
     

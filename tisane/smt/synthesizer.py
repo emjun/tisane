@@ -459,41 +459,64 @@ class Synthesizer(object):
         
         return interaction_facts
     
-    def generate_random_effects(self, design: Design): 
-        fixed_candidates = self._generate_fixed_candidates(design)
+    # Build up maximal effects structure following Barr et al. 2012
+    def generate_random_effects(self, design: Design) -> set: 
+        random_effects = set() 
 
-        random_dict = dict()
-        random_facts = list()
+        # Identify the units
+        identifiers = design.graph.get_identifiers()
+
+        # For each MAIN effect
+        fixed_candidates = self._generate_fixed_candidates(design)
+        # If it is "between-subjects" create a random intercept for the unit
+        # If it is "within-subjects" create a random slope + intercept
+        for i in identifiers:
+            for (key, fixed) in fixed_candidates.items(): 
+                for f in fixed: 
+                    if design.graph.has_edge(start=i, end=f, edge_type='has'): 
+                        (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
+                        # Is this a between subjects edge?
+                        if edge_data['repetitions'] == 1: 
+                            ri = RandomIntercept(i.const)
+                            random_effects.add((ri, (i)))
+
+                            # # Does the identifier already have a set of random effects associated with it?
+                            # if i.name not in variables_to_effects.keys(): 
+                            #     variables_to_effects[i.name] = set()
+                            # # Add effect
+                            # variables_to_effects[i.name] = variables_to_effects[i.name].append(ri)
+
+                        # Is this a within subjects edge?
+                        elif edge_data['repetitions'] > 1: 
+                            ri = RandomIntercept(i.const)
+                            rs = RandomSlope(f.const, i.const)
+                            import pdb; pdb.set_trace()
+                            random_effects.add((ri, (f,i)))
+                            random_effects.add((rs, (f,i)))
+
         
-        # TODO: Limitation of algo below: (i) What happens if there are >2
-        # levels? (ii) Does the number of nesting (1|g2/g1) matter on if
-        # end-user specifies which ones to include in study design? 
-        # Look for "elbow" pattern in graph IR 
-        # Elbow pattern: Dv <- V <- ID1 -> ID2
-        for v in fixed_candidates:
-            # Get 'has' predecessors 
-            has_predecessors = set()
-            v_pred = design.graph.get_predecessors(v)    
-            for p in v_pred: 
-                p_var = design.graph.get_variable(name=p)
-                if design.graph.has_edge(start=p_var, end=v, edge_type='has'): 
-                    has_predecessors.add(p_var)
-            # Of those 'has' predecessors of v, see if they are 'nested' in another level 
-            for h in has_predecessors: 
-                parents = design.graph.get_neighbors(variable=h, edge_type='nest')
-                for p in parents: 
-                    # Get facts
-                    random_facts.append(RandomSlope(v.const, p.const))        
-                    # random_facts.append(NoRandomSlope(v.const, p.const))      
-                    random_facts.append(RandomIntercept(v.const, p.const))        
-                    # random_facts.append(NoRandomIntercept(v.const, p.const))        
-                    # Keep track of pairs to ask about correlation below
-                    # random_facts.append((RandomSlope(v.const, p.const), RandomIntercept(v.const, p.const), v.const, p.const))
-                    random_facts.append(CorrelateRandomSlopeIntercept(v.const, p.const))
-                    random_dict[f'{v.const}, {p.const}'] = random_facts
-                    random_facts = list()
-                
-        return random_dict
+        # For each INTERACTION effect
+        interaction_candidates = self.generate_interaction_effects(design) # dict
+
+        for key, interactions in interaction_candidates.items(): 
+            
+            for ixn in interactions: 
+                all_within = True
+                for v in ixn:
+                    if all_within: 
+                        # If all variables involved are "within-subjects" create random slope for the unit 
+                        if design.graph.has_edge(start=i, end=v, edge_type='has'): 
+                            (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
+                            if edge_data['repetitions'] == 1: 
+                                all_within = False
+                if all_within: 
+                    ri = RandomIntercept(i.const)
+                    rs = RandomSlope(ixn, i.const) # Add a random slope for the unit variable
+                    random_effects.add((ri, (i)))
+                    random_effects.add((rs, (ixn, i)))
+
+        # Return random effects
+        return random_effects
 
     def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 
         family_link = dict()
@@ -514,6 +537,7 @@ class Synthesizer(object):
         if isinstance(dv, Count): 
             family_facts.append(PoissonFamily(dv.const))
         if isinstance(dv, Time): 
+            # TODO: ADD NUMERIC????
             # Expontential distribution would go here
             family_facts.append(GammaFamily(dv.const))
             family_facts.append(TweedieFamily(dv.const)) 

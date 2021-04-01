@@ -15,29 +15,25 @@ Class for expressing (i) that there is a treatment and (ii) how there is a treat
 Used within Class Design
 """
 class Treatment(object): 
-    unit: 'AbstractVariable'
     treatment: 'AbstractVariable'
-    number_of_assignments: int # 1 means Between-subjects, >1 means Within-subjects
+    unit: 'AbstractVariable'
+    num_assignments: int # 1 means Between-subjects, >1 means Within-subjects
     # graph: Graph # TODO: Maybe? 
 
-    def __init__(self, unit: 'AbstractVariable', treatment: 'AbstractVariable', number_of_assignments: int=1): 
-        self.unit = unit
+    def __init__(self, treatment: 'AbstractVariable', unit: 'AbstractVariable', num_assignments: int):
         self.treatment = treatment
-        self.number_of_assignments = number_of_assignments
+        self.unit = unit
+        self.num_assignments = num_assignments
 
-        # Maybe?
-        # self.graph = Graph()
-        # graph.treat(unit=unit, treatment=treatment)
-        
         # TODO: Check that allocation is divisble? 
         # TODO: Assumption that treatment is categorical, not continuous? 
     
-    # Default to between subjects
-    def assign(self, number_of_assignments: int, unit: 'AbstractVariable'=None): 
-        assert(unit is self.unit)
-        self.number_of_assignments = number_of_assignments
+    # # Default to between subjects
+    # def assign(self, number_of_assignments: int, unit: 'AbstractVariable'=None): 
+    #     assert(unit is self.unit)
+    #     self.number_of_assignments = number_of_assignments
 
-        # TODO: Check if number_of_assignments < cardinality of treatment?
+    #     # TODO: Check if number_of_assignments < cardinality of treatment?
 
 """
 Class for expressing Nesting relationship between variables (levels of independent variables in a design, statistical model)
@@ -101,10 +97,11 @@ Class for Has relationships
 class Has(object):
     variable: 'AbstractVariable'
     measure: 'AbstractVariable'
-    repetitions: 'AbstractVariable'
+    repetitions: int
+    # repetitions: 'AbstractVariable'
 
     # Default is between subjects, only once
-    def __init__(self, variable: 'AbstractVariable', measure: 'AbstractVariable', repetitions: 'AbstractVariable'=None):
+    def __init__(self, variable: 'AbstractVariable', measure: 'AbstractVariable', repetitions: int):
         self.variable = variable
         self.measure = measure
         self.repetitions = repetitions
@@ -142,20 +139,22 @@ class AbstractVariable(object):
 
     def has(self, measure: 'AbstractVariable', **kwargs):
         if 'repetitions' in kwargs:
-            rep = kwargs['repetitions']
-            assert(isinstance(rep, 'AbstractVariable'))
-            self.has_multiple(measure=measure, repetitions=rep)
+            rep = int(kwargs['repetitions'])
+            if rep > 1: 
+                self.has_multiple(measure=measure, repetitions=rep)
+            else: 
+                self.has_unique(measure=measure)    
         else: 
             self.has_unique(measure=measure)
 
     # Update both variables
     def has_unique(self, measure: 'AbstractVariable'):
-        has_relat = Has(variable=self, measure=measure, repetitions=self)
+        has_relat = Has(variable=self, measure=measure, repetitions=1)
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
     
     # Update both variables
-    def has_multiple(self, measure: 'AbstractVariable', repetitions: 'AbstractVariable'):
+    def has_multiple(self, measure: 'AbstractVariable', repetitions: int): 
         has_relat = Has(variable=self, measure=measure, repetitions=repetitions)
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
@@ -174,14 +173,45 @@ class AbstractVariable(object):
     # @param number_of_assignments indicates the number of times that the @param unit receives the treatment (self)
     # @param number_of_assignments default is 1 (between-subjects)
     # @return Treatment 
-    def treat(self, variable: 'AbstractVariable', repetitions: 'AbstractVariable'=None): 
-        if repetitions is not None:
-            variable.has(measure=self, repetitions=repetitions)
-        else: 
-            variable.has(measure=self)
+    def treat(self, variable: 'AbstractVariable', **kwargs): #, repetitions: int=None): 
+        rep = None
+        if 'assignment' in kwargs: 
+            assign = kwargs['assignment']
+            if assign.upper() == 'BETWEEN':
+                # TODO: check? 
+                rep = 1
+            elif assign.upper() == 'WITHIN': 
+                # TODO: check? 
+                rep = self.cardinality
+            else: 
+                raise ValueError(f"Invalid description of how {self.name} treats {variable.name} in terms of assignment: {assign}! Accepted values: BETWEEEN or WITHIN.")
+        elif 'num_assignments' in kwargs: 
+            assign = int(kwargs['num_assignments'])
+            # Between subjects? 
+            if assign == 1: 
+                rep = 1
+            # Full within-subjects design? 
+            elif assign == self.cardinality: 
+                rep = self.cardinality 
+            # Partial within-subjects design
+            else: 
+                if assign < cardinality: 
+                    rep = assign 
+                else: 
+                    raise ValueError(f"Invalid number of assignments of {self.name} to {variable.name}. Specified number of assignments ({assign}) is greater than cardinality of {self.name} ({self.cardinality})")
+            
+        variable.has(measure=self, repetitions=rep)
+        treatment = Treatment(treatment=self, unit=variable, num_assignments=rep)
+        self.relationships.append(treatment)
+        variable.relationships.append(treatment)
+        
+        # if repetitions is not None:
+        #     variable.has(measure=self, repetitions=self.cardinality)
+        # else: 
+        #     variable.has(measure=self)
 
-    def treats(self, variable: 'AbstractVariable', repetitions: 'AbstractVariable'=None): 
-        self.treat(variable=variable, repetitions=repetitions)
+    def treats(self, variable: 'AbstractVariable', **kwargs): # repetitions: int=None): 
+        self.treat(variable, kwargs)
 
     # @param group is the group (level 2) that self is nested under (level 1)
     # Add nested relationships to this variable

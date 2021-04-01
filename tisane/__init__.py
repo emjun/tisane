@@ -10,6 +10,8 @@ from tisane.variable import (
                                 Nominal, 
                                 Ordinal,
                                 Numeric,
+                                Time, 
+                                Count,
                                 Variable
 )
 
