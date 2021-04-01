@@ -339,35 +339,40 @@ class InputInterface(object):
         #     return slope_output, intercept_output, correlation_output
 
             
-        # @app.callback(
-        #     Output('random_effects_table', 'children'),
-        #     Input('main_effects_switch', 'value'),
-        #     Input('main_effects_options', 'value'),
-        #     Input('interaction_effects_switch', 'value'),
-        #     Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
-        #     Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
-        #     State('random_effects_table', 'children')
-        # )
-        # def sync_random_effects(main_switch, interaction_switch, main_effects, interaction_effects, table_rows): 
-        #     output = list() 
+        @app.callback(
+            Output('random_effects_div', 'children'),
+            Input('main_effects_switch', 'value'),
+            Input('interaction_effects_switch', 'value'),
+            Input({'type': 'main_effects_options', 'index': ALL}, 'value'),
+            Input({'type': 'interaction_effects_options', 'index': ALL}, 'value'),
+            State('random_effects_div', 'children')
+        )
+        def sync_random_effects(main_switch, interaction_switch, main_effects, interaction_effects, random_list): 
+            output = list() 
 
-        #     if main_switch: 
-        #         for m_list in main_effects: 
-        #             assert(isinstance(m_list, list))
-        #             for m in m_list: 
-        #                 # Is the main effect selected? 
-        #                 # If so, leave main effect in the random effects table
-        #                 # If not, hide main effect in the random effects table 
+            if main_switch: 
+                for m_list in main_effects: 
+                    assert(isinstance(m_list, list))
+                    # Is the main effect selected? 
+                    for m in m_list: 
+                        # If so, leave main effect in the random effects table
+                        # If not, hide main effect in the random effects table 
+                        var_name = m.split('FixedEffect(')[1]
+                        var_name = m.split(',')[0]
+                        for group in random_list: 
+                            # Is the variable in the random effects group?
+                            if var_name in str(group['id']):
+                                output.append(group)
                     
-        #                 main_facts.append(str(fact))
+                        main_facts.append(str(fact))
             
-        #     if interaction_switch: 
-        #         pass
+            if interaction_switch: 
+                pass
             
-        #     if not main_switch and not interaction_switch: 
-        #         raise PreventUpdate
+            if not main_switch and not interaction_switch: 
+                raise PreventUpdate
 
-        #     return output
+            return output
     
 
         # @app.callback(
@@ -676,7 +681,7 @@ class InputInterface(object):
         main_title = html.Div([
             html.H3('Main effects'),
             dbc.Alert(
-                "TODO: Explanation of main effects", className="mb-0",
+                'TODO: effects are variables that are ', className="mb-0",
                 id="main_alert",
                 dismissable=True,
                 fade=True, 
@@ -1055,15 +1060,37 @@ class InputInterface(object):
                 content = names + badges
 
             if len(correlated_radio_items) > 0: 
-                rows.append(html.Tr(children=[html.Td(html.P(children=content)), html.Td(correlated_radio_items)]))
+                var_names = [v.name for v in variables]
+                var_names ='_'.join(var_names)
+                # rows.append(html.Tr(children=[html.Td(html.P(children=content)), html.Td(correlated_radio_items)]))
+                rows.append(dbc.ListGroup([
+                    dbc.ListGroupItem(html.P(children=content)),
+                    dbc.ListGroupItem(correlated_radio_items)
+                ],
+                horizontal=True,
+                id=f'{var_names}_random_effects',
+                style={'visibility': visible}
+                ))
+
+                # rows.append(html.Tr(children=[html.Td(html.P(children=content)), html.Td(correlated_radio_items)]))
             else: 
-                rows.append(html.Tr(html.Td(html.P(children=content))))
-        
-        table_body = [html.Tbody(rows)]
-        table = dbc.Table(children=table_body, striped=True, bordered=False, id='random_effects_table')
+                var_names = [v.name for v in variables]
+                var_names ='_'.join(var_names)
+                rows.append(dbc.ListGroup([
+                    dbc.ListGroupItem(html.P(children=content)),
+                ],
+                horizontal=True,
+                id=f'{var_names}_random_effects',
+                style={'visibility': visible}
+                ))
+
+                # rows.append(html.Tr(html.Td(html.P(children=content))))
+                
+        # table_body = [html.Tbody(rows)]
+        # table = dbc.Table(children=table_body, striped=True, bordered=False, id='random_effects_table')
 
         # return output
-        return html.Div(id='random_effects_div', children=table)
+        return html.Div(id='random_effects_div', children=rows)
     
     def create_correlated_radio_items(self, effect: z3.BoolRef): 
         corr_radioitems = dbc.FormGroup(
