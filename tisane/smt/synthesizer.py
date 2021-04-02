@@ -480,7 +480,7 @@ class Synthesizer(object):
                         # Is this a between subjects edge?
                         if edge_data['repetitions'] == 1: 
                             ri = RandomInterceptEffect(i.const)
-                            random_effects.add((ri, (i)))
+                            random_effects.add((ri, RandomIntercept(i)))
 
                             # # Does the identifier already have a set of random effects associated with it?
                             # if i.name not in variables_to_effects.keys(): 
@@ -491,10 +491,14 @@ class Synthesizer(object):
                         # Is this a within subjects edge?
                         elif edge_data['repetitions'] > 1: 
                             ri = RandomInterceptEffect(i.const)
-                            rs = RandomSlopeEffect(f.const, i.const)
-                            import pdb; pdb.set_trace()
-                            random_effects.add((ri, (f,i)))
-                            random_effects.add((rs, (f,i)))
+                            # rs = RandomSlopeEffect(f.const, i.const)
+                            crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+                            ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+
+                            random_effects.add((ri, RandomIntercept(i)))
+                            random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+                            random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+                            # random_effects.add((rs, RandomSlope(iv=f, groups=i)))
 
         
         # For each INTERACTION effect
@@ -514,8 +518,8 @@ class Synthesizer(object):
                 if all_within: 
                     ri = RandomInterceptEffect(i.const)
                     rs = RandomSlopeEffect(ixn, i.const) # Add a random slope for the unit variable
-                    random_effects.add((ri, (i)))
-                    random_effects.add((rs, (ixn, i)))
+                    random_effects.add((ri, RandomIntercept(i)))
+                    random_effects.add((rs, RandomSlope(iv=ixn, groups=i)))
 
         # Return random effects
         return random_effects

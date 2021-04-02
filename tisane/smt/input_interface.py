@@ -1,9 +1,11 @@
 from tisane.variable import AbstractVariable, Numeric, Nominal, Ordinal
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
+from tisane.random_effects import *
 from tisane.smt.synthesizer import Synthesizer
 from tisane.smt.rules import *
 from tisane.helpers import *
+
 
 from z3 import *
 from typing import List, Any, Tuple
@@ -1074,126 +1076,176 @@ class InputInterface(object):
     def populate_random_effects(self, random_effects: List): 
         global __str_to_z3__
 
-        output = list()
-    
         rows = list()
-        # Organzie random effects by variable
-        re_dict = dict()
-        for (re, variables) in random_effects: 
-            # Create badges
-            if 'RandomSlopeEffect' in str(re): 
-                x = variables[0]
-                identifier = variables[1]
-                if variables not in re_dict.keys(): 
-                    re_dict[variables] = set()   
-                re_dict[variables].add(re) 
 
-            elif 'RandomInterceptEffect' in str(re):
-                if variables not in re_dict.keys(): 
-                    re_dict[variables] = set()
-                    re_dict[variables].add(re)
-                    
+        re_dict = self.reorganize_random_effects(random_effects)
         
         # Create table rows with the information
-        for variables, effects in re_dict.items(): 
-            badges = list()
-            correlated_radio_items = list()
-            for e in effects: 
-                assert(isinstance(e, z3.BoolRef))
-                if 'RandomSlopeEffect' in str(e): 
+        for var_name, data in re_dict.items(): 
+            
+            # There is exactly one possible value
+            if len(data) == 1: 
+                d = data[0]
+                fact = d['fact']
+                re = d['effect']
+                assert(isinstance(re, RandomIntercept))
+
+                # Add random effect fact to global map
+                __str_to_z3__[str(fact)] = fact
+
+                name = html.P(var_name)
+                badges = list()
+                ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1", id=f'{fact}')
+                badges.append(ri_badge)
+
+                content = [name] + badges
+                if '_IMPLIED_' in var_name: 
+                    row = html.Tr(
+                        children=[html.Td(children=content)],
+                        hidden=True,
+                        id=f'{var_name}_random_effects',
+                    )
+                else: 
+                    row = html.Tr(
+                        children=[html.Td(children=content)],
+                        hidden=False,
+                        id=f'{var_name}_random_effects'
+                    )
+
+            elif len(data) > 1: 
+                facts = dict()
+                for d in data: 
+                    fact = d['fact']
+                    re = d['effect']
+
                     # Add random effect fact to global map
-                    fact = e
                     __str_to_z3__[str(fact)] = fact
-                    rs_badge = dbc.Badge("Random slope", pill=True, color="primary", className="mr-1", id=f'{e}')
-                    badges.append(rs_badge)
-                    correlated_radio_items = self.create_correlated_radio_items(e)
-                elif 'RandomInterceptEffect' in str(e):
-                    fact = e
-                    __str_to_z3__[str(fact)] = fact
-                    ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1", id=f'{e}')
-                    badges.append(ri_badge) # TODO: Add unit!
-
-            if isinstance(variables, AbstractVariable): 
-                content = [html.P(variables.name)] + badges
-            else:
-                names = [v.name for v in variables]
-                names = list()
-                for i, v in enumerate(variables): 
-                    if i == 0: 
-                        names.append(v.name + ' within ')
-                    else: 
-                        names.append(f'{v.name}')
-                        if i+1 < len(variables): 
-                            names.append(', ')
-
-                # Cast list to string
-                names = ''.join(names)
-                content = [html.P(names)] + badges
-
-            if len(correlated_radio_items) > 0: 
-                if isinstance(variables, AbstractVariable): 
-                    var_names = variables.name
-                else: 
-                    var_names = [v.name for v in variables]
-                    var_names ='_'.join(var_names)
-                row = html.Tr(
-                    children=[html.Td(children=content), html.Td(correlated_radio_items)],
-                    hidden=False,
-                    id=f'{var_names}_random_effects'
-                )
-                # row = dbc.Row([
-                #     dbc.Col(html.P(children=content), md=3),
-                #     dbc.Col(correlated_radio_items, md=3)
-                # ],
-                # id={'type': 'random_effects_list','index':  f'{var_names}_random_effects'},
-                # style={'visibility': 'visible'}
-                # )
-
-                rows.append(row)
-
-                # rows.append(html.Tr(children=[html.Td(html.P(children=content)), html.Td(correlated_radio_items)]))
-            else: 
-                if isinstance(variables, AbstractVariable): 
-                    var_names = variables.name
-                else: 
-                    var_names = [v.name for v in variables]
-                    var_names ='_'.join(var_names)
-                row = html.Tr(
-                    children=[html.Td(children=content)],
-                    hidden=False,
-                    id=f'{var_names}_random_effects'
-                )
-                # row = dbc.Row([
-                #     dbc.Col(html.P(children=content), md=3),
-                # ],
-                # id={'type': 'random_effects_list','index':  f'{var_names}_random_effects'},
-                # style={'visibility': 'visible'}
-                # )
-
-                rows.append(row)
+                    
+                    assert(isinstance(re, CorrelatedRandomSlopeAndIntercept) or isinstance(re, UncorrelatedRandomSlopeAndIntercept))
+                    if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
+                        facts['Correlated'] = fact
+                    if isinstance(re, UncorrelatedRandomSlopeAndIntercept): 
+                        facts['Uncorrelated'] = fact
                 
+                assert(len(var_name) > 1)
+                v_names = [v for v in var_name]
+                name_str = ' within '.join(v_names)
+                name = html.P(name_str)
+                badges = list() 
+                
+                facts_str = [str(v) for (k, v) in facts.items()]
+                val = '_OR_'.join(facts_str)
+                ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1", id=f'{val}_intercept')
+                rs_badge = dbc.Badge("Random slope", pill=True, color="primary", className="mr-1", id=f'{val}_slope')
+                badges.append(ri_badge)
+                badges.append(rs_badge)
+                
+                correlated_radio_items = self.create_correlated_radio_items(facts)
+                
+                content = [name] + badges
+                
+                row = html.Tr(
+                    children=[html.Td(children=content), html.Td(children=correlated_radio_items)],
+                    hidden=False,
+                    id=f'{name_str}_random_effects'
+                )
+            
+            rows.append(row)
+
         table_body = [html.Tbody(children=rows)]
-        table = dbc.Table(children=table_body, striped=True, bordered=False, id='random_effects_table')
+        table = dbc.Table(children=table_body, striped=False, bordered=False, id='random_effects_table')
 
         # return output
         return html.Div(id='random_effects_div', children=table)
     
-    def create_correlated_radio_items(self, effect: z3.BoolRef): 
+    def create_correlated_radio_items(self, facts: Dict[str, z3.BoolRef]): 
+        correlated_fact = facts['Correlated']
+        uncorrelated_fact = facts['Uncorrelated']
+
         corr_radioitems = dbc.FormGroup(
             [
                 dbc.RadioItems(
                     options=[
-                        {"label": "Correlated", "value": f'Correlated({str(effect)})', 'disabled': False},
-                        {"label": "Uncorrelated", "value": f'Uncorrelated({str(effect)})', 'disabled': False},
+                        {"label": "Correlated", "value": f'{str(correlated_fact)}', 'disabled': False},
+                        {"label": "Uncorrelated", "value": f'{str(uncorrelated_fact)}', 'disabled': False},
                     ],
-                    value=f'Correlated({str(effect)})',
-                    id=f"{str(effect)}_correlated_choice",
+                    value=f'{str(correlated_fact)}',
+                    id=f"{'_OR'.join(facts)}_choice",
                     inline=True,
                 ),
             ]
         )
 
         return corr_radioitems
+    
+    def reorganize_random_effects(self, random_effects: List): 
+        re_dict = dict() 
+
+        # Add all facts to dict
+        for (re_fact, re) in random_effects: 
+            if isinstance(re, RandomIntercept):
+                group = re.groups 
+
+                key = group.name
+                val = {'fact': re_fact, 'effect': re}
+                if key not in re_dict.keys(): 
+                    re_dict[key] = list() 
+                re_dict[key].append(val)
+            elif isinstance(re, RandomSlope):
+                iv = re.iv
+                group = re.groups
+                
+                key = (iv.name, group.name)
+                val = {'fact': re_fact, 'effect': re}
+                if key not in re_dict.keys(): 
+                    re_dict[key] = list() 
+                re_dict[key].append(val)
+            elif isinstance(re, CorrelatedRandomSlopeAndIntercept): 
+                iv = re.iv
+                group = re.groups
+                
+                key = (iv.name, group.name)
+                val = {'fact': re_fact, 'effect': re}
+                if key not in re_dict.keys(): 
+                    re_dict[key] = list() 
+                re_dict[key].append(val)
+            elif isinstance(re, UncorrelatedRandomSlopeAndIntercept): 
+                iv = re.iv
+                group = re.groups
+                
+                key = (iv.name, group.name)
+                val = {'fact': re_fact, 'effect': re}
+                if key not in re_dict.keys(): 
+                    re_dict[key] = list() 
+                re_dict[key].append(val)
+        
+        # Update dict in case there are repeated groups
+        to_delete = list()
+        new_entries = dict() 
+        for var_name, val in re_dict.items(): 
+            # This variable is part of another random effect
+            existing_keys = re_dict.keys()
+            
+            for ek in existing_keys: 
+                if isinstance(ek, str): 
+                    pass
+                elif isinstance(ek, tuple): 
+                    if var_name in ek: 
+                        new_key = var_name + '_IMPLIED_'
+
+                        # Keep track of entries to add
+                        new_entries[new_key] = re_dict[var_name]
+                        # Keep track of entries to delete
+                        to_delete.append(var_name)
+        
+        # Add entries
+        for k, v in new_entries.items():
+            re_dict[k] = v
+        # Delete entries
+        for d in to_delete: 
+            del re_dict[d]
+
+        return re_dict
 
     def get_random_effects_values_from_table(self, random_effects_table): 
         re_values = list() 
