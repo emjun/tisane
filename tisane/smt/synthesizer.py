@@ -620,6 +620,8 @@ class Synthesizer(object):
                     var_names = f.split('FixedEffect(')[1].split(',')
                     iv_name = var_names[0].strip()
                     dv_name = var_names[1].split(')')[0].strip()
+                    if design.dv.name != dv_name: 
+                        import pdb; pdb.set_trace()
                     assert(design.dv.name == dv_name)
 
                     v = get_variable(design, iv_name)

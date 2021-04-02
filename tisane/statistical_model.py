@@ -43,7 +43,7 @@ class StatisticalModel(object):
     dataset: Dataset
 
 
-    def __init__(self, dv: AbstractVariable=None, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None): 
+    def __init__(self, dv: AbstractVariable=None, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None, dataset: Dataset=None): 
         if dv:
             self.dv = dv
 
@@ -81,6 +81,8 @@ class StatisticalModel(object):
         # self.variance_func = variance_func
 
         self.consts = dict()
+
+        self.dataset = None
     
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]): 

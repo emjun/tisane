@@ -3,6 +3,7 @@ from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.smt.rules import *
 from tisane.smt.input_interface import InputInterface
 from tisane.smt.synthesizer import Synthesizer
+from tisane.code_generator import *
 
 import unittest
 from unittest.mock import patch
@@ -23,6 +24,9 @@ interaction = SetAdd(interaction, v2.const)
 interaction_effect = Interaction(interaction)
 gaussian_family = GaussianFamily(dv.const)
 gamma_family = GammaFamily(dv.const)
+
+def absolute_path(p: str) -> str:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
 
 class SynthesizerTest(unittest.TestCase): 
 
@@ -243,10 +247,11 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue((v1, v2, v3) in n_way)
 
     def test_create_statistical_model(self):
-        rt = ts.Time('Reaction time')
-        condition = ts.Nominal('Condition', cardinality=2) # A or B
-        item = ts.Nominal('Item', cardinality=2) # 1, 2, 3, or 4
-        subject = ts.Nominal('Subject', cardinality=24) # 24 subjects
+        rt = ts.Time('Resp')
+        condition = ts.Nominal('Cond', cardinality=2) # A or B
+        item = ts.Nominal('ItemID', cardinality=2) # 1, 2, 3, or 4
+        subject = ts.Nominal('SubjID', cardinality=24) # 24 subjects
+
 
         # Conceptual relationship
         condition.associates_with(rt)
@@ -281,9 +286,37 @@ class SynthesizerTest(unittest.TestCase):
             elif isinstance(re, RandomIntercept): 
                 self.assertTrue(re.groups == ri_subject.groups or re.groups == ri_item.groups)
 
+    def test_generate_code_for_statistical_model(self):
+        rt = ts.Time('Resp')
+        condition = ts.Nominal('Cond', cardinality=2) # A or B
+        item = ts.Nominal('ItemID', cardinality=2) # 1, 2, 3, or 4
+        subject = ts.Nominal('SubjID', cardinality=24) # 24 subjects
+
+        # Conceptual relationship
+        condition.associates_with(rt)
+        # Data measurement
+        item.has_unique(condition) # condition is treated to each item
+        condition.treat(subject, num_assignments=2) # subjects see two conditions
+
+        design = ts.Design(
+                    dv = rt,
+                    ivs = [condition]
+                )
+
+        f = open('./tests/test_model_json/test_model.json', 'r') 
+        model_json = f.read()
+
+        synth = Synthesizer()
         
+        sm = synth.create_statistical_model(model_json, design)
+        data_path = 'test_data/wbsi_24.csv'
+        data_abs = absolute_path(data_path)
+        sm.assign_data(data_abs)
+        generate_code(sm)
+        import pdb; pdb.set_trace()
 
 
+        
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     # @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
     # def test_generate_and_select_effects_sets_from_design_fixed_only(self, mock_increment0, mock_increment1): 
