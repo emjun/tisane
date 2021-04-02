@@ -7,12 +7,14 @@ from tisane.smt.rules import *
 # from tisane.smt.query_manager import QM
 from tisane.smt.rules import *
 from tisane.smt.knowledge_base import KB
+from tisane.random_effects import *
 
 from z3 import * 
 import networkx as nx
 from itertools import chain, combinations
 from typing import List, Dict, Tuple
 from copy import deepcopy
+import json
 
 # Declare data type
 Object = DeclareSort('Object')
@@ -477,7 +479,7 @@ class Synthesizer(object):
                         (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
                         # Is this a between subjects edge?
                         if edge_data['repetitions'] == 1: 
-                            ri = RandomIntercept(i.const)
+                            ri = RandomInterceptEffect(i.const)
                             random_effects.add((ri, (i)))
 
                             # # Does the identifier already have a set of random effects associated with it?
@@ -488,8 +490,8 @@ class Synthesizer(object):
 
                         # Is this a within subjects edge?
                         elif edge_data['repetitions'] > 1: 
-                            ri = RandomIntercept(i.const)
-                            rs = RandomSlope(f.const, i.const)
+                            ri = RandomInterceptEffect(i.const)
+                            rs = RandomSlopeEffect(f.const, i.const)
                             import pdb; pdb.set_trace()
                             random_effects.add((ri, (f,i)))
                             random_effects.add((rs, (f,i)))
@@ -510,8 +512,8 @@ class Synthesizer(object):
                             if edge_data['repetitions'] == 1: 
                                 all_within = False
                 if all_within: 
-                    ri = RandomIntercept(i.const)
-                    rs = RandomSlope(ixn, i.const) # Add a random slope for the unit variable
+                    ri = RandomInterceptEffect(i.const)
+                    rs = RandomSlopeEffect(ixn, i.const) # Add a random slope for the unit variable
                     random_effects.add((ri, (i)))
                     random_effects.add((rs, (ixn, i)))
 
@@ -587,7 +589,81 @@ class Synthesizer(object):
         
         return default_family_to_link
 
-        
+    # Compile Statistical Model from JSON facts
+    # @returns StatisticalModel with properties initialized with values in @param model_json
+    def create_statistical_model(self, model_json: str, design: Design):
+
+        def get_variable(design: Design, var_name: str):
+            # List of variables in @param design
+            variables = design.get_variables()
+
+            for v in variables:
+                if v.name == iv_name:
+                    return v
+
+        tmp = json.loads(model_json) # read in json
+        model_spec = json.loads(tmp)# Json to Dict
+
+        # TODO: Rename SM fixed_ivs to main_ivs
+        main_effects = list()
+        interaction_effects = list() 
+        random_effects = list()
+        family = None 
+        link = None
+
+        for key, facts, in model_spec.items():
+            
+            if key == 'main_effects':
+                for f in facts:
+                    assert(isinstance(f, str))
+                    assert('FixedEffect' in f)
+                    var_names = f.split('FixedEffect(')[1].split(',')
+                    iv_name = var_names[0].strip()
+                    dv_name = var_names[1].split(')')[0].strip()
+                    assert(design.dv.name == dv_name)
+
+                    v = get_variable(design, iv_name)
+                    main_effects.append(v)
+
+            elif key == 'interaction_effects':
+                for f in facts:
+                    raise NotImplementedError
+
+            elif key == 'random_effects':
+                for f in facts:
+                    assert('Random' in f)
+                    if 'RandomSlopeEffect' in f:
+                        var_names = f.split('RandomSlopeEffect(')[1].split(',')
+                        iv_name = var_names[0].strip()
+                        group_name = var_names[1].split(')')[0].strip()
+
+                        iv = get_variable(design, iv_name)
+                        group = get_variable(design, group_name)
+                        random_effects.append(RandomSlope(iv=iv, groups=group))
+
+                    elif 'RandomInterceptEffect' in f:
+                        var_name = f.split('RandomInterceptEffect(')[1]
+                        var_name = var_name.split(')')[0].strip()
+
+                        v = get_variable(design, var_name)
+                        random_effects.append(RandomIntercept(v))
+
+                    # TODO: DEAL WITH CORRELATION!!! in Input Interface, too
+            elif key == 'family': 
+                assert(isinstance(facts, str))
+                family = facts.split('Family')[0]
+                dv_name = facts.split('(')[1].split(')')[0].strip()
+                assert(design.dv.name == dv_name)
+            elif key == 'link': 
+                assert(isinstance(facts, str))
+                link = facts.split('Transform')[0]
+                dv_name = facts.split('(')[1].split(')')[0].strip()
+                assert(design.dv.name == dv_name)
+            else: 
+                raise NotImplementedError
+
+        sm = StatisticalModel(dv=design.dv, fixed_ivs=main_effects, interactions=interaction_effects, random_ivs=random_effects, family=family, link_func=link)
+        return sm
 
 
     def model_to_transformation_facts(self, model: z3.ModelRef, design: Design):
@@ -864,12 +940,12 @@ class Synthesizer(object):
                     parents = design.graph.get_neighbors(variable=h, edge_type='nest')
                     for p in parents: 
                         # Get facts
-                        random_facts.append(RandomSlope(v.const, p.const))        
-                        random_facts.append(NoRandomSlope(v.const, p.const))      
-                        random_facts.append(RandomIntercept(v.const, p.const))        
-                        random_facts.append(NoRandomIntercept(v.const, p.const))        
+                        random_facts.append(RandomSlopeEffect(v.const, p.const))        
+                        random_facts.append(NoRandomSlopeEffect(v.const, p.const))      
+                        random_facts.append(RandomInterceptEffect(v.const, p.const))        
+                        random_facts.append(NoRandomInterceptEffect(v.const, p.const))        
                         # Keep track of pairs to ask about correlation below
-                        random_pairs.append((RandomSlope(v.const, p.const), RandomIntercept(v.const, p.const), v.const, p.const))
+                        random_pairs.append((RandomSlopeEffect(v.const, p.const), RandomInterceptEffect(v.const, p.const), v.const, p.const))
                     
             # Use rules from above
 

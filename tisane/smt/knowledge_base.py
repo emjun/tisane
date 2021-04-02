@@ -7,10 +7,10 @@ class KnowledgeBase(object):
         self.effects_rules = [
                 ForAll([x], Xor(FixedEffect(x, dv_const), NoFixedEffect(x, dv_const))),
                 ForAll([xs], Xor(Interaction(xs), NoInteraction(xs))),
-                ForAll([x0, x1], Xor(RandomSlope(x0, x1), NoRandomSlope(x0, x1))),
-                ForAll([x0, x1], Xor(RandomIntercept(x0, x1), NoRandomIntercept(x0, x1))),
-                ForAll([x0, x1], Xor(CorrelateRandomSlopeIntercept(x0, x1), NoCorrelateRandomSlopeIntercept(x0, x1))),
-                ForAll([x0, x1], Implies(CorrelateRandomSlopeIntercept(x0, x1), And([RandomSlope(x0, x1), RandomIntercept(x0, x1)])))
+                ForAll([x0, x1], Xor(RandomSlopeEffect(x0, x1), NoRandomSlopeEffect(x0, x1))),
+                ForAll([x0, x1], Xor(RandomInterceptEffect(x0, x1), NoRandomInterceptEffect(x0, x1))),
+                ForAll([x0, x1], Xor(CorrelateRandomSlopeInterceptEffects(x0, x1), NoCorrelateRandomSlopeInterceptEffects(x0, x1))),
+                ForAll([x0, x1], Implies(CorrelateRandomSlopeInterceptEffects(x0, x1), And([RandomSlopeEffect(x0, x1), RandomInterceptEffect(x0, x1)])))
                 # TODO: ADD RULE FOR CANT INTERACTION X with Y?
             ]
 

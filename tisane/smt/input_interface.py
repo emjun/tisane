@@ -679,10 +679,12 @@ class InputInterface(object):
                 else: 
                     model_spec['link'] = None
             
-                # Write ou all the values 
+                # Write out all the values 
+                assert(isinstance(model_spec, dict))
                 json_model_spec = json.dumps(model_spec)
                 return False, json_model_spec
                 
+            assert(isinstance(model_spec, dict))
             json_model_spec = json.dumps(model_spec)
             return True, json_model_spec # disable: True
 
@@ -707,6 +709,9 @@ class InputInterface(object):
                 
                 if is_valid_model: 
                     # Write out a model spec!
+                    assert(isinstance(model_spec, str))
+                    # model_spec = json.loads(model_spec)
+                    # assert(isinstance(model_spec, dict))
                     write_data(model_spec)
                 else: 
                     if problem == 'independent variables': 
@@ -1076,14 +1081,14 @@ class InputInterface(object):
         re_dict = dict()
         for (re, variables) in random_effects: 
             # Create badges
-            if 'RandomSlope' in str(re): 
+            if 'RandomSlopeEffect' in str(re): 
                 x = variables[0]
                 identifier = variables[1]
                 if variables not in re_dict.keys(): 
                     re_dict[variables] = set()   
                 re_dict[variables].add(re) 
 
-            elif 'RandomIntercept' in str(re):
+            elif 'RandomInterceptEffect' in str(re):
                 if variables not in re_dict.keys(): 
                     re_dict[variables] = set()
                     re_dict[variables].add(re)
@@ -1095,14 +1100,14 @@ class InputInterface(object):
             correlated_radio_items = list()
             for e in effects: 
                 assert(isinstance(e, z3.BoolRef))
-                if 'RandomSlope' in str(e): 
+                if 'RandomSlopeEffect' in str(e): 
                     # Add random effect fact to global map
                     fact = e
                     __str_to_z3__[str(fact)] = fact
                     rs_badge = dbc.Badge("Random slope", pill=True, color="primary", className="mr-1", id=f'{e}')
                     badges.append(rs_badge)
                     correlated_radio_items = self.create_correlated_radio_items(e)
-                elif 'RandomIntercept' in str(e):
+                elif 'RandomInterceptEffect' in str(e):
                     fact = e
                     __str_to_z3__[str(fact)] = fact
                     ri_badge = dbc.Badge("Random intercept", pill=True, color="info", className="mr-1", id=f'{e}')

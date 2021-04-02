@@ -10,6 +10,7 @@ import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
 from tisane.smt.synthesizer import Synthesizer
 from tisane.smt.input_interface import InputInterface
+from tisane.code_generator import *
 
 from enum import Enum 
 from typing import List, Union
@@ -94,12 +95,16 @@ def synthesize_statistical_model(design: Design):
     # Read JSON file 
     sm = None
     f = open('model_spec.json', 'r') 
+    
     # Construct StatisticalModel from JSON spec
-    # sm = StatsticalModel().from_json(f.read()) # TODO: ADD THIS TO STATISTICAL METHOD
+    model_json = f.read()
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset)
+    # sm = StatisticalModel().from_json(f.read()) 
+
+    # Generate code from SM
+    script = generate_code(sm)
     
     # return scipt (TODO: look into replacing the code snippet in original program)
-    
-    return synth.synthesize_statistical_model(design=design)
     
 
 def verify(input_: Union[Design, ConceptualModel, StatisticalModel], output_: Union[Design, ConceptualModel, StatisticalModel]): 

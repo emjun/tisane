@@ -526,7 +526,7 @@ class QueryManager(object):
                 #     pass
                 #     # Add both RandomSlope and RandomIntercept
 
-                elif 'RandomSlope' in function: 
+                elif 'RandomSlopeEffect' in function: 
                     # Get variable names
                     iv_name = fact_dict['start']
                     group_name = fact_dict=['end']
@@ -543,9 +543,9 @@ class QueryManager(object):
 
                     # Is this a new random effect? 
                     if not already_have: 
-                        random_ivs.append(RandomSlope(iv=iv_var, groups=group_var))
+                        random_ivs.append(RandomSlopeEffect(iv=iv_var, groups=group_var))
                 
-                elif 'RandomIntercept' in function: 
+                elif 'RandomInterceptEffect' in function: 
                     # Get variable names
                     iv_name = fact_dict['start']
                     group_name = fact_dict=['end']
@@ -562,7 +562,7 @@ class QueryManager(object):
 
                     # Is this a new random effect? 
                     if not already_have: 
-                        random_ivs.append(RandomIntercept(iv=iv_var, groups=group_var))
+                        random_ivs.append(RandomInterceptEffect(iv=iv_var, groups=group_var))
 
             # Is this fact about the Family distribution?
             elif 'Family' in function: 

@@ -3,6 +3,7 @@ from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept, CorrelatedRandomSlopeAndIntercept
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
+from tisane.data import Dataset
 from tisane.smt.knowledge_base import KB
 # from tisane.smt.rules import Cause, Correlate, MainEffect, NoMainEffect, Interaction, NoInteraction, NominalDataType, OrdinalDataType, NumericDataType, Transformation, NoTransformation, NumericTransformation, CategoricalTransformation, LogTransform, SquarerootTransform, LogLogTransform, ProbitTransform, LogitTransform
 from tisane.smt.rules import *
@@ -11,7 +12,9 @@ from tisane.smt.rules import *
 from abc import abstractmethod
 import pandas as pd
 from typing import List, Any, Tuple
+import typing
 from itertools import chain, combinations
+import json
 
 from z3 import *
 
@@ -37,12 +40,15 @@ class StatisticalModel(object):
 
     consts: dict # Z3 consts representing the model and its DV, fixed_ivs, etc. 
 
+    dataset: Dataset
 
-    def __init__(self, dv: AbstractVariable, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None): 
-        self.dv = dv
 
-        self.graph = Graph()
-        self.graph._add_variable(self.dv)
+    def __init__(self, dv: AbstractVariable=None, fixed_ivs: List[AbstractVariable]=None, interactions: List[Tuple[AbstractVariable, ...]]=None, random_ivs: List[RandomEffect]=None, family: str=None, link_func: str=None): 
+        if dv:
+            self.dv = dv
+
+            self.graph = Graph()
+            self.graph._add_variable(self.dv)
         
         if fixed_ivs is not None: 
             self.set_fixed_ivs(fixed_ivs=fixed_ivs)
@@ -75,10 +81,12 @@ class StatisticalModel(object):
         # self.variance_func = variance_func
 
         self.consts = dict()
+    
+    # Associate this Study Design with a Dataset
+    def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]): 
+        self.dataset = Dataset(source)
 
-    # TODO: Should be class method? 
-    def create_from(graph: Graph): 
-        raise NotImplementedError
+        return self
 
     def __str__(self): 
         dv = f"DV: {self.dv}\n"
@@ -128,8 +136,17 @@ class StatisticalModel(object):
         # Update the Graph IR
         for var in self.fixed_ivs: 
             assert(isinstance(var, AbstractVariable))
-            self.graph.contribute(lhs=var, rhs=self.dv)
-
+            for relationship in var.relationships: 
+                if isinstance(relationship, Cause): 
+                    cause = relationship.cause 
+                    effect = relationship.effect
+                    if relationship.effect == self.dv: 
+                        self.graph.cause(cause, effect)
+                elif isinstance(relationship, Associate): 
+                    lhs = relationship.lhs
+                    rhs = relationship.rhs 
+                    if relationship.lhs == self.dv or relationship.rhs == self.dv: 
+                        self.graph.associate(lhs, rhs)
     # TODO: Update the interactions after add random slopes/random intercepts...
     # Sets interaction effects to @param fixed_ivs
     def set_interactions(self, interactions: List[Tuple[AbstractVariable,...]]): 
@@ -170,17 +187,66 @@ class StatisticalModel(object):
 
         # Update the Graph IR
         for re in random_ivs: 
-            iv = re.iv
-            groups = re.groups
-            # Add unknown 'has'/identifier relation 
-            unknown_id = Nominal('Unknown identifier')
-            self.graph.has(identifier=unknown_id, variable=iv)
+            
+            if isinstance(re, RandomIntercept): 
+                group = re.groups 
 
-            # Add the random slope to dv relation 
-            self.graph.contribute(lhs=iv, rhs=self.dv)
+                # Add the random intercept
+                for relationship in group.relationships: 
+                    if isinstance(relationship, Has): 
+                        identifier = relationship.variable 
+                        measure = relationship.measure
 
-            # Add nesting relation 
-            self.graph.nest(base=unknown_id, group=groups)
+                        if identifier == group: 
+                            self.graph.has(identifier, measure, relationship, relationship.repetitions)    
+
+            elif isinstance(re, RandomSlope): 
+                iv = re.iv
+                group = re.groups
+
+                for relationship in group.relationships: 
+                    if isinstance(relationship, Has): 
+                        identifier = relationship.variable 
+                        measure = relationship.measure
+
+                        if identifier == group: 
+                            self.graph.has(identifier, measure, relationship, relationship.repetitions)    
+            
+                for relationship in iv.relationships: 
+                    if isinstance(relationship, Cause): 
+                        cause = relationship.cause 
+                        effect = relationship.effect
+                        if relationship.effect == self.dv: 
+                            self.graph.cause(cause, effect)
+                        elif isinstance(relationship, Associate): 
+                            lhs = relationship.lhs
+                            rhs = relationship.rhs 
+                            if relationship.lhs == self.dv or relationship.rhs == self.dv: 
+                                self.graph.associate(lhs, rhs)
+                
+                # Add the random slope
+                group.has(iv, repetitions=iv.cardinality)
+                # TODO: Add relationships to variables? Do they already have them? 
+                # TODO: Add relationships from variables' relationships (stored internally)?
+                # TODO: First: Do the variables have relationships???? If so, what do we do with that? I think they should? 
+                # TODO: HIgher level idea: Maybe once we have a model json, we should be modifying the relationships between variables based on the GUI interactions?
+                # ADDING interactions? as nodes, etc.? --> update Design graph and then update Statistical Model graph (from Design graph)?
+
+                # self.graph.has(identifier=group, variable=iv, has_obj=, repetitions=)
+                # Add the group to DV relationship 
+                self.graph.contribute(lhs=group, rhs=self.dv)
+                # Add the iv to DV relationship 
+                self.graph.contribute(lhs=iv, rhs=self.dv)
+
+            # # Add unknown 'has'/identifier relation 
+            # unknown_id = Nominal('Unknown identifier')
+            # self.graph.has(identifier=unknown_id, variable=iv)
+
+            # # Add the random slope to dv relation 
+            # self.graph.contribute(lhs=iv, rhs=self.dv)
+
+            # # Add nesting relation 
+            # self.graph.nest(base=unknown_id, group=groups)
 
     # # Sets random slopes 
     # def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 

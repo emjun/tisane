@@ -241,6 +241,31 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue((v1, v3) in two_way)
         self.assertTrue((v1, v2, v3) in n_way)
 
+    def test_create_statistical_model(self):
+        rt = ts.Time('Reaction time')
+        condition = ts.Nominal('Condition', cardinality=2) # A or B
+        item = ts.Nominal('Item', cardinality=2) # 1, 2, 3, or 4
+        subject = ts.Nominal('Subject', cardinality=24) # 24 subjects
+
+        # Conceptual relationship
+        condition.associates_with(rt)
+        # Data measurement
+        item.has_unique(condition) # condition is treated to each item
+        condition.treat(subject, num_assignments=2) # subjects see two conditions
+
+        design = ts.Design(
+                    dv = rt,
+                    ivs = [condition]
+                )
+
+        f = open('./tests/test_model_json/test_model.json', 'r') 
+        model_json = f.read()
+
+        synth = Synthesizer()
+        
+        sm = synth.create_statistical_model(model_json, design)
+        import pdb; pdb.set_trace()
+
 
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     # @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
