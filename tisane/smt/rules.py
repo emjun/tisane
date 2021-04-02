@@ -32,8 +32,8 @@ MainEffect = Function('MainEffect', Object, Object, BoolSort())
 NoMainEffect = Function('NoMainEffect', Object, Object, BoolSort())
 
 # Variable Relationship Graph
-Cause = Function('Cause', Object, Object, BoolSort())
-Correlate = Function('Correlate', Object, Object, BoolSort())
+# Cause = Function('Cause', Object, Object, BoolSort())
+# Correlate = Function('Correlate', Object, Object, BoolSort())
 
 # Data schema, data type
 BinaryDataType = Function('BinaryDataType', Object, BoolSort())

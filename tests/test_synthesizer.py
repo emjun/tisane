@@ -1,4 +1,5 @@
 import tisane as ts 
+from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.smt.rules import *
 from tisane.smt.input_interface import InputInterface
 from tisane.smt.synthesizer import Synthesizer
@@ -264,7 +265,23 @@ class SynthesizerTest(unittest.TestCase):
         synth = Synthesizer()
         
         sm = synth.create_statistical_model(model_json, design)
-        import pdb; pdb.set_trace()
+        
+        self.assertEqual(len(sm.fixed_ivs), 1)
+        self.assertTrue(condition in sm.fixed_ivs)
+        self.assertEqual(len(sm.interactions), 0)
+        self.assertEqual(len(sm.random_ivs), 3)
+        
+        rs = RandomSlope(condition, subject)
+        ri_item = RandomIntercept(item)
+        ri_subject = RandomIntercept(subject)
+        for re in sm.random_ivs: 
+            if isinstance(re, RandomSlope): 
+                self.assertEqual(re.iv, rs.iv)
+                self.assertEqual(re.groups, rs.groups)
+            elif isinstance(re, RandomIntercept): 
+                self.assertTrue(re.groups == ri_subject.groups or re.groups == ri_item.groups)
+
+        
 
 
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")

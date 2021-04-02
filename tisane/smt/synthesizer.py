@@ -595,10 +595,10 @@ class Synthesizer(object):
 
         def get_variable(design: Design, var_name: str):
             # List of variables in @param design
-            variables = design.get_variables()
+            variables = design.graph.get_variables()
 
             for v in variables:
-                if v.name == iv_name:
+                if v.name == var_name:
                     return v
 
         tmp = json.loads(model_json) # read in json

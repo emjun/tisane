@@ -1,5 +1,5 @@
 from tisane.concept import Concept
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Has, Associate, Cause
 from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept, CorrelatedRandomSlopeAndIntercept
 from tisane.effect_set import EffectSet, MainEffect, InteractionEffect, MixedEffect
 from tisane.graph import Graph
@@ -224,63 +224,6 @@ class StatisticalModel(object):
                             if relationship.lhs == self.dv or relationship.rhs == self.dv: 
                                 self.graph.associate(lhs, rhs)
                 
-                # Add the random slope
-                group.has(iv, repetitions=iv.cardinality)
-                # TODO: Add relationships to variables? Do they already have them? 
-                # TODO: Add relationships from variables' relationships (stored internally)?
-                # TODO: First: Do the variables have relationships???? If so, what do we do with that? I think they should? 
-                # TODO: HIgher level idea: Maybe once we have a model json, we should be modifying the relationships between variables based on the GUI interactions?
-                # ADDING interactions? as nodes, etc.? --> update Design graph and then update Statistical Model graph (from Design graph)?
-
-                # self.graph.has(identifier=group, variable=iv, has_obj=, repetitions=)
-                # Add the group to DV relationship 
-                self.graph.contribute(lhs=group, rhs=self.dv)
-                # Add the iv to DV relationship 
-                self.graph.contribute(lhs=iv, rhs=self.dv)
-
-            # # Add unknown 'has'/identifier relation 
-            # unknown_id = Nominal('Unknown identifier')
-            # self.graph.has(identifier=unknown_id, variable=iv)
-
-            # # Add the random slope to dv relation 
-            # self.graph.contribute(lhs=iv, rhs=self.dv)
-
-            # # Add nesting relation 
-            # self.graph.nest(base=unknown_id, group=groups)
-
-    # # Sets random slopes 
-    # def set_random_slopes(self, random_slopes: List[Tuple[AbstractVariable, ...]]): 
-    #     self.random_slopes = random_slopes
-        
-    #     # Update the Graph IR
-    #     for slope_for_each, slopes_vary_among in random_slopes: 
-    #         # Add unknown 'has'/identifier relation 
-    #         unknown_id = Nominal('Unknown identifier')
-    #         self.graph.has(identifier=unknown_id, variable=slope_for_each)
-
-    #         # Add the random slope to dv relation 
-    #         self.graph.contribute(lhs=slope_for_each, rhs=self.dv)
-
-    #         # Add nesting relation 
-    #         self.graph.nest(base=unknown_id, group=slopes_vary_among)
-            
-
-    # # Sets random intercepts
-    # def set_random_intercepts(self, random_intercepts: List[Tuple[AbstractVariable, ...]]): 
-    #     self.random_intercepts = random_intercepts
-
-    #     # Update the Graph IR
-    #     for intercept_for_each, intercepts_vary_among in random_intercepts: 
-    #         # Add unknown 'has'/identifier relation 
-    #         unknown_id = Nominal('Unknown identifier')
-    #         self.graph.has(identifier=unknown_id, variable=intercept_for_each)
-
-    #         # Add the random intercept to dv relation 
-    #         self.graph.contribute(lhs=intercept_for_each, rhs=self.dv)
-
-    #         # Add nesting relation 
-    #         self.graph.nest(base=unknown_id, group=intercepts_vary_among)
-
     # Sets the family
     def set_family(self, family: str): 
         self.family = family
@@ -459,50 +402,50 @@ class StatisticalModel(object):
         return facts
 
     # @return additional set of logical facts that needs disambiguation depending on @param desired output_obj
-    def collect_ambiguous_facts(self, output: str) -> List: 
-        facts = list()
-        edges = self.graph.get_edges() # get list of edges
+    # def collect_ambiguous_facts(self, output: str) -> List: 
+    #     facts = list()
+    #     edges = self.graph.get_edges() # get list of edges
 
-        if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
-            # Iterate over all edges
-            # This covers all the interactions, too. 
-            for (n0, n1, edge_data) in edges:         
-                edge_type = edge_data['edge_type']
-                n0_var = gr.get_variable(n0)
-                n1_var = gr.get_variable(n1)
-                if edge_type == 'unknown':
-                    if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
-                        # Induce UNSAT in order to get end-user clarification
-                        facts.append(Cause(n0_var.const, n1_var.const))
-                        facts.append(Correlate(n0_var.const, n1_var.const))
-                else: 
-                    raise NotImplementedError
-        elif output.upper() == 'STUDY DESIGN': 
-            # Data schema
-            nodes = self.graph.get_nodes()
-            for (n, data)  in nodes: 
-                n_var = data['variable']
-                facts.append(NumericDataType(n_var.const))
-                facts.append(CategoricalDataType(n_var.const)) 
-                # TODO: Start here: Find data type info during prep_query? 
-                # Doing so seems to defeat purpose of interactive synth procedure...
-                # Maybe I don't need to add these ambiguous facts since I have a link and variance functions? 
-                # Think through (1) have link and variance functions, (2) do not have (this seems like a separate pre-step...?)
-                # Map out diagrammatically what looking for, etc.
+    #     if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
+    #         # Iterate over all edges
+    #         # This covers all the interactions, too. 
+    #         for (n0, n1, edge_data) in edges:         
+    #             edge_type = edge_data['edge_type']
+    #             n0_var = gr.get_variable(n0)
+    #             n1_var = gr.get_variable(n1)
+    #             if edge_type == 'unknown':
+    #                 if output.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
+    #                     # Induce UNSAT in order to get end-user clarification
+    #                     facts.append(Cause(n0_var.const, n1_var.const))
+    #                     facts.append(Correlate(n0_var.const, n1_var.const))
+    #             else: 
+    #                 raise NotImplementedError
+    #     elif output.upper() == 'STUDY DESIGN': 
+    #         # Data schema
+    #         nodes = self.graph.get_nodes()
+    #         for (n, data)  in nodes: 
+    #             n_var = data['variable']
+    #             facts.append(NumericDataType(n_var.const))
+    #             facts.append(CategoricalDataType(n_var.const)) 
+    #             # TODO: Start here: Find data type info during prep_query? 
+    #             # Doing so seems to defeat purpose of interactive synth procedure...
+    #             # Maybe I don't need to add these ambiguous facts since I have a link and variance functions? 
+    #             # Think through (1) have link and variance functions, (2) do not have (this seems like a separate pre-step...?)
+    #             # Map out diagrammatically what looking for, etc.
 
-                # facts.append(NominalDataType(n_var.const))
-                # facts.append(OrdinalDataType(n_var.const))
+    #             # facts.append(NominalDataType(n_var.const))
+    #             # facts.append(OrdinalDataType(n_var.const))
 
-            # Data collection procedure    
-            for (n0, n1, edge_data) in edges: 
-                edge_type = edge_data['edge_type']
-                n0_var = gr.get_variable(n0)
-                n1_var = gr.get_variable(n1)
-                if edge_type == 'treat':
-                    facts.append(Between(n1_var.const, n0_var.const))
-                    facts.append(Within(n1_var.const, n0_var.const))
+    #         # Data collection procedure    
+    #         for (n0, n1, edge_data) in edges: 
+    #             edge_type = edge_data['edge_type']
+    #             n0_var = gr.get_variable(n0)
+    #             n1_var = gr.get_variable(n1)
+    #             if edge_type == 'treat':
+    #                 facts.append(Between(n1_var.const, n0_var.const))
+    #                 facts.append(Within(n1_var.const, n0_var.const))
                 
-        return facts
+    #     return facts
 
     def query(self, outcome: str) -> Any: 
         # Ground some rules to make the quantification simpler
@@ -522,56 +465,56 @@ class StatisticalModel(object):
             return graph
 
 
-    def collect_facts(self, outcome: str): 
-        desired_outcome = outcome.upper()
+    # def collect_facts(self, outcome: str): 
+    #     desired_outcome = outcome.upper()
 
-        facts = list()
-        if desired_outcome == 'STATISTICAL MODEL': 
-            raise NotImplementedError
-        elif desired_outcome == 'VARIABLE RELATIONSHIP GRAPH': 
-            all_vars = self.consts['variables']
-            dv_const = self.consts['dv']
-            fixed_ivs = self.consts['fixed_ivs']
-            interactions = self.consts['interactions']
+    #     facts = list()
+    #     if desired_outcome == 'STATISTICAL MODEL': 
+    #         raise NotImplementedError
+    #     elif desired_outcome == 'VARIABLE RELATIONSHIP GRAPH': 
+    #         all_vars = self.consts['variables']
+    #         dv_const = self.consts['dv']
+    #         fixed_ivs = self.consts['fixed_ivs']
+    #         interactions = self.consts['interactions']
 
-            for v in all_vars: 
-                # Is the variable a main effect?
-                if is_true(BoolVal(Contains(fixed_ivs, Unit(v)))):
-                    if v is not dv_const: 
-                        facts.append(Cause(v, dv_const))
-                        facts.append(Correlate(v, dv_const))
-                    # Is the variable involved in an interaction?
-                    # for i in interactions: 
-                    #     if is_true(BoolVal(IsMember(v, i))): 
+    #         for v in all_vars: 
+    #             # Is the variable a main effect?
+    #             if is_true(BoolVal(Contains(fixed_ivs, Unit(v)))):
+    #                 if v is not dv_const: 
+    #                     facts.append(Cause(v, dv_const))
+    #                     facts.append(Correlate(v, dv_const))
+    #                 # Is the variable involved in an interaction?
+    #                 # for i in interactions: 
+    #                 #     if is_true(BoolVal(IsMember(v, i))): 
 
-            if self.interactions: 
-                # TODO: Generalize this to more than 2 vars involved in an interaction
-                for v0, v1 in self.interactions: 
-                    v0_const = None 
-                    v1_const = None 
-                    for v in all_vars: 
-                        if v0.name == str(v): 
-                            v0_const = v
-                        if v1.name == str(v): 
-                            v1_const = v
-                    # if v0_const and v1_const: 
-                    #     assert(is_true(BoolVal(IsMember(v0, ))))
+    #         if self.interactions: 
+    #             # TODO: Generalize this to more than 2 vars involved in an interaction
+    #             for v0, v1 in self.interactions: 
+    #                 v0_const = None 
+    #                 v1_const = None 
+    #                 for v in all_vars: 
+    #                     if v0.name == str(v): 
+    #                         v0_const = v
+    #                     if v1.name == str(v): 
+    #                         v1_const = v
+    #                 # if v0_const and v1_const: 
+    #                 #     assert(is_true(BoolVal(IsMember(v0, ))))
                     
-                    # Have found both variables involved in the interaction
-                    assert(v0_const is not None)
-                    assert(v1_const is not None)
-                    facts.append(Cause(v0_const, v1_const))
-                    facts.append(Correlate(v0_const, v1_const))
+    #                 # Have found both variables involved in the interaction
+    #                 assert(v0_const is not None)
+    #                 assert(v1_const is not None)
+    #                 facts.append(Cause(v0_const, v1_const))
+    #                 facts.append(Correlate(v0_const, v1_const))
 
-        elif desired_outcome == 'DATA SCHEMA': 
-            pass
-        elif desired_outcome == 'DATA COLLECTION PROCEDURE': 
-            raise NotImplementedError
-        else: 
-            raise ValueError(f"Query is not supported: {outcome}. Try the following: 'STATISTICAL MODEL', 'VARIABLE RELATIONSHIP GRAPH', 'DATA SCHEMA', 'DATA COLLECTION PROCEDURE'")
+    #     elif desired_outcome == 'DATA SCHEMA': 
+    #         pass
+    #     elif desired_outcome == 'DATA COLLECTION PROCEDURE': 
+    #         raise NotImplementedError
+    #     else: 
+    #         raise ValueError(f"Query is not supported: {outcome}. Try the following: 'STATISTICAL MODEL', 'VARIABLE RELATIONSHIP GRAPH', 'DATA SCHEMA', 'DATA COLLECTION PROCEDURE'")
 
-        # 
-        return facts
+    #     # 
+    #     return facts
 
     # #TODO: @return a DataSet object with data schema info only 
     # def query_data_schema(self): 
