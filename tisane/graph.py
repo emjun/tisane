@@ -151,7 +151,7 @@ class Graph(object):
         nodes = self.get_nodes()
 
         for n in nodes: 
-            if n[1]['variable'] == variable: 
+            if n[1]['variable'].name == variable.name: 
                 return n
     
     # @return list of edges in graph
@@ -254,7 +254,7 @@ class Graph(object):
             raise NotImplementedError
 
     # Add an edge that indicates that identifier 'has' the variable measurement
-    def has(self, identifier: AbstractVariable, variable: AbstractVariable, has_obj: Has, repetitions: int): 
+    def has(self, identifier: AbstractVariable, variable: AbstractVariable, has_obj: Union[Has, Treatment, Nest, RepeatedMeasure], repetitions: int): 
         if not self.has_variable(identifier): 
             self._add_variable(variable=identifier, is_identifier=True)
         else: 

@@ -1,4 +1,5 @@
 import tisane as ts 
+from tisane.variable import Treatment, Has, RepeatedMeasure, Nest
 from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.smt.rules import *
 from tisane.smt.input_interface import InputInterface
@@ -286,34 +287,65 @@ class SynthesizerTest(unittest.TestCase):
             elif isinstance(re, RandomIntercept): 
                 self.assertTrue(re.groups == ri_subject.groups or re.groups == ri_item.groups)
 
-    def test_generate_code_for_statistical_model(self):
-        rt = ts.Time('Resp')
-        condition = ts.Nominal('Cond', cardinality=2) # A or B
-        item = ts.Nominal('ItemID', cardinality=2) # 1, 2, 3, or 4
-        subject = ts.Nominal('SubjID', cardinality=24) # 24 subjects
+    # def test_generate_code_for_statistical_model(self):
+    #     rt = ts.Time('Resp')
+    #     condition = ts.Nominal('Cond', cardinality=2) # A or B
+    #     item = ts.Nominal('ItemID', cardinality=2) # 1, 2, 3, or 4
+    #     subject = ts.Nominal('SubjID', cardinality=24) # 24 subjects
 
-        # Conceptual relationship
-        condition.associates_with(rt)
-        # Data measurement
-        item.has_unique(condition) # condition is treated to each item
-        condition.treat(subject, num_assignments=2) # subjects see two conditions
+    #     # Conceptual relationship
+    #     condition.associates_with(rt)
+    #     # Data measurement
+    #     item.has_unique(condition) # condition is treated to each item
+    #     condition.treat(subject, num_assignments=2) # subjects see two conditions
+
+    #     design = ts.Design(
+    #                 dv = rt,
+    #                 ivs = [condition]
+    #             )
+
+    #     f = open('./tests/test_model_json/test_model.json', 'r') 
+    #     model_json = f.read()
+
+    #     synth = Synthesizer()
+        
+    #     sm = synth.create_statistical_model(model_json, design)
+    #     data_path = 'test_data/wbsi_24.csv'
+    #     data_abs = absolute_path(data_path)
+    #     sm.assign_data(data_abs)
+    #     generate_code(sm)
+    #     import pdb; pdb.set_trace()
+
+    def test_transform_treatment_to_has(self): 
+        acc = ts.Numeric('accuracy')
+        expl = ts.Nominal('explanation type')
+        variables = [acc, expl]
+
+        # Data measurement relationships
+        expl.treats(pid)
 
         design = ts.Design(
-                    dv = rt,
-                    ivs = [condition]
-                )
+            dv = acc, 
+            ivs = [expl]
+        )
 
-        f = open('./tests/test_model_json/test_model.json', 'r') 
-        model_json = f.read()
+        # Pre-transformation 
+        gr = design.graph
+        self.assertEqual(len(gr.get_edges()), 1)
+        self.assertTrue(gr.has_edge(expl, pid, 'treat'))
+        (n0, n1, edge_data) = gr.get_edge(expl, pid, 'treat')
+        self.assertIsInstance(edge_data['edge_obj'], Treatment)
 
-        synth = Synthesizer()
-        
-        sm = synth.create_statistical_model(model_json, design)
-        data_path = 'test_data/wbsi_24.csv'
-        data_abs = absolute_path(data_path)
-        sm.assign_data(data_abs)
-        generate_code(sm)
-        import pdb; pdb.set_trace()
+        synth = Synthesizer() 
+        updated_gr = synth.transform_to_has_edges(gr)
+
+        # Post-transformation 
+        self.assertEqual(len(updated_gr.get_edges()), 2)
+        self.assertTrue(updated_gr.has_edge(pid, expl, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(pid, expl, 'has')
+        self.assertIsInstance(edge_data['edge_obj'], Treatment)
+
+
 
 
         

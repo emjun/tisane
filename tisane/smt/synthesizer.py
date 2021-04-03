@@ -1,10 +1,8 @@
 from tisane.graph import Graph
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Time, Count
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Time, Count, Treatment, Has, RepeatedMeasure, Nest
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
-# from tisane.smt.input_interface import InputInterface
 from tisane.smt.rules import *
-# from tisane.smt.query_manager import QM
 from tisane.smt.rules import *
 from tisane.smt.knowledge_base import KB
 from tisane.random_effects import *
@@ -840,148 +838,29 @@ class Synthesizer(object):
         # Get facts from variance function 
 
 
-##########
-##### PROBABLY CAN DELETE: 
-    # Synthesizer generates possible effects, End-user interactively selects single effect set they want
-    def generate_and_select_effects_sets_from_design(self, design: Design): 
-        sm = StatisticalModel(dv=design.dv)
+    # @param graph is a graph of variables and relationships
+    # @returns a copy of the graph with additional edges 
+    # TODO: May consider removing rather than just adding edges, too
+    def transform_to_has_edges(self, graph: Graph): 
+        gr = copy.deepcopy(graph)
 
-        ##### Fixed effects 
-        fixed_candidates = list() 
+        edges = graph.get_edges() 
 
-        # Find candidates based on predecessors to the @param design.dv
-        # Get the predecessors to the DV 
-        dv_pred = design.graph.get_predecessors(design.dv)
-        for p in dv_pred: 
-            p_var = design.graph.get_variable(name=p)
-            if design.graph.has_edge(start=p_var, end=design.dv, edge_type='cause'): 
-                fixed_candidates.append(p_var)
-            elif design.graph.has_edge(start=p_var, end=design.dv, edge_type='associate'): 
-                fixed_candidates.append(p_var)
-        
-        # Control order
-        fixed_candidate_names = [v.name for v in fixed_candidates]
-        fixed_candidate_names.sort()
-        fixed_candidates_ordered = list()
-        for n in fixed_candidate_names:
-            for c in fixed_candidates:
-                if n == c.name: 
-                    fixed_candidates_ordered.append(c)
-                    break
-        fixed_candidates = fixed_candidates_ordered
-        
-        # Ask for user-input 
-        include_fixed = self.input_interface.ask_inclusion(subject='fixed effects')
-        if include_fixed: 
-            fixed_facts = list()
-            dv = design.dv
-            
-            # Get facts
-            for f in fixed_candidates: 
-                fixed_facts.append(FixedEffect(f.const,dv.const))
-                fixed_facts.append(NoFixedEffect(f.const,dv.const))
-            
-            # Get rules 
-            rules_dict = self.collect_rules(output='effects', dv_const=dv.const)
+        for (n0, n1, edge_data) in edges: 
+            edge_type = edge_data['edge_type']
+            edge_obj = edge_data['edge_obj']
 
-            # Solve constraints + rules
-            (res_model_fixed, res_facts_fixed) = self.solve(facts=fixed_facts, rules=rules_dict)
-            
-            # Update result StatisticalModel based on user selection 
-            sm = self.postprocess_to_statistical_model(model=res_model_fixed, facts=res_facts_fixed, graph=design.graph, statistical_model=sm)
+            # Transform all Treatments into Has 
+            if edge_type == 'treat': 
+                assert(isinstance(edge_obj, Treatment))
+                treatment = edge_obj.treatment
+                identifier = edge_obj.unit
+                num_assignments = edge_obj.num_assignments
 
-        ##### Interaction effects
-        # Do we have enough fixed effects to create interactions?
-        if len(fixed_candidates) >= 2:
-            # Ask for user-input
-            include_interactions = self.input_interface.ask_inclusion(subject='interaction effects')
-            if include_interactions: 
-                interaction_facts = list() 
-                dv = design.dv
-
-                # Generate possible interaction candidates from fixed_candidates
-                interaction_candidates = [c for c in powerset(fixed_candidates) if len(c)>=2]
+                # Add has relationship to gr
+                gr.has(identifier=identifier, variable=treatment, has_obj=edge_obj, repetitions=num_assignments)
                 
-                # Get facts
-                interaction_seq = None 
-                for ixn in interaction_candidates: 
-                    # Build interaction sequence
-                    interaction = EmptySet(Object)
 
-                    for v in ixn:   
-                        interaction = SetAdd(interaction, v.const)
-                    # if interaction_seq is None: 
-                    #     interaction_seq = Unit(interaction)
-                    #     
-                    # else: 
-                    #     interaction_seq = Concat(Unit(interaction), interaction_seq)
-                
-                    interaction_facts.append(Interaction(interaction))
-                    interaction_facts.append(NoInteraction(interaction))
-                    
-                    interaction_seq = None 
+        # Transform all Nest into Has 
 
-                # Use rules from above
-
-                # Solve constraints + rules
-                (res_model_interaction, res_facts_interaction) = self.solve(facts=interaction_facts, rules=rules_dict)
-        
-                # Update result StatisticalModel based on user selection 
-                sm = self.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
-
-        ##### Random effects
-        # Random slopes and intercepts are possible if there is more than one level in design 
-        random_pairs = list()
-        if design.get_number_of_levels() >= 2:
-            random_facts = list()
-        
-            # TODO: Limitation of algo below: (i) What happens if there are >2
-            # levels? (ii) Does the number of nesting (1|g2/g1) matter on if
-            # end-user specifies which ones to include in study design? 
-            # Look for "elbow" pattern in graph IR 
-            # Elbow pattern: Dv <- V <- ID1 -> ID2
-            for v in fixed_candidates: 
-                # Get 'has' predecessors 
-                has_predecessors = set()
-                v_pred = design.graph.get_predecessors(v)
-                for p in v_pred: 
-                    p_var = design.graph.get_variable(name=p)
-                    if design.graph.has_edge(start=p_var, end=v, edge_type='has'): 
-                        has_predecessors.add(p_var)
-
-                # Of those 'has' predecessors of v, see if they are 'nested' in another level 
-                for h in has_predecessors: 
-                    parents = design.graph.get_neighbors(variable=h, edge_type='nest')
-                    for p in parents: 
-                        # Get facts
-                        random_facts.append(RandomSlopeEffect(v.const, p.const))        
-                        random_facts.append(NoRandomSlopeEffect(v.const, p.const))      
-                        random_facts.append(RandomInterceptEffect(v.const, p.const))        
-                        random_facts.append(NoRandomInterceptEffect(v.const, p.const))        
-                        # Keep track of pairs to ask about correlation below
-                        random_pairs.append((RandomSlopeEffect(v.const, p.const), RandomInterceptEffect(v.const, p.const), v.const, p.const))
-                    
-            # Use rules from above
-
-            # Solve constraints + rules
-            (res_model_random, res_facts_random) = self.solve(facts=random_facts, rules=rules_dict)
-            
-            # Ask if random slopes and intercepts are correlated
-            # Get facts
-            random_correlation_facts = list()
-            for (slope, intercept, variable, parent) in random_pairs: 
-                if slope in res_facts_random and intercept in res_facts_random: 
-                    random_correlation_facts.append(CorrelateRandomSlopeIntercept(variable, parent))
-                    random_correlation_facts.append(NoCorrelateRandomSlopeIntercept(variable, parent))
-                    
-            # Use rules from above
-
-            # Solve constraints + rules
-            (res_model_random, res_facts_random) = self.solve(facts=random_correlation_facts, rules=rules_dict)
-
-            # Update result StatisticalModel based on user selections 
-            sm = self.postprocess_to_statistical_model(model=res_model_random, facts=res_facts_random, graph=design.graph, statistical_model=sm)
-            
-        # Return a Statistical Model obj with effects set
-        return sm
-    
+        # Transfom all Repeat into Has + Associate
