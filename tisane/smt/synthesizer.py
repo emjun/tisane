@@ -468,6 +468,12 @@ class Synthesizer(object):
         # Identify the units
         identifiers = design.graph.get_identifiers()
 
+        # There is only one level
+        if len(identifiers) == 1:
+            return None
+        
+        # There multiple levels or units
+
         # For each MAIN effect
         fixed_candidates = self._generate_fixed_candidates(design)
         # If it is "between-subjects" create a random intercept for the unit
@@ -544,7 +550,8 @@ class Synthesizer(object):
         if isinstance(dv, Count): 
             family_facts.append(PoissonFamily(dv.const))
         if isinstance(dv, Time): 
-            # TODO: ADD NUMERIC????
+            family_facts.append(GaussianFamily(dv.const))
+            family_facts.append(InverseGaussianFamily(dv.const))
             # Expontential distribution would go here
             family_facts.append(GammaFamily(dv.const))
             family_facts.append(TweedieFamily(dv.const)) 

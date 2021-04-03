@@ -1,7 +1,7 @@
 import tisane as ts 
 
 import pandas as pd 
-import numpy as n
+import numpy as np
 
 """
 Example from Cohen, Cohen, West, Aiken 2003. 

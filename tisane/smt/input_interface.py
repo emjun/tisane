@@ -845,6 +845,12 @@ class InputInterface(object):
         return interaction_effects_div
 
     def layout_random_effects_div(self, random_effects): 
+        
+        if random_effects is None:
+            return html.Div([])
+
+        # There are random effects
+
         ##### Collect all elements
         # Create random effects title 
         random_effects_title = html.Div([
@@ -1035,8 +1041,8 @@ class InputInterface(object):
         elif isinstance(x1, Numeric) and isinstance(x2, Numeric): 
             x1_data = self.design.get_data(x1)
             x2_data = self.design.get_data(x2)
-            
-            if x1_data.count() <= x2_data.count(): 
+                        
+            if x1_data.nunique() <= x2_data.nunique(): 
                 x = x2
                 color_group = x1
             else: 
@@ -1123,6 +1129,7 @@ class InputInterface(object):
                     # Add random effect fact to global map
                     __str_to_z3__[str(fact)] = fact
                     
+                    import pdb; pdb.set_trace()
                     assert(isinstance(re, CorrelatedRandomSlopeAndIntercept) or isinstance(re, UncorrelatedRandomSlopeAndIntercept))
                     if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
                         facts['Correlated'] = fact
