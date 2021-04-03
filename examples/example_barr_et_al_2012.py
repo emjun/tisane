@@ -27,7 +27,7 @@ design = ts.Design(
         # .assign_data('data.csv')
 identifiers = design.graph.get_identifiers()
 
-ts.synthesize_statistical_model(design=design)
+ts.infer_statistical_model_from_design(design=design)
 
 # TODO: 
 # 1. Check for conceptual relationships IVs to DV

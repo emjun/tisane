@@ -803,6 +803,7 @@ class InputInterface(object):
         return main_effects_div
 
     def layout_interaction_effects_div(self, interaction_effects): 
+        
 
         ##### Collect all elements
         # Create interaction effects title 
@@ -824,7 +825,7 @@ class InputInterface(object):
         ])
         
         # Get accordion for the interaction effects (two-way, n-way)
-        interaction_effects = self.populate_interaction_effects(interaction_effects)
+        interaction_effects_acc = self.populate_interaction_effects(interaction_effects)
         
         # Get chart for visualizing interactions
         # two_way_interaction_vis = self.create_two_way_interaction_chart(('HomeWork', 'Race'), self.design.dv, self.design.dataset.dataset)
@@ -838,10 +839,15 @@ class InputInterface(object):
         # Create div 
 
         # There are interaction effects
-        if interaction_effects is not None:
+        has_interactions = False
+        for k, val in interaction_effects.items():
+            if len(val) > 0:
+                has_interactions = True
+
+        if has_interactions:
             interaction_effects_div = html.Div([
                 interaction_effects_title, 
-                interaction_effects,
+                interaction_effects_acc,
                 interaction_switch
             ])
         else:
@@ -860,7 +866,7 @@ class InputInterface(object):
         )
             interaction_effects_div = html.Div([
                 interaction_effects_title, 
-                interaction_effects,
+                interaction_effects_acc,
                 interaction_switch
             ],
             hidden=True)
