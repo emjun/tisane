@@ -389,3 +389,10 @@ class Unit(Nominal):
 class Variable(AbstractVariable): 
     def __init__(self, name: str): 
         super(Variable, self).__init__(name)
+
+# Represents a value greater than 1 
+class GreaterThanOne(object): 
+    value: int
+
+    def __init__(self): 
+        self.value = 2

@@ -344,7 +344,39 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue(updated_gr.has_edge(pid, expl, 'has'))
         (n0, n1, edge_data) = updated_gr.get_edge(pid, expl, 'has')
         self.assertIsInstance(edge_data['edge_obj'], Treatment)
+        
+    def test_transform_nest_to_has(self): 
+        student = ts.Nominal('student id')
+        school = ts.Nominal('school') 
+        age = ts.Numeric('age')
+        math = ts.Numeric('math score')
 
+        age.associates_with(math) # Introduces 2 edges (bidirectional)
+
+        student.has(age)
+        student.nest_under(school)
+
+        design = ts.Design(
+            dv=math, 
+            ivs=[age]
+        )
+
+        # Pre-transformation 
+        gr = design.graph
+        self.assertEqual(len(gr.get_edges()), 4)
+        self.assertTrue(gr.has_edge(student, school, 'nest'))
+        (n0, n1, edge_data) = gr.get_edge(student, school, 'nest')
+        self.assertIsInstance(edge_data['edge_obj'], Nest)
+
+        synth = Synthesizer() 
+        updated_gr = synth.transform_to_has_edges(gr)
+
+        # Post-transformation
+        self.assertEqual(len(updated_gr.get_edges()), 5)
+        self.assertTrue(updated_gr.has_edge(student, school, 'nest'))
+        self.assertTrue(updated_gr.has_edge(school, student, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(school, student, 'has')
+        self.assertIsInstance(edge_data['edge_obj'], Nest)
 
 
 

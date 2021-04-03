@@ -1,4 +1,4 @@
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure, Has, Associate, Cause
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure, Has, Associate, Cause, GreaterThanOne
 
 import networkx as nx
 import pydot
@@ -251,10 +251,13 @@ class Graph(object):
             effect = relationship.effect  
             self.cause(cause, effect)
         elif isinstance(relationship, RepeatedMeasure):  #TODO: Rename to Repeat? 
-            raise NotImplementedError
+            unit = relationship.unit 
+            response = relationship.response 
+            according_to = relationship.according_to
+            self.repeat(unit=unit, response=response, repeat_obj=relationship)
 
     # Add an edge that indicates that identifier 'has' the variable measurement
-    def has(self, identifier: AbstractVariable, variable: AbstractVariable, has_obj: Union[Has, Treatment, Nest, RepeatedMeasure], repetitions: int): 
+    def has(self, identifier: AbstractVariable, variable: AbstractVariable, has_obj: Union[Has, Treatment, Nest, RepeatedMeasure], repetitions: Union[int, GreaterThanOne]): 
         if not self.has_variable(identifier): 
             self._add_variable(variable=identifier, is_identifier=True)
         else: 

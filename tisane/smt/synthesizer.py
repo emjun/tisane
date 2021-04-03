@@ -1,5 +1,5 @@
 from tisane.graph import Graph
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Time, Count, Treatment, Has, RepeatedMeasure, Nest
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Time, Count, Treatment, Has, RepeatedMeasure, Nest, GreaterThanOne
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.smt.rules import *
@@ -860,7 +860,17 @@ class Synthesizer(object):
                 # Add has relationship to gr
                 gr.has(identifier=identifier, variable=treatment, has_obj=edge_obj, repetitions=num_assignments)
                 
+            # Transform all Nest into Has 
+            elif edge_type == 'nest': 
+                assert(isinstance(edge_obj, Nest))
+                base = edge_obj.base
+                group = edge_obj.group
 
-        # Transform all Nest into Has 
+                # Add has relationship to gr 
+                gr.has(identifier=group, variable=base, has_obj=edge_obj, repetitions=GreaterThanOne())
+            
+            # Transfom all Repeat into Has + Associate
+            elif edge_type == 'repeat': 
+                pass
 
-        # Transfom all Repeat into Has + Associate
+        return gr
