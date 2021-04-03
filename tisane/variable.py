@@ -211,7 +211,7 @@ class AbstractVariable(object):
         #     variable.has(measure=self)
 
     def treats(self, variable: 'AbstractVariable', **kwargs): # repetitions: int=None): 
-        self.treat(variable, kwargs)
+        self.treat(variable, **kwargs)
 
     # @param group is the group (level 2) that self is nested under (level 1)
     # Add nested relationships to this variable

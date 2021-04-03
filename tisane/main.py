@@ -104,8 +104,85 @@ def synthesize_statistical_model(design: Design):
     # Generate code from SM
     script = generate_code(sm)
     
-    # return scipt (TODO: look into replacing the code snippet in original program)
+    return scipt #(TODO: look into replacing the code snippet in original program)
     
+# @returns statistical model that reflects the study design 
+def infer_statistical_model_from_design(design: Design): 
+    ### Initial conceptual checks
+    # TODO: Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    # TODO: Check that the DV does not cause one or more IVs
+    synth = Synthesizer()
+
+    ### Generate possible effects, family, and link based on input design (graph)
+    main_effects_options = synth.generate_main_effects(design=design)
+    interaction_effects_options = synth.generate_interaction_effects(design=design)
+    random_effects_options = synth.generate_random_effects(design=design)
+    # random_effects_options = list()
+    # May want to load a dictionary of family to link
+    family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
+    # family_options = synth.generate_family_distributions(design=design)
+    # link_options = synth.generate_link_functions(design=design)
+
+    # Change to:
+    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
+    # spec is SM or some json dump -> SM -> code generated
+    
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
+    
+    # Read JSON file 
+    sm = None
+    f = open('model_spec.json', 'r') 
+    
+    # Construct StatisticalModel from JSON spec
+    model_json = f.read()
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset)
+    # sm = StatisticalModel().from_json(f.read()) 
+
+    # Generate code from SM
+    script = generate_code(sm)
+    
+    return scipt 
+
+# @returns statistical model that reflects the study design 
+def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]): 
+    ### Initial conceptual checks
+    # TODO: Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    # TODO: Check that the DV does not cause one or more IVs
+    synth = Synthesizer()
+
+    ### Generate possible effects, family, and link based on input design (graph)
+    main_effects_options = synth.generate_main_effects(design=design)
+    interaction_effects_options = synth.generate_interaction_effects(design=design)
+    random_effects_options = synth.generate_random_effects(design=design)
+    # random_effects_options = list()
+    # May want to load a dictionary of family to link
+    family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
+    # family_options = synth.generate_family_distributions(design=design)
+    # link_options = synth.generate_link_functions(design=design)
+
+    # Change to:
+    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
+    # spec is SM or some json dump -> SM -> code generated
+    
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
+    
+    # Read JSON file 
+    sm = None
+    f = open('model_spec.json', 'r') 
+    
+    # Construct StatisticalModel from JSON spec
+    model_json = f.read()
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset)
+    # sm = StatisticalModel().from_json(f.read()) 
+
+    # Generate code from SM
+    script = generate_code(sm)
+    
+    return scipt 
 
 def verify(input_: Union[Design, ConceptualModel, StatisticalModel], output_: Union[Design, ConceptualModel, StatisticalModel]): 
     if isinstance(input_, Design) and isinstance(output_, ConceptualModel): 

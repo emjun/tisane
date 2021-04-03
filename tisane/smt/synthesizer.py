@@ -511,8 +511,9 @@ class Synthesizer(object):
                 for v in ixn:
                     if all_within: 
                         # If all variables involved are "within-subjects" create random slope for the unit 
+                        
                         if design.graph.has_edge(start=i, end=v, edge_type='has'): 
-                            (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
+                            (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=v, edge_type='has')
                             if edge_data['repetitions'] == 1: 
                                 all_within = False
                 if all_within: 

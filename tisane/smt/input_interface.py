@@ -285,6 +285,8 @@ class InputInterface(object):
         @app.callback(
             Output('random_effects_table', 'children'),
             [Input('random_effects_switch', 'value'),
+            # TODO: Start with what happens when main effects removed --> add _IMPLIED random
+            # Input()
             Input('random_effects_table', 'children')],
         )
         def save_random_effects(switch_value, random_effects_table):
@@ -1292,7 +1294,7 @@ class InputInterface(object):
     def draw_dist(self, hist_data, label): 
         # Make sure that there is data to draw
         # Hist_data is not None and labels is not None
-        if hist_data and label: 
+        if hist_data is not None and label is not None: 
             data = pd.DataFrame(hist_data, columns=[label])
 
             fig = px.histogram(data, x=label)
