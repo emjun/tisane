@@ -803,6 +803,7 @@ class InputInterface(object):
         return main_effects_div
 
     def layout_interaction_effects_div(self, interaction_effects): 
+
         ##### Collect all elements
         # Create interaction effects title 
         interaction_effects_title = html.Div([
@@ -836,34 +837,39 @@ class InputInterface(object):
         ##### Combine all elements
         # Create div 
 
-        # interaction_effects_card = dbc.Card(
-        #     dbc.CardBody(
-        #         [
-        #             html.H3("Interaction effects"),
-        #             interaction_effects,
-        #             interaction_switch
-        #         ]
-        #     ),
-        #     color='light',
-        #     outline=True
-        # )
-
-        interaction_effects_div = html.Div([
-            interaction_effects_title, 
-            interaction_effects,
-            interaction_switch
-        ])
+        # There are interaction effects
+        if interaction_effects is not None:
+            interaction_effects_div = html.Div([
+                interaction_effects_title, 
+                interaction_effects,
+                interaction_switch
+            ])
+        else:
+            interaction_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "🔐", "value": False}
+                    ],
+                    value=True, 
+                    id='interaction_effects_switch',
+                    switch=True,
+                    style={'float': 'right'}
+                ),
+            ],
+            id='interaction_effects_group'
+        )
+            interaction_effects_div = html.Div([
+                interaction_effects_title, 
+                interaction_effects,
+                interaction_switch
+            ],
+            hidden=True)
 
         ##### Return div
         return interaction_effects_div
 
     def layout_random_effects_div(self, random_effects): 
         
-        if random_effects is None:
-            return html.Div([])
-
-        # There are random effects
-
         ##### Collect all elements
         # Create random effects title 
         random_effects_title = html.Div([
@@ -888,12 +894,35 @@ class InputInterface(object):
         table = self.populate_random_effects(random_effects)
 
         # Create div 
-        random_effects_div = html.Div([
-            random_effects_title, 
-            # random_descrip, 
-            table,
-            random_switch
-        ])
+        # There are random effects
+        if random_effects is not None:
+            random_effects_div = html.Div([
+                random_effects_title, 
+                # random_descrip, 
+                table,
+                random_switch
+            ])
+        else:
+            random_switch = dbc.FormGroup([
+                dbc.Checklist(
+                    options=[
+                        {"label": "🔐", "value": False}
+                    ],
+                    value=[True],
+                    id='random_effects_switch',
+                    switch=True,
+                    style={'float': 'right'}
+                ),
+            ],
+            id='random_effects_group'
+        )
+            random_effects_div = html.Div([
+                random_effects_title, 
+                # random_descrip, 
+                table,
+                random_switch
+            ],
+            hidden=True)
 
         ##### Return div
         return random_effects_div
@@ -1115,6 +1144,15 @@ class InputInterface(object):
         global __str_to_z3__
 
         rows = list()
+
+        # There are no random effects
+        if random_effects is None:
+            table_body = [html.Tbody(children=rows)]
+            table = dbc.Table(children=table_body, striped=False, bordered=False, id='random_effects_table')
+
+            # return output
+            return html.Div(id='random_effects_div', children=table)
+    
 
         re_dict = self.reorganize_random_effects(random_effects)
         
