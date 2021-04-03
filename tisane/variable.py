@@ -173,34 +173,23 @@ class AbstractVariable(object):
     # @param number_of_assignments indicates the number of times that the @param unit receives the treatment (self)
     # @param number_of_assignments default is 1 (between-subjects)
     # @return Treatment 
-    def treat(self, variable: 'AbstractVariable', **kwargs): #, repetitions: int=None): 
+    def treat(self, variable: 'AbstractVariable', num_assignments: int=1): 
         rep = None
-        if 'assignment' in kwargs: 
-            assign = kwargs['assignment']
-            if assign.upper() == 'BETWEEN':
-                # TODO: check? 
-                rep = 1
-            elif assign.upper() == 'WITHIN': 
-                # TODO: check? 
-                rep = self.cardinality
+        assign = num_assignments
+        # Between subjects? 
+        if assign == 1: 
+            rep = 1
+        # Full within-subjects design? 
+        elif assign == self.cardinality: 
+            rep = self.cardinality 
+        # Partial within-subjects design
+        else: 
+            if assign < cardinality: 
+                rep = assign 
             else: 
-                raise ValueError(f"Invalid description of how {self.name} treats {variable.name} in terms of assignment: {assign}! Accepted values: BETWEEEN or WITHIN.")
-        elif 'num_assignments' in kwargs: 
-            assign = int(kwargs['num_assignments'])
-            # Between subjects? 
-            if assign == 1: 
-                rep = 1
-            # Full within-subjects design? 
-            elif assign == self.cardinality: 
-                rep = self.cardinality 
-            # Partial within-subjects design
-            else: 
-                if assign < cardinality: 
-                    rep = assign 
-                else: 
-                    raise ValueError(f"Invalid number of assignments of {self.name} to {variable.name}. Specified number of assignments ({assign}) is greater than cardinality of {self.name} ({self.cardinality})")
-            
-        variable.has(measure=self, repetitions=rep)
+                raise ValueError(f"Invalid number of assignments of {self.name} to {variable.name}. Specified number of assignments ({assign}) is greater than cardinality of {self.name} ({self.cardinality})")
+        
+        # variable.has(measure=self, repetitions=rep)
         treatment = Treatment(treatment=self, unit=variable, num_assignments=rep)
         self.relationships.append(treatment)
         variable.relationships.append(treatment)
@@ -210,8 +199,8 @@ class AbstractVariable(object):
         # else: 
         #     variable.has(measure=self)
 
-    def treats(self, variable: 'AbstractVariable', **kwargs): # repetitions: int=None): 
-        self.treat(variable, **kwargs)
+    def treats(self, variable: 'AbstractVariable', num_assignments: int=1): 
+        self.treat(variable, num_assignments)
 
     # @param group is the group (level 2) that self is nested under (level 1)
     # Add nested relationships to this variable
@@ -231,10 +220,12 @@ class AbstractVariable(object):
     # @return RepeatedMeasure
     def repeat(self, response: 'AbstractVariable', according_to: 'AbstractVariable'): 
         repeat_relat = RepeatedMeasure(unit=self, response=response, according_to=according_to)
+        self.relationships.append(repeat_relat)
+        response.relationships.append(repeat_relat)
         
     
     def repeats(self, response: 'AbstractVariable', according_to: 'AbstractVariable'):
-        return RepeatedMeasure(unit=self, response=response, according_to=according_to)
+        return self.repeat(response=response, according_to=according_to)
 
     # @param effect the variable causes
     def cause(self, effect: 'AbstractVariable'):

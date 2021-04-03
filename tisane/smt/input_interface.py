@@ -1257,7 +1257,7 @@ class InputInterface(object):
         global __str_to_z3__
 
         rows = list()
-
+        import pdb; pdb.set_trace()
         # There are no random effects
         if random_effects is None:
             table_body = [html.Tbody(children=rows)]

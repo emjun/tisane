@@ -16,13 +16,15 @@ class DesignTest(unittest.TestCase):
         pid = ts.Nominal('pid')
         variables = [acc, expl]
 
-        expl.treats(pid)
+        expl.treats(pid, num_assignments=1) # Expl assignmed to pid 1 time
         expl.associates_with(acc)
 
+        # Basic relationship construction (prior to any transformation)
         self.assertEqual(len(expl.relationships), 2)
-        self.assertIsInstance(expl.relationships[0], Has)
-        self.assertEqual(expl.relationships[0].variable, pid)
-        self.assertEqual(expl.relationships[0].measure, expl)
+        self.assertIsInstance(expl.relationships[0], Treatment)
+        self.assertEqual(expl.relationships[0].treatment, expl)
+        self.assertEqual(expl.relationships[0].unit, pid)
+        self.assertEqual(expl.relationships[0].num_assignments, 1)
 
         self.assertIsInstance(expl.relationships[1], Associate)
         self.assertEqual(expl.relationships[1].lhs, expl)
@@ -45,16 +47,19 @@ class DesignTest(unittest.TestCase):
         self.assertEqual(len(design.graph.get_variables()), len(variables) + 1) # +1 for the identifier
         for v in variables: 
             self.assertTrue(design.graph.has_variable(v))
-        # The graph IR has the identifier
-        identifiers=design.graph.get_identifiers()
-        self.assertEqual(len(identifiers), 1)
-        self.assertEqual(identifiers[0], pid)
+        
+        # TODO: Add the identifier check after implement the transformation
+        # # The graph IR has the identifier
+        # identifiers=design.graph.get_identifiers()
+        # self.assertEqual(len(identifiers), 1)
+        # self.assertEqual(identifiers[0], pid)
 
         # The graph IR has all the edges we expect
         self.assertEqual(len(design.graph.get_edges()), 3)
         self.assertTrue(design.graph.has_edge(expl, acc, edge_type='associate'))
         self.assertTrue(design.graph.has_edge(acc, expl, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(pid, expl, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(expl, pid, edge_type='treat'))
+        # TODO: Update when add graph transformation
 
     def test_initialize_2_levels(self): 
         """Example from Kreft and de Leeuw, 1989"""

@@ -58,6 +58,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
+        import pdb; pdb.set_trace()
         self.assertEqual(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))

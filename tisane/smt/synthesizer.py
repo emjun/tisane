@@ -509,7 +509,6 @@ class Synthesizer(object):
         
         # For each INTERACTION effect
         interaction_candidates = self.generate_interaction_effects(design) # dict
-        import pdb; pdb.set_trace()
 
         for key, interactions in interaction_candidates.items(): 
             
@@ -529,6 +528,7 @@ class Synthesizer(object):
                     random_effects.add((rs, RandomSlope(iv=ixn, groups=i)))
 
         # Return random effects
+        import pdb; pdb.set_trace()
         return random_effects
 
     def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 

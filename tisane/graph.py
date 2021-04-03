@@ -237,7 +237,7 @@ class Graph(object):
             identifier = relationship.unit
             treatment = relationship.treatment
             repetitions = relationship.num_assignments
-            import pdb; pdb.set_trace() # TODO: Create a new edge??
+            self.treat(unit=identifier, treatment=treatment, treatment_obj=relationship)
         elif isinstance(relationship, Nest): 
             base = relationship.base
             group = relationship.group 

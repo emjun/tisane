@@ -1,5 +1,5 @@
 import tisane as ts
-from tisane.variable import Associate, Has, Cause, Nest
+from tisane.variable import Associate, Has, Cause, Nest, Treatment, RepeatedMeasure
 
 import unittest
 
@@ -31,10 +31,25 @@ class VariableTest(unittest.TestCase):
         expl.treats(pid)
 
         self.assertEqual(len(pid.relationships), 1)
-        self.assertIsInstance(pid.relationships[0], Has)
-        self.assertEqual(pid.relationships[0].variable, pid)
-        self.assertEqual(pid.relationships[0].measure, expl)
-    
+        self.assertIsInstance(pid.relationships[0], Treatment)
+        self.assertEqual(pid.relationships[0].unit, pid)
+        self.assertEqual(pid.relationships[0].treatment, expl)
+
+    def test_repeats(self): 
+        pig = ts.Nominal('pig id')
+        time = ts.Nominal('week number')
+        weight = ts.Numeric('weight')
+
+        pig.repeats(weight, according_to=time) 
+
+        self.assertEqual(len(pig.relationships), 1)
+        self.assertIsInstance(pig.relationships[0], RepeatedMeasure)
+        relat = pig.relationships[0]
+        self.assertEqual(relat.unit, pig)
+        self.assertEqual(relat.response, weight)
+        self.assertEqual(relat.according_to, time)
+
+
     def test_all_conceptual_relationships(self):
         math = ts.Numeric('MathAchievement')
         hw = ts.Numeric('HomeWork')
