@@ -51,4 +51,4 @@ design = ts.Design(
     source = data
 )
 
-ts.synthesize_statistical_model(design=design)
+ts.infer_statistical_model_from_design(design=design)

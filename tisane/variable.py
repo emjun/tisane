@@ -57,15 +57,15 @@ Class for expressing Repeated measures
 class RepeatedMeasure(object): 
     unit: 'AbstractVariable'
     response: 'AbstractVariable'
-    repetitions: 'AbstractVariable'
+    according_to: 'AbstractVariable'
     # count_variable: 'AbstractVariable'
     # repetitions: int
     # graph: Graph # TODO: Maybe? 
 
-    def __init__(self, unit: 'AbstractVariable', response: 'AbstractVariable', repetitions: 'AbstractVariable'): #, repetitions: int): 
+    def __init__(self, unit: 'AbstractVariable', response: 'AbstractVariable', according_to: 'AbstractVariable'): #, repetitions: int): 
         self.unit = unit
         self.response = response
-        self.repetitions = repetitions
+        self.according_to = according_to
         # self.repetitions = repetitions
         # self.repetitions = self.count_variable.cardinality
 

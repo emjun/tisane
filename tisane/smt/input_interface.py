@@ -1079,6 +1079,31 @@ class InputInterface(object):
             
         return html.Div(chart_rows)
     
+    # @param data to make categorical 
+    # @return new list with @param values that are split into 3 groups: low, medium, high 
+    # Low: (,-centered std) | Medium: [-centered std, +centered std] | High: (+centered_std, )
+    def get_categorical_data(self, data: pd.Series): 
+        mean = data.mean()
+        centered_data = data - mean 
+        centered_std = centered_data.std()
+        centered_mean = centered_data.mean()
+        assert(int(centered_mean) == 0)
+
+        # Divide into 3 categorical groups
+        cat_data = list()
+        for val in centered_data: 
+            # low
+            if val < (0 - centered_std): 
+                cat_data.append('- 1 SD')
+            # high
+            elif val > (0 + centered_std):
+                cat_data.append('+ 1 SD')
+            # medium
+            else: 
+                cat_data.append('Mean')
+
+        return cat_data
+
     def create_two_way_interaction_chart(self, interaction: Tuple[AbstractVariable, AbstractVariable], dv: AbstractVariable, data: pd.DataFrame):
         assert(len(interaction) == 2)
         (x1, x2) = interaction 
@@ -1096,23 +1121,21 @@ class InputInterface(object):
                 x = x2
                 color_group = x1
 
-                # x_groups = list()
-                # x_mean  = x.mean()
-                # x_std = x.std()
-                # x_low = 
-                # x_mean = 
-                # x_high = 
-
-                # # Make categories for color group
-                # mean
-                # + 1 SD
-                # - 1 SD
-
-                # for 
-
+                color_data_cat = self.get_categorical_data(x1_data)
+                color_group_cat_name = f'{color_group.name}_categorized'
             else: 
                 x = x1
                 color_group = x2
+            
+                color_data_cat = self.get_categorical_data(x2_data)
+                color_group_cat_name = f'{color_group.name}_categorized'
+
+            data[color_group_cat_name] = pd.Series(color_data_cat, index=data.index)
+            fig = px.scatter(data, x=x.name, y=dv.name, color=color_group_cat_name, trendline='ols')
+            fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
+    
+            return fig_elt
+
         elif isinstance(x1, Nominal) and isinstance(x2, Numeric):
             x = x2
             color_group = x1
@@ -1129,20 +1152,104 @@ class InputInterface(object):
             x = x1
             color_group = x2
         
-        fig = px.line(data, x=x.name, y=dv.name, color=color_group.name)
-
+        fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, trendline='ols')
         fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
         
         return fig_elt
 
     def create_three_way_interaction_chart(self, interaction: Tuple[AbstractVariable, AbstractVariable, AbstractVariable], dv: AbstractVariable, data: pd.DataFrame):
         assert(len(interaction) == 3)
-        x = interaction[0]
-        color_group = interaction[1]
-        facet = interaction[2]
-        fig = px.line(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name)
 
-        fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet.name}', figure=fig)        
+        (x1, x2, x3) = interaction 
+
+        categorical_count = 0
+        categorical_variables = list()
+
+        if isinstance(x1, Nominal) or isinstance(x1, Ordinal): 
+            categorical_count += 1
+            categorical_variables.append(x1)
+        if isinstance(x2, Nominal) or isinstance(x2, Ordinal): 
+            categorical_count += 1
+            categorical_variables.append(x2)
+        if isinstance(x3, Nominal) or isinstance(x3, Ordinal): 
+            categorical_count += 1
+            categorical_variables.append(x3)
+
+        # Are there at least two variables that are categorical?
+        if categorical_count == 0: 
+            # Order variables based on cardinality 
+            cardinality = list()
+            cardinality_to_variable = dict() 
+            for i in interaction: 
+                i_card = self.design.get_data(i).nunique()
+                cardinality.append(i_card)
+                cardinality_to_variable[i_card] = i
+                
+            cardinality.sort()
+            x = cardinality_to_variable[cardinality[2]]
+            
+            facet_var = cardinality_to_variable[cardinality[1]]
+            facet_data = self.design.get_data(facet_var)
+            facet_data_cat = self.get_categorical_data(facet_data)
+            facet_data_cat_name = f'{facet_var.name}_categorized'
+            data[facet_data_cat_name] = pd.Series(facet_data_cat, index=data.index)
+
+            color_group_var = cardinality_to_variable[cardinality[0]]
+            color_group_data = self.design.get_data(color_group_var)
+            color_group_data_cat = self.get_categorical_data(color_group_data)
+            color_group_data_cat_name = f'{color_group_var.name}_categorized'
+            data[color_group_data_cat_name] = pd.Series(color_group_data_cat, index=data.index)
+
+            fig = px.scatter(data, x=x.name, y=dv.name, color=color_group_data_cat_name, facet_col=facet_data_cat_name, trendline='ols')
+            fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group_data_cat_name}_{facet_data_cat_name}', figure=fig)        
+
+        elif categorical_count == 1: 
+            cat_var = categorical_variables[0]
+            lower_cardinality_var = None 
+            higher_cardinality_var = None
+
+            for i in interaction: 
+                if i not in categorical_variables: 
+                    i_data = self.design.get_data(i)
+                    if higher_cardinality_var is None: 
+                        higher_cardinality_var = i
+                    else: 
+                        if i_data.nunique() > self.design.get_data(higher_cardinality_var).nunique(): 
+                            lower_cardinality_var = higher_cardinality_var 
+                            higher_cardinality_var = i
+                        else: 
+                            lower_cardinality_var = i
+
+            lower_data = self.design.get_data(lower_cardinality_var)
+            lower_data_cat = self.get_categorical_data(lower_data)
+            lower_data_cat_name = f'{lower_cardinality_var.name}_categorized'
+            data[lower_data_cat_name] = pd.Series(lower_data_cat, index=data.index)
+
+            x = higher_cardinality_var 
+            color_group = cat_var
+            facet_name = lower_data_cat_name
+            fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet_name, trendline='ols')
+            fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet_name}', figure=fig)        
+            
+        elif categorical_count == 2:
+            for i in interaction: 
+                if i not in categorical_variables: 
+                    x = i
+                    break 
+            color_group = categorical_variables[0]
+            facet = categorical_variables[1]
+            fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name, trendline='ols')
+            fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet.name}', figure=fig)        
+
+        elif categorical_count == 3: 
+            x = interaction[0]
+            color_group = interaction[1]
+            facet = interaction[2]
+            fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name, trendline='ols')
+            fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet.name}', figure=fig)        
+    
+
+        # fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet.name}', figure=fig)        
         
         return fig_elt
 
