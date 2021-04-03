@@ -755,14 +755,21 @@ class InputInterface(object):
         ##### Collect all elements
         # Create main effects title 
         main_title = html.Div([
-            html.H3('Main effects'),
-            dbc.Alert(
-                'TODO: effects are variables that are ', className="mb-0",
-                id="main_alert",
-                dismissable=True,
-                fade=True, 
-                is_open=True
-            )
+            dcc.Markdown('''
+            ### Independent Variables
+            #### Do you want to want to add or remove independent variables?
+            *Based on the relationships you specified earlier, the following variables directly impact the dependent variable.*
+            ''')
+            
+            # html.H3('Independent variables'),
+            # html.H6('You already specified a few independent variables. Do you want to add any more?'),
+            # dbc.Alert(
+            #     '', className="mb-0",
+            #     id="main_alert",
+            #     dismissable=True,
+            #     fade=True, 
+            #     is_open=True
+            # )
         ])
         
         # Get form groups for each set of main effects options
@@ -799,14 +806,20 @@ class InputInterface(object):
         ##### Collect all elements
         # Create interaction effects title 
         interaction_effects_title = html.Div([
-            html.H3('Interaction effects'),
-            dbc.Alert(
-                "TODO: Explanation of interaction effects", className="mb-0",
-                id="interaction_alert",
-                dismissable=True,
-                fade=True, 
-                is_open=True
-            )
+            dcc.Markdown('''
+            #### Are there any interactions between variables that you are interested in?
+            *Interactions between variables mean that one variable's effect on the dependent variable impacts, or moderates, how another variable affects the dependent variable.*
+            ''')
+            
+            # html.H3('Interaction effects'),
+            
+            # dbc.Alert(
+            #     "TODO: Explanation of interaction effects", className="mb-0",
+            #     id="interaction_alert",
+            #     dismissable=True,
+            #     fade=True, 
+            #     is_open=True
+            # )
         ])
         
         # Get accordion for the interaction effects (two-way, n-way)
@@ -854,21 +867,18 @@ class InputInterface(object):
         ##### Collect all elements
         # Create random effects title 
         random_effects_title = html.Div([
-            html.H3('Random effects'),
-            dbc.Alert(
-                "TODO: Explanation of random effects", className="mb-0",
-                id="random_alert",
-                dismissable=True,
-                fade=True, 
-                is_open=True
-            )
+            dcc.Markdown('''
+            #### There are clusters within your data.
+            *Based on the relationships you specified in your program, Tisane has identified the following random effects to account for in order to maximize your statistical power.*
+            ''')
+            
         ])
 
         # Create description 
-        random_descrip = dcc.Markdown('''
-        ##### Based on the relationships you specified in your program, Tisane has identified the following random effects.
-        *These constitute the maximal effects sturcture for your model.*
-        ''')
+        # random_descrip = dcc.Markdown('''
+        # ##### Based on the relationships you specified in your program, Tisane has identified the following random effects.
+        # *These constitute the maximal effects sturcture for your model.*
+        # ''')
     
         # Create interaction effects switch
         random_switch = self.create_switch(switch_id='random_effects_switch', form_group_id='random_effects_group')
@@ -880,7 +890,7 @@ class InputInterface(object):
         # Create div 
         random_effects_div = html.Div([
             random_effects_title, 
-            random_descrip, 
+            # random_descrip, 
             table,
             random_switch
         ])
@@ -893,14 +903,19 @@ class InputInterface(object):
         ##### Collect all elements
         # Create family and link title 
         family_link_title = html.Div([
-            html.H3('Family and Link: Data distributions'),
-            dbc.Alert(
-                "TODO: Explanation of family and link functions", className="mb-0",
-                id='family_link_alert',
-                dismissable=True,
-                fade=True, 
-                is_open=True
-            )
+            dcc.Markdown('''
+            ### Data distributions: Family and Link functions.
+            #### Which distribution best matches your data?
+            ''')
+            
+            # html.H3('Family and Link: Data distributions'),
+            # dbc.Alert(
+            #     "TODO: Explanation of family and link functions", className="mb-0",
+            #     id='family_link_alert',
+            #     dismissable=True,
+            #     fade=True, 
+            #     is_open=True
+            # )
         ])
         
         # Get form groups for family link div
@@ -1041,10 +1056,25 @@ class InputInterface(object):
         elif isinstance(x1, Numeric) and isinstance(x2, Numeric): 
             x1_data = self.design.get_data(x1)
             x2_data = self.design.get_data(x2)
-                        
+
             if x1_data.nunique() <= x2_data.nunique(): 
                 x = x2
                 color_group = x1
+
+                # x_groups = list()
+                # x_mean  = x.mean()
+                # x_std = x.std()
+                # x_low = 
+                # x_mean = 
+                # x_high = 
+
+                # # Make categories for color group
+                # mean
+                # + 1 SD
+                # - 1 SD
+
+                # for 
+
             else: 
                 x = x1
                 color_group = x2
