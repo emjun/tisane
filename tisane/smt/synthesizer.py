@@ -893,7 +893,26 @@ class Synthesizer(object):
 
             elif key == 'interaction_effects':
                 for f in facts:
-                    raise NotImplementedError
+                    assert('Store(K(Object, False),' in f)
+
+                    var_names = f.split('Store(K(Object, False),')[1].split('True)')
+                    ixn = list()
+                    # Get var names
+                    cleaned_var_names = list()
+                    for v in var_names:
+                        clean = v.strip()
+                        clean = clean.split(',')
+
+                        for c in clean: 
+                            if len(c) > 0: 
+                                cleaned_var_names.append(c.strip())
+                    
+                    # Get variables 
+                    for n in cleaned_var_names: 
+                        v = get_variable(design, n)
+                        ixn.append(v)
+                    interaction_effects.append(tuple(ixn))
+    
 
             elif key == 'random_effects':
                 for f in facts:
