@@ -317,12 +317,11 @@ class Synthesizer(object):
             if e not in causal_edges:
                 (n0, n1, edge_data) = e
                 edge_type = edge_data['edge_type']
-                assert(edge_type == 'associate')
+                if edge_type == 'associate' and n1 == dv.name:
+                    n0_var = gr.get_variable(n0)
+                    n1_var = gr.get_variable(n1)
 
-                n0_var = gr.get_variable(n0)
-                n1_var = gr.get_variable(n1)
-
-                reduced_gr._add_edge(n0_var, n1_var, edge_type)
+                    reduced_gr._add_edge(n0_var, n1_var, edge_type)
 
         return reduced_gr
         
@@ -378,11 +377,11 @@ class Synthesizer(object):
 
         return fixed_candidates
 
-    def _generate_fixed_candidates_from_graph(self, graph: Graph, dv: AbstractVariable) -> Dict:
+    def _generate_fixed_candidates_from_graph(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> Dict:
         fixed_candidates = dict()
 
         ### Add candidates that are directly part of design
-        fixed_candidates['input'] = order_variables(design.ivs)
+        fixed_candidates['input'] = order_variables(ivs)
 
         ### Find candidates based on predecessors to the @param dv
         direct_pred_candidates = list()
@@ -409,7 +408,7 @@ class Synthesizer(object):
         """
         
         # Prep graph to take transitive closure
-        reduced_gr = self.reduce_graph(design)
+        reduced_gr = self.reduce_graph(graph, dv)
         tc = nx.transitive_closure_dag(reduced_gr._graph)
         transitive_pred_candidates = list()
         # Get the predecessors to the DV 
@@ -432,12 +431,12 @@ class Synthesizer(object):
        
         return fixed_candidates
 
-    def generate_main_effects_from_graph(self, graph: Graph, dv: AbstractVariable) -> Dict:
+    def generate_main_effects_from_graph(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> Dict:
         # Only the conceptual relationshpis are considered for deriving candidate fixed/main effects
         sub_gr = graph.get_conceptual_subgraph()
         assert(isinstance(sub_gr, Graph))
 
-        main_candidates = self._generate_fixed_candidates_from_graph(sub_gr, dv)
+        main_candidates = self._generate_fixed_candidates_from_graph(sub_gr, ivs, dv)
        
         return main_candidates
 
