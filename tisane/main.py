@@ -114,24 +114,24 @@ def infer_statistical_model_from_design(design: Design):
     synth = Synthesizer()
 
     ### Generate possible effects, family, and link based on input design (graph)
-    # gr = synth.transform_to_has_edges(design.graph)
-    # ivs = design.ivs
-    # dv = design.dv
-    # main_effects_options = synth.generate_main_effects_from_graph(gr, ivs, dv)
-    # interaction_effects_options = synth.generate_interaction_effects_from_graph(gr, ivs, dv)
-    # random_effects_options = synth.generate_random_effects_from_graph(gr, ivs, dv)
-    # # May want to load a dictionary of family to link
-    # family_link_options = synth.generate_family_link(design=design)
-    # default_family_link = synth.generate_default_family_link(design=design)
-    # # family_options = synth.generate_family_distributions(design=design)
-    # # link_options = synth.generate_link_functions(design=design)
+    gr = synth.transform_to_has_edges(design.graph)
+    ivs = design.ivs
+    dv = design.dv
+    main_effects_options = synth.generate_main_effects_from_graph(gr, ivs, dv)
+    interaction_effects_options = synth.generate_interaction_effects_from_graph(gr, ivs, dv)
+    random_effects_options = synth.generate_random_effects_from_graph(gr, ivs, dv)
+    # May want to load a dictionary of family to link
+    family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
+    # family_options = synth.generate_family_distributions(design=design)
+    # link_options = synth.generate_link_functions(design=design)
 
-    # # Change to:
-    # # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
-    # # spec is SM or some json dump -> SM -> code generated
+    # Change to:
+    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
+    # spec is SM or some json dump -> SM -> code generated
     
-    # input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
-    # input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
     
     # Read JSON file 
     sm = None
