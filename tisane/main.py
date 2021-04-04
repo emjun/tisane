@@ -114,6 +114,7 @@ def infer_statistical_model_from_design(design: Design):
     synth = Synthesizer()
 
     ### Generate possible effects, family, and link based on input design (graph)
+    gr = synth.transform_to_has_edges(design.graph)
     main_effects_options = synth.generate_main_effects(design=design)
     interaction_effects_options = synth.generate_interaction_effects(design=design)
     random_effects_options = synth.generate_random_effects(design=design)

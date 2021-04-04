@@ -316,6 +316,38 @@ class SynthesizerTest(unittest.TestCase):
     #     generate_code(sm)
     #     import pdb; pdb.set_trace()
 
+
+    def test_generate_fixed_candidates_cycle(self): 
+        dv = ts.Numeric('DV')
+        x1 = ts.Nominal('x1', cardinality=2)
+        x2 = ts.Nominal('x2', cardinality=2)
+        x3 = ts.Numeric('x3')
+
+        x1.cause(dv)
+        x2.associates_with(dv)
+        x3.associates_with(x2)
+        # x3.cause(x1)
+
+        design = ts.Design(
+            dv=dv, 
+            ivs=[x1, x2, x3]
+        )
+
+        synth = Synthesizer() 
+        
+        candidates = synth._generate_fixed_candidates(design)
+
+        error = False
+        try: 
+            candidates = synth._generate_fixed_candidates(design)
+        
+        except: 
+            error = True 
+        self.assertTrue(error)
+        import pdb; pdb.set_trace()
+            
+
+
     def test_transform_treatment_to_has(self): 
         acc = ts.Numeric('accuracy')
         expl = ts.Nominal('explanation type')

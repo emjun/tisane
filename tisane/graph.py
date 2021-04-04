@@ -3,6 +3,7 @@ from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatme
 import networkx as nx
 import pydot
 from typing import List, Union, Tuple
+import copy
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -303,9 +304,24 @@ class Graph(object):
         if not self.has_edge(start=unit, end=response, edge_type='repeat'): 
             self._add_edge(start=unit, end=response, edge_type='repeat', edge_obj=repeat_obj)
 
-    # Generate Z3 consts that correspond to nodes in this graph 
-    def generate_consts(self): 
-        pass
+    # # Generate Z3 consts that correspond to nodes in this graph 
+    # def generate_consts(self): 
+    #     pass
+
+    # @returns sub-graph containing only conceptual edges
+    def get_conceptual_subgraph(self):
+        gr = copy.deepcopy(self)
+
+        edges = self.get_edges()
+        for (n0, n1, edge_data) in edges:
+            edge_type = edge_data['edge_type']
+            if edge_type == 'cause' or edge_type == 'associate':
+                pass
+            else: 
+                gr._graph.remove_edge(n0, n1)
+
+        return gr
+
 
     
-from tisane.smt.query_manager import QM
+# from tisane.smt.query_manager import QM

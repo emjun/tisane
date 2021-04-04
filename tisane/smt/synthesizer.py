@@ -352,11 +352,22 @@ class Synthesizer(object):
         fixed_candidates['derived_transitive'] = order_variables(transitive_pred_candidates)
 
         return fixed_candidates
+
+    def get_conceptual_sub_graph(self, graph: Graph):
+        pass 
     
     def generate_main_effects(self, design: Design) -> Dict:
         fixed_candidates = self._generate_fixed_candidates(design)
        
         return fixed_candidates
+
+    def generate_main_effects_from_graph(self, graph:Graph) -> Dict:
+        # Only the conceptual relationshpis are considered for deriving candidate fixed/main effects
+        sub_gr = graph.get_conceptual_subgraph()
+
+        main_candidates = self._generate_fixed_candidates_from_graph(sub_gr)
+       
+        return main_candidates
 
     def generate_fixed_effects_candidates(self, design: Design) -> Dict:
         fixed_candidates = self._generate_fixed_candidates(design)
