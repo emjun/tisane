@@ -140,13 +140,13 @@ def infer_statistical_model_from_design(design: Design):
     
     # Construct StatisticalModel from JSON spec
     model_json = f.read()
-    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset)
-    # sm = StatisticalModel().from_json(f.read()) 
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset.dataset)
+    
 
     # Generate code from SM
     script = generate_code(sm)
     
-    return scipt 
+    return script 
 
 # @returns statistical model that reflects the study design 
 def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]): 

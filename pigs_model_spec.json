@@ -1,0 +1,1 @@
+"{\"main_effects\": [\"FixedEffect(Time, Weight)\"], \"interaction_effects\": [], \"random_effects\": [\"CorrelatedRandomSlopeInterceptEffects(Time, Pig)\"], \"family\": \"GaussianFamily(Weight)\", \"link\": \"LogTransform(Weight)\"}"

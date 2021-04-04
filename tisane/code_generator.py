@@ -11,7 +11,6 @@ import statsmodels.formula.api as smf
 
 
 def generate_code(statistical_model: StatisticalModel, library: str='STATSMODELS', **kwargs): 
-    import pdb; pdb.set_trace()
     if library.upper() == 'STATSMODELS': 
         return generate_statsmodels_code(statistical_model=statistical_model, **kwargs)
 
@@ -185,20 +184,19 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
     re_formula = 're_formula = "1'
     exactly_one_group = False
     
-    import pdb; pdb.set_trace()
     for re in statistical_model.random_ivs: 
         if isinstance(re, RandomIntercept): 
             if vc_started:
                 vc += ' , ' 
-            else: 
-                vc_started = True
-            random_intercept = f'"{re.groups.name}" : ' + f'"0 + C({re.groups.name})"'
-            vc += random_intercept
+            vc += f'"{re.groups.name}" : ' + f'"0 + C({re.groups.name})"'
+            vc_started = True
             
         elif isinstance(re, CorrelatedRandomSlopeAndIntercept):
             group = re.groups
-            vc += ' , ' + f'"0 + C({group.name})"'
-            groups += f'{group.name}'
+            if vc_started:
+                vc += ' , ' 
+            vc += f'"{re.groups.name}" : ' + f'"0 + C({re.groups.name})"'
+            groups += f'"{group.name}"'
             exactly_one_group = not exactly_one_group
             
             iv = re.iv 
@@ -206,8 +204,10 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
             re_formula += ' + ' + f'{iv.name}"'
         elif isinstance(re, UncorrelatedRandomSlopeAndIntercept): 
             group = re.groups
-            vc += ' , ' + f'"0 + C({group.name})"'
-            groups += f'{group.name}'
+            if vc_started:
+                vc += ' , ' 
+            vc += f'"{re.groups.name}" : ' + f'"0 + C({re.groups.name})"'
+            groups += f'"{group.name}"'
             exactly_one_group = not exactly_one_group
             
             iv = re.iv 
@@ -248,6 +248,10 @@ def generate_statsmodels_model_code(statistical_model: StatisticalModel, **kwarg
 
 def generate_dataframe_code(statistical_model: StatisticalModel): 
     code_snippet = str()
+
+    # Generate no code if there is no data
+    if statistical_model.dataset.dataset is None: 
+        return code_snippet
 
     data_code = list()
     vars_in_data = list() # Keep track of which variables we have added to the dataframe

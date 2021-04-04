@@ -640,7 +640,6 @@ class Synthesizer(object):
                     random_effects.add((rs, RandomSlope(iv=ixn, groups=i)))
 
         # Return random effects
-        import pdb; pdb.set_trace()
         return random_effects
 
     def get_valid_levels(self, graph: Graph, dv: AbstractVariable): 
@@ -687,7 +686,6 @@ class Synthesizer(object):
         for i in levels:
             for (key, fixed) in fixed_candidates.items(): 
                 for f in fixed: 
-                    # import pdb; pdb.set_trace()
                     if graph.has_edge(start=i, end=f, edge_type='has'): 
                         (start_name, end_name, edge_data) = graph.get_edge(start=i, end=f, edge_type='has')
                         # Is this a between subjects edge?
@@ -729,10 +727,10 @@ class Synthesizer(object):
 
         return random_effects
 
-    def generate_random_effects_for_interaction_effects(self, graph: Graph, iv: List[AbstractVariable], dv: AbstractVariable): 
+    def generate_random_effects_for_interaction_effects(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable): 
         random_effects = set() 
 
-        interaction_candidates = self.generate_interaction_effects_from_graph(design, ivs, dv) # dict
+        interaction_candidates = self.generate_interaction_effects_from_graph(graph, ivs, dv) # dict
 
         levels = self.get_valid_levels(graph, dv)
 
@@ -781,7 +779,6 @@ class Synthesizer(object):
             random_effects.add(e)
         
         # Return random effects
-        import pdb; pdb.set_trace()
         return random_effects
 
     def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 
@@ -886,7 +883,7 @@ class Synthesizer(object):
                     iv_name = var_names[0].strip()
                     dv_name = var_names[1].split(')')[0].strip()
                     if design.dv.name != dv_name: 
-                        import pdb; pdb.set_trace()
+                        raise ValueError(f"Fact does not have DV as recipient!{f}")
                     assert(design.dv.name == dv_name)
 
                     v = get_variable(design, iv_name)
@@ -915,7 +912,24 @@ class Synthesizer(object):
                         v = get_variable(design, var_name)
                         random_effects.append(RandomIntercept(v))
 
-                    # TODO: DEAL WITH CORRELATION!!! in Input Interface, too
+                    elif 'CorrelatedRandomSlopeInterceptEffects' in f: 
+                        var_names = f.split('CorrelatedRandomSlopeInterceptEffects(')[1].split(',')
+                        iv_name = var_names[0].strip()
+                        group_name = var_names[1].split(')')[0].strip()
+
+                        iv = get_variable(design, iv_name)
+                        group = get_variable(design, group_name)
+                        random_effects.append(CorrelatedRandomSlopeAndIntercept(iv=iv, groups=group))
+                    
+                    elif 'UncorrelatedRandomSlopeInterceptEffects(' in f: 
+                        var_names = f.split('UncorrelatedRandomSlopeInterceptEffects(')[1].split(',')
+                        iv_name = var_names[0].strip()
+                        group_name = var_names[1].split(')')[0].strip()
+
+                        iv = get_variable(design, iv_name)
+                        group = get_variable(design, group_name)
+                        random_effects.append(UncorrelatedRandomSlopeAndIntercept(iv=iv, groups=group))
+
             elif key == 'family': 
                 assert(isinstance(facts, str))
                 family = facts.split('Family')[0]

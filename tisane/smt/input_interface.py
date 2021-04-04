@@ -670,8 +670,14 @@ class InputInterface(object):
                 re_facts = list() 
                 random_effects_values = self.get_random_effects_values_from_table(random_effects)
                 for re in random_effects_values: 
-                    fact = __str_to_z3__[re]
-                    re_facts.append(str(fact))
+                    # Is this a joint correlated/uncorrelated example? 
+                    if '_OR_' in re: 
+                        # Look at the radio buttons 
+                        pass
+
+                    else: 
+                        fact = __str_to_z3__[re]
+                        re_facts.append(str(fact))
                 model_spec['random_effects'] = re_facts
 
                 if family is not None: 
@@ -1257,7 +1263,7 @@ class InputInterface(object):
         global __str_to_z3__
 
         rows = list()
-        import pdb; pdb.set_trace()
+        
         # There are no random effects
         if random_effects is None:
             table_body = [html.Tbody(children=rows)]
@@ -1281,6 +1287,7 @@ class InputInterface(object):
 
                 # Add random effect fact to global map
                 __str_to_z3__[str(fact)] = fact
+                
 
                 name = html.P(var_name)
                 badges = list()
@@ -1310,7 +1317,7 @@ class InputInterface(object):
                     # Add random effect fact to global map
                     __str_to_z3__[str(fact)] = fact
                     
-                    import pdb; pdb.set_trace()
+                    
                     assert(isinstance(re, CorrelatedRandomSlopeAndIntercept) or isinstance(re, UncorrelatedRandomSlopeAndIntercept))
                     if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
                         facts['Correlated'] = fact
@@ -1441,7 +1448,7 @@ class InputInterface(object):
         re_values = list() 
 
         table_body = random_effects_table[0]
-        # import pdb; pdb.set_trace()
+        
         table_rows = table_body['props']['children']
 
         for row in table_rows: 
@@ -1457,11 +1464,13 @@ class InputInterface(object):
                     fact = badges['props']['id']
                     re_values.append(fact)
                 elif len(content) == 3:
-                    badges = [content[1], content[2]]
-                    for b in badges:
-                        # Get id, which contains fact for random effect
-                        fact = b['props']['id']
-                        re_values.append(fact)
+                    badges = [content[1], content[2]] # Random Slope and Random Intercept
+                    # Get radio buttons
+                    radio_wrapper = row['props']['children'][1]
+                    radio_wrapper = radio_wrapper['props']['children']
+                    radio_wrapper = radio_wrapper['props']['children']
+                    radio_val = radio_wrapper[0]['props']['value']
+                    re_values.append(radio_val)
         
         return re_values 
 
