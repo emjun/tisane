@@ -335,18 +335,13 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer() 
         
-        candidates = synth._generate_fixed_candidates(design)
-
         error = False
         try: 
             candidates = synth._generate_fixed_candidates(design)
         
         except: 
             error = True 
-        self.assertTrue(error)
-        import pdb; pdb.set_trace()
-            
-
+        self.assertTrue(error)            
 
     def test_transform_treatment_to_has(self): 
         acc = ts.Numeric('accuracy')
@@ -515,6 +510,25 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue(updated_gr.has_edge(time, weight, 'cause'))
         self.assertTrue(updated_gr.has_edge(time, weight, 'associate')) 
         self.assertTrue(updated_gr.has_edge(weight, time, 'associate')) 
+
+    def test_reduce_graph(self):
+        v1 = ts.Numeric('V1')
+        v2 = ts.Numeric('V2')
+        v3 = ts.Numeric('V3')
+
+        gr = ts.Graph()
+        gr.cause(v1, v2)
+        gr.associate(v2, v3)
+
+        v1.has(v2)
+        has_obj = v1.relationships[0]
+        self.assertIsInstance(has_obj, Has)
+        gr.has(v1, v2, has_obj, 1)
+
+        synth = Synthesizer()
+        sub_gr = gr.get_conceptual_subgraph()
+        reduced_gr = synth.reduce_graph(sub_gr, v2)
+        self.assertEqual(len(reduced_gr.get_edges()), 2)
 
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     # @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')

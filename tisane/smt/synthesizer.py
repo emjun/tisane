@@ -293,16 +293,39 @@ class Synthesizer(object):
     
     # Reduce the graph associated with @param Design 
     # Remove cycles in graph based on the DV
-    def reduce_graph(self, design: Design):
-        gr_copy = deepcopy(design.graph._graph)
-        dv_name = design.dv.name
+    def reduce_graph_old(self, graph: Graph, dv: AbstractVariable):
+        gr_copy = deepcopy(graph._graph)
+        dv_name = dv.name
 
         # Iterate over outgoing edges from design.dv
-        for n in design.graph._graph.neighbors(dv_name):
+        for n in graph._graph.neighbors(dv_name):
             gr_copy.remove_edge(dv_name, n)
         
         return gr_copy
 
+    def reduce_graph(self, graph: Graph, dv: AbstractVariable):
+        # Remove outgoing edges from DV
+        gr = graph.remove_outgoing_edges(dv)
+        # Get only causal subgraph of this gr
+        reduced_gr = gr.get_causal_subgraph()
+
+        # Add back in associations to DV
+        gr_edges = gr.get_edges()
+        causal_edges = reduced_gr.get_edges()
+
+        for e in gr_edges:
+            if e not in causal_edges:
+                (n0, n1, edge_data) = e
+                edge_type = edge_data['edge_type']
+                assert(edge_type == 'associate')
+
+                n0_var = gr.get_variable(n0)
+                n1_var = gr.get_variable(n1)
+
+                reduced_gr._add_edge(n0_var, n1_var, edge_type)
+
+        return reduced_gr
+        
     def _generate_fixed_candidates(self, design: Design) -> Dict:
         fixed_candidates = dict()
         # fixed_candidates = list() 
@@ -335,7 +358,7 @@ class Synthesizer(object):
         """
         # Get transitive closure of graph with reduced graph (remove cycles)
         gr = design.graph._graph
-        reduced_gr = self.reduce_graph(design)
+        reduced_gr = self.reduce_graph_old(design.graph, design.dv)
         tc = nx.transitive_closure_dag(reduced_gr)
         transitive_pred_candidates = list()
         # Get the predecessors to the DV 
@@ -350,6 +373,8 @@ class Synthesizer(object):
                 if p_var not in direct_pred_candidates:
                     transitive_pred_candidates.append(p_var)
         fixed_candidates['derived_transitive'] = order_variables(transitive_pred_candidates)
+
+        return fixed_candidates
 
         return fixed_candidates
 
@@ -382,12 +407,10 @@ class Synthesizer(object):
         (1) X1 -> X2 -> Y => X1, X2 are fixed candidates
         (2) X1 -> Y, X2 -> Y, X3 -> X1, X3 -> X2 => X1, X2, X3 are fixed candidates
         """
-        # Remove cycles
-        causal_sub = graph.get_causal_subgraph()
-        # Get transitive closure of graph with reduced graph (remove cycles)
-        gr = graph._graph
+        
+        # Prep graph to take transitive closure
         reduced_gr = self.reduce_graph(design)
-        tc = nx.transitive_closure_dag(reduced_gr)
+        tc = nx.transitive_closure_dag(reduced_gr._graph)
         transitive_pred_candidates = list()
         # Get the predecessors to the DV 
         dv_node = graph.get_node(dv) # Returns tuple: (name, data{variable, is_identifier})

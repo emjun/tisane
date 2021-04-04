@@ -335,7 +335,18 @@ class Graph(object):
                 gr._graph.remove_edge(n0, n1)
 
         return gr
+    
+    # Remove outgoing associative relationships from the DV
+    # Remove outgoing edges from @param variable
+    def remove_outgoing_edges(self, variable: AbstractVariable):
+        assert(self.has_variable(variable))
+        gr = copy.deepcopy(self)
 
+        # Iterate over outgoing edges from dv
+        for n in self._graph.neighbors(variable.name):
+            gr._graph.remove_edge(variable.name, n)
+        
+        return gr
 
     
 # from tisane.smt.query_manager import QM
