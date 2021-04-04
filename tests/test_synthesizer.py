@@ -211,7 +211,7 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        ixn_candidates = synth.generate_interaction_effects(design)
+        ixn_candidates = synth.generate_interaction_effects_from_graph(design.graph, design.ivs, design.dv)
         two_way = ixn_candidates['two-way']
         n_way = ixn_candidates['n-way']
         self.assertIsInstance(two_way, list)
@@ -243,7 +243,7 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        ixn_candidates = synth.generate_interaction_effects(design)
+        ixn_candidates = synth.generate_interaction_effects_from_graph(design.graph, design.ivs, design.dv)
         two_way = ixn_candidates['two-way']
         n_way = ixn_candidates['n-way']
         self.assertIsInstance(two_way, list)

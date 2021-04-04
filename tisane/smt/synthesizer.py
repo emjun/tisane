@@ -459,90 +459,108 @@ class Synthesizer(object):
 
         return fixed_candidates
     
-    def generate_interaction_effects(self, design: Design) -> Dict: 
-        fixed_candidates = self._generate_fixed_candidates(design)
+    # def generate_interaction_effects(self, design: Design) -> Dict: 
+    #     fixed_candidates = self._generate_fixed_candidates(design)
         
-        interaction_facts = dict() 
-        dv = design.dv
+    #     interaction_facts = dict() 
+    #     dv = design.dv
 
-        # Generate possible interaction candidates from fixed_candidates
-        interaction_candidates = [c for c in powerset(fixed_candidates) if len(c)>=2]
+    #     # Generate possible interaction candidates from fixed_candidates
+    #     interaction_candidates = [c for c in powerset(fixed_candidates) if len(c)>=2]
         
-        # Get facts
-        interaction_seq = None 
-        for ixn in interaction_candidates: 
-            # Build interaction sequence
-            # interaction = EmptySet(Object)
-            # for v in ixn:   
-            #     interaction = SetAdd(interaction, v.const)
+    #     # Get facts
+    #     interaction_seq = None 
+    #     for ixn in interaction_candidates: 
+    #         # Build interaction sequence
+    #         # interaction = EmptySet(Object)
+    #         # for v in ixn:   
+    #         #     interaction = SetAdd(interaction, v.const)
 
-            # Two-way interaction
-            if len(ixn) == 2: 
-                if 'two-way' not in interaction_facts.keys(): 
-                   interaction_facts['two-way'] = list()
+    #         # Two-way interaction
+    #         if len(ixn) == 2: 
+    #             if 'two-way' not in interaction_facts.keys(): 
+    #                interaction_facts['two-way'] = list()
                 
-                interaction_dict = dict()
-                interaction_name = list()
-                interaction = EmptySet(Object)
-                for v in ixn: 
-                    interaction_name.append(v.name)
-                    interaction = SetAdd(interaction, v.const)
-                interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
+    #             interaction_dict = dict()
+    #             interaction_name = list()
+    #             interaction = EmptySet(Object)
+    #             for v in ixn: 
+    #                 interaction_name.append(v.name)
+    #                 interaction = SetAdd(interaction, v.const)
+    #             interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
                 
-                interaction_facts['two-way'] = interaction_dict
+    #             interaction_facts['two-way'] = interaction_dict
             
-            # Three-way interaction
-            # elif len(ixn) == 3: 
-            #     if 'three-way' not in interaction_facts.keys(): 
-            #        interaction_facts['three-way'] = list()
+    #         # Three-way interaction
+    #         # elif len(ixn) == 3: 
+    #         #     if 'three-way' not in interaction_facts.keys(): 
+    #         #        interaction_facts['three-way'] = list()
                 
-            #     interaction_dict = dict()
-            #     interaction_name = list()
-            #     interaction = EmptySet(Object)
-            #     for v in ixn: 
-            #         interaction_name.append(v.name)
-            #         interaction = SetAdd(interaction, v.const)
-            #     interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
+    #         #     interaction_dict = dict()
+    #         #     interaction_name = list()
+    #         #     interaction = EmptySet(Object)
+    #         #     for v in ixn: 
+    #         #         interaction_name.append(v.name)
+    #         #         interaction = SetAdd(interaction, v.const)
+    #         #     interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
                 
-            #     interaction_facts['three-way'] = interaction_dict
-            else: 
-                if 'n-way' not in interaction_facts.keys(): 
-                   interaction_facts['n-way'] = list()
+    #         #     interaction_facts['three-way'] = interaction_dict
+    #         else: 
+    #             if 'n-way' not in interaction_facts.keys(): 
+    #                interaction_facts['n-way'] = list()
                 
-                interaction_dict = dict()
-                interaction_name = list()
-                interaction = EmptySet(Object)
-                for v in ixn: 
-                    interaction_name.append(v.name)
-                    interaction = SetAdd(interaction, v.const)
-                interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
+    #             interaction_dict = dict()
+    #             interaction_name = list()
+    #             interaction = EmptySet(Object)
+    #             for v in ixn: 
+    #                 interaction_name.append(v.name)
+    #                 interaction = SetAdd(interaction, v.const)
+    #             interaction_dict['*'.join(interaction_name)] = Interaction(interaction)
                 
-                interaction_facts['n-way'] = interaction_dict
+    #             interaction_facts['n-way'] = interaction_dict
 
-            # interaction_facts.append(Interaction(interaction))
-            # interaction_facts.append(NoInteraction(interaction))
+    #         # interaction_facts.append(Interaction(interaction))
+    #         # interaction_facts.append(NoInteraction(interaction))
             
-            # interaction_seq = None 
+    #         # interaction_seq = None 
         
-        # if 'three-way' not in interaction_facts.keys(): 
-        #     interaction_facts['three-way'] = None
-        if 'n-way' not in interaction_facts.keys(): 
-            interaction_facts['n-way'] = None
-        return interaction_facts
+    #     # if 'three-way' not in interaction_facts.keys(): 
+    #     #     interaction_facts['three-way'] = None
+    #     if 'n-way' not in interaction_facts.keys(): 
+    #         interaction_facts['n-way'] = None
+    #     return interaction_facts
 
-        # # Use rules from above
+    #     # # Use rules from above
 
-        # # Solve constraints + rules
-        # (res_model_interaction, res_facts_interaction) = self.solve(facts=interaction_facts, rules=rules_dict)
+    #     # # Solve constraints + rules
+    #     # (res_model_interaction, res_facts_interaction) = self.solve(facts=interaction_facts, rules=rules_dict)
 
-        # # Update result StatisticalModel based on user selection 
-        # sm = self.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
+    #     # # Update result StatisticalModel based on user selection 
+    #     # sm = self.postprocess_to_statistical_model(model=res_model_interaction, facts=res_facts_interaction, graph=design.graph, statistical_model=sm)
+
 
     def generate_interaction_effects(self, design: Design):
         interaction_facts = dict() 
         dv = design.dv
 
         fixed_candidates = self._generate_fixed_candidates(design) # Returns a dict
+        # Collapse fixed_candidates dict into list
+        fixed_candidates_list = list()
+        for (key, value) in fixed_candidates.items():
+            fixed_candidates_list += value
+
+        # Generate possible interaction candidates from fixed_candidates
+        interaction_candidates = [c for c in powerset(fixed_candidates_list) if len(c)>=2]
+        interaction_facts['two-way'] = [c for c in interaction_candidates if len(c) == 2]
+        interaction_facts['n-way'] = [c for c in interaction_candidates if len(c) > 2]
+        
+        return interaction_facts
+
+    def generate_interaction_effects_from_graph(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable): 
+        interaction_facts = dict() 
+        graph_dv = graph.get_variable(dv.name) # Because graph may be a transformed copy of the original graph dv belongs to 
+
+        fixed_candidates = self._generate_fixed_candidates_from_graph(graph, ivs, graph_dv) # Returns a dict
         # Collapse fixed_candidates dict into list
         fixed_candidates_list = list()
         for (key, value) in fixed_candidates.items():
