@@ -255,6 +255,9 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue((v1, v3) in two_way)
         self.assertTrue((v1, v2, v3) in n_way)
 
+    def test_generate_random_effects(self): 
+        pass
+
     def test_create_statistical_model(self):
         rt = ts.Time('Resp')
         condition = ts.Nominal('Cond', cardinality=2) # A or B
@@ -378,6 +381,7 @@ class SynthesizerTest(unittest.TestCase):
         self.assertFalse(error)
 
     def test_transform_treatment_to_has(self): 
+        pid = ts.Nominal('pid')
         acc = ts.Numeric('accuracy')
         expl = ts.Nominal('explanation type')
         variables = [acc, expl]

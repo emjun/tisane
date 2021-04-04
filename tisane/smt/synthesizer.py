@@ -643,6 +643,76 @@ class Synthesizer(object):
         import pdb; pdb.set_trace()
         return random_effects
 
+    # Build up maximal effects structure following Barr et al. 2012
+    def generate_random_effects_from_graph(self, graph: Graph, dv: AbstractVariable) -> set: 
+        random_effects = set() 
+
+        # Identify the units
+        identifiers = design.graph.get_identifiers()
+
+        # There is only one level
+        if len(identifiers) == 1:
+            return None
+        
+        # There multiple levels or units
+
+        # For each MAIN effect
+        fixed_candidates = self._generate_fixed_candidates(design)
+        # If it is "between-subjects" create a random intercept for the unit
+        # If it is "within-subjects" create a random slope + intercept
+        for i in identifiers:
+            for (key, fixed) in fixed_candidates.items(): 
+                for f in fixed: 
+                    if design.graph.has_edge(start=i, end=f, edge_type='has'): 
+                        (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
+                        # Is this a between subjects edge?
+                        if edge_data['repetitions'] == 1: 
+                            ri = RandomInterceptEffect(i.const)
+                            random_effects.add((ri, RandomIntercept(i)))
+
+                            # # Does the identifier already have a set of random effects associated with it?
+                            # if i.name not in variables_to_effects.keys(): 
+                            #     variables_to_effects[i.name] = set()
+                            # # Add effect
+                            # variables_to_effects[i.name] = variables_to_effects[i.name].append(ri)
+
+                        # Is this a within subjects edge?
+                        elif edge_data['repetitions'] > 1: 
+                            ri = RandomInterceptEffect(i.const)
+                            # rs = RandomSlopeEffect(f.const, i.const)
+                            crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+                            ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+
+                            random_effects.add((ri, RandomIntercept(i)))
+                            random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+                            random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+                            # random_effects.add((rs, RandomSlope(iv=f, groups=i)))
+
+        
+        # For each INTERACTION effect
+        interaction_candidates = self.generate_interaction_effects(design) # dict
+
+        for key, interactions in interaction_candidates.items(): 
+            
+            for ixn in interactions: 
+                all_within = True
+                for v in ixn:
+                    if all_within: 
+                        # If all variables involved are "within-subjects" create random slope for the unit 
+                        if design.graph.has_edge(start=i, end=v, edge_type='has'): 
+                            (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=v, edge_type='has')
+                            if edge_data['repetitions'] == 1: 
+                                all_within = False
+                if all_within: 
+                    ri = RandomInterceptEffect(i.const)
+                    rs = RandomSlopeEffect(ixn, i.const) # Add a random slope for the unit variable
+                    random_effects.add((ri, RandomIntercept(i)))
+                    random_effects.add((rs, RandomSlope(iv=ixn, groups=i)))
+
+        # Return random effects
+        import pdb; pdb.set_trace()
+        return random_effects
+
     def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 
         family_link = dict()
 
