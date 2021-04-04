@@ -255,7 +255,74 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue((v1, v3) in two_way)
         self.assertTrue((v1, v2, v3) in n_way)
 
-    def test_generate_random_effects(self): 
+    def test_get_valid_levels_1(self): 
+        v1 = ts.Numeric('V1')
+        v2 = ts.Numeric('V2')
+        v3 = ts.Numeric('V3')
+
+        v2.cause(v3)
+        
+        v1.has(v3)
+        v1.has(v2)
+        
+        design = ts.Design(
+            dv = v3, 
+            ivs=[v1, v2]
+        )
+
+        synth = Synthesizer() 
+        levels = synth.get_valid_levels(design.graph, design.dv)
+        self.assertEqual(len(levels), 1)
+        self.assertTrue(v1 in levels)
+
+    def test_get_valid_levels_2(self): 
+        pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
+        litter = ts.Nominal('litter', cardinality=4) # 4 litter (6 pigs each)
+        time = ts.Nominal('week number')
+        weight = ts.Numeric('weight')
+
+        pig.repeats(weight, according_to=time) 
+        pig.nest_under(litter)
+
+        design = ts.Design(
+            dv = weight,
+            ivs = [time]
+        )
+        
+        synth = Synthesizer() 
+        trans_gr = synth.transform_to_has_edges(design.graph)
+        levels = synth.get_valid_levels(trans_gr, design.dv)
+        self.assertEqual(len(levels), 3)
+        levels_names = [l.name for l in levels]
+        self.assertTrue(pig.name in levels_names)
+        self.assertTrue(litter.name in levels_names)
+
+
+    def test_generate_random_effects_for_main_effects(self): 
+        pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
+        litter = ts.Nominal('litter', cardinality=4) # 4 litter (6 pigs each)
+        time = ts.Nominal('week number')
+        weight = ts.Numeric('weight')
+
+        pig.repeats(weight, according_to=time) 
+        pig.nest_under(litter)
+
+        design = ts.Design(
+            dv = weight,
+            ivs = [time]
+        )
+        
+        synth = Synthesizer() 
+        trans_gr = synth.transform_to_has_edges(design.graph)
+        levels = synth.get_valid_levels(trans_gr, design.dv)
+        self.assertEqual(len(levels), 3)
+        re_main = synth.generate_random_effects_for_main_effects(trans_gr, [time], weight)
+        self.assertEqual(len(re_main), 3) # Random Intercept + Slope 
+
+
+
+    
+    def test_generate_random_effects_for_interaction_effects(self): 
         pass
 
     def test_create_statistical_model(self):

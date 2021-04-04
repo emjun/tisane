@@ -206,6 +206,20 @@ class Graph(object):
                 identifiers.append(n_var)
         
         return identifiers
+    
+    # @return the variable in graph that is the identifier for @param variable
+    def get_identifier_for_variable(self, variable: AbstractVariable) -> AbstractVariable: 
+        identifiers = self.get_identifiers() 
+
+        # Is the variable itself an identifier?
+        if variable in identifiers: 
+            return variable
+
+        for i in identifiers: 
+            if graph.has_edge(i, variable, 'has'): 
+                return i
+        
+        return None
 
     # Update the edge by first removing then adding
     def update_edge(self, start: AbstractVariable, end: AbstractVariable, new_edge_type: str): 
@@ -347,6 +361,7 @@ class Graph(object):
             gr._graph.remove_edge(variable.name, n)
         
         return gr
-
+    
+    
     
 # from tisane.smt.query_manager import QM

@@ -643,38 +643,57 @@ class Synthesizer(object):
         import pdb; pdb.set_trace()
         return random_effects
 
-    # Build up maximal effects structure following Barr et al. 2012
-    def generate_random_effects_from_graph(self, graph: Graph, dv: AbstractVariable) -> set: 
-        random_effects = set() 
+    def get_valid_levels(self, graph: Graph, dv: AbstractVariable): 
+        graph_dv = graph.get_variable(dv)
 
         # Identify the units
-        identifiers = design.graph.get_identifiers()
+        identifiers = graph.get_identifiers()
 
         # There is only one level
         if len(identifiers) == 1:
-            return None
+            return identifiers
         
         # There multiple levels or units
+        # TODO: Find level of DV
+        levels_to_consider = list()
+        dv_level = None
+        for i in identifiers: 
+            if graph.has_edge(i, dv, 'has'): 
+                dv_level = i
+                break 
+        
+        # dv_level_node = graph.get_node(dv_level)
+        for i in identifiers: 
+            if i != dv_level: 
+                # i_node = graph.get_node(i)
+                paths = list(nx.all_simple_paths(graph._graph, source=i.name, target=dv_level.name))
+                # There is a path, means level i is connected to level dv_level
+                if len(paths) > 0: 
+                    levels_to_consider.append(i)
+
+        levels_to_consider.append(dv_level)
+
+        return levels_to_consider
+
+    def generate_random_effects_for_main_effects(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> set: 
+        random_effects = set()
+
+        levels = self.get_valid_levels(graph, dv)
 
         # For each MAIN effect
-        fixed_candidates = self._generate_fixed_candidates(design)
+        fixed_candidates = self._generate_fixed_candidates_from_graph(graph, ivs, dv)
         # If it is "between-subjects" create a random intercept for the unit
         # If it is "within-subjects" create a random slope + intercept
-        for i in identifiers:
+        for i in levels:
             for (key, fixed) in fixed_candidates.items(): 
                 for f in fixed: 
-                    if design.graph.has_edge(start=i, end=f, edge_type='has'): 
-                        (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
+                    # import pdb; pdb.set_trace()
+                    if graph.has_edge(start=i, end=f, edge_type='has'): 
+                        (start_name, end_name, edge_data) = graph.get_edge(start=i, end=f, edge_type='has')
                         # Is this a between subjects edge?
                         if edge_data['repetitions'] == 1: 
                             ri = RandomInterceptEffect(i.const)
                             random_effects.add((ri, RandomIntercept(i)))
-
-                            # # Does the identifier already have a set of random effects associated with it?
-                            # if i.name not in variables_to_effects.keys(): 
-                            #     variables_to_effects[i.name] = set()
-                            # # Add effect
-                            # variables_to_effects[i.name] = variables_to_effects[i.name].append(ri)
 
                         # Is this a within subjects edge?
                         elif edge_data['repetitions'] > 1: 
@@ -687,28 +706,80 @@ class Synthesizer(object):
                             random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
                             random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
                             # random_effects.add((rs, RandomSlope(iv=f, groups=i)))
+                    elif graph.has_edge(start=f, end=i, edge_type='has'): 
+                        # This only happens when both f and i are identifiers 
+                        assert(i in levels)
+                        assert(f in levels)
+                        (start_name, end_name, edge_data) = graph.get_edge(start=f, end=i, edge_type='has')
+                        # Is this a between subjects edge?
+                        if edge_data['repetitions'] == 1: 
+                            ri = RandomInterceptEffect(i.const)
+                            random_effects.add((ri, RandomIntercept(i)))
 
-        
-        # For each INTERACTION effect
-        interaction_candidates = self.generate_interaction_effects(design) # dict
+                        # Is this a within subjects edge?
+                        elif edge_data['repetitions'] > 1: 
+                            ri = RandomInterceptEffect(i.const)
+                            # rs = RandomSlopeEffect(f.const, i.const)
+                            crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+                            ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
 
+                            random_effects.add((ri, RandomIntercept(i)))
+                            random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+                            random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+
+        return random_effects
+
+    def generate_random_effects_for_interaction_effects(self, graph: Graph, iv: List[AbstractVariable], dv: AbstractVariable): 
+        random_effects = set() 
+
+        interaction_candidates = self.generate_interaction_effects_from_graph(design, ivs, dv) # dict
+
+        levels = self.get_valid_levels(graph, dv)
+
+        # Go through two-way, n-way individually
         for key, interactions in interaction_candidates.items(): 
             
+            # For each k-way interaction (e.g., All two-way interactions)
             for ixn in interactions: 
+                
                 all_within = True
+                # For each variable involved in the current k-way interaction 
                 for v in ixn:
                     if all_within: 
                         # If all variables involved are "within-subjects" create random slope for the unit 
-                        if design.graph.has_edge(start=i, end=v, edge_type='has'): 
-                            (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=v, edge_type='has')
-                            if edge_data['repetitions'] == 1: 
-                                all_within = False
+                        v_id = graph.get_identifier_for_variable(v)
+                        (start_name, end_name, edge_data) = graph.get_edge(start=v_id, end=v, edge_type='has')
+                        if edge_data['repetitions'] == 1: 
+                            all_within = False
                 if all_within: 
                     ri = RandomInterceptEffect(i.const)
                     rs = RandomSlopeEffect(ixn, i.const) # Add a random slope for the unit variable
                     random_effects.add((ri, RandomIntercept(i)))
                     random_effects.add((rs, RandomSlope(iv=ixn, groups=i)))
+        
+        return random_effects
 
+    # Build up maximal effects structure following Barr et al. 2012
+    def generate_random_effects_from_graph(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> set: 
+        random_effects = set()
+        graph_dv = graph.get_variable(dv)
+        
+        levels = self.get_valid_levels(graph, dv)
+        if levels is None: 
+            return None
+        
+        ### MAIN EFFECTS
+        # Add random effects derived for main effects
+        re_main = self.generate_random_effects_for_main_effects(graph, ivs, dv)
+        for e in re_main: 
+            random_effects.add(e)
+
+        ### INTERACTION EFFECTS
+        # Add random effects derived for interaction effects
+        re_ixn = self.generate_random_effects_for_interaction_effects(graph, ivs, dv)
+        for e in re_ixn: 
+            random_effects.add(e)
+        
         # Return random effects
         import pdb; pdb.set_trace()
         return random_effects
