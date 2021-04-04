@@ -381,18 +381,21 @@ class Synthesizer(object):
         fixed_candidates = dict()
 
         ### Add candidates that are directly part of design
-        fixed_candidates['input'] = order_variables(ivs)
+        graph_ivs = [graph.get_variable(i.name) for i in ivs]
+        fixed_candidates['input'] = order_variables(graph_ivs)
 
         ### Find candidates based on predecessors to the @param dv
         direct_pred_candidates = list()
         # Get the predecessors to the DV 
-        dv_pred = graph.get_predecessors(dv)
-        for p in dv_pred: 
-            p_var = graph.get_variable(name=p)
-            if graph.has_edge(start=p_var, end=dv, edge_type='cause'): 
-                direct_pred_candidates.append(p_var)
-            elif graph.has_edge(start=p_var, end=dv, edge_type='associate'): 
-                direct_pred_candidates.append(p_var)
+        graph_dv = graph.get_variable(dv.name)
+        dv_pred = graph.get_predecessors(graph_dv)
+        if dv_pred is not None: 
+            for p in dv_pred: 
+                p_var = graph.get_variable(name=p)
+                if graph.has_edge(start=p_var, end=graph_dv, edge_type='cause'): 
+                    direct_pred_candidates.append(p_var)
+                elif graph.has_edge(start=p_var, end=graph_dv, edge_type='associate'): 
+                    direct_pred_candidates.append(p_var)
         # Filter out any candidates that were already part of the input set and therefore already part of fixed_candidates
         direct_pred_filtered = list()
         for c in direct_pred_candidates:
@@ -408,21 +411,32 @@ class Synthesizer(object):
         """
         
         # Prep graph to take transitive closure
-        reduced_gr = self.reduce_graph(graph, dv)
+        reduced_gr = self.reduce_graph(graph, graph_dv)
         tc = nx.transitive_closure_dag(reduced_gr._graph)
-        transitive_pred_candidates = list()
-        # Get the predecessors to the DV 
-        dv_node = graph.get_node(dv) # Returns tuple: (name, data{variable, is_identifier})
+        # Filter reduced graph to only include relationships/edges to DV
+        dv_node = graph.get_node(graph_dv) # Returns tuple: (name, data{variable, is_identifier})
         dv_pred = tc.predecessors(dv_node[0])
-        for p in dv_pred: 
-            p_var = graph.get_variable(name=p)
-            # If the variable was not part of the original graph
-            p_node = graph.get_node(p_var)
-            # If the variable is not an identifier
-            if not p_node[1]['is_identifier']:
-                if p_var not in direct_pred_candidates:
+        transitive_pred_candidates = list()
+        for (n0, n1, edge_data) in tc.edges(data=True):
+            if n1 == dv.name:
+                p_var = graph.get_variable(name=n0)
+                if (p_var not in fixed_candidates['input']) and (p_var not in fixed_candidates['derived_direct']):
                     transitive_pred_candidates.append(p_var)
         fixed_candidates['derived_transitive'] = order_variables(transitive_pred_candidates)
+
+
+        
+        
+        # # Get the predecessors to the DV 
+        # for p in dv_pred: 
+        #     p_var = graph.get_variable(name=p)
+        #     # If the variable was not part of the original graph
+        #     p_node = graph.get_node(p_var)
+        #     # If the variable is not an identifier
+        #     if not p_node[1]['is_identifier']:
+        #         if p_var not in direct_pred_candidates:
+        #             transitive_pred_candidates.append(p_var)
+        # fixed_candidates['derived_transitive'] = order_variables(transitive_pred_candidates)
 
         return fixed_candidates
 

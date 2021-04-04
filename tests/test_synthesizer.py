@@ -48,11 +48,12 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        me_candidates = synth.generate_main_effects(design)
+        me_candidates = synth.generate_main_effects_from_graph(design.graph, design.ivs, design.dv)
         self.assertIsInstance(me_candidates, dict)
         self.assertIsInstance(me_candidates['input'], list)
         self.assertEqual(len(me_candidates['input']), 1)
-        self.assertTrue(v1 in me_candidates['input'])
+        input_vars = [i.name for i in me_candidates['input']]
+        self.assertTrue(v1.name in input_vars)
         self.assertEqual(len(me_candidates['derived_direct']), 0)
         self.assertEqual(len(me_candidates['derived_transitive']), 0)
 
@@ -76,12 +77,13 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        me_candidates = synth.generate_main_effects(design)
+        me_candidates = synth.generate_main_effects_from_graph(design.graph, design.ivs, design.dv)
         self.assertIsInstance(me_candidates, dict)
         self.assertIsInstance(me_candidates['input'], list)
         self.assertEqual(len(me_candidates['input']), 2)
-        self.assertTrue(v1 in me_candidates['input'])
-        self.assertTrue(v2 in me_candidates['input'])
+        input_vars = [i.name for i in me_candidates['input']]
+        self.assertTrue(v1.name in input_vars)
+        self.assertTrue(v2.name in input_vars)
         self.assertEqual(len(me_candidates['derived_direct']), 0)
         self.assertEqual(len(me_candidates['derived_transitive']), 0)
 
@@ -107,14 +109,16 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        me_candidates = synth.generate_main_effects(design)
+        me_candidates = synth.generate_main_effects_from_graph(design.graph, design.ivs, design.dv)
         self.assertIsInstance(me_candidates, dict)
         self.assertIsInstance(me_candidates['input'], list)
         self.assertEqual(len(me_candidates['input']), 2)
-        self.assertTrue(v1 in me_candidates['input'])
-        self.assertTrue(v2 in me_candidates['input'])
+        input_vars = [i.name for i in me_candidates['input']]
+        self.assertTrue(v1.name in input_vars)
+        self.assertTrue(v2.name in input_vars)
         self.assertEqual(len(me_candidates['derived_direct']), 1)
-        self.assertTrue(v3 in me_candidates['derived_direct'])
+        derived_vars = [v.name for v in me_candidates['derived_direct']]
+        self.assertTrue(v3.name in derived_vars)
         self.assertEqual(len(me_candidates['derived_transitive']), 0)
 
     def test_generate_main_effects_infer_transitive_1(self):
@@ -139,15 +143,17 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        me_candidates = synth.generate_main_effects(design)
+        me_candidates = synth.generate_main_effects_from_graph(design.graph, design.ivs, design.dv)
         self.assertIsInstance(me_candidates, dict)
         self.assertIsInstance(me_candidates['input'], list)
         self.assertEqual(len(me_candidates['input']), 2)
-        self.assertTrue(v1 in me_candidates['input'])
-        self.assertTrue(v2 in me_candidates['input'])
+        input_vars = [i.name for i in me_candidates['input']]
+        self.assertTrue(v1.name in input_vars)
+        self.assertTrue(v2.name in input_vars)
         self.assertEqual(len(me_candidates['derived_direct']), 0)
         self.assertEqual(len(me_candidates['derived_transitive']), 1)
-        self.assertTrue(v3 in me_candidates['derived_transitive'])
+        trans_vars = [v.name for v in me_candidates['derived_transitive']]
+        self.assertTrue(v3.name in trans_vars)
 
     def test_generate_main_effects_infer_transitive_2(self):
         dv = ts.Numeric('DV')
@@ -173,15 +179,17 @@ class SynthesizerTest(unittest.TestCase):
 
         synth = Synthesizer()
         self.assertTrue(len(v1.relationships), 1)
-        me_candidates = synth.generate_main_effects(design)
+        me_candidates = synth.generate_main_effects_from_graph(design.graph, design.ivs, design.dv)
         self.assertIsInstance(me_candidates, dict)
         self.assertIsInstance(me_candidates['input'], list)
         self.assertEqual(len(me_candidates['input']), 2)
-        self.assertTrue(v1 in me_candidates['input'])
-        self.assertTrue(v2 in me_candidates['input'])
+        input_vars = [i.name for i in me_candidates['input']]
+        self.assertTrue(v1.name in input_vars)
+        self.assertTrue(v2.name in input_vars)
         self.assertEqual(len(me_candidates['derived_direct']), 0)
         self.assertEqual(len(me_candidates['derived_transitive']), 1)
-        self.assertTrue(v3 in me_candidates['derived_transitive'])
+        trans_vars = [v.name for v in me_candidates['derived_transitive']]
+        self.assertTrue(v3.name in trans_vars)
 
     def test_generate_interaction_effects_1(self):
         dv = ts.Numeric('DV')
@@ -555,6 +563,7 @@ class SynthesizerTest(unittest.TestCase):
         sub_gr = gr.get_conceptual_subgraph()
         reduced_gr = synth.reduce_graph(sub_gr, v2)
         self.assertEqual(len(reduced_gr.get_edges()), 2)
+
 
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     # @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
