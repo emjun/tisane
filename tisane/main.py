@@ -120,6 +120,7 @@ def infer_statistical_model_from_design(design: Design):
     main_effects_options = synth.generate_main_effects_from_graph(gr, ivs, dv)
     interaction_effects_options = synth.generate_interaction_effects_from_graph(gr, ivs, dv)
     random_effects_options = synth.generate_random_effects_from_graph(gr, ivs, dv)
+    import pdb; pdb.set_trace()
     # random_effects_options = list()
     # May want to load a dictionary of family to link
     family_link_options = synth.generate_family_link(design=design)

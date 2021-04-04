@@ -216,7 +216,7 @@ class Graph(object):
             return variable
 
         for i in identifiers: 
-            if graph.has_edge(i, variable, 'has'): 
+            if self.has_edge(i, variable, 'has'): 
                 return i
         
         return None

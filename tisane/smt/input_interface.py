@@ -1318,6 +1318,7 @@ class InputInterface(object):
                     __str_to_z3__[str(fact)] = fact
                     
                     
+                    import pdb; pdb.set_trace()
                     assert(isinstance(re, CorrelatedRandomSlopeAndIntercept) or isinstance(re, UncorrelatedRandomSlopeAndIntercept))
                     if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
                         facts['Correlated'] = fact

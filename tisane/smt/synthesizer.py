@@ -580,9 +580,11 @@ class Synthesizer(object):
         # Identify the units
         identifiers = design.graph.get_identifiers()
 
+    
         # There is only one level
         if len(identifiers) == 1:
             return None
+        
         
         # There multiple levels or units
 
@@ -763,7 +765,7 @@ class Synthesizer(object):
         graph_dv = graph.get_variable(dv)
         
         levels = self.get_valid_levels(graph, dv)
-        if levels is None: 
+        if len(levels) > 0: 
             return None
         
         ### MAIN EFFECTS
