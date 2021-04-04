@@ -123,12 +123,6 @@ def infer_statistical_model_from_design(design: Design):
     # May want to load a dictionary of family to link
     family_link_options = synth.generate_family_link(design=design)
     default_family_link = synth.generate_default_family_link(design=design)
-    # family_options = synth.generate_family_distributions(design=design)
-    # link_options = synth.generate_link_functions(design=design)
-
-    # Change to:
-    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
-    # spec is SM or some json dump -> SM -> code generated
     
     input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
     input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
@@ -141,7 +135,6 @@ def infer_statistical_model_from_design(design: Design):
     model_json = f.read()
     sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset.dataset)
     
-
     # Generate code from SM
     script = generate_code(sm)
     
