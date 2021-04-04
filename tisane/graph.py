@@ -321,6 +321,20 @@ class Graph(object):
                 gr._graph.remove_edge(n0, n1)
 
         return gr
+    
+    # @returns sub-graph containing only CAUSAL edges
+    def get_causal_subgraph(self):
+        gr = copy.deepcopy(self)
+
+        edges = self.get_edges()
+        for (n0, n1, edge_data) in edges:
+            edge_type = edge_data['edge_type']
+            if edge_type == 'cause':
+                pass
+            else: 
+                gr._graph.remove_edge(n0, n1)
+
+        return gr
 
 
     

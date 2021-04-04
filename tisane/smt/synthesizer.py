@@ -353,19 +353,68 @@ class Synthesizer(object):
 
         return fixed_candidates
 
-    def get_conceptual_sub_graph(self, graph: Graph):
-        pass 
-    
+    def _generate_fixed_candidates_from_graph(self, graph: Graph, dv: AbstractVariable) -> Dict:
+        fixed_candidates = dict()
+
+        ### Add candidates that are directly part of design
+        fixed_candidates['input'] = order_variables(design.ivs)
+
+        ### Find candidates based on predecessors to the @param dv
+        direct_pred_candidates = list()
+        # Get the predecessors to the DV 
+        dv_pred = graph.get_predecessors(dv)
+        for p in dv_pred: 
+            p_var = graph.get_variable(name=p)
+            if graph.has_edge(start=p_var, end=dv, edge_type='cause'): 
+                direct_pred_candidates.append(p_var)
+            elif graph.has_edge(start=p_var, end=dv, edge_type='associate'): 
+                direct_pred_candidates.append(p_var)
+        # Filter out any candidates that were already part of the input set and therefore already part of fixed_candidates
+        direct_pred_filtered = list()
+        for c in direct_pred_candidates:
+            if c not in fixed_candidates['input']:
+                direct_pred_filtered.append(c)
+        fixed_candidates['derived_direct'] = order_variables(direct_pred_filtered)
+        
+        ### Find candidates based on transitive conceptual relationships
+        """
+        Two use cases: 
+        (1) X1 -> X2 -> Y => X1, X2 are fixed candidates
+        (2) X1 -> Y, X2 -> Y, X3 -> X1, X3 -> X2 => X1, X2, X3 are fixed candidates
+        """
+        # Remove cycles
+        causal_sub = graph.get_causal_subgraph()
+        # Get transitive closure of graph with reduced graph (remove cycles)
+        gr = graph._graph
+        reduced_gr = self.reduce_graph(design)
+        tc = nx.transitive_closure_dag(reduced_gr)
+        transitive_pred_candidates = list()
+        # Get the predecessors to the DV 
+        dv_node = graph.get_node(dv) # Returns tuple: (name, data{variable, is_identifier})
+        dv_pred = tc.predecessors(dv_node[0])
+        for p in dv_pred: 
+            p_var = graph.get_variable(name=p)
+            # If the variable was not part of the original graph
+            p_node = graph.get_node(p_var)
+            # If the variable is not an identifier
+            if not p_node[1]['is_identifier']:
+                if p_var not in direct_pred_candidates:
+                    transitive_pred_candidates.append(p_var)
+        fixed_candidates['derived_transitive'] = order_variables(transitive_pred_candidates)
+
+        return fixed_candidates
+
     def generate_main_effects(self, design: Design) -> Dict:
         fixed_candidates = self._generate_fixed_candidates(design)
        
         return fixed_candidates
 
-    def generate_main_effects_from_graph(self, graph:Graph) -> Dict:
+    def generate_main_effects_from_graph(self, graph: Graph, dv: AbstractVariable) -> Dict:
         # Only the conceptual relationshpis are considered for deriving candidate fixed/main effects
         sub_gr = graph.get_conceptual_subgraph()
+        assert(isinstance(sub_gr, Graph))
 
-        main_candidates = self._generate_fixed_candidates_from_graph(sub_gr)
+        main_candidates = self._generate_fixed_candidates_from_graph(sub_gr, dv)
        
         return main_candidates
 
