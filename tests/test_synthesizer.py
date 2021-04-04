@@ -378,9 +378,112 @@ class SynthesizerTest(unittest.TestCase):
         (n0, n1, edge_data) = updated_gr.get_edge(school, student, 'has')
         self.assertIsInstance(edge_data['edge_obj'], Nest)
 
+    def test_transform_repeat_to_has(self): 
+        pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
+        time = ts.Nominal('week number')
+        weight = ts.Numeric('weight')
 
+        pig.repeats(weight, according_to=time) 
 
+        design = ts.Design(
+            dv = weight,
+            ivs = [time]
+        )
+
+        # Pre-transformation 
+        gr = design.graph
+        self.assertEqual(len(gr.get_edges()), 1)
+        self.assertTrue(gr.has_edge(pig, weight, 'repeat'))
+        (n0, n1, edge_data) = gr.get_edge(pig, weight, 'repeat')
+        self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
+
+        synth = Synthesizer() 
+        updated_gr = synth.transform_to_has_edges(gr)
+
+        # Post-transformation 
+        self.assertEqual(len(updated_gr.get_edges()), 4) # Has + Associate (introduces 2 edges)
+        self.assertTrue(updated_gr.has_edge(pig, weight, 'repeat'))
+        self.assertTrue(updated_gr.has_edge(time, pig, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(time, pig, 'has')
+        self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
+        self.assertEqual(edge_data['repetitions'], pig.cardinality)
+
+        self.assertTrue(updated_gr.has_edge(time, weight, 'associate'))
+        self.assertTrue(updated_gr.has_edge(weight, time, 'associate')) 
         
+
+    def test_transform_repeat_to_has_2(self): 
+        pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
+        time = ts.Nominal('week number')
+        weight = ts.Numeric('weight')
+
+        time.associates_with(weight)
+        pig.repeats(weight, according_to=time) 
+
+        design = ts.Design(
+            dv = weight,
+            ivs = [time]
+        )
+
+        # Pre-transformation 
+        gr = design.graph
+        self.assertEqual(len(gr.get_edges()), 3)
+        self.assertTrue(gr.has_edge(pig, weight, 'repeat'))
+        (n0, n1, edge_data) = gr.get_edge(pig, weight, 'repeat')
+        self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
+        self.assertTrue(gr.has_edge(time, weight, 'associate'))
+        self.assertTrue(gr.has_edge(weight, time, 'associate'))
+
+        synth = Synthesizer() 
+        updated_gr = synth.transform_to_has_edges(gr)
+
+        # Post-transformation 
+        self.assertEqual(len(updated_gr.get_edges()), 4) # Has + Associate (introduces 2 edges)
+        self.assertTrue(updated_gr.has_edge(pig, weight, 'repeat'))
+        self.assertTrue(updated_gr.has_edge(time, pig, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(time, pig, 'has')
+        self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
+        self.assertEqual(edge_data['repetitions'], pig.cardinality)
+
+        self.assertTrue(updated_gr.has_edge(time, weight, 'associate'))
+        self.assertTrue(updated_gr.has_edge(weight, time, 'associate')) 
+
+    def test_transform_repeat_to_has_3(self): 
+        pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
+        time = ts.Nominal('week number')
+        weight = ts.Numeric('weight')
+
+        time.causes(weight)
+        pig.repeats(weight, according_to=time) 
+
+        design = ts.Design(
+            dv = weight,
+            ivs = [time]
+        )
+
+        # Pre-transformation 
+        gr = design.graph
+        self.assertEqual(len(gr.get_edges()), 2)
+        self.assertTrue(gr.has_edge(pig, weight, 'repeat'))
+        (n0, n1, edge_data) = gr.get_edge(pig, weight, 'repeat')
+        self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
+        self.assertTrue(gr.has_edge(time, weight, 'cause'))
+
+        synth = Synthesizer() 
+        updated_gr = synth.transform_to_has_edges(gr)
+
+        # Post-transformation 
+        self.assertEqual(len(updated_gr.get_edges()), 5) # Has + Associate (introduces 2 edges)
+        self.assertTrue(updated_gr.has_edge(pig, weight, 'repeat'))
+        self.assertTrue(updated_gr.has_edge(time, pig, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(time, pig, 'has')
+        self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
+        self.assertEqual(edge_data['repetitions'], pig.cardinality)
+
+        self.assertTrue(updated_gr.has_edge(time, weight, 'cause'))
+        self.assertTrue(updated_gr.has_edge(time, weight, 'associate')) 
+        self.assertTrue(updated_gr.has_edge(weight, time, 'associate')) 
+
     # @patch("tisane.smt.input_interface.InputInterface.resolve_unsat")
     # @patch('tisane.smt.input_interface.InputInterface.ask_inclusion')
     # def test_generate_and_select_effects_sets_from_design_fixed_only(self, mock_increment0, mock_increment1): 

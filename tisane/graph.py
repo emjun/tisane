@@ -43,14 +43,10 @@ class Graph(object):
         
     # @returns tuple representing edge or None if edge is not found in graph
     def get_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> Union[Tuple, None]: 
-        if not isinstance(start, AbstractVariable): 
-            import pdb; pdb.set_trace()
-        if not isinstance(end, AbstractVariable): 
-            import pdb; pdb.set_trace()
         edges = self.get_edges()
 
         for (n0, n1, edge_data) in edges: 
-
+            
             if n0 == start.name and n1 == end.name:  
                  if edge_type == edge_data['edge_type']: 
                     return (n0, n1, edge_data)
@@ -74,7 +70,7 @@ class Graph(object):
 
     # Add edge to graph
     # If nodes aren't already in the graph, add them
-    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, repetitions: int=1, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
+    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, repetitions: int=None, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
 
         # If the variables aren't in the graph, add nodes first.
         start_node = None
@@ -270,7 +266,7 @@ class Graph(object):
 
     # Add an ''associate'' edge to the graph 
     # Adds two edges, one in each direction 
-    def associate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
+    def associate(self, lhs: AbstractVariable, rhs: AbstractVariable):
         # Is this edge new? 
         if not self.has_edge(start=lhs, end=rhs, edge_type='associate'): 
             assert(not self.has_edge(start=rhs, end=lhs, edge_type='associate'))

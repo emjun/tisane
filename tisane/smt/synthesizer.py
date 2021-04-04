@@ -871,6 +871,15 @@ class Synthesizer(object):
             
             # Transfom all Repeat into Has + Associate
             elif edge_type == 'repeat': 
-                pass
+                assert(isinstance(edge_obj, RepeatedMeasure))
+                unit = edge_obj.unit
+                response = edge_obj.response
+                according_to = edge_obj.according_to
+
+                # Add has relationshipt to gr 
+                gr.has(identifier=according_to, variable=unit, has_obj=edge_obj, repetitions=unit.cardinality)
+
+                # Add implied associate relationship to gr
+                gr.associate(according_to, response)
 
         return gr
