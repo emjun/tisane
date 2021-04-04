@@ -1062,6 +1062,7 @@ class Synthesizer(object):
 
                 # Add has relationshipt to gr 
                 gr.has(identifier=according_to, variable=unit, has_obj=edge_obj, repetitions=unit.cardinality)
+                gr.has(identifier=unit, variable=response, has_obj=edge_obj, repetitions=according_to.cardinality)
 
                 # Add implied associate relationship to gr
                 gr.associate(according_to, response)
