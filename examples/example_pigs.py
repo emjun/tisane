@@ -22,19 +22,15 @@ time = ts.Nominal('Time', cardinality=12)
 
 # Conceptual relationship
 time.cause(weight)
-# litter.associates_with(weight)
 
 # Data measurement
-# pig_id.nests_under(litter)
 pig_id.repeats(weight, according_to=time)
+pig_id.nests_under(litter)
 
 design = ts.Design(
             dv = weight,
-            ivs = [time]
+            ivs = [time, litter]
         ).assign_data(df)
 
 ts.infer_statistical_model_from_design(design=design)
 
-# TODO: 
-# 1. Check for conceptual relationships IVs to DV
-# 2. Check that DV not conceptuall cause/associate with IV

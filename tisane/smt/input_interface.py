@@ -1148,19 +1148,30 @@ class InputInterface(object):
         elif isinstance(x1, Nominal) and isinstance(x2, Ordinal): 
             x = x2
             color_group = x1
+            fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
+            fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
+            return fig_elt
         elif isinstance(x1, Ordinal) and isinstance(x2, Numeric): 
             x = x1
             color_group = x2
+            fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
+            fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
+            return fig_elt
         elif isinstance(x1, Ordinal) and isinstance(x2, Ordinal): 
             x = x1
             color_group = x2
+            fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
+            fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
+            return fig_elt
         else: 
             x = x1
             color_group = x2
+            fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
+            fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
+            return fig_elt
         
         fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, trendline='ols')
         fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
-        
         return fig_elt
 
     def create_three_way_interaction_chart(self, interaction: Tuple[AbstractVariable, AbstractVariable, AbstractVariable], dv: AbstractVariable, data: pd.DataFrame):

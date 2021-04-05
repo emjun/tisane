@@ -375,13 +375,14 @@ class Synthesizer(object):
 
         return fixed_candidates
 
-        return fixed_candidates
-
     def _generate_fixed_candidates_from_graph(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> Dict:
         fixed_candidates = dict()
 
         ### Add candidates that are directly part of design
         graph_ivs = [graph.get_variable(i.name) for i in ivs]
+        # import pdb; pdb.set_trace()
+        # get rid of none
+        graph_ivs = [v for v in graph_ivs if v is not None]
         fixed_candidates['input'] = order_variables(graph_ivs)
 
         ### Find candidates based on predecessors to the @param dv
@@ -597,8 +598,13 @@ class Synthesizer(object):
                 for f in fixed: 
                     if design.graph.has_edge(start=i, end=f, edge_type='has'): 
                         (start_name, end_name, edge_data) = design.graph.get_edge(start=i, end=f, edge_type='has')
+                        rep = edge_data['repetitions']
+                        if isinstance(rep, int):
+                            rep_count = rep 
+                        else: 
+                            rep_count = 2 # GreaterThanOne
                         # Is this a between subjects edge?
-                        if edge_data['repetitions'] == 1: 
+                        if rep_count == 1: 
                             ri = RandomInterceptEffect(i.const)
                             random_effects.add((ri, RandomIntercept(i)))
 
@@ -609,7 +615,7 @@ class Synthesizer(object):
                             # variables_to_effects[i.name] = variables_to_effects[i.name].append(ri)
 
                         # Is this a within subjects edge?
-                        elif edge_data['repetitions'] > 1: 
+                        elif rep_count > 1: 
                             ri = RandomInterceptEffect(i.const)
                             # rs = RandomSlopeEffect(f.const, i.const)
                             crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
@@ -711,13 +717,19 @@ class Synthesizer(object):
                         assert(i in levels)
                         assert(f in levels)
                         (start_name, end_name, edge_data) = graph.get_edge(start=f, end=i, edge_type='has')
+                        rep = edge_data['repetitions']
+                        if isinstance(rep, int):
+                            rep_count = rep 
+                        else: 
+                            rep_count = 2 # GreaterThanOne
+
                         # Is this a between subjects edge?
-                        if edge_data['repetitions'] == 1: 
+                        if rep_count == 1: 
                             ri = RandomInterceptEffect(i.const)
                             random_effects.add((ri, RandomIntercept(i)))
 
                         # Is this a within subjects edge?
-                        elif edge_data['repetitions'] > 1: 
+                        elif rep_count > 1: 
                             ri = RandomInterceptEffect(i.const)
                             # rs = RandomSlopeEffect(f.const, i.const)
                             crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
@@ -748,9 +760,13 @@ class Synthesizer(object):
                     if all_within: 
                         # If all variables involved are "within-subjects" create random slope for the unit 
                         v_id = graph.get_identifier_for_variable(v)
-                        (start_name, end_name, edge_data) = graph.get_edge(start=v_id, end=v, edge_type='has')
-                        if edge_data['repetitions'] == 1: 
-                            all_within = False
+
+                        if v.name != v_id.name:
+                            if graph.get_edge(start=v_id, end=v, edge_type='has') is None: 
+                                import pdb; pdb.set_trace()
+                            (start_name, end_name, edge_data) = graph.get_edge(start=v_id, end=v, edge_type='has')
+                            if edge_data['repetitions'] == 1: 
+                                all_within = False
                 if all_within: 
                     ri = RandomInterceptEffect(i.const)
                     rs = RandomSlopeEffect(ixn, i.const) # Add a random slope for the unit variable
@@ -765,7 +781,7 @@ class Synthesizer(object):
         graph_dv = graph.get_variable(dv)
         
         levels = self.get_valid_levels(graph, dv)
-        if len(levels) > 0: 
+        if len(levels) == 1: 
             return None
         
         ### MAIN EFFECTS
