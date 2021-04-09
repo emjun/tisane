@@ -33,7 +33,8 @@ def generate_statsmodels_glm_code(statistical_model: StatisticalModel, **kwargs)
             if xs_code is None: 
                 xs_code = f'{f.name}'
             else: 
-                xs_code = f' + {f.name}'
+                xs_code += f' + {f.name}'
+        
         for interaction in statistical_model.interactions: 
             ixn_terms = list()
             for e in interaction: 
@@ -43,7 +44,7 @@ def generate_statsmodels_glm_code(statistical_model: StatisticalModel, **kwargs)
             if xs_code is None: 
                 xs_code = f'{mult.join(ixn_terms)}'
             else:
-                xs_code = f' + {mult.join(ixn_terms)}'
+                xs_code += f' + {mult.join(ixn_terms)}'
         
         formula_code = 'formula=' + '"' + y_code + ' ~ ' + xs_code + '"'
         data_code = 'data=df'
@@ -55,7 +56,7 @@ def generate_statsmodels_glm_code(statistical_model: StatisticalModel, **kwargs)
     if 'IDENTITY' in link: 
         link_code += 'identity()'
     elif 'LOG' in link and 'LOGLOG' not in link:
-        link_code += 'Log()'
+        link_code += 'log()'
     elif 'CLOGLOG' in link:
         link_code += 'cloglog()'
     elif 'SQUAREROOT' in link:
@@ -165,7 +166,7 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
         if xs_code is None: 
             xs_code = f'{f.name}'
         else: 
-            xs_code = f' + {f.name}'
+            xs_code += f' + {f.name}'
     for interaction in statistical_model.interactions: 
         ixn_terms = list()
         for e in interaction: 
@@ -175,7 +176,7 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
         if xs_code is None: 
             xs_code = f'{mult.join(ixn_terms)}'
         else:
-            xs_code = f' + {mult.join(ixn_terms)}'
+            xs_code += f' + {mult.join(ixn_terms)}'
     
     # Ex: vc = {'classroom': '0 + C(classroom)'}
     vc = 'vc_formula = {' # For storing the variance components or random intercepts and slopes
@@ -219,7 +220,9 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
             exactly_one_group = not exactly_one_group
 
             iv = re.iv 
-            assert(iv.name in xs_code) # Make sure the iv is included as an IV/X already 
+            # if iv.name not in xs_code: 
+            #     import pdb; pdb.set_trace()
+            # assert(iv.name in xs_code) # Make sure the iv is included as an IV/X already 
             re_formula += ' + ' + f'{iv.name}"'
         print(re)
     

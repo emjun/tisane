@@ -301,7 +301,7 @@ class SynthesizerTest(unittest.TestCase):
     def test_generate_random_effects_for_main_effects(self): 
         pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
         litter = ts.Nominal('litter', cardinality=4) # 4 litter (6 pigs each)
-        time = ts.Nominal('week number')
+        time = ts.Nominal('week number', cardinality = 10)
         weight = ts.Numeric('weight')
 
         pig.repeats(weight, according_to=time) 
@@ -319,11 +319,62 @@ class SynthesizerTest(unittest.TestCase):
         re_main = synth.generate_random_effects_for_main_effects(trans_gr, [time], weight)
         self.assertEqual(len(re_main), 3) # Random Intercept + Slope 
 
-
-
-    
     def test_generate_random_effects_for_interaction_effects(self): 
-        pass
+        a = ts.Nominal('a', cardinality=4)
+        b = ts.Nominal('b', cardinality=7) 
+        y = ts.Numeric('y')
+
+        a.associates_with(y)
+        b.associates_with(y)
+
+        a.repeats(y, according_to=b)
+
+        design = ts.Design(
+            dv = y, 
+            ivs =[a, b]
+        )
+
+        synth = Synthesizer()
+        trans_gr = synth.transform_to_has_edges(design.graph)
+        random_effects = synth.generate_random_effects_for_interaction_effects(trans_gr, ivs=[a, b], dv=y)
+        self.assertTrue(len(random_effects), 2)
+        one_rs = False 
+        one_ri = False
+        for (fact, re) in random_effects: 
+            if isinstance(re, RandomSlope): 
+                one_rs = not one_rs
+            if isinstance(re, RandomIntercept): 
+                one_ri = not one_ri
+        
+        self.assertTrue(one_rs)
+        self.assertTrue(one_ri)
+    
+    def test_generate_random_effects_for_interaction_effects_combin(self): 
+        a = ts.Nominal('a', cardinality=4)
+        b = ts.Nominal('b', cardinality=7) 
+        c = ts.Nominal('c', cardinality=7) 
+        d = ts.Nominal('d', cardinality=17) 
+        y = ts.Numeric('y')
+
+        
+        a.associates_with(y)
+        b.associates_with(y)
+        c.associates_with(y)
+        # a.associates_with(c)
+        
+        a.repeats(y, according_to=b)
+        c.repeats(y, according_to=d)
+
+        design = ts.Design(
+            dv = y, 
+            ivs =[a, c]
+        )
+
+        synth = Synthesizer()
+        trans_gr = synth.transform_to_has_edges(design.graph)
+        random_effects = synth.generate_random_effects_for_interaction_effects(trans_gr, ivs=[a, b], dv=y)
+        self.assertTrue(len(random_effects), 6)
+
 
     def test_create_statistical_model(self):
         rt = ts.Time('Resp')

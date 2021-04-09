@@ -660,26 +660,27 @@ class Synthesizer(object):
         if len(identifiers) == 1:
             return identifiers
         
-        # There multiple levels or units
-        # TODO: Find level of DV
-        levels_to_consider = list()
-        dv_level = None
-        for i in identifiers: 
-            if graph.has_edge(i, dv, 'has'): 
-                dv_level = i
-                break 
+        # # There multiple levels or units
+        # # TODO: Find level of DV
+        # levels_to_consider = list()
+        # dv_level = None
+        # for i in identifiers: 
+        #     if graph.has_edge(i, dv, 'has'): 
+        #         dv_level = i
+        #         break 
         
-        # dv_level_node = graph.get_node(dv_level)
-        for i in identifiers: 
-            if i != dv_level: 
-                # i_node = graph.get_node(i)
-                paths = list(nx.all_simple_paths(graph._graph, source=i.name, target=dv_level.name))
-                # There is a path, means level i is connected to level dv_level
-                if len(paths) > 0: 
-                    levels_to_consider.append(i)
+        # # dv_level_node = graph.get_node(dv_level)
+        # for i in identifiers: 
+        #     if i != dv_level: 
+        #         # i_node = graph.get_node(i)
+        #         paths = list(nx.all_simple_paths(graph._graph, source=i.name, target=dv_level.name))
+        #         # There is a path, means level i is connected to level dv_level
+        #         if len(paths) > 0: 
+        #             levels_to_consider.append(i)
 
-        levels_to_consider.append(dv_level)
+        # levels_to_consider.append(dv_level)
 
+        levels_to_consider = identifiers
         return levels_to_consider
 
     def generate_random_effects_for_main_effects(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> set: 
@@ -689,91 +690,178 @@ class Synthesizer(object):
 
         # For each MAIN effect
         fixed_candidates = self._generate_fixed_candidates_from_graph(graph, ivs, dv)
+
+
+        levels_included = list()
+        for (key, fixed) in fixed_candidates.items(): 
+            for f in fixed: 
+                # get parent 
+                parent = None
+                for l in levels: 
+                    if graph.has_edge(start=l, end=f, edge_type='has'): 
+                        parent = l
+                        
+                        break 
+                
+                if parent is not None: 
+                    (start_name, end_name, edge_data) = graph.get_edge(start=l, end=f, edge_type='has')
+                    # Is this a between subjects edge?
+                    if edge_data['repetitions'] == 1: 
+                        ri = RandomInterceptEffect(parent.const)
+                        random_effects.add((ri, RandomIntercept(parent)))
+
+                    # Is this a within subjects edge?
+                    elif edge_data['repetitions'] > 1: 
+                        ri = RandomInterceptEffect(parent.const)
+                        # rs = RandomSlopeEffect(f.const, i.const)
+                        crsi = CorrelatedRandomSlopeInterceptEffects(f.const, parent.const)
+                        ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, parent.const)
+
+                        random_effects.add((ri, RandomIntercept(parent)))
+                        random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=parent)))
+                        random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=parent)))
+
+                    levels_included.append(parent)
+        
+        # Should we include other random effects based on the levels that are already included?
+        for l in levels: 
+            for li in levels_included: 
+                if graph.has_edge(start=li, end=l, edge_type='has'): 
+                    (start_name, end_name, edge_data) = graph.get_edge(start=li, end=l, edge_type='has')
+
+                    if edge_data['repetitions'] == 1: 
+                        ri = RandomInterceptEffect(l.const)
+                        random_effects.add((ri, RandomIntercept(l)))
+    
+        # import pdb; pdb.set_trace()
+                
         # If it is "between-subjects" create a random intercept for the unit
         # If it is "within-subjects" create a random slope + intercept
-        for i in levels:
-            for (key, fixed) in fixed_candidates.items(): 
-                for f in fixed: 
-                    if graph.has_edge(start=i, end=f, edge_type='has'): 
-                        (start_name, end_name, edge_data) = graph.get_edge(start=i, end=f, edge_type='has')
-                        # Is this a between subjects edge?
-                        if edge_data['repetitions'] == 1: 
-                            ri = RandomInterceptEffect(i.const)
-                            random_effects.add((ri, RandomIntercept(i)))
+        # for i in levels:
+        #     for (key, fixed) in fixed_candidates.items(): 
+        #         for f in fixed: 
+        #             if graph.has_edge(start=i, end=f, edge_type='has'): 
+        #                 (start_name, end_name, edge_data) = graph.get_edge(start=i, end=f, edge_type='has')
+        #                 # Is this a between subjects edge?
+        #                 if edge_data['repetitions'] == 1: 
+        #                     ri = RandomInterceptEffect(i.const)
+        #                     random_effects.add((ri, RandomIntercept(i)))
 
-                        # Is this a within subjects edge?
-                        elif edge_data['repetitions'] > 1: 
-                            ri = RandomInterceptEffect(i.const)
-                            # rs = RandomSlopeEffect(f.const, i.const)
-                            crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
-                            ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+        #                 # Is this a within subjects edge?
+        #                 elif edge_data['repetitions'] > 1: 
+        #                     ri = RandomInterceptEffect(i.const)
+        #                     # rs = RandomSlopeEffect(f.const, i.const)
+        #                     crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+        #                     ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
 
-                            random_effects.add((ri, RandomIntercept(i)))
-                            random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
-                            random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
-                            # random_effects.add((rs, RandomSlope(iv=f, groups=i)))
-                    elif graph.has_edge(start=f, end=i, edge_type='has'): 
-                        # This only happens when both f and i are identifiers 
-                        assert(i in levels)
-                        assert(f in levels)
-                        (start_name, end_name, edge_data) = graph.get_edge(start=f, end=i, edge_type='has')
-                        rep = edge_data['repetitions']
-                        if isinstance(rep, int):
-                            rep_count = rep 
-                        else: 
-                            rep_count = 2 # GreaterThanOne
+        #                     random_effects.add((ri, RandomIntercept(i)))
+        #                     random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+        #                     random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+        #                     # random_effects.add((rs, RandomSlope(iv=f, groups=i)))
+        #             elif graph.has_edge(start=f, end=i, edge_type='has'): 
+        #                 # This only happens when both f and i are identifiers 
+        #                 assert(i in levels)
+        #                 assert(f in levels)
+        #                 (start_name, end_name, edge_data) = graph.get_edge(start=f, end=i, edge_type='has')
+        #                 rep = edge_data['repetitions']
+        #                 if isinstance(rep, int):
+        #                     rep_count = rep 
+        #                 else: 
+        #                     rep_count = 2 # GreaterThanOne
 
-                        # Is this a between subjects edge?
-                        if rep_count == 1: 
-                            ri = RandomInterceptEffect(i.const)
-                            random_effects.add((ri, RandomIntercept(i)))
+        #                 # Is this a between subjects edge?
+        #                 if rep_count == 1: 
+        #                     ri = RandomInterceptEffect(i.const)
+        #                     random_effects.add((ri, RandomIntercept(i)))
 
-                        # Is this a within subjects edge?
-                        elif rep_count > 1: 
-                            ri = RandomInterceptEffect(i.const)
-                            # rs = RandomSlopeEffect(f.const, i.const)
-                            crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
-                            ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+        #                 # Is this a within subjects edge?
+        #                 elif rep_count > 1: 
+        #                     ri = RandomInterceptEffect(i.const)
+        #                     # rs = RandomSlopeEffect(f.const, i.const)
+        #                     crsi = CorrelatedRandomSlopeInterceptEffects(f.const, i.const)
+        #                     ursi = UncorrelatedRandomSlopeInterceptEffects(f.const, i.const)
 
-                            random_effects.add((ri, RandomIntercept(i)))
-                            random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
-                            random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+        #                     random_effects.add((ri, RandomIntercept(i)))
+        #                     random_effects.add((crsi, CorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
+        #                     random_effects.add((ursi, UncorrelatedRandomSlopeAndIntercept(iv=f, groups=i)))
 
+        # import pdb; pdb.set_trace()
         return random_effects
 
+    # Follows updated Barr guidelines from https://www.frontiersin.org/articles/10.3389/fpsyg.2013.00328/full
     def generate_random_effects_for_interaction_effects(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable): 
         random_effects = set() 
 
         interaction_candidates = self.generate_interaction_effects_from_graph(graph, ivs, dv) # dict
 
         levels = self.get_valid_levels(graph, dv)
-
         # Go through two-way, n-way individually
         for key, interactions in interaction_candidates.items(): 
             
             # For each k-way interaction (e.g., All two-way interactions)
             for ixn in interactions: 
                 
-                all_within = True
+                within_subjects_subset = list()
+                per_ixn_random_effects = list()
                 # For each variable involved in the current k-way interaction 
                 for v in ixn:
-                    if all_within: 
-                        # If all variables involved are "within-subjects" create random slope for the unit 
-                        v_id = graph.get_identifier_for_variable(v)
+                    # If the variable is  "within-subjects" create random slope for the unit 
+                    # v_id = graph.get_identifier_for_variable(v)
 
-                        if v.name != v_id.name:
-                            if graph.get_edge(start=v_id, end=v, edge_type='has') is None: 
-                                import pdb; pdb.set_trace()
-                            (start_name, end_name, edge_data) = graph.get_edge(start=v_id, end=v, edge_type='has')
-                            if edge_data['repetitions'] == 1: 
-                                all_within = False
-                if all_within: 
-                    ri = RandomInterceptEffect(i.const)
-                    rs = RandomSlopeEffect(ixn, i.const) # Add a random slope for the unit variable
-                    random_effects.add((ri, RandomIntercept(i)))
-                    random_effects.add((rs, RandomSlope(iv=ixn, groups=i)))
-        
-        return random_effects
+                    for l in levels: 
+                        edge = graph.get_edge(start=l, end=v, edge_type='has')
+                        # import pdb; pdb.set_trace()
+                        if edge is not None: 
+                            # assert(l == v_id)
+                            (start_name, end_name, edge_data) = edge
+                            if edge_data['repetitions'] > 1: 
+                                ri = RandomInterceptEffect(l.const)
+                                rs = RandomSlopeEffect(v.const, l.const) # Add a random slope for the unit variable
+                                
+                                per_ixn_random_effects.append((ri, RandomIntercept(l)))
+                                per_ixn_random_effects.append((rs, RandomSlope(v, l)))
+
+                                within_subjects_subset.append(v)
+                                
+                                break
+                for e in per_ixn_random_effects:  # Add individual variable random effects
+                    random_effects.add(e)
+                # Add combination random effects
+                if len(within_subjects_subset) > 1: 
+                    combin = tuple(within_subjects_subset)
+                    if len(levels) == 1: 
+                        group = levels[0]
+                    else: 
+                        # group = levels[len(levels) - 1] # same level as DV
+                        for l in levels: 
+                            if graph.has_edge(start=l, end=dv, edge_type='has'): 
+                                group = l
+                                break
+                    ri = RandomInterceptEffect(group.const)
+                    rs = RandomSlopeEffect(group.const, group.const) # Add a random slope for the combined interaction variable   
+                    
+                    per_ixn_random_effects.append((ri, RandomIntercept(group)))
+                    per_ixn_random_effects.append((rs, RandomSlope(combin, group)))
+                    random_effects.add((ri, RandomIntercept(group)))
+                    random_effects.add((rs, RandomSlope(combin, group)))
+
+        keep = list()
+        # Remove redundancies
+        for (fact, re) in random_effects:
+            if len(keep) == 0: 
+                keep.append((fact, re))
+            else:
+                in_keep = False
+                for (k_fact, k_re) in keep: 
+                    if str(fact) == str(k_fact): 
+                        if type(re) == type(k_re): 
+                            in_keep = True
+                
+                if not in_keep: 
+                    keep.append((fact, re))
+
+        return set(keep)
+        # return keep
 
     # Build up maximal effects structure following Barr et al. 2012
     def generate_random_effects_from_graph(self, graph: Graph, ivs: List[AbstractVariable], dv: AbstractVariable) -> set: 
@@ -781,6 +869,8 @@ class Synthesizer(object):
         graph_dv = graph.get_variable(dv)
         
         levels = self.get_valid_levels(graph, dv)
+        import pdb; pdb.set_trace()
+        
         if len(levels) == 1: 
             return None
         
@@ -796,7 +886,21 @@ class Synthesizer(object):
         for e in re_ixn: 
             random_effects.add(e)
         
+        # Filter out redundancies
+        keep = set()
+        for (fact, re) in random_effects: 
+            if len(keep) == 0: 
+                keep.add((fact, re))
+            else: 
+                in_keep = False 
+                for (k_fact, k_re) in keep: 
+                    if str(k_fact) == str(fact): 
+                        in_keep = True 
+                if not in_keep: 
+                    keep.add((fact, re))
+
         # Return random effects
+        import pdb; pdb.set_trace()
         return random_effects
 
     def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 
@@ -815,14 +919,17 @@ class Synthesizer(object):
         if isinstance(dv, Numeric) or isinstance(dv, Ordinal): 
             family_facts.append(GaussianFamily(dv.const))
             family_facts.append(InverseGaussianFamily(dv.const))
-        if isinstance(dv, Count): 
-            family_facts.append(PoissonFamily(dv.const))
-        if isinstance(dv, Time): 
-            family_facts.append(GaussianFamily(dv.const))
-            family_facts.append(InverseGaussianFamily(dv.const))
-            # Expontential distribution would go here
             family_facts.append(GammaFamily(dv.const))
             family_facts.append(TweedieFamily(dv.const)) 
+            family_facts.append(PoissonFamily(dv.const))
+        # if isinstance(dv, Count): 
+        #     family_facts.append(PoissonFamily(dv.const))
+        # if isinstance(dv, Time): 
+        #     family_facts.append(GaussianFamily(dv.const))
+        #     family_facts.append(InverseGaussianFamily(dv.const))
+        #     # Expontential distribution would go here
+        #     family_facts.append(GammaFamily(dv.const))
+        #     family_facts.append(TweedieFamily(dv.const)) 
         if isinstance(dv, Nominal) or isinstance(dv, Ordinal): 
             if dv.cardinality is not None: 
                 if dv.cardinality == 2:
@@ -830,7 +937,6 @@ class Synthesizer(object):
                     family_facts.append(NegativeBinomialFamily(dv.const))
                 elif dv.cardinality > 2: 
                     family_facts.append(MultinomialFamily(dv.const))
-            # TODO: Get missing info about cardinality?
             else: 
                 pass
 
@@ -1173,7 +1279,7 @@ class Synthesizer(object):
                 group = edge_obj.group
 
                 # Add has relationship to gr 
-                gr.has(identifier=group, variable=base, has_obj=edge_obj, repetitions=GreaterThanOne())
+                gr.has(identifier=base, variable=group, has_obj=edge_obj, repetitions=1)
             
             # Transfom all Repeat into Has + Associate
             elif edge_type == 'repeat': 
@@ -1183,7 +1289,7 @@ class Synthesizer(object):
                 according_to = edge_obj.according_to
 
                 # Add has relationshipt to gr 
-                gr.has(identifier=according_to, variable=unit, has_obj=edge_obj, repetitions=unit.cardinality)
+                gr.has(identifier=unit, variable=according_to, has_obj=edge_obj, repetitions=according_to.cardinality)
                 gr.has(identifier=unit, variable=response, has_obj=edge_obj, repetitions=according_to.cardinality)
 
                 # Add implied associate relationship to gr

@@ -310,6 +310,9 @@ class Graph(object):
     def nest(self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest=None):
         # Is this edge new? 
         if not self.has_edge(start=base, end=group, edge_type='nest'): 
+            # Mark as identifiers 
+            self._add_variable(base, is_identifier=True)
+            self._add_variable(group, is_identifier=True)
             self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
         
     # Add a 'repeat' edge to the graph

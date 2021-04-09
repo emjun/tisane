@@ -8,7 +8,7 @@ class RandomEffect(object):
 
 class RandomSlope(RandomEffect):
     iv: Union[AbstractVariable, int]
-    def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable): 
+    def __init__(self, iv: Union[AbstractVariable, int, tuple], groups: AbstractVariable): 
         # Check if @param iv is 1? (meaning intercept)
         self.iv = iv
         self.groups = groups

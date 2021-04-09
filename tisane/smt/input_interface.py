@@ -907,7 +907,8 @@ class InputInterface(object):
 
         # Create div 
         # There are random effects
-        if random_effects is not None:
+        
+        if random_effects is not None and len(random_effects) > 0:
             random_effects_div = html.Div([
                 random_effects_title, 
                 # random_descrip, 
@@ -1262,7 +1263,13 @@ class InputInterface(object):
             x = interaction[0]
             color_group = interaction[1]
             facet = interaction[2]
-            fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name, trendline='ols')
+            # import pdb; pdb.set_trace()
+            fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name)
+            # if dv.cardinality > 2: 
+            #     fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name)
+            #     # fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, facet_col=facet.name, trendline='ols')
+            # else: 
+            #     fig = px.bar(data)
             fig_elt = dcc.Graph(id=f'three_way_interaction_chart_{x.name}_{color_group.name}_{facet.name}', figure=fig)        
     
 
@@ -1294,7 +1301,8 @@ class InputInterface(object):
                 d = data[0]
                 fact = d['fact']
                 re = d['effect']
-                assert(isinstance(re, RandomIntercept))
+                # import pdb; pdb.set_trace()
+                # assert(isinstance(re, RandomIntercept))
 
                 # Add random effect fact to global map
                 __str_to_z3__[str(fact)] = fact
@@ -1318,6 +1326,7 @@ class InputInterface(object):
                         hidden=False,
                         id=f'{var_name}_random_effects'
                     )
+                rows.append(row)
 
             elif len(data) > 1: 
                 facts = dict()
@@ -1329,8 +1338,8 @@ class InputInterface(object):
                     __str_to_z3__[str(fact)] = fact
                     
                     
-                    import pdb; pdb.set_trace()
-                    assert(isinstance(re, CorrelatedRandomSlopeAndIntercept) or isinstance(re, UncorrelatedRandomSlopeAndIntercept))
+                    # import pdb; pdb.set_trace()
+                    # assert(isinstance(re, CorrelatedRandomSlopeAndIntercept) or isinstance(re, UncorrelatedRandomSlopeAndIntercept))
                     if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
                         facts['Correlated'] = fact
                     if isinstance(re, UncorrelatedRandomSlopeAndIntercept): 
@@ -1349,17 +1358,18 @@ class InputInterface(object):
                 badges.append(ri_badge)
                 badges.append(rs_badge)
                 
-                correlated_radio_items = self.create_correlated_radio_items(facts)
+                if len(facts.keys()) > 0: 
+                    correlated_radio_items = self.create_correlated_radio_items(facts)
                 
-                content = [name] + badges
-                
-                row = html.Tr(
-                    children=[html.Td(children=content), html.Td(children=correlated_radio_items)],
-                    hidden=False,
-                    id=f'{name_str}_random_effects'
-                )
+                    content = [name] + badges
+                    
+                    row = html.Tr(
+                        children=[html.Td(children=content), html.Td(children=correlated_radio_items)],
+                        hidden=False,
+                        id=f'{name_str}_random_effects'
+                    )
             
-            rows.append(row)
+                    rows.append(row)
 
         table_body = [html.Tbody(children=rows)]
         table = dbc.Table(children=table_body, striped=False, bordered=False, id='random_effects_table')
@@ -1379,7 +1389,7 @@ class InputInterface(object):
                         {"label": "Uncorrelated", "value": f'{str(uncorrelated_fact)}', 'disabled': False},
                     ],
                     value=f'{str(correlated_fact)}',
-                    id=f"{'_OR'.join(facts)}_choice",
+                    id=f"{correlated_fact}_OR_{uncorrelated_fact}_choice",
                     inline=True,
                 ),
             ]
@@ -1404,7 +1414,12 @@ class InputInterface(object):
                 iv = re.iv
                 group = re.groups
                 
-                key = (iv.name, group.name)
+                # Is it an interaction effect? 
+                if isinstance(iv, tuple): 
+                    key = [v.name for v in iv]
+                    key = tuple(key)
+                else: 
+                    key = (iv.name, group.name)
                 val = {'fact': re_fact, 'effect': re}
                 if key not in re_dict.keys(): 
                     re_dict[key] = list() 
@@ -1450,9 +1465,11 @@ class InputInterface(object):
         # Add entries
         for k, v in new_entries.items():
             re_dict[k] = v
+        
         # Delete entries
         for d in to_delete: 
-            del re_dict[d]
+            if d in re_dict.keys(): 
+                del re_dict[d]
 
         return re_dict
 
