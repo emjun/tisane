@@ -186,7 +186,7 @@ class QueryManager(object):
                 # ds_facts = input_obj.collect_ambiguous_data_structure_facts()
                 # treatment_facts = input_obj.collect_ambiguous_treatment_facts()
 
-                # import pdb; pdb.set_trace()
+                # 
         
         if isinstance(input_obj, Graph): 
             if isinstance(output_obj, Design): 
@@ -215,7 +215,7 @@ class QueryManager(object):
         main_effects = input_obj.consts['main_effects']
         interactions = input_obj.consts['interactions']
         mixed_effects = None # mixed effects
-        # import pdb; pdb.set_trace()
+        # 
         KB.ground_rules(dv_const=dv_const, main_effects=main_effects, interactions=interactions)
         
         # After grounding KB, collect rules to guide synthesis
@@ -251,7 +251,7 @@ class QueryManager(object):
 
         nodes = graph.get_nodes()
 
-        import pdb; pdb.set_trace()
+        
         for var in model_variables: 
             # Data Transformations
             # Induce UNSAT 
@@ -312,7 +312,7 @@ class QueryManager(object):
             elif output.upper() == 'CONCEPTUAL MODEL': 
                 rules_to_consider['graph_rules'] = KB.graph_rules
             # elif output.upper() == 'STUDY DESIGN': 
-            #     # import pdb; pdb.set_trace()
+            #     # 
             #     # TODO: Should allow separate queries for data schema and data collection?? probably not?
             #     rules_to_consider['data_type_rules'] = KB.data_type_rules
             #     rules_to_consider['data_transformation_rules'] = KB.data_transformation_rules
@@ -332,7 +332,7 @@ class QueryManager(object):
             # Add rules
             s.add(rule_set)
             (model, updated_facts) = self.check_update_constraints(solver=s, assertions=facts)
-            # import pdb; pdb.set_trace()
+            # 
             facts = updated_facts        
         
         mdl =  s.model()
@@ -342,7 +342,7 @@ class QueryManager(object):
     # @param unsat_core is the set of cosntraints that caused a conflict
     # @param keep_clause is the clause in unsat_core to keep and that resolves the conflict
     def update_clauses(self, pushed_constraints: list, unsat_core: list, keep_clause): 
-        # import pdb; pdb.set_trace()
+        # 
         # Verify that keep_clause is indeed a subset of unsat_core
         if keep_clause not in unsat_core: 
             raise ValueError (f'Keep clause ({keep_clause}) not in unsat_core({unsat_core})')
@@ -425,13 +425,13 @@ class QueryManager(object):
         return keep
 
     def check_update_constraints(self, solver: Solver, assertions: list) -> List: 
-        # import pdb; pdb.set_trace()
+        # 
         state = solver.check(assertions)
         if (state == unsat): 
             unsat_core = solver.unsat_core() 
             
             if len(unsat_core) == 0: 
-                import pdb; pdb.set_trace()
+                raise ValueError(f'Unsat core is == 0: {unsat_core}')    
             assert(len(unsat_core) > 0)
 
             # Ask user for input
@@ -526,7 +526,7 @@ class QueryManager(object):
                 #     pass
                 #     # Add both RandomSlope and RandomIntercept
 
-                elif 'RandomSlope' in function: 
+                elif 'RandomSlopeEffect' in function: 
                     # Get variable names
                     iv_name = fact_dict['start']
                     group_name = fact_dict=['end']
@@ -543,9 +543,9 @@ class QueryManager(object):
 
                     # Is this a new random effect? 
                     if not already_have: 
-                        random_ivs.append(RandomSlope(iv=iv_var, groups=group_var))
+                        random_ivs.append(RandomSlopeEffect(iv=iv_var, groups=group_var))
                 
-                elif 'RandomIntercept' in function: 
+                elif 'RandomInterceptEffect' in function: 
                     # Get variable names
                     iv_name = fact_dict['start']
                     group_name = fact_dict=['end']
@@ -562,7 +562,7 @@ class QueryManager(object):
 
                     # Is this a new random effect? 
                     if not already_have: 
-                        random_ivs.append(RandomIntercept(iv=iv_var, groups=group_var))
+                        random_ivs.append(RandomInterceptEffect(iv=iv_var, groups=group_var))
 
             # Is this fact about the Family distribution?
             elif 'Family' in function: 

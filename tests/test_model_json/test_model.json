@@ -1,0 +1,1 @@
+"{\"main_effects\": [\"FixedEffect(Cond, Resp)\"], \"interaction_effects\": [], \"random_effects\": [\"RandomInterceptEffect(SubjID)\", \"RandomSlopeEffect(Cond, SubjID)\", \"RandomInterceptEffect(ItemID)\"], \"family\": \"GaussianFamily(Resp)\", \"link\": \"IdentityTransform(Resp)\"}"

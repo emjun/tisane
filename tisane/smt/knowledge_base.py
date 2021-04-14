@@ -7,10 +7,10 @@ class KnowledgeBase(object):
         self.effects_rules = [
                 ForAll([x], Xor(FixedEffect(x, dv_const), NoFixedEffect(x, dv_const))),
                 ForAll([xs], Xor(Interaction(xs), NoInteraction(xs))),
-                ForAll([x0, x1], Xor(RandomSlope(x0, x1), NoRandomSlope(x0, x1))),
-                ForAll([x0, x1], Xor(RandomIntercept(x0, x1), NoRandomIntercept(x0, x1))),
-                ForAll([x0, x1], Xor(CorrelateRandomSlopeIntercept(x0, x1), NoCorrelateRandomSlopeIntercept(x0, x1))),
-                ForAll([x0, x1], Implies(CorrelateRandomSlopeIntercept(x0, x1), And([RandomSlope(x0, x1), RandomIntercept(x0, x1)])))
+                ForAll([x0, x1], Xor(RandomSlopeEffect(x0, x1), NoRandomSlopeEffect(x0, x1))),
+                ForAll([x0, x1], Xor(RandomInterceptEffect(x0, x1), NoRandomInterceptEffect(x0, x1))),
+                ForAll([x0, x1], Xor(CorrelateRandomSlopeInterceptEffects(x0, x1), NoCorrelateRandomSlopeInterceptEffects(x0, x1))),
+                ForAll([x0, x1], Implies(CorrelateRandomSlopeInterceptEffects(x0, x1), And([RandomSlopeEffect(x0, x1), RandomInterceptEffect(x0, x1)])))
                 # TODO: ADD RULE FOR CANT INTERACTION X with Y?
             ]
 
@@ -29,6 +29,22 @@ class KnowledgeBase(object):
         ]
 
     def ground_data_transformation_rules(self, dv_const: Const): 
+        self.default_family_to_transformation = [
+            Implies(GaussianFamily(dv_const), IdentityTransform(dv_const)),
+
+            Implies(InverseGaussianFamily(dv_const), InverseSquaredTransform(dv_const)),
+
+            Implies(PoissonFamily(dv_const), LogTransform(dv_const)),
+
+            Implies(GammaFamily(dv_const), InverseTransform(dv_const)),
+            
+            Implies(TweedieFamily(dv_const), LogTransform(dv_const)),
+
+            Implies(BinomialFamily(dv_const), LogitTransform(dv_const)),
+
+            Implies(NegativeBinomialFamily(dv_const), LogTransform(dv_const)),
+        ]
+
         self.family_to_transformation_rules = [
             Implies(GaussianFamily(dv_const), LogTransform(dv_const)), 
             Implies(GaussianFamily(dv_const), SquarerootTransform(dv_const)),
@@ -63,7 +79,7 @@ class KnowledgeBase(object):
             # Power not yet supported in statsmodels
             # Implies(NegativeBinomialFamily(dv_const), PowerTransform(dv_const)),
             
-            # Multinomial family is not supported in statsmodels
+            # Multinomial family is not supported in statsmodels for GLM
             # Implies(MultinomialFamily(dv_const), IdentityTransform(dv_const))
         ]
 

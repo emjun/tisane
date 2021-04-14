@@ -1,8 +1,7 @@
 from tisane.main import (
                             # Tisane,
                             infer_from,
-                            synthesize_statistical_model,
-                            verify
+                            infer_statistical_model_from_design
                             
 )
 
@@ -10,6 +9,8 @@ from tisane.variable import (
                                 Nominal, 
                                 Ordinal,
                                 Numeric,
+                                Time, 
+                                Count,
                                 Variable
 )
 

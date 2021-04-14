@@ -20,20 +20,20 @@ FixedEffect = Function('FixedEffect', Object, Object, BoolSort())
 NoFixedEffect = Function('NoFixedEffect', Object, Object, BoolSort())
 Interaction = Function('Interaction', SetSort(Object), BoolSort())
 NoInteraction = Function('NoInteraction', SetSort(Object), BoolSort())
-RandomSlope = Function('RandomSlope', Object, Object, BoolSort())
-NoRandomSlope = Function('NoRandomSlope', Object, Object, BoolSort())
-RandomIntercept = Function('RandomIntercept', Object, Object, BoolSort())
-NoRandomIntercept = Function('NoRandomIntercept', Object, Object, BoolSort())
-CorrelateRandomSlopeIntercept = Function('CorrelateRandomSlopeIntercept', Object, Object, BoolSort())
-NoCorrelateRandomSlopeIntercept = Function('NoCorrelateRandomSlopeIntercept', Object, Object, BoolSort())
+RandomSlopeEffect = Function('RandomSlopeEffect', Object, Object, BoolSort())
+NoRandomSlopeEffect = Function('NoRandomSlopeEffect', Object, Object, BoolSort())
+RandomInterceptEffect = Function('RandomInterceptEffect', Object, BoolSort())
+# NoRandomIntercept = Function('NoRandomIntercept', Object, Object, BoolSort())
+CorrelatedRandomSlopeInterceptEffects = Function('CorrelatedRandomSlopeInterceptEffects', Object, Object, BoolSort())
+UncorrelatedRandomSlopeInterceptEffects = Function('UncorrelatedRandomSlopeInterceptEffects', Object, Object, BoolSort())
 
 # TODO: Remove
 MainEffect = Function('MainEffect', Object, Object, BoolSort())
 NoMainEffect = Function('NoMainEffect', Object, Object, BoolSort())
 
 # Variable Relationship Graph
-Cause = Function('Cause', Object, Object, BoolSort())
-Correlate = Function('Correlate', Object, Object, BoolSort())
+# Cause = Function('Cause', Object, Object, BoolSort())
+# Correlate = Function('Correlate', Object, Object, BoolSort())
 
 # Data schema, data type
 BinaryDataType = Function('BinaryDataType', Object, BoolSort())

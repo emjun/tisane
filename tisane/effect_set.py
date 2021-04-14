@@ -93,7 +93,7 @@ class EffectSet(object):
     
     # def get_all_iv_effects(self):
     #     for m in self.get_main_effects().effect:
-    #         import pdb; pdb.set_trace()
+    #         
 
     # @returns dictionary with all effects and properties
     def to_dict(self): 

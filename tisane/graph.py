@@ -1,8 +1,9 @@
-from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure
+from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric, Treatment, Nest, RepeatedMeasure, Has, Associate, Cause, GreaterThanOne
 
 import networkx as nx
 import pydot
 from typing import List, Union, Tuple
+import copy
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -33,7 +34,7 @@ class Graph(object):
     def has_variable(self, variable: AbstractVariable) -> bool: 
         return self._graph.has_node(variable.name)
     
-    # @returns True if the edge between @params start and end is in the graph
+    # @returns True if the edge between @params start and end is in the graph; False otherwise
     def has_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> bool: 
         # return self._graph.has_edge(start.name, end.name)
 
@@ -46,7 +47,7 @@ class Graph(object):
         edges = self.get_edges()
 
         for (n0, n1, edge_data) in edges: 
-
+            
             if n0 == start.name and n1 == end.name:  
                  if edge_type == edge_data['edge_type']: 
                     return (n0, n1, edge_data)
@@ -70,7 +71,7 @@ class Graph(object):
 
     # Add edge to graph
     # If nodes aren't already in the graph, add them
-    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
+    def _add_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str, repetitions: int=None, edge_obj: Union[Treatment, Nest, RepeatedMeasure]=None): 
 
         # If the variables aren't in the graph, add nodes first.
         start_node = None
@@ -92,13 +93,13 @@ class Graph(object):
         # up the actual variable objects 
         # Add edge using NetworkGraph's API
         if edge_type == 'treat': 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
         elif edge_type == 'nest': 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
         elif edge_type == 'repeat': 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
         else: 
-            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type)
+            self._graph.add_edge(start_node[0], end_node[0], edge_type=edge_type, edge_obj=edge_obj, repetitions=repetitions)
 
     # @returns pydot object (representing DOT graph)representing conceptual graph info
     # Iterates through internal graph object and constructs vis
@@ -147,7 +148,7 @@ class Graph(object):
         nodes = self.get_nodes()
 
         for n in nodes: 
-            if n[1]['variable'] == variable: 
+            if n[1]['variable'].name == variable.name: 
                 return n
     
     # @return list of edges in graph
@@ -192,6 +193,34 @@ class Graph(object):
                 if n_var == var: 
                     return self._graph.predecessors(n) # pass node, not variable
 
+    # @return a list of identifiers
+    def get_identifiers(self) -> List[AbstractVariable]: 
+        identifiers = list() 
+
+        nodes = self.get_nodes()
+
+        for (n, data) in nodes: 
+            is_id = data['is_identifier']
+            n_var = data['variable']
+            if is_id: 
+                identifiers.append(n_var)
+        
+        return identifiers
+    
+    # @return the variable in graph that is the identifier for @param variable
+    def get_identifier_for_variable(self, variable: AbstractVariable) -> AbstractVariable: 
+        identifiers = self.get_identifiers() 
+
+        # Is the variable itself an identifier?
+        if variable in identifiers: 
+            return variable
+
+        for i in identifiers: 
+            if self.has_edge(i, variable, 'has'): 
+                return i
+        
+        return None
+
     # Update the edge by first removing then adding
     def update_edge(self, start: AbstractVariable, end: AbstractVariable, new_edge_type: str): 
         start_node = self._get_variable_node(variable=start)
@@ -207,9 +236,39 @@ class Graph(object):
     # Add a node that identifies levels in the Graph    
     def add_identifier(self, identifier: AbstractVariable): 
         self._add_variable(variable=identifier, is_identifier=True)
+    
+    # TODO: Add repetitions for between/within; I think make repetitions an int not a variable
+    def add_relationship(self, relationship: Union[Has, Treatment, Nest, Associate, Cause]): 
+        if isinstance(relationship, Has): 
+            identifier = relationship.variable
+            measure = relationship.measure
+            repetitions = relationship.repetitions
+            self.has(identifier, measure, relationship, repetitions)
+        elif isinstance(relationship, Treatment): 
+            identifier = relationship.unit
+            treatment = relationship.treatment
+            repetitions = relationship.num_assignments
+            self.treat(unit=identifier, treatment=treatment, treatment_obj=relationship)
+        elif isinstance(relationship, Nest): 
+            base = relationship.base
+            group = relationship.group 
+            self.nest(base, group, relationship)
+        elif isinstance(relationship, Associate): 
+            lhs = relationship.lhs
+            rhs = relationship.rhs 
+            self.associate(lhs, rhs)
+        elif isinstance(relationship, Cause): 
+            cause = relationship.cause
+            effect = relationship.effect  
+            self.cause(cause, effect)
+        elif isinstance(relationship, RepeatedMeasure):  #TODO: Rename to Repeat? 
+            unit = relationship.unit 
+            response = relationship.response 
+            according_to = relationship.according_to
+            self.repeat(unit=unit, response=response, repeat_obj=relationship)
 
     # Add an edge that indicates that identifier 'has' the variable measurement
-    def has(self, identifier: AbstractVariable, variable: AbstractVariable): 
+    def has(self, identifier: AbstractVariable, variable: AbstractVariable, has_obj: Union[Has, Treatment, Nest, RepeatedMeasure], repetitions: Union[int, GreaterThanOne]): 
         if not self.has_variable(identifier): 
             self._add_variable(variable=identifier, is_identifier=True)
         else: 
@@ -218,11 +277,11 @@ class Graph(object):
             node_data['is_identifier'] = True
         # Is this edge new? 
         if not self.has_edge(start=identifier, end=variable, edge_type='has'): 
-            self._add_edge(start=identifier, end=variable, edge_type='has')
+            self._add_edge(start=identifier, end=variable, edge_type='has', edge_obj=has_obj, repetitions=repetitions)
 
     # Add an ''associate'' edge to the graph 
     # Adds two edges, one in each direction 
-    def associate(self, lhs: AbstractVariable, rhs: AbstractVariable): 
+    def associate(self, lhs: AbstractVariable, rhs: AbstractVariable):
         # Is this edge new? 
         if not self.has_edge(start=lhs, end=rhs, edge_type='associate'): 
             assert(not self.has_edge(start=rhs, end=lhs, edge_type='associate'))
@@ -251,17 +310,61 @@ class Graph(object):
     def nest(self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest=None):
         # Is this edge new? 
         if not self.has_edge(start=base, end=group, edge_type='nest'): 
+            # Mark as identifiers 
+            self._add_variable(base, is_identifier=True)
+            self._add_variable(group, is_identifier=True)
             self._add_edge(start=base, end=group, edge_type='nest', edge_obj=nest_obj)
-    
+        
     # Add a 'repeat' edge to the graph
     def repeat(self, unit: AbstractVariable, response: AbstractVariable, repeat_obj: RepeatedMeasure): 
         # Is this edge new? 
         if not self.has_edge(start=unit, end=response, edge_type='repeat'): 
             self._add_edge(start=unit, end=response, edge_type='repeat', edge_obj=repeat_obj)
 
-    # Generate Z3 consts that correspond to nodes in this graph 
-    def generate_consts(self): 
-        pass
+    # # Generate Z3 consts that correspond to nodes in this graph 
+    # def generate_consts(self): 
+    #     pass
 
+    # @returns sub-graph containing only conceptual edges
+    def get_conceptual_subgraph(self):
+        gr = copy.deepcopy(self)
+
+        edges = self.get_edges()
+        for (n0, n1, edge_data) in edges:
+            edge_type = edge_data['edge_type']
+            if edge_type == 'cause' or edge_type == 'associate':
+                pass
+            else: 
+                gr._graph.remove_edge(n0, n1)
+
+        return gr
     
-from tisane.smt.query_manager import QM
+    # @returns sub-graph containing only CAUSAL edges
+    def get_causal_subgraph(self):
+        gr = copy.deepcopy(self)
+
+        edges = self.get_edges()
+        for (n0, n1, edge_data) in edges:
+            edge_type = edge_data['edge_type']
+            if edge_type == 'cause':
+                pass
+            else: 
+                gr._graph.remove_edge(n0, n1)
+
+        return gr
+    
+    # Remove outgoing associative relationships from the DV
+    # Remove outgoing edges from @param variable
+    def remove_outgoing_edges(self, variable: AbstractVariable):
+        assert(self.has_variable(variable))
+        gr = copy.deepcopy(self)
+
+        # Iterate over outgoing edges from dv
+        for n in self._graph.neighbors(variable.name):
+            gr._graph.remove_edge(variable.name, n)
+        
+        return gr
+    
+    
+    
+# from tisane.smt.query_manager import QM

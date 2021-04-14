@@ -2,7 +2,8 @@ from tisane.data import Dataset, DataVector
 
 import pandas as pd
 from enum import Enum 
-from typing import Any
+from typing import Any, List, Union
+import typing
 from z3 import *
 
 
@@ -14,40 +15,36 @@ Class for expressing (i) that there is a treatment and (ii) how there is a treat
 Used within Class Design
 """
 class Treatment(object): 
-    unit: 'AbstractVariable'
     treatment: 'AbstractVariable'
-    number_of_assignments: int # 1 means Between-subjects, >1 means Within-subjects
+    unit: 'AbstractVariable'
+    num_assignments: int # 1 means Between-subjects, >1 means Within-subjects
     # graph: Graph # TODO: Maybe? 
 
-    def __init__(self, unit: 'AbstractVariable', treatment: 'AbstractVariable', number_of_assignments: int=1): 
-        self.unit = unit
+    def __init__(self, treatment: 'AbstractVariable', unit: 'AbstractVariable', num_assignments: int):
         self.treatment = treatment
-        self.number_of_assignments = number_of_assignments
+        self.unit = unit
+        self.num_assignments = num_assignments
 
-        # Maybe?
-        # self.graph = Graph()
-        # graph.treat(unit=unit, treatment=treatment)
-        
         # TODO: Check that allocation is divisble? 
         # TODO: Assumption that treatment is categorical, not continuous? 
     
-    # Default to between subjects
-    def assign(self, number_of_assignments: int, unit: 'AbstractVariable'=None): 
-        assert(unit is self.unit)
-        self.number_of_assignments = number_of_assignments
+    # # Default to between subjects
+    # def assign(self, number_of_assignments: int, unit: 'AbstractVariable'=None): 
+    #     assert(unit is self.unit)
+    #     self.number_of_assignments = number_of_assignments
 
-        # TODO: Check if number_of_assignments < cardinality of treatment?
+    #     # TODO: Check if number_of_assignments < cardinality of treatment?
 
 """
 Class for expressing Nesting relationship between variables (levels of independent variables in a design, statistical model)
 """
 class Nest(object): 
-    unit: 'AbstractVariable'
+    base: 'AbstractVariable'
     group: 'AbstractVariable'
     # graph: Graph # TODO: Maybe? 
 
-    def __init__(self, unit: 'AbstractVariable', group: 'AbstractVariable'): 
-        self.unit = unit
+    def __init__(self, base: 'AbstractVariable', group: 'AbstractVariable'): 
+        self.base = base
         self.group = group
     
         # Maybe?
@@ -60,17 +57,17 @@ Class for expressing Repeated measures
 class RepeatedMeasure(object): 
     unit: 'AbstractVariable'
     response: 'AbstractVariable'
-    number_of_measures: int
+    according_to: 'AbstractVariable'
+    # count_variable: 'AbstractVariable'
+    # repetitions: int
     # graph: Graph # TODO: Maybe? 
 
-    def __init__(self, unit: 'AbstractVariable', response: 'AbstractVariable', number_of_measures: int): 
+    def __init__(self, unit: 'AbstractVariable', response: 'AbstractVariable', according_to: 'AbstractVariable'): #, repetitions: int): 
         self.unit = unit
         self.response = response
-        self.number_of_measures = number_of_measures
-    
-        # Maybe?
-        # self.graph = Graph()
-        # graph.treat(unit=unit, manipulation=manipulation)
+        self.according_to = according_to
+        # self.repetitions = repetitions
+        # self.repetitions = self.count_variable.cardinality
 
 """
 Class for Cause relationships
@@ -94,17 +91,35 @@ class Associate(object):
         self.lhs = lhs
         self.rhs = rhs
 
+"""
+Class for Has relationships
+"""
+class Has(object):
+    variable: 'AbstractVariable'
+    measure: 'AbstractVariable'
+    repetitions: int
+    # repetitions: 'AbstractVariable'
+
+    # Default is between subjects, only once
+    def __init__(self, variable: 'AbstractVariable', measure: 'AbstractVariable', repetitions: int):
+        self.variable = variable
+        self.measure = measure
+        self.repetitions = repetitions
+
 class AbstractVariable(object): 
     name: str 
     data : DataVector
     properties : dict
     transform : str
+    relationships: List[typing.Union[Associate, Cause, Has, Nest, Treatment, RepeatedMeasure]]
 
     const : Object # Z3 const 
 
     def __init__(self, name=str): 
         self.name = name
         self.const = Const(self.name, Object) # Z3 const
+
+        self.relationships = list()
 
     # @returns True if AbstractVariable has data associated with it, False otherwise
     def hasData(self):
@@ -122,30 +137,106 @@ class AbstractVariable(object):
 
         return ls
 
+    def has(self, measure: 'AbstractVariable', **kwargs):
+        if 'repetitions' in kwargs:
+            rep = int(kwargs['repetitions'])
+            if rep > 1: 
+                self.has_multiple(measure=measure, repetitions=rep)
+            else: 
+                self.has_unique(measure=measure)    
+        else: 
+            self.has_unique(measure=measure)
+
+    # Update both variables
+    def has_unique(self, measure: 'AbstractVariable'):
+        has_relat = Has(variable=self, measure=measure, repetitions=1)
+        self.relationships.append(has_relat)
+        measure.relationships.append(has_relat)
+    
+    # Update both variables
+    def has_multiple(self, measure: 'AbstractVariable', repetitions: int): 
+        has_relat = Has(variable=self, measure=measure, repetitions=repetitions)
+        self.relationships.append(has_relat)
+        measure.relationships.append(has_relat)
+
+    # @param associated with this variable
+    def _associate(self, rhs: 'AbstractVariable'):
+        assoc = Associate(lhs=self, rhs=rhs)
+        self.relationships.append(assoc)
+    
+    def associates_with(self, variable: 'AbstractVariable'):
+        # Update both variables
+        self._associate(variable)
+        
+        variable._associate(self)
+
     # @param number_of_assignments indicates the number of times that the @param unit receives the treatment (self)
     # @param number_of_assignments default is 1 (between-subjects)
     # @return Treatment 
-    def treat(self, unit: 'AbstractVariable', number_of_assignments: int=1) -> Treatment: 
-        return Treatment(unit=unit, treatment=self, number_of_assignments=number_of_assignments)
+    def treat(self, variable: 'AbstractVariable', num_assignments: int=1): 
+        rep = None
+        assign = num_assignments
+        # Between subjects? 
+        if assign == 1: 
+            rep = 1
+        # Full within-subjects design? 
+        elif assign == self.cardinality: 
+            rep = self.cardinality 
+        # Partial within-subjects design
+        else: 
+            if assign < cardinality: 
+                rep = assign 
+            else: 
+                raise ValueError(f"Invalid number of assignments of {self.name} to {variable.name}. Specified number of assignments ({assign}) is greater than cardinality of {self.name} ({self.cardinality})")
+        
+        # variable.has(measure=self, repetitions=rep)
+        treatment = Treatment(treatment=self, unit=variable, num_assignments=rep)
+        self.relationships.append(treatment)
+        variable.relationships.append(treatment)
+        
+        # if repetitions is not None:
+        #     variable.has(measure=self, repetitions=self.cardinality)
+        # else: 
+        #     variable.has(measure=self)
+
+    def treats(self, variable: 'AbstractVariable', num_assignments: int=1): 
+        self.treat(variable, num_assignments)
 
     # @param group is the group (level 2) that self is nested under (level 1)
-    # @return Nest
-    def nested_under(self, group: 'AbstractVariable'): 
-        return Nest(unit=self, group=group)
+    # Add nested relationships to this variable
+    def nest_under(self, group: 'AbstractVariable'): 
+        # Update both variables
+        nest_relat = Nest(base=self, group=group)
+        self.relationships.append(nest_relat)
+        group.relationships.append(nest_relat)
+        # return Nest(unit=self, group=group)
+    
+    # Provide alternative that might read nicer grammatically
+    def nests_under(self, group: 'AbstractVariable'): 
+        self.nest_under(group)
 
     # @param response is what is measured repeatedly
     # self is who/unit that provides the repeated measure
     # @return RepeatedMeasure
-    def repeat(self, response: 'AbstractVariable', number_of_measures: int): 
-        return RepeatedMeasure(unit=self, response=response, number_of_measures=number_of_measures)
+    def repeat(self, response: 'AbstractVariable', according_to: 'AbstractVariable'): 
+        repeat_relat = RepeatedMeasure(unit=self, response=response, according_to=according_to)
+        self.relationships.append(repeat_relat)
+        response.relationships.append(repeat_relat)
+        
+    
+    def repeats(self, response: 'AbstractVariable', according_to: 'AbstractVariable'):
+        return self.repeat(response=response, according_to=according_to)
 
     # @param effect the variable causes
     def cause(self, effect: 'AbstractVariable'):
-        return Cause(cause=self, effect=effect)
+        # Update both variables
+        cause_relat = Cause(cause=self, effect=effect)
+        self.relationships.append(cause_relat)
+        effect.relationships.append(cause_relat)
 
-    # @param associated with this variable
-    def associate(self, rhs: 'AbstractVariable'):
-        return Associate(lhs=self, rhs=rhs)
+    # Provide multiple function names for 'CAUSE' that might read more correctly 
+    def causes(self, effect: 'AbstractVariable'): 
+        self.cause(effect=effect)
         
     # Apply the @param transformation to the AbstractVariable
     def transform(self, transformation: str): 
@@ -277,10 +368,31 @@ class Numeric(AbstractVariable):
         return f"NumericVariable: data:{self.data}"
     
     def get_cardinality(self): 
-        # TODO: Does this make sense to do?
         raise NotImplementedError
+
+class Count(AbstractVariable): 
+    def __init(self, name: str, data=None, **kwargs): 
+        super(Count, self).__init__(name)
+        self.data = data 
+
+class Time(AbstractVariable): 
+    def __init(self, name: str, data=None, **kwargs): 
+        super(Time, self).__init__(name)
+        self.data = data 
+
+
+class Unit(Nominal):
+    def __init__(self, name: str):
+        super(Unit, self).__init__(name)
 
 # Wrapper around AbstractVariable class
 class Variable(AbstractVariable): 
     def __init__(self, name: str): 
         super(Variable, self).__init__(name)
+
+# Represents a value greater than 1 
+class GreaterThanOne(object): 
+    value: int
+
+    def __init__(self): 
+        self.value = 2

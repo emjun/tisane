@@ -36,7 +36,7 @@ class Property(object):
         for _ in range(self.arity):
             z3_args.append(z3.BoolSort())
         z3_args.append(z3.BoolSort())
-        # import pdb; pdb.set_trace()
+        # 
         self.__z3__ = z3.Function(self.name, *z3_args)  # e.g. continuous(x)
         
         # self.__cache__ = {}
@@ -58,7 +58,7 @@ class Property(object):
         return hash((self.name, self.method))
     
     def __call__(self, *var_names):
-        # import pdb; pdb.set_trace()
+        # 
         # if len(var_names) != self.arity:
         #     raise Exception(f"{self.name} property has arity {self.arity} " \
         #                     f"found {len(var_names)} arguments")

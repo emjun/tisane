@@ -9,8 +9,8 @@ from tisane.smt.results import AllStatisticalResults
 import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
 from tisane.smt.synthesizer import Synthesizer
-
-
+from tisane.smt.input_interface import InputInterface
+from tisane.code_generator import *
 
 from enum import Enum 
 from typing import List, Union
@@ -18,7 +18,7 @@ import copy
 from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
-
+import json
 
 ##### Functions that are not associated with a class/object
 def query(input_obj: Union[StatisticalModel, Design, Graph], output: str): 
@@ -55,7 +55,7 @@ def infer_from(input_: Union[Design], output_: str):
     elif isinstance(input_, StatisticalModel):
         if output_.upper() == 'STUDY DESIGN': 
             design = query(input_obj=input_, output=output_)
-            import pdb; pdb.set_trace()
+            
             return design 
         elif output_.upper() == 'VARIABLE RELATIONSHIP GRAPH': 
             gr = query(input_obj=input_, output=output_)
@@ -69,10 +69,142 @@ def infer_from(input_: Union[Design], output_: str):
 
 # @returns statistical model that reflects the study design 
 def synthesize_statistical_model(design: Design): 
-    # Invoke synthesizer
+    ### Initial conceptual checks
+    # TODO: Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    # TODO: Check that the DV does not cause one or more IVs
     synth = Synthesizer()
-    return synth.synthesize_statistical_model(design=design)
-    # return QM.synthesize_statistical_model(dv=design.dv, graph=design.graph)
+
+    ### Generate possible effects, family, and link based on input design (graph)
+    main_effects_options = synth.generate_main_effects(design=design)
+    interaction_effects_options = synth.generate_interaction_effects(design=design)
+    random_effects_options = synth.generate_random_effects(design=design)
+    # random_effects_options = list()
+    # May want to load a dictionary of family to link
+    family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
+    # family_options = synth.generate_family_distributions(design=design)
+    # link_options = synth.generate_link_functions(design=design)
+
+    # Change to:
+    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
+    # spec is SM or some json dump -> SM -> code generated
+    
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
+    
+    # Read JSON file 
+    sm = None
+    f = open('model_spec.json', 'r') 
+    
+    # Construct StatisticalModel from JSON spec
+    model_json = f.read()
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset)
+    # sm = StatisticalModel().from_json(f.read()) 
+
+    # Generate code from SM
+    script = generate_code(sm)
+    
+    return scipt #(TODO: look into replacing the code snippet in original program)
+    
+# Checks that the IVS for @param design have a conceptual relationship with the DV
+# Issues a warning if an independent variable does not cause or associate with the DV
+def check_design_ivs(design: Design): 
+    dv = design.dv
+    for i in design.ivs: 
+        has_cause = design.graph.has_edge(start=i, end=dv, edge_type='cause')
+        has_associate = design.graph.has_edge(start=i, end=dv, edge_type='associate')
+
+        # Variable i has neither a cause nor an associate relationship with the DV
+        if not has_cause and not has_associate: 
+            raise ValueError (f"The independent variable {i.name} does not have a conceptual relationship with the dependent variable {dv.name}. Every independent variable should either CAUSE or  ASSOCIATE_WITH the dependent variable.")
+
+# Checks that the DV does not cause any of the IVs
+# Issues a warning if dependent variable causes an independent variable
+def check_design_dv(design: Design): 
+    dv = design.dv
+
+    for i in design.ivs: 
+        dv_causes = design.graph.has_edge(start=dv, end=i, edge_type='cause')
+
+        if dv_causes: 
+            raise ValueError (f"The dependent variable {dv.name} causes the independent variable {i.name}.")
+
+# @returns statistical model that reflects the study design 
+def infer_statistical_model_from_design(design: Design): 
+    ### Initial conceptual checks
+    # Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    check_design_ivs(design)
+    # Check that the DV does not cause one or more IVs
+    check_design_dv(design)
+
+    synth = Synthesizer()
+
+    ### Generate possible effects, family, and link based on input design (graph)
+    gr = synth.transform_to_has_edges(design.graph)
+    ivs = design.ivs
+    dv = design.dv
+    main_effects_options = synth.generate_main_effects_from_graph(gr, ivs, dv)
+    interaction_effects_options = synth.generate_interaction_effects_from_graph(gr, ivs, dv)
+    random_effects_options = synth.generate_random_effects_from_graph(gr, ivs, dv)
+    
+    # May want to load a dictionary of family to link
+    family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
+    
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
+    
+    # Read JSON file 
+    sm = None
+    f = open('model_spec.json', 'r') 
+    
+    # Construct StatisticalModel from JSON spec
+    model_json = f.read()
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset.dataset)
+    
+    # Generate code from SM
+    script = generate_code(sm)
+    
+    return script 
+
+# @returns statistical model that reflects the study design 
+def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]): 
+    ### Initial conceptual checks
+    # TODO: Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    # TODO: Check that the DV does not cause one or more IVs
+    synth = Synthesizer()
+
+    ### Generate possible effects, family, and link based on input design (graph)
+    main_effects_options = synth.generate_main_effects(design=design)
+    interaction_effects_options = synth.generate_interaction_effects(design=design)
+    random_effects_options = synth.generate_random_effects(design=design)
+    # random_effects_options = list()
+    # May want to load a dictionary of family to link
+    family_link_options = synth.generate_family_link(design=design)
+    default_family_link = synth.generate_default_family_link(design=design)
+    # family_options = synth.generate_family_distributions(design=design)
+    # link_options = synth.generate_link_functions(design=design)
+
+    # Change to:
+    # spec = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_options, link_options)
+    # spec is SM or some json dump -> SM -> code generated
+    
+    input_cli = InputInterface(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design, synthesizer=synth)
+    input_cli.start_app(main_effects_options, interaction_effects_options, random_effects_options, family_link_options, default_family_link, design=design)
+    
+    # Read JSON file 
+    sm = None
+    f = open('model_spec.json', 'r') 
+    
+    # Construct StatisticalModel from JSON spec
+    model_json = f.read()
+    sm = synth.create_statistical_model(model_json, design).assign_data(design.dataset)
+    # sm = StatisticalModel().from_json(f.read()) 
+
+    # Generate code from SM
+    script = generate_code(sm)
+    
+    return scipt 
 
 def verify(input_: Union[Design, ConceptualModel, StatisticalModel], output_: Union[Design, ConceptualModel, StatisticalModel]): 
     if isinstance(input_, Design) and isinstance(output_, ConceptualModel): 
@@ -138,8 +270,3 @@ def verify_design_and_statistical_model(design: Design, sm: StatisticalModel):
     # Catches groupigns (mixed effects) that are in Statistical Model but missing in Design? 
 
     pass 
-
-
-
-
-    

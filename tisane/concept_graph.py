@@ -86,7 +86,7 @@ class ConceptGraph(object):
     
     # @returns Concept with concept_name in this conceptual graph
     def getConcept(self, concept_name: str) -> Concept: 
-        # import pdb; pdb.set_trace()
+        # 
         
         for n in self._graph.nodes('concept'): 
             if n[0] == concept_name: 

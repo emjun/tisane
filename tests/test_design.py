@@ -3,7 +3,7 @@ Tests initialization, graph construction, and verification of several different 
 """
 
 import tisane as ts
-from tisane.variable import Treatment, Nest, RepeatedMeasure
+from tisane.variable import Treatment, Nest, RepeatedMeasure, Has, Associate, Cause
 from tisane.level import Level, LevelSet
 
 import unittest
@@ -13,99 +13,130 @@ class DesignTest(unittest.TestCase):
     def test_initialize_1_level(self): 
         acc = ts.Numeric('accuracy')
         expl = ts.Nominal('explanation type')
+        pid = ts.Nominal('pid')
         variables = [acc, expl]
-        
-        iv = ts.Level(identifier='id', measures=[expl])
+
+        expl.treats(pid, num_assignments=1) # Expl assignmed to pid 1 time
+        expl.associates_with(acc)
+
+        # Basic relationship construction (prior to any transformation)
+        self.assertEqual(len(expl.relationships), 2)
+        self.assertIsInstance(expl.relationships[0], Treatment)
+        self.assertEqual(expl.relationships[0].treatment, expl)
+        self.assertEqual(expl.relationships[0].unit, pid)
+        self.assertEqual(expl.relationships[0].num_assignments, 1)
+
+        self.assertIsInstance(expl.relationships[1], Associate)
+        self.assertEqual(expl.relationships[1].lhs, expl)
+        self.assertEqual(expl.relationships[1].rhs, acc)
+
+        self.assertEqual(len(acc.relationships), 1)
+        self.assertIsInstance(acc.relationships[0], Associate)
+        self.assertEqual(acc.relationships[0].lhs, acc)
+        self.assertEqual(acc.relationships[0].rhs, expl)
 
         design = ts.Design(
-            dv = acc, 
-            ivs = iv
+            dv = acc,
+            ivs = [expl]
         )
 
         # DV 
         self.assertEqual(design.dv, acc)
-        # Levels 
-        self.assertEqual(design.levels, iv)
 
         # The graph IR has all the variables
         self.assertEqual(len(design.graph.get_variables()), len(variables) + 1) # +1 for the identifier
         for v in variables: 
             self.assertTrue(design.graph.has_variable(v))
-        # The graph IR has the identifier
-        pid = None 
-        for v in design.graph.get_variables(): 
-            if v.name == 'id': 
-                pid = v
-        self.assertIsNotNone(pid)
+        
+        # TODO: Add the identifier check after implement the transformation
+        # # The graph IR has the identifier
+        # identifiers=design.graph.get_identifiers()
+        # self.assertEqual(len(identifiers), 1)
+        # self.assertEqual(identifiers[0], pid)
 
         # The graph IR has all the edges we expect
-        self.assertEqual(len(design.graph.get_edges()), 2)
-        self.assertTrue(design.graph.has_edge(expl, acc, edge_type='contribute'))
-        self.assertTrue(design.graph.has_edge(pid, expl, edge_type='has'))
-    
+        self.assertEqual(len(design.graph.get_edges()), 3)
+        self.assertTrue(design.graph.has_edge(expl, acc, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(acc, expl, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(expl, pid, edge_type='treat'))
+        # TODO: Update when add graph transformation
+
     def test_initialize_2_levels(self): 
         """Example from Kreft and de Leeuw, 1989"""
 
         # Variables
+        student = ts.Nominal('Student')
+        school = ts.Nominal('School')
         math = ts.Numeric('MathAchievement')
         hw = ts.Numeric('HomeWork')
         race = ts.Nominal('Race')
         mean_ses = ts.Numeric('MeanSES')
         variables = [math, hw, race, mean_ses]
 
-        # No need to create a separate variable for 'student' and 'school'
-        student_level = ts.Level(identifier='student', measures=[hw, race])
-        school_level = ts.Level(identifier='school', measures=[mean_ses])
+        # Conceptual relationships
+        hw.associates_with(math)
+        race.associates_with(math)
+        mean_ses.associates_with(math)
+
+        # Data measurement relationships
+        student.has(hw)
+        student.has(race)
+        school.has(mean_ses)
+        student.nest_under(school)
 
         design = ts.Design(
             dv=math, 
-            ivs=student_level.nest_under(school_level)
+            ivs=[hw, race, mean_ses]
         )
 
         # DV 
         self.assertEqual(design.dv, math)
-        # Levels 
-        self.assertTrue(isinstance(design.levels, LevelSet))
-        self.assertTrue(student_level in design.levels.get_levels())
-        self.assertTrue(school_level in design.levels.get_levels())
-
+    
         # The graph IR has all the variables
         self.assertEqual(len(design.graph.get_variables()), len(variables) + 2) # +1 for each identifier
         for v in variables: 
             self.assertTrue(design.graph.has_variable(v))
         # The graph IR has the identifier
-        student_id = None 
-        school_id = None
-        for v in design.graph.get_variables(): 
-            if v.name == 'student': 
-                student_id = v
-            elif v.name == 'school': 
-                school_id = v
-        self.assertIsNotNone(student_id)
-        self.assertIsNotNone(school_id)
+        identifiers = design.graph.get_identifiers()
+        self.assertEqual(len(identifiers), 2)
+        self.assertTrue(student in identifiers)
+        self.assertTrue(school in identifiers)
 
         # The graph IR has all the edges we expect
-        self.assertEqual(len(design.graph.get_edges()), 7)
-        self.assertTrue(design.graph.has_edge(hw, math, edge_type='contribute'))
-        self.assertTrue(design.graph.has_edge(race, math, edge_type='contribute'))
-        self.assertTrue(design.graph.has_edge(mean_ses, math, edge_type='contribute'))
-        self.assertTrue(design.graph.has_edge(student_id, hw, edge_type='has'))
-        self.assertTrue(design.graph.has_edge(student_id, race, edge_type='has'))
-        self.assertTrue(design.graph.has_edge(school_id, mean_ses, edge_type='has'))
-        self.assertTrue(design.graph.has_edge(student_id, school_id, edge_type='nest'))
+        self.assertEqual(len(design.graph.get_edges()), 10)
+        self.assertTrue(design.graph.has_edge(hw, math, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(math, hw, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(race, math, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(math, race, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(mean_ses, math, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(math, mean_ses, edge_type='associate'))
+        self.assertTrue(design.graph.has_edge(student, hw, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(student, race, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(school, mean_ses, edge_type='has'))
+        self.assertTrue(design.graph.has_edge(student, school, edge_type='nest'))
 
     def test_initialize_with_data(self): 
+        student = ts.Nominal('Student ID')
+        school = ts.Nominal('School')
         math = ts.Numeric('MathAchievement')
         hw = ts.Numeric('HomeWork')
         race = ts.Nominal('Race')
         mean_ses = ts.Numeric('MeanSES')
         variables = [math, hw, race, mean_ses]
 
-        # No need to create a separate variable for 'student' and 'school'
-        student_level = ts.Level(identifier='student', measures=[hw, race])
-        school_level = ts.Level(identifier='school', measures=[mean_ses])
+        # Conceptual relationships
+        hw.associates_with(math)
+        race.associates_with(math)
+        mean_ses.associates_with(math)
+
+        # Data measurement relationships
+        student.has(hw)
+        student.has(race)
+        school.has(mean_ses)
         
         source = pd.DataFrame(data={
+            'Student ID': [1, 2, 3, 4, 5],
+            'School': ['A', 'A', 'B', 'B', 'B'],
             'MathAchievement': [100, 90, 90, 80, 92],
             'HomeWork': [1, 3, 4, 9, 4],
             'Race': ['White', 'White', 'Black', 'Asian', 'Hispanic'],
@@ -114,8 +145,9 @@ class DesignTest(unittest.TestCase):
 
         design = ts.Design(
             dv=math, 
-            ivs=student_level.nest_under(school_level)
+            ivs=[hw, race, mean_ses]
         ).assign_data(source)
+
 
         self.assertIsNotNone(design.dataset)
         self.assertIsInstance(design.dataset.dataset, pd.DataFrame)
