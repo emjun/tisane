@@ -14,7 +14,7 @@ from subprocess import DEVNULL
 import os
 import sys
 from flask import request
-
+import logging
 import json
 import pandas as pd
 import plotly.figure_factory as ff
@@ -39,6 +39,10 @@ s.bind(('', 0))
 addr = s.getsockname()
 port = addr[1]
 s.close()
+
+# For logging Dash output
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # port = '0' # FYI: default dash port is 8050
 def open_browser():
@@ -82,11 +86,11 @@ class InputInterface(object):
         # Hidden modals
         code_gen_modal = dbc.Modal(
             [
-                dbc.ModalHeader("Downloading generated script!"),
+                dbc.ModalHeader("Downloading generated script in model.py!"),
                 dbc.ModalBody("Tisane is generating a script based on your input script and UI selections."),
                 dbc.ModalFooter([
-                    dbc.Button("Close GUI", id="close", color='danger', className="ml-auto"),
-                    dbc.Button("Keep GUI open", id="keep_open", className="ml-auto")
+                    dbc.Button("Shutdown GUI", id="close", color='danger', className="ml-auto"),
+                    dbc.Button("Keep GUI running", id="keep_open", className="ml-auto")
                 ]),
             ],
             id="code_gen_modal",
@@ -1138,6 +1142,7 @@ class InputInterface(object):
                 color_group_cat_name = f'{color_group.name}_categorized'
 
             data[color_group_cat_name] = pd.Series(color_data_cat, index=data.index)
+            data[color_group_cat_name] = data[color_group_cat_name].astype(str) #convert to string, make sure that the Nominal color group is treated discretely
             fig = px.scatter(data, x=x.name, y=dv.name, color=color_group_cat_name, trendline='ols')
             fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
     
@@ -1149,28 +1154,33 @@ class InputInterface(object):
         elif isinstance(x1, Nominal) and isinstance(x2, Ordinal): 
             x = x2
             color_group = x1
+            data[color_group.name] = data[color_group.name].astype(str) #convert to string, make sure that the Nominal color group is treated discretely
             fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
             fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
             return fig_elt
         elif isinstance(x1, Ordinal) and isinstance(x2, Numeric): 
             x = x1
             color_group = x2
+            data[color_group.name] = data[color_group.name].astype(str) #convert to string, make sure that the Nominal color group is treated discretely
             fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
             fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
             return fig_elt
         elif isinstance(x1, Ordinal) and isinstance(x2, Ordinal): 
             x = x1
             color_group = x2
+            data[color_group.name] = data[color_group.name].astype(str) #convert to string, make sure that the Nominal color group is treated discretely
             fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
             fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
             return fig_elt
         else: 
             x = x1
             color_group = x2
+            data[color_group.name] = data[color_group.name].astype(str) #convert to string, make sure that the Nominal color group is treated discretely
             fig = px.bar(data, x=x.name, y=dv.name, color=color_group.name, barmode="group")
             fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig) 
             return fig_elt
         
+        data[color_group.name] = data[color_group.name].astype(str) #convert to string, make sure that the Nominal color group is treated discretely
         fig = px.scatter(data, x=x.name, y=dv.name, color=color_group.name, trendline='ols')
         fig_elt = dcc.Graph(id=f'two_way_interaction_chart_{x.name}_{color_group.name}', figure=fig)        
         return fig_elt

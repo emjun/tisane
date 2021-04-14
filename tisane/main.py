@@ -106,11 +106,37 @@ def synthesize_statistical_model(design: Design):
     
     return scipt #(TODO: look into replacing the code snippet in original program)
     
+# Checks that the IVS for @param design have a conceptual relationship with the DV
+# Issues a warning if an independent variable does not cause or associate with the DV
+def check_design_ivs(design: Design): 
+    dv = design.dv
+    for i in design.ivs: 
+        has_cause = design.graph.has_edge(start=i, end=dv, edge_type='cause')
+        has_associate = design.graph.has_edge(start=i, end=dv, edge_type='associate')
+
+        # Variable i has neither a cause nor an associate relationship with the DV
+        if not has_cause and not has_associate: 
+            raise ValueError (f"The independent variable {i.name} does not have a conceptual relationship with the dependent variable {dv.name}. Every independent variable should either CAUSE or  ASSOCIATE_WITH the dependent variable.")
+
+# Checks that the DV does not cause any of the IVs
+# Issues a warning if dependent variable causes an independent variable
+def check_design_dv(design: Design): 
+    dv = design.dv
+
+    for i in design.ivs: 
+        dv_causes = design.graph.has_edge(start=dv, end=i, edge_type='cause')
+
+        if dv_causes: 
+            raise ValueError (f"The dependent variable {dv.name} causes the independent variable {i.name}.")
+
 # @returns statistical model that reflects the study design 
 def infer_statistical_model_from_design(design: Design): 
     ### Initial conceptual checks
-    # TODO: Check that the IVs have a conceptual relationship (direct or transitive) with DV
-    # TODO: Check that the DV does not cause one or more IVs
+    # Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    check_design_ivs(design)
+    # Check that the DV does not cause one or more IVs
+    check_design_dv(design)
+
     synth = Synthesizer()
 
     ### Generate possible effects, family, and link based on input design (graph)

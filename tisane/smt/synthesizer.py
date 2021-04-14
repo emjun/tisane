@@ -136,7 +136,7 @@ class Synthesizer(object):
         rules_dict = self.collect_rules(output=rule_set, dv_const=design.dv.const)
 
         for batch_name, rules in rules_dict.items(): 
-            print(f'Adding {batch_name} rules.')
+            # print(f'Adding {batch_name} rules.')
             # Add rules
             self.solver.add(rules)
         
@@ -160,7 +160,7 @@ class Synthesizer(object):
         rules_dict = self.collect_rules(output=rule_set, dv_const=design.dv.const)
 
         for batch_name, rules in rules_dict.items(): 
-            print(f'Adding {batch_name} rules.')
+            # print(f'Adding {batch_name} rules.')
             # Add rules incrementally
             for r in rules: 
                 if r not in self.solver.assertions(): 
@@ -282,7 +282,7 @@ class Synthesizer(object):
         s = Solver() # Z3 solver
 
         for batch_name, rule_set in rules.items(): 
-            print(f'Adding {batch_name} rules.')
+            # print(f'Adding {batch_name} rules.')
             # Add rules
             s.add(rule_set)
             
@@ -869,7 +869,6 @@ class Synthesizer(object):
         graph_dv = graph.get_variable(dv)
         
         levels = self.get_valid_levels(graph, dv)
-        import pdb; pdb.set_trace()
         
         if len(levels) == 1: 
             return None
@@ -900,7 +899,6 @@ class Synthesizer(object):
                     keep.add((fact, re))
 
         # Return random effects
-        import pdb; pdb.set_trace()
         return random_effects
 
     def generate_family_link(self, design: Design) -> Dict[z3.BoolRef, List[z3.BoolRef]]: 

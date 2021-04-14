@@ -197,6 +197,7 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
             if vc_started:
                 vc += ' , ' 
             vc += f'"{re.groups.name}" : ' + f'"0 + C({re.groups.name})"'
+            vc_started = True
             groups += f'"{group.name}"'
             exactly_one_group = not exactly_one_group
             
@@ -208,6 +209,7 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
             if vc_started:
                 vc += ' , ' 
             vc += f'"{re.groups.name}" : ' + f'"0 + C({re.groups.name})"'
+            vc_started = True
             groups += f'"{group.name}"'
             exactly_one_group = not exactly_one_group
             
@@ -224,7 +226,7 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
             #     import pdb; pdb.set_trace()
             # assert(iv.name in xs_code) # Make sure the iv is included as an IV/X already 
             re_formula += ' + ' + f'{iv.name}"'
-        print(re)
+        # print(re)
     
     vc += '}' # Add closing curly brace
 

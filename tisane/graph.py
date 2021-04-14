@@ -34,7 +34,7 @@ class Graph(object):
     def has_variable(self, variable: AbstractVariable) -> bool: 
         return self._graph.has_node(variable.name)
     
-    # @returns True if the edge between @params start and end is in the graph
+    # @returns True if the edge between @params start and end is in the graph; False otherwise
     def has_edge(self, start: AbstractVariable, end: AbstractVariable, edge_type: str) -> bool: 
         # return self._graph.has_edge(start.name, end.name)
 
