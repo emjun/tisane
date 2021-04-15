@@ -119,6 +119,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "dash-daq"
+version = "0.5.0"
+description = "DAQ components for Dash"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+dash = ">=1.6.1"
+
+[[package]]
 name = "dash-html-components"
 version = "1.1.3"
 description = "Vanilla HTML components for Dash"
@@ -556,7 +567,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.1"
-content-hash = "dd8676fc30e4d3ca40c7e72e57326e5873d10da4b6889d029624da8d783f7020"
+content-hash = "78d91729b53dc16a2cb90afd7c8ac8cb660215fcea765467ccbd6c53046bde06"
 
 [metadata.files]
 appdirs = [
@@ -625,6 +636,9 @@ dash-bootstrap-components = [
 ]
 dash-core-components = [
     {file = "dash_core_components-1.16.0.tar.gz", hash = "sha256:e8cdfaf3580577670bb2d1c3168efa06f5a7b439fbe5527cfaefa3e32394542f"},
+]
+dash-daq = [
+    {file = "dash_daq-0.5.0.tar.gz", hash = "sha256:a1d85b6799f7b885652fbc44aebdb58c41254616a8d350b943beeb42ade4256a"},
 ]
 dash-html-components = [
     {file = "dash_html_components-1.1.3.tar.gz", hash = "sha256:88adb77a674d5d7d0835d71c469f6e7b4aa692f9673808a474d244b71863c58a"},
