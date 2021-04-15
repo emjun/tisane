@@ -13,6 +13,7 @@ statsmodels = "^0.12.2"
 more-itertools = "^8.7.0"
 pydot = "^1.4.2"
 tweedie = "^0.0.7"
+Flask = "^1.1.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
