@@ -1,37 +1,32 @@
 name: CI
-
-on: [push, pull_request]
-
+on: 
+  push: 
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 jobs:
     test:
       runs-on: ubuntu-latest
-   
-    steps:
-      - uses: actions/checkout@v1
-        with: 
-          fetch-depth: 1
-      - name: Set up Python 3.7.3
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.7.3
-      - name: Install Poetry
-        uses: dschep/install-poetry-action@v1.2
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v1
-        id: cache
-        with: 
-          path: ~/.virtualenvs
-          key: poetry-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            poetry-${{ hashFiles('**/poetry.lock') }}
-      - name: Set Poetry config
-        run: |
-          poetry config settings.virtualenvs.in-project false
-          poetry config settings.virtualenvs.path ~/.virtualenvs
-      - name: Install dependencies
-        run: poetry install
-        if: steps.cache.outputs.cache-hit != 'true'
-      - name: Code Quality 
-        run: poetry run black . --check          
-      - name: Test with pytest
-        run: poetry run pytest --cov . -n 2
+      steps:
+        # uses: actions/checkout@v1
+        # with: 
+        #   fetch-depth: 1
+        - id: Set up Python 3.7.3
+          uses: actions/setup-python@v1
+          with:
+            python-version: 3.7.3
+        - id: Install Poetry
+          uses: dschep/install-poetry-action@v1.2
+        - id: Set Poetry config
+          run: |
+            poetry config settings.virtualenvs.in-project false
+            poetry config settings.virtualenvs.path ~/.virtualenvs
+        - id: Install dependencies
+          run: poetry install
+          if: steps.cache.outputs.cache-hit != 'true'
+        - id: Code Quality 
+          run: poetry run black . --check          
+        - id: Test with pytest
+          run: poetry run pytest --cov . -n 2
