@@ -85,8 +85,10 @@ class GraphTest(unittest.TestCase):
         # Pre-transformation 
         gr = design.graph
         ids = gr.get_identifiers()
-        self.assertEqual(len(ids), 1)
+        self.assertEqual(len(ids), 2)
         self.assertTrue(student in ids)
+        self.assertTrue(school in ids)
+
 
         synth = Synthesizer() 
         updated_gr = synth.transform_to_has_edges(gr)
@@ -151,8 +153,5 @@ class GraphTest(unittest.TestCase):
         # Post-transformation 
         ids = updated_gr.get_identifiers()
         id_names = [i.name for i in ids]
-        self.assertEqual(len(ids), 2)
-        self.assertTrue(time.name in id_names)
+        self.assertEqual(len(ids), 1)
         self.assertTrue(pig.name in id_names)
-
-        # TODO: Add has edge for pig has weight/dv

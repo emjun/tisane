@@ -23,7 +23,7 @@ NoInteraction = Function('NoInteraction', SetSort(Object), BoolSort())
 RandomSlopeEffect = Function('RandomSlopeEffect', Object, Object, BoolSort())
 NoRandomSlopeEffect = Function('NoRandomSlopeEffect', Object, Object, BoolSort())
 RandomInterceptEffect = Function('RandomInterceptEffect', Object, BoolSort())
-# NoRandomIntercept = Function('NoRandomIntercept', Object, Object, BoolSort())
+NoRandomInterceptEffect = Function('NoRandomInterceptEffect', Object, BoolSort())
 CorrelatedRandomSlopeInterceptEffects = Function('CorrelatedRandomSlopeInterceptEffects', Object, Object, BoolSort())
 UncorrelatedRandomSlopeInterceptEffects = Function('UncorrelatedRandomSlopeInterceptEffects', Object, Object, BoolSort())
 

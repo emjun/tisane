@@ -138,17 +138,22 @@ class StatisticalModel(object):
         # Update the Graph IR
         for var in self.fixed_ivs: 
             assert(isinstance(var, AbstractVariable))
+            conceptually_related = False
             for relationship in var.relationships: 
                 if isinstance(relationship, Cause): 
                     cause = relationship.cause 
                     effect = relationship.effect
                     if relationship.effect == self.dv: 
                         self.graph.cause(cause, effect)
+                        conceptually_related = True
                 elif isinstance(relationship, Associate): 
                     lhs = relationship.lhs
                     rhs = relationship.rhs 
                     if relationship.lhs == self.dv or relationship.rhs == self.dv: 
                         self.graph.associate(lhs, rhs)
+                        conceptually_related = True
+            if not conceptually_related: 
+                raise ValueError (f"The independent variable {var.name} is not conceptually related to the dependent variable {self.dv.name}")
     
     # Sets interaction effects to @param interactions, adding updates to the graph as needed
     def set_interactions(self, interactions: List[Tuple[AbstractVariable,...]]): 
@@ -164,7 +169,7 @@ class StatisticalModel(object):
                 self.graph.get_variable        
             ixn_var = Nominal('*'.join(ixn_name))
             # Ixn contributes to DV
-            self.graph.contribute(lhs=ixn_var, rhs=self.dv)
+            self.graph.associate(lhs=ixn_var, rhs=self.dv)
             
             # Ixn variable 'inherits' has/identifier edges from component variables/nodes
             pre_identifiers=list()
@@ -182,7 +187,8 @@ class StatisticalModel(object):
                         #     pre_identifiers.append(p_var)
             
             for pi in pre_identifiers:
-                self.graph.has(identifier=pi, variable=ixn_var)
+                has_obj = pi.has(ixn_var)
+                self.graph.has(identifier=pi, variable=ixn_var, has_obj=has_obj, repetitions=1)
 
     # Sets random ivs 
     def set_random_ivs(self, random_ivs: List[RandomEffect]): 
@@ -221,11 +227,11 @@ class StatisticalModel(object):
                         effect = relationship.effect
                         if relationship.effect == self.dv: 
                             self.graph.cause(cause, effect)
-                        elif isinstance(relationship, Associate): 
-                            lhs = relationship.lhs
-                            rhs = relationship.rhs 
-                            if relationship.lhs == self.dv or relationship.rhs == self.dv: 
-                                self.graph.associate(lhs, rhs)
+                    elif isinstance(relationship, Associate): 
+                        lhs = relationship.lhs
+                        rhs = relationship.rhs 
+                        if relationship.lhs == self.dv or relationship.rhs == self.dv: 
+                            self.graph.associate(lhs, rhs)
                 
     # Sets the family
     def set_family(self, family: str): 

@@ -8,9 +8,9 @@ class KnowledgeBase(object):
                 ForAll([x], Xor(FixedEffect(x, dv_const), NoFixedEffect(x, dv_const))),
                 ForAll([xs], Xor(Interaction(xs), NoInteraction(xs))),
                 ForAll([x0, x1], Xor(RandomSlopeEffect(x0, x1), NoRandomSlopeEffect(x0, x1))),
-                ForAll([x0, x1], Xor(RandomInterceptEffect(x0, x1), NoRandomInterceptEffect(x0, x1))),
-                ForAll([x0, x1], Xor(CorrelateRandomSlopeInterceptEffects(x0, x1), NoCorrelateRandomSlopeInterceptEffects(x0, x1))),
-                ForAll([x0, x1], Implies(CorrelateRandomSlopeInterceptEffects(x0, x1), And([RandomSlopeEffect(x0, x1), RandomInterceptEffect(x0, x1)])))
+                ForAll([x], Xor(RandomInterceptEffect(x), NoRandomInterceptEffect(x))),
+                ForAll([x0, x1], Xor(CorrelatedRandomSlopeInterceptEffects(x0, x1), UncorrelatedRandomSlopeInterceptEffects(x0, x1))),
+                ForAll([x0, x1], Implies(CorrelatedRandomSlopeInterceptEffects(x0, x1), And([RandomSlopeEffect(x0, x1), RandomInterceptEffect(x1)]))) # Assumes that x1 is the grouping variable
                 # TODO: ADD RULE FOR CANT INTERACTION X with Y?
             ]
 

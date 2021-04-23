@@ -3,9 +3,6 @@ import tisane as ts
 from z3 import *
 import unittest
 
-# TODO: Expressivity coverage: Look at and re-implement lmer test cases
-# TODO: Examples: CCWA, Kreft and de Leeuw, Statistical Rethinking --> look for adversarial examples
-
 class StatisticalModelTest(unittest.TestCase): 
     def test_initialize_fixed_only(self):
         """ Example from Bansal et al. CHI 2021
@@ -13,6 +10,8 @@ class StatisticalModelTest(unittest.TestCase):
         expl = ts.Nominal('explanation type')
         acc = ts.Numeric('accuracy')
         variables = [acc, expl]
+
+        expl.associates_with(acc)
 
         sm = ts.StatisticalModel(
             dv=acc,
@@ -31,8 +30,8 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertEqual(len(sm.graph.get_variables()), 2)
         
         # The graph IR has all the edges we expect
-        self.assertEqual(len(sm.graph.get_edges()), 1)
-        self.assertTrue(sm.graph.has_edge(expl, acc, edge_type='contribute'))
+        self.assertEqual(len(sm.graph.get_edges()), 2) # Associations introduce 2 edges
+        self.assertTrue(sm.graph.has_edge(expl, acc, edge_type='associate'))
         
     def test_initialize_fixed_interaction_1(self): 
         """ Example from Jun et al. CSCW 2019
@@ -44,6 +43,12 @@ class StatisticalModelTest(unittest.TestCase):
         acc = ts.Numeric('Accuracy')
         group = ts.Nominal('Group')
         variables = [acc, chronotype, composition, tod, qtype]
+
+        chronotype.cause(acc)
+        composition.cause(acc)
+        tod.cause(acc)
+        qtype.cause(acc)
+        group.cause(acc)
         
         sm = ts.StatisticalModel(
             dv=acc,
@@ -58,7 +63,6 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
-        import pdb; pdb.set_trace()
         self.assertEqual(len(sm.graph.get_variables()), 7) # variables + 1 interaction 
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
@@ -70,15 +74,15 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
         # The graph IR has all the edges we expect
-        self.assertEqual(len(sm.graph.get_edges()), 6)
+        self.assertEqual(len(sm.graph.get_edges()), 7) # 1 for each IV and 2 for interaction (associate)
         # Main effects
-        self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(tod, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(qtype, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(group, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='cause'))
+        self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='cause'))
+        self.assertTrue(sm.graph.has_edge(tod, acc, edge_type='cause'))
+        self.assertTrue(sm.graph.has_edge(qtype, acc, edge_type='cause'))
+        self.assertTrue(sm.graph.has_edge(group, acc, edge_type='cause'))
         # Interaction effects
-        self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='associate'))
     
     def test_initialize_main_interaction_2(self): 
         """ Example adapted from Jun et al. CSCW 2019
@@ -90,6 +94,12 @@ class StatisticalModelTest(unittest.TestCase):
         acc = ts.Numeric('Accuracy')
         group = ts.Nominal('Group')
         variables = [acc, chronotype, composition, tod, qtype]
+
+        chronotype.associates_with(acc)
+        composition.associates_with(acc)
+        tod.associates_with(acc)
+        qtype.associates_with(acc)
+        group.associates_with(acc)
         
         sm = ts.StatisticalModel(
             dv=acc,
@@ -115,15 +125,15 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
         
         # The graph IR has all the edges we expect
-        self.assertEqual(len(sm.graph.get_edges()), 6)
+        self.assertEqual(len(sm.graph.get_edges()), 12)
         # Main effects
-        self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(tod, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(qtype, acc, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(group, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(chronotype, acc, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(composition, acc, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(tod, acc, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(qtype, acc, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(group, acc, edge_type='associate'))
         # Interaction effects
-        self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(ixn_var, acc, edge_type='associate'))
     
     def test_initialize_random_ivs_1(self): 
         """ From Kreft and de Leeuw 1989
@@ -136,8 +146,16 @@ class StatisticalModelTest(unittest.TestCase):
         # School-level variables
         school = ts.Nominal('school')
         mean_ses = ts.Numeric('MeanSES')
-        variables = [math, hw, race, mean_ses]
+        variables = [math, race, mean_ses]
         identifiers = [student, school]
+
+        race.associates_with(math)
+        mean_ses.associates_with(math)
+        student.has(race)
+        student.has(hw)
+        student.has(math)
+        school.has(mean_ses)
+        student.nest_under(school)
 
         random_ivs = [ts.RandomSlope(iv=hw, groups=school)]
         sm = ts.StatisticalModel(
@@ -153,9 +171,9 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
-        self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random slopes + 1 interaction
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
+        self.assertEqual(len(sm.graph.get_variables()), 5) # 1 dv + 2 fixed + 1 random slopes + 1 interaction (student is not in statistical model's graph)
         variables_in_graph = sm.graph.get_variables()
         student_id = None 
         school_id = None
@@ -168,22 +186,21 @@ class StatisticalModelTest(unittest.TestCase):
             if v.name == 'school': 
                 school_id = v
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
-        self.assertIsNotNone(student_id) # Student variable in the graph as an unknown identifier node
+        self.assertIsNone(student_id) # Student variable in the graph is not in the graph
         self.assertIsNotNone(school_id) # School variable in the graph as an identifier node
         
         # The graph IR has all the edges we expect
-        self.assertEqual(len(sm.graph.get_edges()), 7)
+        self.assertEqual(len(sm.graph.get_edges()), 8)
         # Main effects
-        self.assertTrue(sm.graph.has_edge(hw, math, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(race, math, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(mean_ses, math, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(race, math, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(mean_ses, math, edge_type='associate'))
         # Interaction effects
-        self.assertTrue(sm.graph.has_edge(ixn_var, math, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(ixn_var, math, edge_type='associate'))
         # Identifier
-        self.assertTrue(sm.graph.has_edge(student_id, hw, edge_type='has'))
-        self.assertTrue(sm.graph.has_edge(student_id, ixn_var, edge_type='has'))
+        # self.assertTrue(sm.graph.has_edge(student_id, hw, edge_type='has')) # not par tof graph 
+        self.assertTrue(sm.graph.has_edge(school_id, ixn_var, edge_type='has'))
         # Nesting
-        self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest'))
+        # self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest'))
 
     # def test_initialize_random_ivs_2(self): 
     #     pass
@@ -200,15 +217,24 @@ class StatisticalModelTest(unittest.TestCase):
         # School-level variables
         school = ts.Nominal('school')
         mean_ses = ts.Numeric('MeanSES')
-        variables = [math, hw, race, mean_ses]
+        variables = [math, race, mean_ses]
         identifiers = [student, school]
 
-        random_intercepts = [ts.RandomIntercept(iv=hw, groups=school)]
+        race.associates_with(math)
+        hw.associates_with(math)
+        mean_ses.associates_with(math)
+        student.has(race)
+        student.has(hw)
+        student.has(math)
+        school.has(mean_ses)
+        student.nest_under(school)
+
+        random_intercepts = [ts.RandomIntercept(groups=school), ts.RandomSlope(iv=hw, groups=student)]
         sm = ts.StatisticalModel(
             dv=math,
-            fixed_ivs=[race, mean_ses], 
+            fixed_ivs=[hw, race, mean_ses], 
             random_ivs=random_intercepts,
-            interactions=[(hw, mean_ses)], 
+            interactions=[(hw, race)], 
         )
 
         # Statistical Model has properties we expect
@@ -217,7 +243,7 @@ class StatisticalModelTest(unittest.TestCase):
         self.assertIsNone(sm.link_function)
 
         # The graph IR has all the variables
-        self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 2 fixed + 3 random intercepts + 1 interaction
+        self.assertEqual(len(sm.graph.get_variables()), 7) # 1 dv + 3 fixed + 2 groups (student, school) + 1 interaction
         for v in variables: 
             self.assertTrue(sm.graph.has_variable(v))
         variables_in_graph = sm.graph.get_variables()
@@ -225,29 +251,35 @@ class StatisticalModelTest(unittest.TestCase):
         school_id = None
         ixn_var = None
         for v in variables_in_graph: 
-            if v.name == '*'.join([hw.name,mean_ses.name]):
+            if v.name == '*'.join([hw.name,race.name]):
                 ixn_var = v
-            if v.name == 'Unknown identifier': 
+            # if v.name == 'Unknown identifier': 
+            #     student_id = v
+            if v.name == 'id': 
                 student_id = v
             if v.name == 'school': 
                 school_id = v
         self.assertIsNotNone(ixn_var) # Interaction variable in the graph as a node
-        self.assertIsNotNone(student_id) # Student variable in the graph as an unknown identifier node
+        self.assertIsNotNone(student_id) # Student variable in the graph as an identifier node
         self.assertIsNotNone(school_id) # School variable in the graph as an identifier node
         
         # The graph IR has all the edges we expect
-        self.assertEqual(len(sm.graph.get_edges()), 7)
         # Main effects
-        self.assertTrue(sm.graph.has_edge(hw, math, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(race, math, edge_type='contribute'))
-        self.assertTrue(sm.graph.has_edge(mean_ses, math, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(hw, math, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(race, math, edge_type='associate'))
+        self.assertTrue(sm.graph.has_edge(mean_ses, math, edge_type='associate'))
         # Interaction effects
-        self.assertTrue(sm.graph.has_edge(ixn_var, math, edge_type='contribute'))
+        self.assertTrue(sm.graph.has_edge(ixn_var, math, edge_type='associate'))
         # Identifier
         self.assertTrue(sm.graph.has_edge(student_id, hw, edge_type='has'))
+        self.assertTrue(sm.graph.has_edge(student_id, race, edge_type='has'))
+        self.assertTrue(sm.graph.has_edge(student_id, math, edge_type='has'))
         self.assertTrue(sm.graph.has_edge(student_id, ixn_var, edge_type='has'))
+        self.assertTrue(sm.graph.has_edge(school_id, mean_ses, edge_type='has'))
         # Nesting
-        self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest'))
+        # self.assertTrue(sm.graph.has_edge(student_id, school_id, edge_type='nest')) # Not included in a statistical model 
+        # Total count
+        self.assertEqual(len(sm.graph.get_edges()), 13)
 
     # def test_initialize_random_intercepts_2(self): 
     #     pos_aff = ts.Numeric('Positive Affect')
