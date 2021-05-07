@@ -58,7 +58,7 @@ jobs:
           pytest tests/
         # coverage report
 
-      - name: Code Quality 
-        run: poetry run black . --check          
-      - name: Test with pytest
-        run: poetry run pytest --cov . -n 2
+      # - name: Code Quality 
+      #   run: poetry run black . --check          
+      # - name: Test with pytest
+      #   run: poetry run pytest --cov . -n 2
