@@ -13,12 +13,10 @@ jobs:
           python-version: 3.7
       - name: Install Black
         run: pip install black
-      # - name: Run black --check .
-      #   run: black --check .
-      # - name: If needed, commit black changes to the pull request
-      #   if: failure()
-      #   run: |
-      - name: Automaticaly reformat
+      - name: Run black --check .
+        run: black --check .
+      - name: If needed, commit black changes to the pull request
+        if: failure()
         run: |
           black .
           git config --global user.name 'autoblack'
