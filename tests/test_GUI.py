@@ -5,6 +5,7 @@ import unittest
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
+
 class GUITest(unittest.TestCase):
     def test_get_random_effects_values_from_table(self):
         pass
@@ -22,5 +23,3 @@ class GUITest(unittest.TestCase):
 
         # app = InputInterface()
         # app.get_random_effects_values_from_table(table_body)
-
-

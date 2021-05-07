@@ -1,41 +1,29 @@
 from tisane.main import (
-                            # Tisane,
-                            infer_from,
-                            infer_statistical_model_from_design
-                            
+    # Tisane,
+    infer_from,
+    infer_statistical_model_from_design,
 )
 
-from tisane.variable import (
-                                Nominal, 
-                                Ordinal,
-                                Numeric,
-                                Time, 
-                                Count,
-                                Variable
-)
+from tisane.variable import Nominal, Ordinal, Numeric, Time, Count, Variable
 
 from tisane.statistical_model import (
-                                        StatisticalModel,                                    
+    StatisticalModel,
 )
 
 from tisane.design import (
-                                        Design,                                    
+    Design,
 )
 
 from tisane.graph import (
-                                        Graph,                                    
+    Graph,
 )
 
-from tisane.conceptual_model import (
-                                        ConceptualModel
-)
+from tisane.conceptual_model import ConceptualModel
 
-from tisane.level import (
-                                Level
-) 
+from tisane.level import Level
 
 from tisane.random_effects import (
-                                        RandomSlope,
-                                        RandomIntercept,
-                                        CorrelatedRandomSlopeAndIntercept
+    RandomSlope,
+    RandomIntercept,
+    CorrelatedRandomSlopeAndIntercept,
 )

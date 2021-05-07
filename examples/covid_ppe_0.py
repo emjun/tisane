@@ -1,7 +1,7 @@
 # COVID PPE Exampe 0
 # Multivariate example where compound concepts are required (concept is not 1:1 to variable/data)
 
-analysis = Tisane(task="prediction") # should an analysis only have one task?
+analysis = Tisane(task="prediction")  # should an analysis only have one task?
 
 # Concepts
 approval = Concept("approval")
@@ -19,7 +19,7 @@ approval.data = Variable(...)
 
 
 # Verify expected model
-analysis.verify(MultinomialRegression) 
+analysis.verify(MultinomialRegression)
 
 # provide partial specification to narrow search space
 analysis.specifySomethingLike("Approval ~ safety + replicability")
