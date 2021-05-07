@@ -1,27 +1,34 @@
-name: coverage
-on: [push, pull_request]
-
+name: Coverage
+on: [push]
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      OS: ${{ matrix.os }}
+      PYTHON: '3.7'
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
-
-    - name: Unit tests
-      run: make test
-
-    - name: Coveralls
-      uses: AndreMiras/coveralls-python-action@develop
+    - uses: actions/checkout@master
+    - name: Setup Python
+      uses: actions/setup-python@master
       with:
-        parallel: true
-        flag-name: Unit Test
-
-  coveralls_finish:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: AndreMiras/coveralls-python-action@develop
+        python-version: 3.7
+    - name: Generate coverage report
+      run: |
+        pip install pytest
+        pip install pytest-cov
+        pytest --cov=./ --cov-report=xml
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
       with:
-        parallel-finished: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage1.xml,./coverage2.xml
+        directory: ./coverage/reports/
+        flags: unittests
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
