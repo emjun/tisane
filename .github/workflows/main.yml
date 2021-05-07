@@ -56,8 +56,9 @@ jobs:
         run: |
           source .venv/bin/activate
           pytest tests/
-          pytest --cov=./ --cov-report=xml
+          pytest tests/ --cov=./ --cov-report=xml
       - name: Coveralls
         uses: coverallsapp/github-action@master
         with:
+          path-to-lcov: ./
           github-token: ${{ secrets.GITHUB_TOKEN }}
