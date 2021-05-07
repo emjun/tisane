@@ -57,8 +57,9 @@ jobs:
           source .venv/bin/activate
           pytest tests/
           pytest tests/ --cov=./ --cov-report=xml
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          path-to-lcov: ./
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload coverage data to coveralls.io
+        run: |
+          python -m pip install coveralls==2.2
+          coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
