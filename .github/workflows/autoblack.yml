@@ -19,7 +19,7 @@ jobs:
       #   if: failure()
       #   run: |
       - name: Automaticaly reformat
-        run:
+        run: |
           black .
           git config --global user.name 'autoblack'
           git config --global user.email 'cclauss@users.noreply.github.com'
