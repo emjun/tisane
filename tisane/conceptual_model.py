@@ -3,10 +3,15 @@ from tisane.variable import Cause, Associate
 
 from typing import List
 
+
 class ConceptualModel(object):
     graph: Graph
 
-    def __init__(self, causal_relationships: List[Cause]=None, associative_relationships: List[Associate]=None):
+    def __init__(
+        self,
+        causal_relationships: List[Cause] = None,
+        associative_relationships: List[Associate] = None,
+    ):
         self.graph = Graph()
 
         if causal_relationships:
@@ -28,5 +33,3 @@ class ConceptualModel(object):
             rhs = r.rhs
 
             self.graph.associate(lhs=lhs, rhs=rhs)
-
-    

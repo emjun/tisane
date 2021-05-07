@@ -9,7 +9,7 @@ Task goal: hypothesis testing
 import tisane as ts
 
 # LANG REQUIREMENT: At least two different tasks: explanation (theory/domain info impt), prediction (theory/domain not impt)
-analysis = ts.Tisane(task="hypothesis testing") # analysis has one task
+analysis = ts.Tisane(task="hypothesis testing")  # analysis has one task
 
 # CONCEPTS
 # Concepts
@@ -25,8 +25,8 @@ analysis.addConcept(tutoring)
 
 # MEASUREMENTS
 # No data but know some ideas for measurement
-test_score.specifyData(dtype="numeric") # Score 0 - 100 
-intelligence.specifyData(dtype="numeric") # IQ score 
+test_score.specifyData(dtype="numeric")  # Score 0 - 100
+intelligence.specifyData(dtype="numeric")  # IQ score
 tutoring.specifyData(dtype="nominal", categories=["afterschool", "none"])
 
 # LANG REQ: Type of relationship
@@ -39,8 +39,8 @@ analysis.relate(ivs=[intelligence, tutoring], dv=[test_score], type="exponential
 
 # CONCEPTUAL RELATIONSHIPS
 # KNOW IVS and DV are related in THEORY vs. exploratory
-intelligence.causes(test_score, "assert") # know this from theory
-tutoring.causes(test_score, "ask") # asking about this relationship
+intelligence.causes(test_score, "assert")  # know this from theory
+tutoring.causes(test_score, "ask")  # asking about this relationship
 # assert intelligence.causes(score)
 # assume intelligence.causes(score)
 
@@ -54,9 +54,9 @@ assert (theory) | assume (exploratory) | ask (hypothesis testing)
 """
 
 # STUDY DESIGN -- inspiration from TSL
-analysis.between(tutoring) # TODO: START HERE: What if we skip this for now? 
+analysis.between(tutoring)  # TODO: START HERE: What if we skip this for now?
 
-# TODO: Do we need a notion of a "unit"?? like a participant? Trial? 
+# TODO: Do we need a notion of a "unit"?? like a participant? Trial?
 """
 Between(Pointer, Device X ID)
 Ops for IVs in TSL: 
@@ -65,7 +65,7 @@ cross
 concatenate 
 replicate
 """
-# DATA SCHEMA (to use to verify assumptions, test hypotheses) --- and how this connects to study design 
+# DATA SCHEMA (to use to verify assumptions, test hypotheses) --- and how this connects to study design
 # Not required though if don't have data
 
 
@@ -82,9 +82,9 @@ analysis.predict(ivs=[], dvs=[])
 # Hypothesis as query.
 
 
-# WOULD BE NICE: 
+# WOULD BE NICE:
 # Verify expected model
-analysis.verify(MultinomialRegression) 
+analysis.verify(MultinomialRegression)
 
 # provide partial specification to narrow search space
 analysis.specifySomethingLike("Approval ~ safety + replicability")

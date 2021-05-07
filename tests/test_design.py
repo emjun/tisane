@@ -9,14 +9,15 @@ from tisane.level import Level, LevelSet
 import unittest
 import pandas as pd
 
-class DesignTest(unittest.TestCase): 
-    def test_initialize_1_level(self): 
-        acc = ts.Numeric('accuracy')
-        expl = ts.Nominal('explanation type')
-        pid = ts.Nominal('pid')
+
+class DesignTest(unittest.TestCase):
+    def test_initialize_1_level(self):
+        acc = ts.Numeric("accuracy")
+        expl = ts.Nominal("explanation type")
+        pid = ts.Nominal("pid")
         variables = [acc, expl]
 
-        expl.treats(pid, num_assignments=1) # Expl assignmed to pid 1 time
+        expl.treats(pid, num_assignments=1)  # Expl assignmed to pid 1 time
         expl.associates_with(acc)
 
         # Basic relationship construction (prior to any transformation)
@@ -35,19 +36,18 @@ class DesignTest(unittest.TestCase):
         self.assertEqual(acc.relationships[0].lhs, acc)
         self.assertEqual(acc.relationships[0].rhs, expl)
 
-        design = ts.Design(
-            dv = acc,
-            ivs = [expl]
-        )
+        design = ts.Design(dv=acc, ivs=[expl])
 
-        # DV 
+        # DV
         self.assertEqual(design.dv, acc)
 
         # The graph IR has all the variables
-        self.assertEqual(len(design.graph.get_variables()), len(variables) + 1) # +1 for the identifier
-        for v in variables: 
+        self.assertEqual(
+            len(design.graph.get_variables()), len(variables) + 1
+        )  # +1 for the identifier
+        for v in variables:
             self.assertTrue(design.graph.has_variable(v))
-        
+
         # TODO: Add the identifier check after implement the transformation
         # # The graph IR has the identifier
         # identifiers=design.graph.get_identifiers()
@@ -56,21 +56,21 @@ class DesignTest(unittest.TestCase):
 
         # The graph IR has all the edges we expect
         self.assertEqual(len(design.graph.get_edges()), 3)
-        self.assertTrue(design.graph.has_edge(expl, acc, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(acc, expl, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(expl, pid, edge_type='treat'))
+        self.assertTrue(design.graph.has_edge(expl, acc, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(acc, expl, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(expl, pid, edge_type="treat"))
         # TODO: Update when add graph transformation
 
-    def test_initialize_2_levels(self): 
+    def test_initialize_2_levels(self):
         """Example from Kreft and de Leeuw, 1989"""
 
         # Variables
-        student = ts.Nominal('Student')
-        school = ts.Nominal('School')
-        math = ts.Numeric('MathAchievement')
-        hw = ts.Numeric('HomeWork')
-        race = ts.Nominal('Race')
-        mean_ses = ts.Numeric('MeanSES')
+        student = ts.Nominal("Student")
+        school = ts.Nominal("School")
+        math = ts.Numeric("MathAchievement")
+        hw = ts.Numeric("HomeWork")
+        race = ts.Nominal("Race")
+        mean_ses = ts.Numeric("MeanSES")
         variables = [math, hw, race, mean_ses]
 
         # Conceptual relationships
@@ -84,17 +84,16 @@ class DesignTest(unittest.TestCase):
         school.has(mean_ses)
         student.nest_under(school)
 
-        design = ts.Design(
-            dv=math, 
-            ivs=[hw, race, mean_ses]
-        )
+        design = ts.Design(dv=math, ivs=[hw, race, mean_ses])
 
-        # DV 
+        # DV
         self.assertEqual(design.dv, math)
-    
+
         # The graph IR has all the variables
-        self.assertEqual(len(design.graph.get_variables()), len(variables) + 2) # +1 for each identifier
-        for v in variables: 
+        self.assertEqual(
+            len(design.graph.get_variables()), len(variables) + 2
+        )  # +1 for each identifier
+        for v in variables:
             self.assertTrue(design.graph.has_variable(v))
         # The graph IR has the identifier
         identifiers = design.graph.get_identifiers()
@@ -104,24 +103,24 @@ class DesignTest(unittest.TestCase):
 
         # The graph IR has all the edges we expect
         self.assertEqual(len(design.graph.get_edges()), 10)
-        self.assertTrue(design.graph.has_edge(hw, math, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(math, hw, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(race, math, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(math, race, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(mean_ses, math, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(math, mean_ses, edge_type='associate'))
-        self.assertTrue(design.graph.has_edge(student, hw, edge_type='has'))
-        self.assertTrue(design.graph.has_edge(student, race, edge_type='has'))
-        self.assertTrue(design.graph.has_edge(school, mean_ses, edge_type='has'))
-        self.assertTrue(design.graph.has_edge(student, school, edge_type='nest'))
+        self.assertTrue(design.graph.has_edge(hw, math, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(math, hw, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(race, math, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(math, race, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(mean_ses, math, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(math, mean_ses, edge_type="associate"))
+        self.assertTrue(design.graph.has_edge(student, hw, edge_type="has"))
+        self.assertTrue(design.graph.has_edge(student, race, edge_type="has"))
+        self.assertTrue(design.graph.has_edge(school, mean_ses, edge_type="has"))
+        self.assertTrue(design.graph.has_edge(student, school, edge_type="nest"))
 
-    def test_initialize_with_data(self): 
-        student = ts.Nominal('Student ID')
-        school = ts.Nominal('School')
-        math = ts.Numeric('MathAchievement')
-        hw = ts.Numeric('HomeWork')
-        race = ts.Nominal('Race')
-        mean_ses = ts.Numeric('MeanSES')
+    def test_initialize_with_data(self):
+        student = ts.Nominal("Student ID")
+        school = ts.Nominal("School")
+        math = ts.Numeric("MathAchievement")
+        hw = ts.Numeric("HomeWork")
+        race = ts.Nominal("Race")
+        mean_ses = ts.Numeric("MeanSES")
         variables = [math, hw, race, mean_ses]
 
         # Conceptual relationships
@@ -133,32 +132,32 @@ class DesignTest(unittest.TestCase):
         student.has(hw)
         student.has(race)
         school.has(mean_ses)
-        
-        source = pd.DataFrame(data={
-            'Student ID': [1, 2, 3, 4, 5],
-            'School': ['A', 'A', 'B', 'B', 'B'],
-            'MathAchievement': [100, 90, 90, 80, 92],
-            'HomeWork': [1, 3, 4, 9, 4],
-            'Race': ['White', 'White', 'Black', 'Asian', 'Hispanic'],
-            'MeanSES': [100000, 100000, 90000, 83000, 70000]
-        })
 
-        design = ts.Design(
-            dv=math, 
-            ivs=[hw, race, mean_ses]
-        ).assign_data(source)
+        source = pd.DataFrame(
+            data={
+                "Student ID": [1, 2, 3, 4, 5],
+                "School": ["A", "A", "B", "B", "B"],
+                "MathAchievement": [100, 90, 90, 80, 92],
+                "HomeWork": [1, 3, 4, 9, 4],
+                "Race": ["White", "White", "Black", "Asian", "Hispanic"],
+                "MeanSES": [100000, 100000, 90000, 83000, 70000],
+            }
+        )
 
+        design = ts.Design(dv=math, ivs=[hw, race, mean_ses]).assign_data(source)
 
         self.assertIsNotNone(design.dataset)
         self.assertIsInstance(design.dataset.dataset, pd.DataFrame)
         # Compare element-wise
         design_data = design.dataset.dataset
-        self.assertTrue((design_data['MathAchievement'] == source['MathAchievement']).all())
-        self.assertTrue((design_data['HomeWork'] == source['HomeWork']).all())
-        self.assertTrue((design_data['Race'] == source['Race']).all())
-        self.assertTrue((design_data['MeanSES'] == source['MeanSES']).all())
+        self.assertTrue(
+            (design_data["MathAchievement"] == source["MathAchievement"]).all()
+        )
+        self.assertTrue((design_data["HomeWork"] == source["HomeWork"]).all())
+        self.assertTrue((design_data["Race"] == source["Race"]).all())
+        self.assertTrue((design_data["MeanSES"] == source["MeanSES"]).all())
 
-    # def test_initialize_ivs_only_2(self): 
+    # def test_initialize_ivs_only_2(self):
     #     chronotype = ts.Nominal('Group chronotype')
     #     composition = ts.Nominal('Group composition')
     #     tod = ts.Nominal('Time of day')
@@ -168,29 +167,29 @@ class DesignTest(unittest.TestCase):
     #     variables = [acc, chronotype, composition, tod, qtype, group]
 
     #     design = ts.Design(
-    #         dv = acc, 
+    #         dv = acc,
     #         ivs = [chronotype.treat(group, 1), composition.treat(group, 1), tod.treat(group, 1), qtype.treat(group, 2)]
     #     )
 
     #     # The graph IR has all the variables
-    #     for v in variables: 
+    #     for v in variables:
     #         self.assertTrue(design.graph.has_variable(v))
 
     #     # The graph IR has all the edges we expect
-    #     self.assertTrue(design.graph.has_edge(chronotype, acc, edge_type='unknown'))        
-    #     self.assertTrue(design.graph.has_edge(composition, acc, edge_type='unknown'))        
-    #     self.assertTrue(design.graph.has_edge(tod, acc, edge_type='unknown'))        
-    #     self.assertTrue(design.graph.has_edge(qtype, acc, edge_type='unknown'))        
+    #     self.assertTrue(design.graph.has_edge(chronotype, acc, edge_type='unknown'))
+    #     self.assertTrue(design.graph.has_edge(composition, acc, edge_type='unknown'))
+    #     self.assertTrue(design.graph.has_edge(tod, acc, edge_type='unknown'))
+    #     self.assertTrue(design.graph.has_edge(qtype, acc, edge_type='unknown'))
     #     # Treatment
-    #     self.assertTrue(design.graph.has_edge(chronotype, group, edge_type='treat'))        
+    #     self.assertTrue(design.graph.has_edge(chronotype, group, edge_type='treat'))
     #     edge = design.graph.get_edge(chronotype, group, edge_type='treat')
     #     edge_data = edge[2]
     #     edge_obj = edge_data['edge_obj']
     #     self.assertIsInstance(edge_obj, Treatment)
     #     self.assertIs(edge_obj.unit, group)
     #     self.assertIs(edge_obj.treatment, chronotype)
-        
-    #     self.assertTrue(design.graph.has_edge(composition, group, edge_type='treat'))        
+
+    #     self.assertTrue(design.graph.has_edge(composition, group, edge_type='treat'))
     #     edge = design.graph.get_edge(composition, group, edge_type='treat')
     #     edge_data = edge[2]
     #     edge_obj = edge_data['edge_obj']
@@ -198,7 +197,7 @@ class DesignTest(unittest.TestCase):
     #     self.assertIs(edge_obj.unit, group)
     #     self.assertIs(edge_obj.treatment, composition)
 
-    #     self.assertTrue(design.graph.has_edge(tod, group, edge_type='treat'))        
+    #     self.assertTrue(design.graph.has_edge(tod, group, edge_type='treat'))
     #     edge = design.graph.get_edge(tod, group, edge_type='treat')
     #     edge_data = edge[2]
     #     edge_obj = edge_data['edge_obj']
@@ -206,7 +205,7 @@ class DesignTest(unittest.TestCase):
     #     self.assertIs(edge_obj.unit, group)
     #     self.assertIs(edge_obj.treatment, tod)
 
-    #     self.assertTrue(design.graph.has_edge(qtype, group, edge_type='treat'))        
+    #     self.assertTrue(design.graph.has_edge(qtype, group, edge_type='treat'))
     #     edge = design.graph.get_edge(qtype, group, edge_type='treat')
     #     edge_data = edge[2]
     #     edge_obj = edge_data['edge_obj']
@@ -217,21 +216,21 @@ class DesignTest(unittest.TestCase):
     #     self.assertEqual(len(design.graph.get_edges()), 8)
     #     self.assertEqual(len(design.graph.get_nodes()), len(variables))
 
-    # def test_initialize_repeat_1(self): 
+    # def test_initialize_repeat_1(self):
     #     expl = ts.Nominal('explanation type')
     #     correct = ts.Nominal('correct') # yes/no
     #     participant = ts.Nominal('id')
     #     variables = [expl, correct, participant]
 
     #     design = ts.Design(
-    #         dv = correct, 
+    #         dv = correct,
     #         ivs = [expl.treat(participant, 1)], # treatment
     #         groupings = [participant.repeat(correct, 50)], # participant observations are closer to each other than between participants in a condition
     #     )
 
     #     # The graph IR has all the edges we expect
     #     self.assertTrue(design.graph.has_edge(expl, correct, edge_type='unknown'))
-    #     # Treatment 
+    #     # Treatment
     #     self.assertTrue(design.graph.has_edge(expl, participant, edge_type='treat'))
     #     edge = design.graph.get_edge(expl, participant, edge_type='treat')
     #     self.assertIsNotNone(edge)
@@ -240,7 +239,7 @@ class DesignTest(unittest.TestCase):
     #     self.assertIsInstance(edge_obj, Treatment)
     #     self.assertIs(edge_obj.unit, participant)
     #     self.assertIs(edge_obj.treatment, expl)
-    #     # Nesting 
+    #     # Nesting
     #     design.graph.has_edge(participant, correct, edge_type='repeat')
     #     edge = design.graph.get_edge(participant, correct, edge_type='repeat')
     #     self.assertIsNotNone(edge)
@@ -254,7 +253,7 @@ class DesignTest(unittest.TestCase):
     #     self.assertEqual(len(design.graph.get_edges()), 3)
     #     self.assertEqual(len(design.graph.get_nodes()), len(variables))
 
-    # def test_initialize_nesting_2(self): 
+    # def test_initialize_nesting_2(self):
     #     chronotype = ts.Nominal('Group chronotype')
     #     composition = ts.Nominal('Group composition')
     #     tod = ts.Nominal('Time of day')
@@ -265,7 +264,7 @@ class DesignTest(unittest.TestCase):
     #     variables = [chronotype, composition, tod, qtype, acc, group, participant]
 
     #     design = ts.Design(
-    #         dv = acc, 
+    #         dv = acc,
     #         ivs = [group, chronotype.treat(group, 1), composition.treat(group, 1), tod.treat(group, 1), qtype.treat(group, 2)], # listing group here is including a random slope/intercept for group
     #         groupings = [participant.nested_under(group), group.repeat(acc, 2)] # might want to separate out for end-user
     #     )
@@ -276,7 +275,7 @@ class DesignTest(unittest.TestCase):
     #     self.assertTrue(design.graph.has_edge(composition, acc, edge_type='unknown'))
     #     self.assertTrue(design.graph.has_edge(tod, acc, edge_type='unknown'))
     #     self.assertTrue(design.graph.has_edge(qtype, acc, edge_type='unknown'))
-    #     # Treatment 
+    #     # Treatment
     #     self.assertTrue(design.graph.has_edge(chronotype, group, edge_type='treat'))
     #     edge = design.graph.get_edge(chronotype, group, edge_type='treat')
     #     self.assertIsNotNone(edge)
@@ -312,8 +311,8 @@ class DesignTest(unittest.TestCase):
     #     self.assertIsInstance(edge_obj, Treatment)
     #     self.assertIs(edge_obj.unit, group)
     #     self.assertIs(edge_obj.treatment, qtype)
-        
-    #     # Nesting 
+
+    #     # Nesting
     #     design.graph.has_edge(participant, group, edge_type='nest')
     #     edge = design.graph.get_edge(participant, group, edge_type='nest')
     #     self.assertIsNotNone(edge)
@@ -364,7 +363,7 @@ class DesignTest(unittest.TestCase):
     #     participant = ts.Nominal('id')
 
     #     sd = ts.Design(
-    #         dv = correct, 
+    #         dv = correct,
     #         ivs = [expl.treat(participant, 1)], # treatment
     #         groupings = [participant.repeat(correct, 50)], # participant observations are closer to each other than between participants in a condition
     #     )
@@ -376,7 +375,7 @@ class DesignTest(unittest.TestCase):
 
     #     verif = ts.verify(sd, cm)
     #     self.assertTrue(verif)
-    
+
     # def test_verify_with_conceptual_model_false(self):
     #     chronotype = ts.Nominal('Group chronotype')
     #     composition = ts.Nominal('Group composition')
@@ -387,7 +386,7 @@ class DesignTest(unittest.TestCase):
     #     variables = [acc, chronotype, composition, tod, qtype]
 
     #     sd = ts.Design(
-    #         dv = acc, 
+    #         dv = acc,
     #         ivs = [chronotype.treat(group, 1), composition.treat(group, 1), tod.treat(group, 1), qtype.treat(group, 2)]
     #     )
 
