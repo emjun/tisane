@@ -31,7 +31,7 @@ approval.specifyData(dtype=nominal, categories=["community", "clinical", "incomp
 approval.addData(data=data["approval"], kwargs) # kwargs provide syntactic sugar
 
 # STUDY DESIGN 
-- What does TSL look like??
+# - What does TSL look like??
 
 # NO assumptions, knowledge about data
 
