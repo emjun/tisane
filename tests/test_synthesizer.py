@@ -292,7 +292,7 @@ class SynthesizerTest(unittest.TestCase):
         synth = Synthesizer() 
         trans_gr = synth.transform_to_has_edges(design.graph)
         levels = synth.get_valid_levels(trans_gr, design.dv)
-        self.assertEqual(len(levels), 3)
+        self.assertEqual(len(levels), 2)
         levels_names = [l.name for l in levels]
         self.assertTrue(pig.name in levels_names)
         self.assertTrue(litter.name in levels_names)
@@ -315,9 +315,12 @@ class SynthesizerTest(unittest.TestCase):
         synth = Synthesizer() 
         trans_gr = synth.transform_to_has_edges(design.graph)
         levels = synth.get_valid_levels(trans_gr, design.dv)
-        self.assertEqual(len(levels), 3)
+        self.assertEqual(len(levels), 2)
+        level_names = [l.name for l in levels]
+        self.assertTrue(pig.name in level_names)
+        self.assertTrue(litter.name in level_names)
         re_main = synth.generate_random_effects_for_main_effects(trans_gr, [time], weight)
-        self.assertEqual(len(re_main), 3) # Random Intercept + Slope 
+        self.assertEqual(len(re_main), 4) # Random Intercept + Slope  + Correlated/Uncorrelated options
 
     def test_generate_random_effects_for_interaction_effects(self): 
         a = ts.Nominal('a', cardinality=4)
@@ -557,13 +560,13 @@ class SynthesizerTest(unittest.TestCase):
         # Post-transformation
         self.assertEqual(len(updated_gr.get_edges()), 5)
         self.assertTrue(updated_gr.has_edge(student, school, 'nest'))
-        self.assertTrue(updated_gr.has_edge(school, student, 'has'))
-        (n0, n1, edge_data) = updated_gr.get_edge(school, student, 'has')
+        self.assertTrue(updated_gr.has_edge(student, school, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(student, school, 'has')
         self.assertIsInstance(edge_data['edge_obj'], Nest)
 
     def test_transform_repeat_to_has(self): 
         pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
-        time = ts.Nominal('week number')
+        time = ts.Nominal('week number', cardinality=10) # 10 weeks
         weight = ts.Numeric('weight')
 
         pig.repeats(weight, according_to=time) 
@@ -588,10 +591,10 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue(updated_gr.has_edge(pig, weight, 'repeat'))
         self.assertTrue(updated_gr.has_edge(pig, weight, 'has'))
         (n0, n1, edge_data) = updated_gr.get_edge(pig, weight, 'has')
-        self.assertTrue(updated_gr.has_edge(time, pig, 'has'))
-        (n0, n1, edge_data) = updated_gr.get_edge(time, pig, 'has')
+        self.assertTrue(updated_gr.has_edge(pig, time, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(pig, time, 'has')
         self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
-        self.assertEqual(edge_data['repetitions'], pig.cardinality)
+        self.assertEqual(edge_data['repetitions'], time.cardinality)
 
         self.assertTrue(updated_gr.has_edge(time, weight, 'associate'))
         self.assertTrue(updated_gr.has_edge(weight, time, 'associate')) 
@@ -599,7 +602,7 @@ class SynthesizerTest(unittest.TestCase):
 
     def test_transform_repeat_to_has_2(self): 
         pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
-        time = ts.Nominal('week number')
+        time = ts.Nominal('week number', cardinality=10) # 10 weeks
         weight = ts.Numeric('weight')
 
         time.associates_with(weight)
@@ -627,17 +630,17 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue(updated_gr.has_edge(pig, weight, 'repeat'))
         self.assertTrue(updated_gr.has_edge(pig, weight, 'has'))
         (n0, n1, edge_data) = updated_gr.get_edge(pig, weight, 'has')
-        self.assertTrue(updated_gr.has_edge(time, pig, 'has'))
-        (n0, n1, edge_data) = updated_gr.get_edge(time, pig, 'has')
+        self.assertTrue(updated_gr.has_edge(pig, time, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(pig, time, 'has')
         self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
-        self.assertEqual(edge_data['repetitions'], pig.cardinality)
+        self.assertEqual(edge_data['repetitions'], time.cardinality)
 
         self.assertTrue(updated_gr.has_edge(time, weight, 'associate'))
         self.assertTrue(updated_gr.has_edge(weight, time, 'associate')) 
 
     def test_transform_repeat_to_has_3(self): 
         pig = ts.Nominal('pig id', cardinality=24) # 24 pigs
-        time = ts.Nominal('week number', cardinality=12) # 12 weeks
+        time = ts.Nominal('week number', cardinality=10) # 10 weeks
         weight = ts.Numeric('weight')
 
         time.causes(weight)
@@ -665,10 +668,10 @@ class SynthesizerTest(unittest.TestCase):
         self.assertTrue(updated_gr.has_edge(pig, weight, 'has'))
         (n0, n1, edge_data) = updated_gr.get_edge(pig, weight, 'has')
         self.assertEqual(edge_data['repetitions'], time.cardinality)
-        self.assertTrue(updated_gr.has_edge(time, pig, 'has'))
-        (n0, n1, edge_data) = updated_gr.get_edge(time, pig, 'has')
+        self.assertTrue(updated_gr.has_edge(pig, time, 'has'))
+        (n0, n1, edge_data) = updated_gr.get_edge(pig, time, 'has')
         self.assertIsInstance(edge_data['edge_obj'], RepeatedMeasure)
-        self.assertEqual(edge_data['repetitions'], pig.cardinality)
+        self.assertEqual(edge_data['repetitions'], time.cardinality)
 
         self.assertTrue(updated_gr.has_edge(time, weight, 'cause'))
         self.assertTrue(updated_gr.has_edge(time, weight, 'associate')) 
