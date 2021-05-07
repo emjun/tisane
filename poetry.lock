@@ -988,8 +988,3 @@ zipp = [
     {file = "zipp-3.4.1-py3-none-any.whl", hash = "sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098"},
     {file = "zipp-3.4.1.tar.gz", hash = "sha256:3607921face881ba3e026887d8150cca609d517579abe052ac81fc5aeffdbd76"},
 ]
-
-
-[tool.poetry.dependencies]
-python = "^3.7"
-patsy = { git = "https://github.com/pydata/patsy.git", branch = "master" }
