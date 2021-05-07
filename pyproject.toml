@@ -18,6 +18,7 @@ plotly = "^4.14.3"
 dash = "^1.20.0"
 dash-bootstrap-components = "^0.12.0"
 dash-daq = "^0.5.0"
+patsy = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
