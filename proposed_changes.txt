@@ -1,0 +1,3 @@
+Make Tisane an R-studio plug-in: https://rstudio.github.io/rstudioaddins/
+
+Example of dual-language/environment library: https://academic.oup.com/ije/article/45/6/1887/2907796
