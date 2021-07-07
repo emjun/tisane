@@ -22,14 +22,14 @@ item.has_unique(condition)  # condition is treated to each item
 # condition.treat(subject, condition) # subjects see two conditions
 condition.treat(subject, num_assignments=2)  # subjects see two conditions
 
-item.has(condition, 1) # item has a unique condition 
-subject.has(condition, 2) # subjects see two conditions
-# Reasonable to assume item and subject are of type Unit? 
-# Seems reasonable to assume subject is of type Unit, less sure about item as Unit. 
-# If not, can Item be inferred as/to be a Unit? 
-# But maybe a domain expert would easily name Item as a Unit? 
+item.has(condition, 1)  # item has a unique condition
+subject.has(condition, 2)  # subjects see two conditions
+# Reasonable to assume item and subject are of type Unit?
+# Seems reasonable to assume subject is of type Unit, less sure about item as Unit.
+# If not, can Item be inferred as/to be a Unit?
+# But maybe a domain expert would easily name Item as a Unit?
 
-condition.has(subject, 24) # condition has up to 24 subjects ??
+condition.has(subject, 24)  # condition has up to 24 subjects ??
 
 design = ts.Design(dv=rt, ivs=[condition])
 # .assign_data('data.csv')

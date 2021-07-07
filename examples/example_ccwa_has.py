@@ -46,11 +46,13 @@ member.has(motivation)  # Each member has motivation (self-motivation)
 
 # HAS CONSTRUCT
 # Associate measures with levels
-group.has(treatment, 1) # Unit must have measure, be on LHS of measure
+group.has(treatment, 1)  # Unit must have measure, be on LHS of measure
 member.has(motivation)
 # Relate levels to each other
 member.has(group, 1)
-group.has(member, 30) # UP TO 30 members in each group. Should # param be up-to? rather than exactly? --> two parameters?
+group.has(
+    member, 30
+)  # UP TO 30 members in each group. Should # param be up-to? rather than exactly? --> two parameters?
 
 
 # Query Tisane to infer a statistical model and generate a script
