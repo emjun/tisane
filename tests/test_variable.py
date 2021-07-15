@@ -195,21 +195,3 @@ class VariableTest(unittest.TestCase):
         # Alternative
         # student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
-
-    # def test_has_two_levels(self):
-    #     math = ts.Numeric('MathAchievement')
-    #     hw = ts.Numeric('HomeWork')
-    #     race = ts.Nominal('Race')
-    #     ses = ts.Numeric('SES')
-
-    #     # No need to create a separate variable for 'student' and 'school'
-    #     student_level = ts.Level(identifier='student', measures=[hw, race])
-    #     school_level = ts.Level(identifier='school', measures=[ses])
-
-    #     design = ts.Design(
-    #         dv=math,
-    #         ivs=student_level.nest_under(school_level)
-    #     )
-
-    # NOTE: to use streamlit, try starting up and running streamlit from
-    # Input Interface before asking for input?
