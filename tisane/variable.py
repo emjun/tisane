@@ -65,8 +65,6 @@ class Nest(object):
 """
 Class for expressing Repeated measures
 """
-
-
 class RepeatedMeasure(object):
     unit: "AbstractVariable"
     response: "AbstractVariable"

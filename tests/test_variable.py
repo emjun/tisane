@@ -176,19 +176,26 @@ class VariableTest(unittest.TestCase):
 
         self.assertEqual(relat.repetitions, 2)
 
-        # WHAT happens once construct graph?? - end to end examples with test case?
 
     def test_unit_repeats(self):
         student = ts.Unit("student id")
-        school = ts.Unit("school id")
         test_score = ts.Numeric("test score")
         test_time = ts.Nominal("pre/post", cardinality=2)
 
         student.repeats(test_score, according_to=test_time) # repeats
         # student.has(test_score, exactly=1).foreach(test_time) # under the hood?
+        self.assertEqual(len(student.relationships), 1)
+        self.assertEqual(len(test_score.relationships), 1)
 
-        
-        student.has(test_score, exactly=2)
+        relat = student.relationships[0]
+        self.assertIn(relat, test_score.relationships)
+
+        self.assertEqual(relat.according_to, test_time)
+
+
+
+        # Alternative
+        # student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
 
         

@@ -146,3 +146,6 @@ class GraphTest(unittest.TestCase):
         id_names = [i.name for i in ids]
         self.assertEqual(len(ids), 1)
         self.assertTrue(pig.name in id_names)
+    
+    def test_graph_construction_with_units(self):
+        # WHAT happens once construct graph?? - end to end examples with test case?
