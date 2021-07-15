@@ -122,6 +122,79 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(school.relationships[0].base, student)
         self.assertEqual(school.relationships[0].group, school)
 
+    def test_unit_type(self):
+        student = ts.Unit("student id")
+        school = ts.Unit("school id")
+        
+        self.assertIsInstance(student, ts.Unit)
+        self.assertIsInstance(school, ts.Unit)
+
+        self.assertIsInstance(student, ts.Nominal)
+        self.assertIsInstance(school, ts.Nominal)
+
+    def test_unit_has_error(self):
+        student = ts.Unit("student id")
+        school = ts.Unit("school id")
+        test_score = ts.Numeric("test score")
+
+        error = False
+        try: 
+            student.has(test_score)
+
+        except:
+            error = True
+
+        self.assertTrue(error)
+
+    def test_unit_has_exactly(self):
+        student = ts.Unit("student id")
+        test_score = ts.Numeric("test score")
+
+        student.has(test_score, exactly=1)
+
+        #Check that student and test_score have the same has relationship stored
+        self.assertEqual(len(student.relationships), 1)
+        self.assertEqual(len(test_score.relationships), 1)
+
+        relat = student.relationships[0]
+        self.assertIn(relat, test_score.relationships)
+
+        self.assertEqual(relat.repetitions, 1)
+
+    def test_unit_has_up_to(self):
+        student = ts.Unit("student id")
+        test_score = ts.Numeric("test score")
+
+        student.has(test_score, up_to=2)
+
+        #Check that student and test_score have the same has relationship stored
+        self.assertEqual(len(student.relationships), 1)
+        self.assertEqual(len(test_score.relationships), 1)
+
+        relat = student.relationships[0]
+        self.assertIn(relat, test_score.relationships)
+
+        self.assertEqual(relat.repetitions, 2)
+
+        # WHAT happens once construct graph?? - end to end examples with test case?
+
+    def test_unit_repeats(self):
+        student = ts.Unit("student id")
+        school = ts.Unit("school id")
+        test_score = ts.Numeric("test score")
+        test_time = ts.Nominal("pre/post", cardinality=2)
+
+        student.repeats(test_score, according_to=test_time) # repeats
+        # student.has(test_score, exactly=1).foreach(test_time) # under the hood?
+
+        
+        student.has(test_score, exactly=2)
+        # test_score.has(test_time, exactly=1).foreach(test_time)
+
+        
+
+        
+
     # def test_has_two_levels(self):
     #     math = ts.Numeric('MathAchievement')
     #     hw = ts.Numeric('HomeWork')

@@ -426,6 +426,19 @@ class Unit(Nominal):
     def __init__(self, name: str):
         super(Unit, self).__init__(name)
 
+    def has(self, measure: AbstractVariable, exactly: int=0, up_to: int=None):
+        repet = 0
+        if exactly==0: 
+            assert(up_to is not None)
+            repet = up_to
+        else: # exactly!=0
+            assert(up_to is None)
+            repet = exactly
+
+        has_relat = Has(variable=self, measure=measure, repetitions=repet)
+        self.relationships.append(has_relat)
+        measure.relationships.append(has_relat)
+
 
 # Wrapper around AbstractVariable class
 class Variable(AbstractVariable):

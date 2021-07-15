@@ -4,7 +4,7 @@ from tisane.main import (
     infer_statistical_model_from_design,
 )
 
-from tisane.variable import Nominal, Ordinal, Numeric, Time, Count, Variable
+from tisane.variable import Nominal, Ordinal, Numeric, Unit
 
 from tisane.statistical_model import (
     StatisticalModel,
