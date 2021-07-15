@@ -125,7 +125,7 @@ class VariableTest(unittest.TestCase):
     def test_unit_type(self):
         student = ts.Unit("student id")
         school = ts.Unit("school id")
-        
+
         self.assertIsInstance(student, ts.Unit)
         self.assertIsInstance(school, ts.Unit)
 
@@ -138,7 +138,7 @@ class VariableTest(unittest.TestCase):
         test_score = ts.Numeric("test score")
 
         error = False
-        try: 
+        try:
             student.has(test_score)
 
         except:
@@ -152,7 +152,7 @@ class VariableTest(unittest.TestCase):
 
         student.has(test_score, exactly=1)
 
-        #Check that student and test_score have the same has relationship stored
+        # Check that student and test_score have the same has relationship stored
         self.assertEqual(len(student.relationships), 1)
         self.assertEqual(len(test_score.relationships), 1)
 
@@ -167,7 +167,7 @@ class VariableTest(unittest.TestCase):
 
         student.has(test_score, up_to=2)
 
-        #Check that student and test_score have the same has relationship stored
+        # Check that student and test_score have the same has relationship stored
         self.assertEqual(len(student.relationships), 1)
         self.assertEqual(len(test_score.relationships), 1)
 
@@ -184,16 +184,11 @@ class VariableTest(unittest.TestCase):
         test_score = ts.Numeric("test score")
         test_time = ts.Nominal("pre/post", cardinality=2)
 
-        student.repeats(test_score, according_to=test_time) # repeats
+        student.repeats(test_score, according_to=test_time)  # repeats
         # student.has(test_score, exactly=1).foreach(test_time) # under the hood?
 
-        
         student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
-
-        
-
-        
 
     # def test_has_two_levels(self):
     #     math = ts.Numeric('MathAchievement')
