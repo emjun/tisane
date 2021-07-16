@@ -2,8 +2,8 @@ from tisane.data import Dataset, DataVector
 
 import pandas as pd
 from enum import Enum
-from typing import Any, List, Union
-import typing
+from typing import Any, List
+import typing # for typing.Unit
 from z3 import *
 
 
@@ -101,7 +101,6 @@ class Cause(object):
         self.cause = cause
         self.effect = effect
 
-
 """
 Class for Associate relationships
 """
@@ -114,6 +113,16 @@ class Associate(object):
     def __init__(self, lhs: "AbstractVariable", rhs: "AbstractVariable"):
         self.lhs = lhs
         self.rhs = rhs
+
+"""
+Class for Moderate relationships (for Interactions)
+"""
+
+class Moderate(object): 
+    variables: List["AbstractVariable"]
+
+    def __init__(self, variables: List["AbstractVariable"]): 
+        self.variables = variables
 
 
 """
@@ -275,6 +284,30 @@ class AbstractVariable(object):
     # Provide multiple function names for 'CAUSE' that might read more correctly
     def causes(self, effect: "AbstractVariable"):
         self.cause(effect=effect)
+
+    # Add interaction effect 
+    def moderate(self, moderator: typing.Union["AbstractVariable", List["AbstractVariable"]], on: "AbstractVariable"): 
+        # Update both variables
+        m_vars = list()
+        m_vars.append(self)
+        if isinstance(moderator, AbstractVariable): 
+            m_vars.append(moderator) # Add moderator to vars list
+        else: 
+            assert(isinstance(moderator, List))
+            for m in moderator: 
+                assert(isinstance(m, AbstractVariable))
+            m_vars += moderator # Add moderator to vars list
+
+        moderate_relat = Moderate(variables=m_vars)
+        self.relationships.append(moderate_relat)
+
+        # Add relationship to moderators
+        for v in m_vars: 
+            if self != v: # Already added to self
+                v.relationships.append(moderate_relat)
+
+        # Add relationship to @param on
+        on.relationships.append(moderate_relat)
 
     # Apply the @param transformation to the AbstractVariable
     def transform(self, transformation: str):
