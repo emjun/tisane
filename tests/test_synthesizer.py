@@ -663,7 +663,6 @@ class SynthesizerTest(unittest.TestCase):
         reduced_gr = synth.reduce_graph(sub_gr, v2)
         self.assertEqual(len(reduced_gr.get_edges()), 2)
 
-
     # @pytest.mark.skip(reason="Sanity check that the interaction loop works after testing all the individual components")
     # def test_one_level_fixed(self):
     #     """

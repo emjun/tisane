@@ -1,5 +1,13 @@
 import tisane as ts
-from tisane.variable import Associate, Has, Cause, Moderate, Nest, Treatment, RepeatedMeasure
+from tisane.variable import (
+    Associate,
+    Has,
+    Cause,
+    Moderate,
+    Nest,
+    Treatment,
+    RepeatedMeasure,
+)
 
 import unittest
 
@@ -190,12 +198,12 @@ class VariableTest(unittest.TestCase):
         self.assertIn(relat, test_score.relationships)
 
         self.assertEqual(relat.according_to, test_time)
-        
+
         # Alternative
         # student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
 
-    def test_moderate_obj(self): 
+    def test_moderate_obj(self):
         v1 = ts.Nominal("V1")
         v2 = ts.Nominal("V2")
         v3 = ts.Nominal("V3")
@@ -207,7 +215,7 @@ class VariableTest(unittest.TestCase):
         self.assertIn(v2, relat.moderator)
         self.assertIs(v3, relat.on)
 
-    def test_moderate_two_variables(self): 
+    def test_moderate_two_variables(self):
         race = ts.Nominal("Race")
         ses = ts.Numeric("SES")
         test_score = ts.Numeric("Test score")
@@ -223,13 +231,13 @@ class VariableTest(unittest.TestCase):
         self.assertIn(relat, ses.relationships)
         self.assertIn(relat, test_score.relationships)
 
-    def test_moderate_three_variables(self): 
+    def test_moderate_three_variables(self):
         v1 = ts.Nominal("V1")
         v2 = ts.Nominal("V2")
         v3 = ts.Nominal("V3")
         v4 = ts.Nominal("V4")
 
-        v1.moderate([v2,v3], on=v4)
+        v1.moderate([v2, v3], on=v4)
         self.assertEqual(len(v1.relationships), 1)
         self.assertEqual(len(v2.relationships), 1)
         self.assertEqual(len(v3.relationships), 1)
@@ -241,4 +249,3 @@ class VariableTest(unittest.TestCase):
         self.assertIn(relat, v2.relationships)
         self.assertIn(relat, v3.relationships)
         self.assertIn(relat, v4.relationships)
-        

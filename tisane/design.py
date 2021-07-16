@@ -41,7 +41,8 @@ Class for expressing (i) data collection structure, (ii) that there is a manipul
 Relies on Class Treatment, Nest, RepeatedMeasure
 """
 
-interaction_effects = list() 
+interaction_effects = list()
+
 
 class Design(object):
     dv: AbstractVariable

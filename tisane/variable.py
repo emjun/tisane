@@ -3,7 +3,7 @@ from tisane.data import Dataset, DataVector
 import pandas as pd
 from enum import Enum
 from typing import Any, List
-import typing # for typing.Unit
+import typing  # for typing.Unit
 from z3 import *
 
 
@@ -101,6 +101,7 @@ class Cause(object):
         self.cause = cause
         self.effect = effect
 
+
 """
 Class for Associate relationships
 """
@@ -114,15 +115,17 @@ class Associate(object):
         self.lhs = lhs
         self.rhs = rhs
 
+
 """
 Class for Moderate relationships (for Interactions)
 """
 
-class Moderate(object): 
+
+class Moderate(object):
     moderator: List["AbstractVariable"]
     on: "AbstractVariable"
 
-    def __init__(self, moderator: List["AbstractVariable"], on: "AbstractVariable"): 
+    def __init__(self, moderator: List["AbstractVariable"], on: "AbstractVariable"):
         self.moderator = moderator
         self.on = on
 
@@ -287,25 +290,29 @@ class AbstractVariable(object):
     def causes(self, effect: "AbstractVariable"):
         self.cause(effect=effect)
 
-    # Add interaction effect 
-    def moderate(self, moderator: typing.Union["AbstractVariable", List["AbstractVariable"]], on: "AbstractVariable"): 
+    # Add interaction effect
+    def moderate(
+        self,
+        moderator: typing.Union["AbstractVariable", List["AbstractVariable"]],
+        on: "AbstractVariable",
+    ):
         # Update both variables
         m_vars = list()
         m_vars.append(self)
-        if isinstance(moderator, AbstractVariable): 
-            m_vars.append(moderator) # Add moderator to vars list
-        else: 
-            assert(isinstance(moderator, List))
-            for m in moderator: 
-                assert(isinstance(m, AbstractVariable))
-            m_vars += moderator # Add moderator to vars list
+        if isinstance(moderator, AbstractVariable):
+            m_vars.append(moderator)  # Add moderator to vars list
+        else:
+            assert isinstance(moderator, List)
+            for m in moderator:
+                assert isinstance(m, AbstractVariable)
+            m_vars += moderator  # Add moderator to vars list
 
         moderate_relat = Moderate(moderator=m_vars, on=on)
         self.relationships.append(moderate_relat)
 
         # Add relationship to moderators
-        for v in m_vars: 
-            if self != v: # Already added to self
+        for v in m_vars:
+            if self != v:  # Already added to self
                 v.relationships.append(moderate_relat)
 
         # Add relationship to @param on
@@ -376,7 +383,7 @@ class Nominal(AbstractVariable):
             if "cardinality" in kwargs.keys():
                 self.cardinality = kwargs["cardinality"]
             else:
-                if "categories" in kwargs.keys(): 
+                if "categories" in kwargs.keys():
                     num_categories = len(kwargs["categories"])
                     self.cardinality = num_categories
 
@@ -428,7 +435,6 @@ class Ordinal(AbstractVariable):
                 num_categories = len(self.ordered_cat)
                 self.cardinality = num_categories
 
-
     def __str__(self):
         return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
 
@@ -447,11 +453,11 @@ class Numeric(AbstractVariable):
         return f"NumericVariable: data:{self.data}"
 
     def get_cardinality(self):
-        if self.data is not None: 
+        if self.data is not None:
             # Return number of unique values
             raise NotImplementedError
-        else: 
-            return 1 
+        else:
+            return 1
 
 
 class Count(AbstractVariable):
