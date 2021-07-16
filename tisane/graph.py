@@ -3,6 +3,7 @@ from tisane.variable import (
     Nominal,
     Ordinal,
     Numeric,
+    Unit,
     Treatment,
     Nest,
     RepeatedMeasure,
@@ -254,8 +255,13 @@ class Graph(object):
         for (n, data) in nodes:
             is_id = data["is_identifier"]
             n_var = data["variable"]
-            if is_id:
+            if isinstance(n_var, Unit):
+                assert(is_id)
                 identifiers.append(n_var)
+            # This is to be backwards compatible with code that does not use the Unit type 
+            else: 
+                if is_id: 
+                    identifiers.append(n_var)
 
         return identifiers
 

@@ -437,7 +437,6 @@ class Unit(Nominal):
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
 
-
 # Wrapper around AbstractVariable class
 class Variable(AbstractVariable):
     def __init__(self, name: str):
