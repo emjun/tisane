@@ -1,3 +1,4 @@
+from tisane import graph
 import tisane as ts
 from tisane.variable import Has
 from tisane.smt.synthesizer import Synthesizer
@@ -148,4 +149,20 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(pig.name in id_names)
     
     def test_graph_construction_with_units(self):
+        pig = ts.Unit("pig id")
+        litter = ts.Unit("litter")
+        weight = ts.Numeric("weight")
+
+        pig.has(weight, exactly=1)
+        pig.has(litter, exactly=1)
+        litter.has(pig, up_to=30)
+
+        design = ts.Design(dv=weight, ivs=[pig, litter])
+        
+        gr = design.graph
+        self.assertTrue(gr.has_variable(weight))
+        self.assertTrue(gr.has_variable(pig))
+        self.assertTrue(gr.has_variable(litter))
+        
+
         # WHAT happens once construct graph?? - end to end examples with test case?
