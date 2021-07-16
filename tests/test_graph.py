@@ -147,7 +147,7 @@ class GraphTest(unittest.TestCase):
         id_names = [i.name for i in ids]
         self.assertEqual(len(ids), 1)
         self.assertTrue(pig.name in id_names)
-    
+
     def test_graph_construction_with_units(self):
         pig = ts.Unit("pig id")
         litter = ts.Unit("litter")
@@ -158,7 +158,7 @@ class GraphTest(unittest.TestCase):
         litter.has(pig, up_to=30)
 
         design = ts.Design(dv=weight, ivs=[pig, litter])
-        
+
         gr = design.graph
         self.assertTrue(gr.has_variable(weight))
         self.assertTrue(gr.has_variable(pig))
@@ -174,13 +174,13 @@ class GraphTest(unittest.TestCase):
         litter.has(pig, up_to=30)
 
         design = ts.Design(dv=weight, ivs=[pig, litter])
-        
+
         gr = design.graph
         vars = gr.get_identifiers()
-        self.assertEqual(len(vars), 2) # 2 units/levels in the graph
+        self.assertEqual(len(vars), 2)  # 2 units/levels in the graph
         self.assertIn(pig, vars)
         self.assertIn(litter, vars)
-    
+
     def test_get_variables_with_units(self):
         pig = ts.Unit("pig id")
         litter = ts.Unit("litter")
@@ -192,38 +192,33 @@ class GraphTest(unittest.TestCase):
         litter.has(pig, up_to=30)
 
         design = ts.Design(dv=weight, ivs=[pig, litter])
-        
+
         gr = design.graph
         vars = gr.get_identifiers()
-        self.assertEqual(len(vars), 2) # 2 units/levels in the graph
+        self.assertEqual(len(vars), 2)  # 2 units/levels in the graph
         self.assertIn(pig, vars)
         self.assertIn(litter, vars)
 
         self.assertEqual(len(pig.relationships), 3)
-        for obj in pig.relationships: 
+        for obj in pig.relationships:
             self.assertIsInstance(obj, Has)
 
-            if pig == obj.variable: 
-                self.assertIsNotNone(gr.has_edge(pig, obj.measure, 'has'))
-            else: 
+            if pig == obj.variable:
+                self.assertIsNotNone(gr.has_edge(pig, obj.measure, "has"))
+            else:
                 self.assertEqual(litter, obj.variable)
                 self.assertEqual(pig, obj.measure)
-                self.assertIsNotNone(gr.has_edge(litter, pig, 'has'))
-        
+                self.assertIsNotNone(gr.has_edge(litter, pig, "has"))
+
         self.assertEqual(len(litter.relationships), 2)
         for obj in litter.relationships:
             self.assertIsInstance(obj, Has)
 
-            if litter == obj.variable: 
-                self.assertIsNotNone(gr.has_edge(litter, obj.measure, 'has'))
-            else: 
+            if litter == obj.variable:
+                self.assertIsNotNone(gr.has_edge(litter, obj.measure, "has"))
+            else:
                 self.assertEqual(pig, obj.variable)
                 self.assertEqual(litter, obj.measure)
-                self.assertIsNotNone(gr.has_edge(litter, pig, 'has'))
-            
-
-
-        
-
+                self.assertIsNotNone(gr.has_edge(litter, pig, "has"))
 
         # WHAT happens once construct graph?? - end to end examples with test case?
