@@ -65,6 +65,8 @@ class Nest(object):
 """
 Class for expressing Repeated measures
 """
+
+
 class RepeatedMeasure(object):
     unit: "AbstractVariable"
     response: "AbstractVariable"
@@ -436,6 +438,7 @@ class Unit(Nominal):
         has_relat = Has(variable=self, measure=measure, repetitions=repet)
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
+
 
 # Wrapper around AbstractVariable class
 class Variable(AbstractVariable):

@@ -256,11 +256,11 @@ class Graph(object):
             is_id = data["is_identifier"]
             n_var = data["variable"]
             if isinstance(n_var, Unit):
-                assert(is_id)
+                assert is_id
                 identifiers.append(n_var)
-            # This is to be backwards compatible with code that does not use the Unit type 
-            else: 
-                if is_id: 
+            # This is to be backwards compatible with code that does not use the Unit type
+            else:
+                if is_id:
                     identifiers.append(n_var)
 
         return identifiers

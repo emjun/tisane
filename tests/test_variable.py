@@ -176,7 +176,6 @@ class VariableTest(unittest.TestCase):
 
         self.assertEqual(relat.repetitions, 2)
 
-
     def test_unit_repeats(self):
         student = ts.Unit("student id")
         test_score = ts.Numeric("test score")
@@ -196,5 +195,5 @@ class VariableTest(unittest.TestCase):
         # student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
 
-    def test_unit_has_relationships(self): 
+    def test_unit_has_relationships(self):
         pass
