@@ -119,10 +119,12 @@ Class for Moderate relationships (for Interactions)
 """
 
 class Moderate(object): 
-    variables: List["AbstractVariable"]
+    moderator: List["AbstractVariable"]
+    on: "AbstractVariable"
 
-    def __init__(self, variables: List["AbstractVariable"]): 
-        self.variables = variables
+    def __init__(self, moderator: List["AbstractVariable"], on: "AbstractVariable"): 
+        self.moderator = moderator
+        self.on = on
 
 
 """
@@ -298,7 +300,7 @@ class AbstractVariable(object):
                 assert(isinstance(m, AbstractVariable))
             m_vars += moderator # Add moderator to vars list
 
-        moderate_relat = Moderate(variables=m_vars)
+        moderate_relat = Moderate(moderator=m_vars, on=on)
         self.relationships.append(moderate_relat)
 
         # Add relationship to moderators
@@ -374,7 +376,9 @@ class Nominal(AbstractVariable):
             if "cardinality" in kwargs.keys():
                 self.cardinality = kwargs["cardinality"]
             else:
-                self.cardinality = None
+                if "categories" in kwargs.keys(): 
+                    num_categories = len(kwargs["categories"])
+                    self.cardinality = num_categories
 
         # has data
         if self.data is not None:
@@ -420,7 +424,10 @@ class Ordinal(AbstractVariable):
         else:
             if "cardinality" in kwargs:
                 self.cardinality = kwargs["cardinality"]
-            # TODO: What to do if cardinality not in kwargs?
+            else:
+                num_categories = len(self.ordered_cat)
+                self.cardinality = num_categories
+
 
     def __str__(self):
         return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
@@ -440,7 +447,11 @@ class Numeric(AbstractVariable):
         return f"NumericVariable: data:{self.data}"
 
     def get_cardinality(self):
-        raise NotImplementedError
+        if self.data is not None: 
+            # Return number of unique values
+            raise NotImplementedError
+        else: 
+            return 1 
 
 
 class Count(AbstractVariable):

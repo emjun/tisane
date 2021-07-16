@@ -10,6 +10,7 @@ from tisane.variable import (
     Has,
     Associate,
     Cause,
+    Moderate, 
     GreaterThanOne,
 )
 
@@ -255,6 +256,7 @@ class Graph(object):
         for (n, data) in nodes:
             is_id = data["is_identifier"]
             n_var = data["variable"]
+            
             if isinstance(n_var, Unit):
                 assert is_id
                 identifiers.append(n_var)
@@ -262,7 +264,7 @@ class Graph(object):
             else:
                 if is_id:
                     identifiers.append(n_var)
-
+        
         return identifiers
 
     # @return the variable in graph that is the identifier for @param variable
@@ -301,7 +303,7 @@ class Graph(object):
 
     # TODO: Add repetitions for between/within; I think make repetitions an int not a variable
     def add_relationship(
-        self, relationship: Union[Has, Treatment, Nest, Associate, Cause]
+        self, relationship: Union[Has, Treatment, Nest, Associate, Cause, Moderate]
     ):
         if isinstance(relationship, Has):
             identifier = relationship.variable
@@ -325,6 +327,8 @@ class Graph(object):
             cause = relationship.cause
             effect = relationship.effect
             self.cause(cause, effect)
+        elif isinstance(relationship, Moderate): 
+            self.moderate(moderator=relationship.moderator, on=relationship.on, moderate_obj=relationship)
         elif isinstance(relationship, RepeatedMeasure):  # TODO: Rename to Repeat?
             unit = relationship.unit
             response = relationship.response
@@ -369,6 +373,29 @@ class Graph(object):
         # Is this edge new?
         if not self.has_edge(start=cause, end=effect, edge_type="cause"):
             self._add_edge(start=cause, end=effect, edge_type="cause")
+
+    def moderate(self, moderator: List[AbstractVariable], on: AbstractVariable, moderate_obj: Moderate): 
+        # Create new interaction variable
+        m_names = [m.name for m in moderator]
+        name = "*".join(m_names)
+
+        m_cardinality = 1 
+        for m in moderator: 
+            if m.get_cardinality() is not None: 
+                m_cardinality *= m.get_cardinality()
+
+        var = Nominal(name, cardinality=m_cardinality) # Interaction variables are cast as nominal variables
+
+        # Add associate edges for interaction 
+        self.associate(lhs=var, rhs=on)
+        
+        # Inherit unit has relationships from moderators 
+        for m in moderator: 
+            identifier = self.get_identifier_for_variable(m)
+            
+            if identifier is not None: 
+                relationship = Has(variable=identifier, measure=var, repetitions=m_cardinality)
+                self.has(identifier, var, relationship, repetitions=m_cardinality)
 
     # Add an ambiguous/contribute edge to the graph
     def contribute(self, lhs: AbstractVariable, rhs: AbstractVariable):

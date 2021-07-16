@@ -195,6 +195,18 @@ class VariableTest(unittest.TestCase):
         # student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
 
+    def test_moderate_obj(self): 
+        v1 = ts.Nominal("V1")
+        v2 = ts.Nominal("V2")
+        v3 = ts.Nominal("V3")
+
+        v1.moderate([v2], on=v3)
+        relat = v1.relationships[0]
+        self.assertIsInstance(relat, Moderate)
+        self.assertIn(v1, relat.moderator)
+        self.assertIn(v2, relat.moderator)
+        self.assertIs(v3, relat.on)
+
     def test_moderate_two_variables(self): 
         race = ts.Nominal("Race")
         ses = ts.Numeric("SES")

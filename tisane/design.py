@@ -41,6 +41,7 @@ Class for expressing (i) data collection structure, (ii) that there is a manipul
 Relies on Class Treatment, Nest, RepeatedMeasure
 """
 
+interaction_effects = list() 
 
 class Design(object):
     dv: AbstractVariable
@@ -68,7 +69,6 @@ class Design(object):
             self._add_variable_to_graph(v)
         # Add any nesting relationships involving IVs that may be implicit
         self._add_nesting_relationships_to_graph()
-        # TODO: Check that DV and IVs have relationships between them
 
         if source is not None:
             self.dataset = Dataset(source)

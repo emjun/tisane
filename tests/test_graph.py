@@ -127,7 +127,7 @@ class GraphTest(unittest.TestCase):
 
     def test_get_identifiers_repeat(self):
         pig = ts.Nominal("pig id", cardinality=24)  # 24 pigs
-        time = ts.Nominal("week number")
+        time = ts.Nominal("week number", cardinality=12)
         weight = ts.Numeric("weight")
 
         pig.repeats(weight, according_to=time)
@@ -221,4 +221,68 @@ class GraphTest(unittest.TestCase):
                 self.assertEqual(litter, obj.measure)
                 self.assertIsNotNone(gr.has_edge(litter, pig, "has"))
 
-        # WHAT happens once construct graph?? - end to end examples with test case?
+    def test_add_interaction_effects(self): 
+        student = ts.Unit("Student")
+        race = ts.Nominal("Race", cardinality=5)
+        ses = ts.Numeric("SES")
+        test_score = ts.Numeric("Test score")
+
+        student.has(race, exactly=1)
+        student.has(ses, exactly=1)
+        student.has(test_score, exactly=1)
+        race.moderate(ses, on=test_score)
+
+        self.assertEqual(len(student.relationships), 3)
+
+        design = ts.Design(dv=test_score, ivs=[race, ses])
+
+        gr = design.graph
+        identifiers = gr.get_identifiers()
+        self.assertIn(student, identifiers)
+        self.assertIsNotNone(gr.has_edge(student, race, "has"))
+        self.assertIsNotNone(gr.has_edge(student, ses, "has"))
+        self.assertIsNotNone(gr.has_edge(student, test_score, "has"))
+
+        variables = gr.get_variables() 
+        self.assertEqual(len(variables), 5) # Check that interaction effect is part of graph as a new variable/node
+        v_names = [v.name for v in variables]
+        self.assertIn("Student", v_names)
+        self.assertIn("Race", v_names)
+        self.assertIn("SES", v_names)
+        self.assertIn("Test score", v_names)
+        self.assertIn("Race*SES", v_names) # Check that interaction effect is part of graph as a new variable/node
+
+        edges = gr.get_edges()
+        # Identifier has interaction effect only once (no duplicates)
+        # Associate (between Race*SES and Test score introduces to edges)
+        self.assertEqual(len(edges), 6) 
+        
+        # Check associate edge for interaction effect
+        lhs = None
+        for v in variables: 
+            if v.name == "Race*SES": 
+                lhs = v
+        self.assertIsNotNone(lhs)
+        self.assertTrue(gr.has_edge(lhs, test_score, "associate"))
+        self.assertTrue(gr.has_edge(test_score, lhs, "associate"))
+
+        # Check that the interaction effect inherits from Student unit
+        self.assertTrue(gr.has_edge(student, lhs, "has"))
+        
+    # def test_add_interaction_effects_units(self): 
+    #     student = ts.Unit("Student")
+    #     race = ts.Nominal("Race")
+    #     ses = ts.Numeric("SES")
+    #     test_score = ts.Numeric("Test score")
+
+    #     race.moderate(ses, on=test_score)
+
+    #     design = ts.Design(dv=test_score, ivs=[race, ses])
+        
+    #     gr = design.graph
+        
+    #     edges = gr.get_edges()
+    
+        
+
+       

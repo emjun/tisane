@@ -1474,13 +1474,13 @@ class Synthesizer(object):
                     identifier=unit,
                     variable=according_to,
                     has_obj=edge_obj,
-                    repetitions=according_to.cardinality,
+                    repetitions=according_to.get_cardinality(),
                 )
                 gr.has(
                     identifier=unit,
                     variable=response,
                     has_obj=edge_obj,
-                    repetitions=according_to.cardinality,
+                    repetitions=according_to.get_cardinality(),
                 )
 
                 # Add implied associate relationship to gr
