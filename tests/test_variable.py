@@ -194,6 +194,3 @@ class VariableTest(unittest.TestCase):
         # Alternative
         # student.has(test_score, exactly=2)
         # test_score.has(test_time, exactly=1).foreach(test_time)
-
-    def test_unit_has_relationships(self):
-        pass
