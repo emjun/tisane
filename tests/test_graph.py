@@ -222,14 +222,36 @@ class GraphTest(unittest.TestCase):
                 self.assertIsNotNone(gr.has_edge(litter, pig, "has"))
 
     def test_add_interaction_effects(self):
-        student = ts.Unit("Student")
-        race = ts.Nominal("Race", cardinality=5)
+        # General comment: Enforce checks through API --> limit number of programs can author to valid set
+
+        # Type safety, enforces relationships already vs. additional checks
+        # Unit vs. Variable
+        student = ts.Unit("Student", attributes=[]) # object type, specify data types through object type
+        # Variables instantiated through Units
+        race = ts.Nominal(student, "Race", cardinality=5) # not true receiver
+        race = student.nominal("Race", cardinality=5, exactly=1) # proper OOP
         ses = ts.Numeric("SES")
         test_score = ts.Numeric("Test score")
+        tutoring = ts.Nominal("treatment")
 
+        # conceptual relationships
+        # Cause, associate, moderate (interaction)
+        race.associates_with(test_score)
+        student.associates_with(test_score)
+        # Entity = Unit 
+        # Levels in ER diagram/hierarchical units and variables
+        # Express constraints that are enforced/implicit (not in ER diagrams)
+        # relationships over attributes rather than relationships over entities alone
+
+        # data measurement relationships
         student.has(race, exactly=1)
         student.has(ses, exactly=1)
         student.has(test_score, exactly=1)
+        student.has(tutoring, exactly=3) # complete factorial design
+        student.has(tutoring, up_to=3) # incomplete factorial design 
+
+        tutoring.has(student, exactly=30) # introduces ambiguity
+
         race.moderate(ses, on=test_score)
 
         self.assertEqual(len(student.relationships), 3)

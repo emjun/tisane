@@ -476,6 +476,9 @@ class Unit(Nominal):
     def __init__(self, name: str):
         super(Unit, self).__init__(name)
 
+    # def nominal(self, name: str, cardinality=None,exactly: int = 0, up_to: int = None):
+    #     return Nominal(unit=self, name=name, cardinality=cardinality, exactly=exactly, up_to=up_to)
+
     def has(self, measure: AbstractVariable, exactly: int = 0, up_to: int = None):
         repet = 0
         if exactly == 0:
