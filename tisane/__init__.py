@@ -18,9 +18,7 @@ from tisane.graph import (
     Graph,
 )
 
-from tisane.conceptual_model import ConceptualModel
-
-from tisane.level import Level
+# from tisane.conceptual_model import ConceptualModel
 
 from tisane.random_effects import (
     RandomSlope,

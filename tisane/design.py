@@ -1,4 +1,4 @@
-from tisane.variable import (
+from tisane.og_variable import (
     AbstractVariable,
     Nominal,
     Ordinal,
@@ -7,7 +7,6 @@ from tisane.variable import (
     Nest,
     RepeatedMeasure,
 )
-from tisane.level import Level, LevelSet
 from tisane.graph import Graph
 from tisane.smt.rules import (
     MainEffect,

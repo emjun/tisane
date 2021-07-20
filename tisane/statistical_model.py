@@ -1,5 +1,5 @@
 from tisane.concept import Concept
-from tisane.variable import (
+from tisane.og_variable import (
     AbstractVariable,
     Nominal,
     Ordinal,

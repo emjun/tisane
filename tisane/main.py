@@ -5,7 +5,7 @@ from tisane.effect_set import EffectSet
 from tisane.graph import Graph
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
-from tisane.conceptual_model import ConceptualModel
+# from tisane.conceptual_model import ConceptualModel
 from tisane.smt.results import AllStatisticalResults
 import tisane.smt.rules as rules
 from tisane.smt.query_manager import QM
@@ -276,67 +276,67 @@ def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]):
     return scipt
 
 
-def verify(
-    input_: Union[Design, ConceptualModel, StatisticalModel],
-    output_: Union[Design, ConceptualModel, StatisticalModel],
-):
-    if isinstance(input_, Design) and isinstance(output_, ConceptualModel):
-        return verify_design_and_conceptual_model(design=input_, cm=output_)
-    elif isinstance(input_, ConceptualModel) and isinstance(output_, Design):
-        return verify_design_and_conceptual_model(design=output_, cm=input_)
-    elif isinstance(input_, Design) and isinstance(output_, StatisticalModel):
-        return verify_design_and_statistical_model(design=input_, sm=output_)
-    elif isinstance(input_, StatisticalModel) and isinstance(output_, Design):
-        return verify_design_and_statistical_model(design=output_, sm=input_)
-    elif isinstance(input_, StatisticalModel) and isinstance(output_, ConceptualModel):
-        return verify_statistical_model_and_conceptual_model(sm=input_, cm=output_)
-    elif isinstance(input_, ConceptualModel) and isinstance(output_, StatisticalModel):
-        return verify_statistical_model_and_conceptual_model(sm=output_, cm=input_)
-    else:
-        # TODO: If two objects of the same class are compared!
-        raise NotImplementedError
+# def verify(
+#     input_: Union[Design, ConceptualModel, StatisticalModel],
+#     output_: Union[Design, ConceptualModel, StatisticalModel],
+# ):
+#     if isinstance(input_, Design) and isinstance(output_, ConceptualModel):
+#         return verify_design_and_conceptual_model(design=input_, cm=output_)
+#     elif isinstance(input_, ConceptualModel) and isinstance(output_, Design):
+#         return verify_design_and_conceptual_model(design=output_, cm=input_)
+#     elif isinstance(input_, Design) and isinstance(output_, StatisticalModel):
+#         return verify_design_and_statistical_model(design=input_, sm=output_)
+#     elif isinstance(input_, StatisticalModel) and isinstance(output_, Design):
+#         return verify_design_and_statistical_model(design=output_, sm=input_)
+#     elif isinstance(input_, StatisticalModel) and isinstance(output_, ConceptualModel):
+#         return verify_statistical_model_and_conceptual_model(sm=input_, cm=output_)
+#     elif isinstance(input_, ConceptualModel) and isinstance(output_, StatisticalModel):
+#         return verify_statistical_model_and_conceptual_model(sm=output_, cm=input_)
+#     else:
+#         # TODO: If two objects of the same class are compared!
+#         raise NotImplementedError
 
 
-def verify_design_and_conceptual_model(design: Design, cm: ConceptualModel):
-    d_graph = design.graph
-    cm_graph = cm.graph
+# def verify_design_and_conceptual_model(design: Design, cm: ConceptualModel):
+#     d_graph = design.graph
+#     cm_graph = cm.graph
 
-    cm_edges = cm_graph.get_edges()
-    for (n0, n1, data) in cm_edges:
-        n0_var = cm_graph.get_variable(name=n0)
-        n1_var = cm_graph.get_variable(name=n1)
-        if data["edge_type"] == "associate":
-            # check if there is a corresponding 'unknown' edge in the Study Design
-            if not d_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
-                # Check both because Conceptual Models have bidirectional edges for 'associations'
-                if not d_graph.has_edge(start=n1_var, end=n0_var, edge_type="unknown"):
-                    return False
-        elif data["edge_type"] == "cause":
-            # check if there is a corresponding 'unknown' edge in the Study Design
-            if not d_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
-                return False
-    return True
+#     cm_edges = cm_graph.get_edges()
+#     for (n0, n1, data) in cm_edges:
+#         n0_var = cm_graph.get_variable(name=n0)
+#         n1_var = cm_graph.get_variable(name=n1)
+#         if data["edge_type"] == "associate":
+#             # check if there is a corresponding 'unknown' edge in the Study Design
+#             if not d_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
+#                 # Check both because Conceptual Models have bidirectional edges for 'associations'
+#                 if not d_graph.has_edge(start=n1_var, end=n0_var, edge_type="unknown"):
+#                     return False
+#         elif data["edge_type"] == "cause":
+#             # check if there is a corresponding 'unknown' edge in the Study Design
+#             if not d_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
+#                 return False
+#     return True
 
 
-def verify_statistical_model_and_conceptual_model(
-    sm: StatisticalModel, cm: ConceptualModel
-):
-    sm_graph = sm.graph
-    cm_graph = cm.graph
+# def verify_statistical_model_and_conceptual_model(
+#     sm: StatisticalModel, cm: ConceptualModel
+# ):
+#     sm_graph = sm.graph
+#     cm_graph = cm.graph
 
-    cm_edges = cm_graph.get_edges()
-    for (n0, n1, data) in cm_edges:
-        n0_var = cm_graph.get_variable(name=n0)
-        n1_var = cm_graph.get_variable(name=n1)
-        if data["edge_type"] == "associate":
-            # check if there is a corresponding 'unknown' edge in the Statistical Model
-            if not sm_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
-                return False
-        elif data["edge_type"] == "cause":
-            # check if there is a corresponding 'unknown' edge in the Statistical Model
-            if not sm_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
-                return False
-    return True
+#     cm_edges = cm_graph.get_edges()
+#     for (n0, n1, data) in cm_edges:
+#         n0_var = cm_graph.get_variable(name=n0)
+#         n1_var = cm_graph.get_variable(name=n1)
+#         if data["edge_type"] == "associate":
+#             # check if there is a corresponding 'unknown' edge in the Statistical Model
+#             if not sm_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
+#                 return False
+#         elif data["edge_type"] == "cause":
+#             # check if there is a corresponding 'unknown' edge in the Statistical Model
+#             if not sm_graph.has_edge(start=n0_var, end=n1_var, edge_type="unknown"):
+#                 return False
+#     return True
 
 
 def verify_design_and_statistical_model(design: Design, sm: StatisticalModel):
