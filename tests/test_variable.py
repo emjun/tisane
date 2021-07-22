@@ -310,47 +310,51 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(school.relationships[0].base, student)
         self.assertEqual(school.relationships[0].group, school)
 
-    # def test_has_variables(self): 
-        
-    #     # Simple case: Tutoring is between-subjects
-    #     student = ts.Unit("Student ID")
-    #     race = student.nominal("Race") # exactly=1 by default 
-    #     tutoring = student.nominal("Tutoring") # exactly=1 by default 
-    #     score = student.numeric("Test score") # exactly=1 by default 
+    def test_has_variables(self): 
+        # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects
 
-    #     # Tutoring is within-subjects
-    #     student = ts.Unit("Student ID")
-    #     race = student.nominal("Race") # exactly=1 by default 
-    #     tutoring = student.nominal("Tutoring", exactly=2) # each student receives 2 conditions of tutoring
-    #     score = student.numeric("Test score", exactly=2) 
-    #     student.repeats(score, according_to=tutoring) # 1 score per tutoring condition
-    #     # There need to be checks that validate the number of scores per student == number of tutoring conditions per student 
-    #     # Maybe some minimal upper bound checking if use up_to instead of exactly OR require both statements to use exactly/up_to
+        # Simple case: Tutoring is between-subjects
+        student = ts.Unit("Student ID")
+        race = student.nominal("Race") # exactly=1 by default 
+        tutoring = student.nominal("Tutoring") # exactly=1 by default 
+        score = student.numeric("Test score") # exactly=1 by default 
 
-    #     # Repeated measures with time
-    #     student = ts.Unit("Student ID")
-    #     race = student.nominal("Race") # exactly=1 by default 
-    #     score = student.numeric("Test score", exactly=10) 
-    #     week = ts.Nominal("Week", cardinality=10) # Week in quarter 
+        # Tutoring is within-subjects
+        student = ts.Unit("Student ID")
+        race = student.nominal("Race") # exactly=1 by default 
+        tutoring = student.nominal("Tutoring", exactly=2) # each student receives 2 conditions of tutoring
+        score = student.numeric("Test score", exactly=2) 
+        student.repeats(score, according_to=tutoring) # 1 score per tutoring condition
+        # There need to be checks that validate the number of scores per student == number of tutoring conditions per student 
+        # Maybe some minimal upper bound checking if use up_to instead of exactly OR require both statements to use exactly/up_to
 
-    #     student.repeats(score, according_to=week) # 1 score per week (10:10)
+        # Repeated measures with time
+        student = ts.Unit("Student ID")
+        race = student.nominal("Race") # exactly=1 by default 
+        score = student.numeric("Test score", exactly="week") 
+        week = student.ordinal("Week", cardinality=10) # Week in quarter 
+
+        student.repeats(score, according_to=week) # 1 score per week (10:10)
     
-    #     # Repeated measures with Tutoring X Time
-    #     student = ts.Unit("Student ID")
-    #     race = student.nominal("Race") # exactly=1 by default 
-    #     tutoring = student.nominal("Tutoring", exactly=2) # each student receives 2 conditions of tutoring
-    #     score = student.numeric("Test score", exactly=20) 
-    #     week = ts.Nominal("Week", cardinality=10) # Week in quarter 
+        # Repeated measures with Tutoring X Time
+        student = ts.Unit("Student ID")
+        race = student.nominal("Race") # exactly=1 by default 
+        tutoring = student.nominal("Tutoring", exactly=2) # each student receives 2 conditions of tutoring
+        score = student.numeric("Test score", exactly=20) # TODO: how often variable is measured according to turoring * week, no need to express repeats/what 20 corresponds to
+        # + operator: tutoring + something else
+        # repeated measure as how often measured according to what
+        week = ts.CONTROL("Week", cardinality=10) # Week in quarter 
 
-    #     student.repeats(score, according_to=tutoring) # 1 score per tutoring condition
-    #     student.repeats(score, according_to=week) # ?? 2 scores per week in quarter if test both conditions each week 
-    #     # OR 
-    #     student.repeats(score, according_to=[tutoring, week]) # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
+        student.repeats(score, according_to=tutoring) # 1 score per tutoring condition
+        student.repeats(score, according_to=week) # ?? 2 scores per week in quarter if test both conditions each week 
+        # OR 
+        student.repeats(score, according_to=[tutoring, week]) # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
+        student.repeats(score, according_to=tutoring*week) # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
 
-    #     ## TODO: START HERE: How are repeated measures used to generate random effects????
-    #     # time as a within-subjects condition for a unit 
-    #     score = student.numeric("Test score", exactly=20)
-    #     time = student.nominal("Week",  exactly=10)
-    #     student.repeats(score, according_to=10)
+        ## TODO: How are repeated measures used to generate random effects????
+        # time as a within-subjects condition for a unit 
+        score = student.numeric("Test score", exactly=20)
+        time = student.nominal("Week",  exactly=10)
+        student.repeats(score, according_to=10)
 
-    #     # Is the more general problem: What happens when there are multiple within-subjects variables?
+        # Is the more general problem: What happens when there are multiple within-subjects variables?
