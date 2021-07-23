@@ -147,42 +147,29 @@ pig = ts.Unit("Pig", cardinality=82)
 litter = ts.Unit("Litter", cardinality=22)
 week = ts.Control("Week", cardinality=12)
 
-pig.nests_within(litter) # pigs nested within litters
-diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_observations=1) # Each pig has 1 diet
-weight = pig.numeric("Weight", number_of_observations=week.cardinality()) # Each pig has a Weight measure corresponding to each week
-feed = pig.numeric("Feed consumption", number_of_observations=week) # Each pig has a feed consumption measure corresponding to each week
-# The assumption is that there is a "for each" variable passed as number_of_observations @param
+pig.nests_within(litter, number_of_instances=NUMBER_OF_PIGS_IN_A_LITTER) # pigs nested within litters
+diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_instances=1) # Each pig has 1 diet
+weight = pig.numeric("Weight", number_of_instances=week.cardinality()) # Each pig has 1 instance of a Weight measure corresponding to each week
+feed = pig.numeric("Feed consumption", number_of_instances=week) # Each pig has a feed consumption measure corresponding to each week
+# The assumption is that there is a "for each" variable passed as number_of_instances @param
 
-diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_observations=2)
-
-age = student.numeric("Age", number_of_observations=1) # Each student has 1 Age
-vitaminE = litter.nominal("Evit", number_of_observations=1) # Each litter has 1 Evit
-weight = pig.numeric("Weight", number_of_observations=12, for_each=time) # Each pig has 12 Weight measures, 1 for each instance/type of time
-weight = pig.numeric("Weight", number_of_observations=time.cardinality)
-
-# How could we replace the number designations?
-weight = pig.numeric("Weight", for_each=time)
-
-
-score = student.numeric("Test score, number_of_observations=20, for_each=tutoring*week)
-Could we expect/assume analysts to have a separate column that represents tutoring*week? 
---> If we did make this assumption, we could lose the clustering/nesting within week. UNLESS we assume that analysts will have *both* week and tutoring*week as separate columns.
-
+# Hypothetical: 
+diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_instances=2) # Each pic has two instances of a diet
 
 # Conceptual relationship
 time.cause(weight)
-
-# Data measurement relationships
-pig.repeats(weight, according_to=time)
-
-
-pig.nests_within(litter, NUMBER_OF_PIGS_IN_A_LITTER)
 
 # Specify and execute query
 design = ts.Design(dv=weight, ivs=[time]).assign_data(df)
 
 ts.infer_statistical_model_from_design(design=design)
-
 ```
+
+High-level points: 
+- number_of_instances = ratio of Unit to Measure. Unit is always set to "1" 
+- number_of_instances can be set to an INT, variable (syntactic sugar for variable.cardinality which returns an INT), which get cast to an internal INT type (i.e., ExactlyOne, GreaterThanOne)
+- "exactly" comes in the form of INT
+- "up_to" comes in the form of either a function tisane provides (e.g., ts.up_to(....)) or "one_of" (e.g., ts.one_of([1, 2, 3])) which outputs an internal INT type (i.e., ExactlyOne, GreaterThanOne)
+
 
 
