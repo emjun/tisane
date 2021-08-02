@@ -1,11 +1,13 @@
-from tisane.og_variable import (
+from tisane.variable import (
+    Measure,
+    Unit,
     AbstractVariable,
-    Nominal,
-    Ordinal,
-    Numeric,
-    Treatment,
-    Nest,
-    RepeatedMeasure,
+    Has,
+    Associates,
+    Causes,
+    Moderates,
+    Nests,
+    Repeats
 )
 from tisane.graph import Graph
 from tisane.smt.rules import (
@@ -37,7 +39,7 @@ from z3 import *
 
 """
 Class for expressing (i) data collection structure, (ii) that there is a manipulation and (iii) how there is a manipulation (e.g., between-subjects, within-subjects)
-Relies on Class Treatment, Nest, RepeatedMeasure
+Relies on Class Treatment, Nests, Repeats
 """
 
 interaction_effects = list()
@@ -67,6 +69,11 @@ class Design(object):
         # Add all ivs
         for v in ivs:
             self._add_variable_to_graph(v)
+        # # Add all the units
+        # units = self.graph.get_identifiers()
+        # for u in units: 
+        #     import pdb;pdb.set_trace()
+
         # Add any nesting relationships involving IVs that may be implicit
         self._add_nesting_relationships_to_graph()
 
@@ -92,7 +99,7 @@ class Design(object):
             relationships = v.relationships
 
             for r in relationships:
-                if isinstance(r, Nest):
+                if isinstance(r, Nests):
                     self.graph.add_relationship(relationship=r)
 
     # def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]):
@@ -111,16 +118,16 @@ class Design(object):
     #             # Add treatment edge
     #             self.graph.contribute(lhs=treatment, rhs=self.dv)
 
-    def _add_groupings(self, groupings: List[typing.Union[Nest, RepeatedMeasure]]):
+    def _add_groupings(self, groupings: List[typing.Union[Nests, Repeats]]):
         for g in groupings:
 
-            if isinstance(g, Nest):
+            if isinstance(g, Nests):
                 unit = g.unit
                 group = g.group
 
                 self.graph.nest(unit=unit, group=group, nest_obj=g)
 
-            elif isinstance(g, RepeatedMeasure):
+            elif isinstance(g, Repeats):
                 unit = g.unit
                 response = g.response
 

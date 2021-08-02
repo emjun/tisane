@@ -1,16 +1,14 @@
 from tisane.graph import Graph
-from tisane.og_variable import (
+from tisane.variable import (
+    Measure,
+    Unit,
     AbstractVariable,
-    Nominal,
-    Ordinal,
-    Numeric,
-    Time,
-    Count,
-    Treatment,
     Has,
-    RepeatedMeasure,
-    Nest,
-    GreaterThanOne,
+    Associates,
+    Causes,
+    Moderates,
+    Nests,
+    Repeats
 )
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
