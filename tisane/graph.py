@@ -1,19 +1,5 @@
-from tisane.og_variable import (
-    # AbstractVariable,
-    Nominal,
-    Ordinal,
-    Numeric,
-    # Unit,
-    Treatment,
-    # Nest,
-    RepeatedMeasure,
-    # Has,
-    # Associate,
-    # Cause,
-    # Moderate,
-    GreaterThanOne,
-)
 from tisane.variable import (
+    Nominal,
     Measure,
     Unit,
     AbstractVariable,
@@ -21,9 +7,9 @@ from tisane.variable import (
     Associates,
     Causes,
     Moderates,
-    Nests
+    Nests,
+    Repeats
 )
-
 import networkx as nx
 import pydot
 from typing import List, Union, Tuple
@@ -109,7 +95,7 @@ class Graph(object):
         end: AbstractVariable,
         edge_type: str,
         repetitions: int = None,
-        edge_obj: Union[Treatment, Nests, RepeatedMeasure] = None,
+        edge_obj: Union[Nests, Repeats, Associates] = None,
     ):
 
         # If the variables aren't in the graph, add nodes first.
@@ -364,7 +350,7 @@ class Graph(object):
 
     # TODO: Add repetitions for between/within; I think make repetitions an int not a variable
     def add_relationship(
-        self, relationship: Union[Has, Treatment, Nests, Associates, Causes, Moderates]
+        self, relationship: Union[Has, Nests, Associates, Causes, Moderates]
     ):
         def relclass(clazz):
             return isinstance(relationship, clazz)
@@ -377,42 +363,42 @@ class Graph(object):
             measure = relationship.measure
             repetitions = relationship.repetitions
             self.has(identifier, measure, relationship, repetitions)
-        elif isinstance(relationship, Treatment):
-            identifier = relationship.unit
-            treatment = relationship.treatment
-            repetitions = relationship.num_assignments
-            self.treat(unit=identifier, treatment=treatment, treatment_obj=relationship)
+        # elif isinstance(relationship, Treatment):
+        #     identifier = relationship.unit
+        #     treatment = relationship.treatment
+        #     repetitions = relationship.num_assignments
+        #     self.treat(unit=identifier, treatment=treatment, treatment_obj=relationship)
         elif isinstance(relationship, Nests):
             base = relationship.base
             group = relationship.group
-            self.nest(base, group, relationship)
+            self.nests(base, group, relationship)
         elif isinstance(relationship, Associates):
             lhs = relationship.lhs
             rhs = relationship.rhs
-            self.associate(lhs, rhs)
+            self.associates(lhs, rhs, associates_obj=relationship)
         elif isinstance(relationship, Causes):
             cause = relationship.cause
             effect = relationship.effect
-            self.cause(cause, effect)
+            self.causes(cause, effect, relationship)
         elif isinstance(relationship, Moderates):
-            self.moderate(
+            self.moderates(
                 moderator=relationship.moderator,
                 on=relationship.on,
-                moderate_obj=relationship,
+                moderates_obj=relationship,
             )
-        elif isinstance(relationship, RepeatedMeasure):  # TODO: Rename to Repeat?
+        elif isinstance(relationship, Repeats):  # TODO: Rename to Repeat?
             unit = relationship.unit
-            response = relationship.response
+            measure = relationship.measure
             according_to = relationship.according_to
-            self.repeat(unit=unit, response=response, repeat_obj=relationship)
+            self.repeat(unit=unit, measure=measure, repeat_obj=relationship)
 
     # Add an edge that indicates that identifier 'has' the variable measurement
     def has(
         self,
         identifier: AbstractVariable,
         variable: AbstractVariable,
-        has_obj: Union[Has, Treatment, Nests, RepeatedMeasure],
-        repetitions: Union[int, GreaterThanOne],
+        has_obj: Union[Has, Nests, Repeats],
+        repetitions: Union[int],
     ):
         if not self.has_variable(identifier):
             self._add_variable(variable=identifier, is_identifier=True)
@@ -432,24 +418,24 @@ class Graph(object):
 
     # Add an ''associate'' edge to the graph
     # Adds two edges, one in each direction
-    def associate(self, lhs: AbstractVariable, rhs: AbstractVariable):
+    def associates(self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: Associates):
         # Is this edge new?
         if not self.has_edge(start=lhs, end=rhs, edge_type="associate"):
             assert not self.has_edge(start=rhs, end=lhs, edge_type="associate")
-            self._add_edge(start=lhs, end=rhs, edge_type="associate")
-            self._add_edge(start=rhs, end=lhs, edge_type="associate")
+            self._add_edge(start=lhs, end=rhs, edge_type="associate", edge_obj=associates_obj)
+            self._add_edge(start=rhs, end=lhs, edge_type="associate", edge_obj=associates_obj)
 
     # Add a causal edge to the graph
-    def cause(self, cause: AbstractVariable, effect: AbstractVariable):
+    def causes(self, cause: AbstractVariable, effect: AbstractVariable, causes_obj: Causes):
         # Is this edge new?
         if not self.has_edge(start=cause, end=effect, edge_type="cause"):
-            self._add_edge(start=cause, end=effect, edge_type="cause")
+            self._add_edge(start=cause, end=effect, edge_type="cause", edge_obj=causes_obj)
 
-    def moderate(
+    def moderates(
         self,
         moderator: List[AbstractVariable],
         on: AbstractVariable,
-        moderate_obj: Moderates,
+        moderates_obj: Moderates,
     ):
         # Create new interaction variable
         m_names = [m.name for m in moderator]
@@ -464,8 +450,9 @@ class Graph(object):
             name, cardinality=m_cardinality
         )  # Interaction variables are cast as nominal variables
 
-        # Add associate edges for interaction
-        self.associate(lhs=var, rhs=on)
+        # Add associate edges between interaction and @param on variable
+        associates_obj = Associates(lhs=var, rhs=on)
+        self.associates(lhs=var, rhs=on, associates_obj=associates_obj)
 
         # Inherit unit has relationships from moderators
         for m in moderator:
@@ -476,6 +463,8 @@ class Graph(object):
                     variable=identifier, measure=var, repetitions=m_cardinality
                 )
                 self.has(identifier, var, relationship, repetitions=m_cardinality)
+            # else:
+            #     import pdb; pdb.set_trace()
 
     # Add an ambiguous/contribute edge to the graph
     def contribute(self, lhs: AbstractVariable, rhs: AbstractVariable):
@@ -488,7 +477,7 @@ class Graph(object):
         self,
         unit: AbstractVariable,
         treatment: AbstractVariable,
-        treatment_obj: Treatment,
+        treatment_obj: Measure, # Used to be Treatment
     ):
         # Is this edge new?
         if not self.has_edge(start=treatment, end=unit, edge_type="treat"):
@@ -497,27 +486,27 @@ class Graph(object):
             )
 
     # Add a 'nest' edge to the graph
-    def nest(
-        self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nests = None
+    def nests(
+        self, base: Unit, group: Unit, nests_obj: Nests = None
     ):
         # Is this edge new?
         if not self.has_edge(start=base, end=group, edge_type="nest"):
             # Mark as identifiers
             self._add_variable(base, is_identifier=True)
             self._add_variable(group, is_identifier=True)
-            self._add_edge(start=base, end=group, edge_type="nest", edge_obj=nest_obj)
+            self._add_edge(start=base, end=group, edge_type="nest", edge_obj=nests_obj)
 
     # Add a 'repeat' edge to the graph
     def repeat(
         self,
-        unit: AbstractVariable,
-        response: AbstractVariable,
-        repeat_obj: RepeatedMeasure,
+        unit: Unit,
+        measure: Measure,
+        repeat_obj: Repeats,
     ):
         # Is this edge new?
-        if not self.has_edge(start=unit, end=response, edge_type="repeat"):
+        if not self.has_edge(start=unit, end=measure, edge_type="repeat"):
             self._add_edge(
-                start=unit, end=response, edge_type="repeat", edge_obj=repeat_obj
+                start=unit, end=measure, edge_type="repeat", edge_obj=repeat_obj
             )
 
     # # Generate Z3 consts that correspond to nodes in this graph

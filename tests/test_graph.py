@@ -1,6 +1,6 @@
 from tisane import graph
 import tisane as ts
-from tisane.variable import Has
+from tisane.variable import Causes, Has, Nests, Associates
 from tisane.smt.synthesizer import Synthesizer
 
 import unittest
@@ -8,9 +8,9 @@ import unittest
 
 class GraphTest(unittest.TestCase):
     def test_variables_node(self):
-        v1 = ts.Nominal("V1")
-        v2 = ts.Nominal("V2")
-        v3 = ts.Nominal("V3")
+        v1 = ts.Unit("V1")
+        v2 = ts.Unit("V2")
+        v3 = ts.Unit("V3")
 
         gr = ts.Graph()
         gr._add_variable(v1)
@@ -20,15 +20,16 @@ class GraphTest(unittest.TestCase):
         self.assertEqual(len(gr.get_variables()), len(gr.get_nodes()))
 
     def test_get_conceptual_subgraph(self):
-        v1 = ts.Numeric("V1")
-        v2 = ts.Numeric("V2")
-        v3 = ts.Numeric("V3")
+        v1 = ts.Unit("V1")
+        v2 = v1.nominal("V2")
+        v3 = v1.nominal("V3")
 
         gr = ts.Graph()
-        gr.cause(v1, v2)
-        gr.cause(v2, v3)
+        causes_obj_1 = Causes(v1, v2)
+        causes_obj_2 = Causes(v2, v3)
+        gr.causes(v1, v2, causes_obj_1)
+        gr.causes(v2, v3, causes_obj_2)
 
-        v1.has(v2)
         has_obj = v1.relationships[0]
         self.assertIsInstance(has_obj, Has)
         gr.has(v1, v2, has_obj, 1)
@@ -37,15 +38,16 @@ class GraphTest(unittest.TestCase):
         self.assertEqual(len(sub_gr.get_edges()), 2)
 
     def test_get_causal_subgraph(self):
-        v1 = ts.Numeric("V1")
-        v2 = ts.Numeric("V2")
-        v3 = ts.Numeric("V3")
+        v1 = ts.Unit("V1")
+        v2 = v1.nominal("V2")
+        v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
-        gr.cause(v1, v2)
-        gr.associate(v2, v3)
+        gr = ts.Graph() 
+        causes_obj = Causes(v1, v2)
+        gr.causes(v1, v2, causes_obj)
+        associates_obj = Associates(v2, v3)
+        gr.associates(v2, v3, associates_obj) # Question: When should the edge_obj be created? by whom? --> make consistent for all edges; Why do some edge types create them sooner than others?
 
-        v1.has(v2)
         has_obj = v1.relationships[0]
         self.assertIsInstance(has_obj, Has)
         gr.has(v1, v2, has_obj, 1)
@@ -54,12 +56,11 @@ class GraphTest(unittest.TestCase):
         self.assertEqual(len(sub_gr.get_edges()), 1)
 
     def test_get_identifiers_direct(self):
-        v1 = ts.Numeric("V1")
-        v2 = ts.Numeric("V2")
-        v3 = ts.Numeric("V3")
+        v1 = ts.Unit("V1")
+        v2 = v1.nominal("V2")
+        v3 = v1.nominal("V3")
 
         gr = ts.Graph()
-        v1.has(v2)
         has_obj = v1.relationships[0]
         self.assertIsInstance(has_obj, Has)
         gr.has(v1, v2, has_obj, 1)
@@ -69,15 +70,14 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(v1 in ids)
 
     def test_get_identifiers_nest(self):
-        student = ts.Nominal("student id")
-        school = ts.Nominal("school")
-        age = ts.Numeric("age")
-        math = ts.Numeric("math score")
+        student = ts.Unit("student id")
+        school = ts.Unit("school")
+        age = student.numeric("age")
+        math = student.numeric("math score")
 
         age.associates_with(math)  # Introduces 2 edges (bidirectional)
 
-        student.has(age)
-        student.nest_under(school)
+        student.nests_within(school)
 
         design = ts.Design(dv=math, ivs=[age])
 
@@ -88,62 +88,40 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(student in ids)
         self.assertTrue(school in ids)
 
-        synth = Synthesizer()
-        updated_gr = synth.transform_to_has_edges(gr)
-
-        # Post-transformation
-        ids = updated_gr.get_identifiers()
+        ids = gr.get_identifiers()
         id_names = [i.name for i in ids]
         self.assertEqual(len(ids), 2)
-        self.assertFalse(student in ids)
+        self.assertTrue(student in ids)
         self.assertTrue(student.name in id_names)
-        self.assertFalse(school in ids)
+        self.assertTrue(school in ids)
         self.assertTrue(school.name in id_names)
 
     def test_get_identifiers_treatment(self):
-        pid = ts.Nominal("pid")
-        acc = ts.Numeric("accuracy")
-        expl = ts.Nominal("explanation type")
+        pid = ts.Unit("pid")
+        acc = pid.numeric("accuracy")
+        expl = pid.nominal("explanation type")
         variables = [acc, expl]
 
-        # Data measurement relationships
-        expl.treats(pid)
-
+    
         design = ts.Design(dv=acc, ivs=[expl])
 
         # Pre-transformation
         gr = design.graph
         ids = gr.get_identifiers()
-        self.assertEqual(len(ids), 0)
-
-        synth = Synthesizer()
-        updated_gr = synth.transform_to_has_edges(gr)
-
-        # Post-transformation
-        ids = updated_gr.get_identifiers()
         id_names = [i.name for i in ids]
         self.assertEqual(len(ids), 1)
         self.assertTrue(pid.name in id_names)
 
     def test_get_identifiers_repeat(self):
-        pig = ts.Nominal("pig id", cardinality=24)  # 24 pigs
-        time = ts.Nominal("week number", cardinality=12)
-        weight = ts.Numeric("weight")
+        pig = ts.Unit("pig id", cardinality=24)  # 24 pigs
+        time = pig.nominal("week number", cardinality=12)
+        weight = pig.numeric("weight")
 
-        pig.repeats(weight, according_to=time)
+        pig.repeats(measure=weight, according_to=time)
 
         design = ts.Design(dv=weight, ivs=[time])
-
-        # Pre-transformation
         gr = design.graph
         ids = gr.get_identifiers()
-        self.assertEqual(len(ids), 0)
-
-        synth = Synthesizer()
-        updated_gr = synth.transform_to_has_edges(gr)
-
-        # Post-transformation
-        ids = updated_gr.get_identifiers()
         id_names = [i.name for i in ids]
         self.assertEqual(len(ids), 1)
         self.assertTrue(pig.name in id_names)
@@ -151,11 +129,10 @@ class GraphTest(unittest.TestCase):
     def test_graph_construction_with_units(self):
         pig = ts.Unit("pig id")
         litter = ts.Unit("litter")
-        weight = ts.Numeric("weight")
+        weight = pig.numeric("weight")
 
-        pig.has(weight, exactly=1)
-        pig.has(litter, exactly=1)
-        litter.has(pig, up_to=30)
+        # pig.nests_within(litter, up_to=30)
+        pig.nests_within(litter)
 
         design = ts.Design(dv=weight, ivs=[pig, litter])
 
@@ -167,11 +144,10 @@ class GraphTest(unittest.TestCase):
     def test_get_identifiers_with_units(self):
         pig = ts.Unit("pig id")
         litter = ts.Unit("litter")
-        weight = ts.Numeric("weight")
+        weight = pig.numeric("weight")
 
-        pig.has(weight, exactly=1)
-        pig.has(litter, exactly=1)
-        litter.has(pig, up_to=30)
+        # pig.nests_within(litter, up_to=30)
+        pig.nests_within(litter)
 
         design = ts.Design(dv=weight, ivs=[pig, litter])
 
@@ -184,13 +160,11 @@ class GraphTest(unittest.TestCase):
     def test_get_variables_with_units(self):
         pig = ts.Unit("pig id")
         litter = ts.Unit("litter")
-        weight = ts.Numeric("weight")
+        weight = pig.numeric("weight")
 
-        pig.has(weight, exactly=1)
-
-        pig.has(litter, exactly=1)
-        litter.has(pig, up_to=30)
-
+        # pig.nests_within(litter, up_to=30)
+        pig.nests_within(litter)
+        
         design = ts.Design(dv=weight, ivs=[pig, litter])
 
         gr = design.graph
@@ -199,71 +173,52 @@ class GraphTest(unittest.TestCase):
         self.assertIn(pig, vars)
         self.assertIn(litter, vars)
 
-        self.assertEqual(len(pig.relationships), 3)
+        self.assertEqual(len(pig.relationships), 2)
         for obj in pig.relationships:
-            self.assertIsInstance(obj, Has)
-
-            if pig == obj.variable:
-                self.assertIsNotNone(gr.has_edge(pig, obj.measure, "has"))
-            else:
-                self.assertEqual(litter, obj.variable)
-                self.assertEqual(pig, obj.measure)
-                self.assertIsNotNone(gr.has_edge(litter, pig, "has"))
-
-        self.assertEqual(len(litter.relationships), 2)
-        for obj in litter.relationships:
-            self.assertIsInstance(obj, Has)
-
-            if litter == obj.variable:
-                self.assertIsNotNone(gr.has_edge(litter, obj.measure, "has"))
-            else:
+            if isinstance(obj, Has):
                 self.assertEqual(pig, obj.variable)
-                self.assertEqual(litter, obj.measure)
-                self.assertIsNotNone(gr.has_edge(litter, pig, "has"))
+                self.assertIsNotNone(gr.has_edge(pig, obj.measure, "has"))
+            elif isinstance(obj, Nests):
+                self.assertEqual(pig, obj.base)
+                self.assertEqual(litter, obj.group)
+                self.assertIsNotNone(gr.has_edge(pig, litter, "nest"))
+
+        self.assertEqual(len(litter.relationships), 1)
+        for obj in litter.relationships:
+            self.assertIsInstance(obj, Nests)
+            self.assertEqual(pig, obj.base)
+            self.assertEqual(litter, obj.group)        
 
     def test_add_interaction_effects(self):
-        # General comment: Enforce checks through API --> limit number of programs can author to valid set
-
-        # Type safety, enforces relationships already vs. additional checks
-        # Unit vs. Variable
-        student = ts.Unit("Student", attributes=[]) # object type, specify data types through object type
+        student = ts.Unit("Student")
         # Variables instantiated through Units
-        race = ts.Nominal(student, "Race", cardinality=5) # not true receiver
-        race = student.nominal("Race", cardinality=5, exactly=1) # proper OOP
-        ses = ts.Numeric("SES")
-        test_score = ts.Numeric("Test score")
-        tutoring = ts.Nominal("treatment")
+        race = student.nominal("Race", cardinality=5)
+        ses = student.numeric("SES")
+        test_score = student.numeric("Test score")
+        tutoring = student.nominal("treatment", cardinality=3)
 
-        # conceptual relationships
-        # Cause, associate, moderate (interaction)
+        # Conceptual relationships
         race.associates_with(test_score)
         student.associates_with(test_score)
-        # Entity = Unit 
-        # Levels in ER diagram/hierarchical units and variables
-        # Express constraints that are enforced/implicit (not in ER diagrams)
-        # relationships over attributes rather than relationships over entities alone
-
-        # data measurement relationships
-        student.has(race, exactly=1)
-        student.has(ses, exactly=1)
-        student.has(test_score, exactly=1)
-        student.has(tutoring, exactly=3) # complete factorial design
-        student.has(tutoring, up_to=3) # incomplete factorial design 
-
-        tutoring.has(student, exactly=30) # introduces ambiguity
-
         race.moderate(ses, on=test_score)
 
-        self.assertEqual(len(student.relationships), 3)
+        self.assertEqual(len(student.relationships), 5)
 
         design = ts.Design(dv=test_score, ivs=[race, ses])
 
         gr = design.graph
+        self.assertTrue(gr.has_variable(student))
+        self.assertTrue(gr.has_variable(race))
+        self.assertTrue(gr.has_variable(ses))
+        self.assertTrue(gr.has_variable(test_score))
+        self.assertFalse(gr.has_variable(tutoring))
+
         identifiers = gr.get_identifiers()
         self.assertIn(student, identifiers)
-        self.assertIsNotNone(gr.has_edge(student, race, "has"))
-        self.assertIsNotNone(gr.has_edge(student, ses, "has"))
-        self.assertIsNotNone(gr.has_edge(student, test_score, "has"))
+        self.assertTrue(gr.has_edge(student, race, "has"))
+        self.assertTrue(gr.has_edge(student, ses, "has"))
+        self.assertTrue(gr.has_edge(student, test_score, "has"))
+        self.assertFalse(gr.has_edge(student, tutoring, "has")) # SHOULD THIS BE TRUE OR FALSE
 
         variables = gr.get_variables()
         self.assertEqual(
@@ -279,9 +234,25 @@ class GraphTest(unittest.TestCase):
         )  # Check that interaction effect is part of graph as a new variable/node
 
         edges = gr.get_edges()
+
+        count_has_edges = 0
+        count_associates_edges = 0
+        count_other_edges = 0
+        for (start, end, data) in edges:
+            if isinstance(data['edge_obj'], Has):
+                count_has_edges += 1
+            elif isinstance(data['edge_obj'], Associates):
+                count_associates_edges += 1
+            else:
+                count_other_edges += 1
+        
+        self.assertEqual(count_has_edges, 4) # Should this be 5?
+        self.assertEqual(count_associates_edges, 6)
+        self.assertEqual(count_other_edges, 0)
+ 
         # Identifier has interaction effect only once (no duplicates)
         # Associate (between Race*SES and Test score introduces to edges)
-        self.assertEqual(len(edges), 6)
+        self.assertEqual(len(edges), 10)
 
         # Check associate edge for interaction effect
         lhs = None
@@ -294,17 +265,3 @@ class GraphTest(unittest.TestCase):
 
         # Check that the interaction effect inherits from Student unit
         self.assertTrue(gr.has_edge(student, lhs, "has"))
-
-    # def test_add_interaction_effects_units(self):
-    #     student = ts.Unit("Student")
-    #     race = ts.Nominal("Race")
-    #     ses = ts.Numeric("SES")
-    #     test_score = ts.Numeric("Test score")
-
-    #     race.moderate(ses, on=test_score)
-
-    #     design = ts.Design(dv=test_score, ivs=[race, ses])
-
-    #     gr = design.graph
-
-    #     edges = gr.get_edges()
