@@ -207,6 +207,12 @@ class GraphTest(unittest.TestCase):
         design = ts.Design(dv=test_score, ivs=[race, ses])
 
         gr = design.graph
+        self.assertTrue(gr.has_variable(student))
+        self.assertTrue(gr.has_variable(race))
+        self.assertTrue(gr.has_variable(ses))
+        self.assertTrue(gr.has_variable(test_score))
+        self.assertFalse(gr.has_variable(tutoring))
+
         identifiers = gr.get_identifiers()
         self.assertIn(student, identifiers)
         self.assertTrue(gr.has_edge(student, race, "has"))
@@ -243,7 +249,7 @@ class GraphTest(unittest.TestCase):
         self.assertEqual(count_has_edges, 4) # Should this be 5?
         self.assertEqual(count_associates_edges, 6)
         self.assertEqual(count_other_edges, 0)
-
+ 
         # Identifier has interaction effect only once (no duplicates)
         # Associate (between Race*SES and Test score introduces to edges)
         self.assertEqual(len(edges), 10)
