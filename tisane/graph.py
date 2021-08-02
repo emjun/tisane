@@ -1,23 +1,34 @@
 from tisane.og_variable import (
-    AbstractVariable,
+    # AbstractVariable,
     Nominal,
     Ordinal,
     Numeric,
-    Unit,
+    # Unit,
     Treatment,
-    Nest,
+    # Nest,
     RepeatedMeasure,
-    Has,
-    Associate,
-    Cause,
-    Moderate,
+    # Has,
+    # Associate,
+    # Cause,
+    # Moderate,
     GreaterThanOne,
+)
+from tisane.variable import (
+    Measure,
+    Unit,
+    AbstractVariable,
+    Has,
+    Associates,
+    Causes,
+    Moderates,
+    Nests
 )
 
 import networkx as nx
 import pydot
 from typing import List, Union, Tuple
 import copy
+from tisane.graph_vis_tikz_template import formatTikzVis
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -98,7 +109,7 @@ class Graph(object):
         end: AbstractVariable,
         edge_type: str,
         repetitions: int = None,
-        edge_obj: Union[Treatment, Nest, RepeatedMeasure] = None,
+        edge_obj: Union[Treatment, Nests, RepeatedMeasure] = None,
     ):
 
         # If the variables aren't in the graph, add nodes first.
@@ -152,6 +163,54 @@ class Graph(object):
                 edge_obj=edge_obj,
                 repetitions=repetitions,
             )
+    def _get_graph_tikz(self):
+        edges = list(self._graph.edges(data=True))
+        tikz_edges = []
+        nodes = []
+        for (n0, n1, edge_data) in edges:
+            if n0 not in nodes:
+                nodes.append(n0)
+                pass
+            if n1 not in nodes:
+                nodes.append(n1)
+            print("{}, {}, {}".format(n0, n1, edge_data))
+            print("{}, {}, {}".format(type(n0), type(n1), type(edge_data)))
+            edge_type = edge_data["edge_type"]
+            tikz_edges.append({
+                "start": n0,
+                "end": n1,
+                "style": edge_type
+            })
+            pass
+
+        # variables = self.get_variables()
+        nodeStyles = {}
+        for n in nodes:
+            var = self.get_variable(n)
+            if var:
+                nodeStyles[n] = "unit" if isinstance(var, Unit) and not isinstance(var, Measure) else "measure"
+        nodes_code = ""
+        # for n in nodes:
+        #     # TODO: get the type of the node
+        #     nodes_code += "\\node ({}) at ()"
+        graph_code = ""
+        seen_nodes = []
+        for tedge in tikz_edges:
+            start_style = ""
+            end_style = ""
+            if tedge["start"] not in seen_nodes:
+                start_style = f"[{nodeStyles[tedge['start']]}]"
+                seen_nodes.append(tedge["start"])
+                pass
+            if tedge["end"] not in seen_nodes:
+                end_style = f"[{nodeStyles[tedge['end']]}]"
+                seen_nodes.append(tedge["end"])
+                pass
+            graph_code += "{} -> [{}] {};\n".format(tedge["start"] + start_style, tedge["style"], tedge["end"] + end_style)
+            pass
+        print(formatTikzVis(graph_code, siblingDistance=3, levelDistance=3))
+
+
 
     # @returns pydot object (representing DOT graph)representing conceptual graph info
     # Iterates through internal graph object and constructs vis
@@ -159,9 +218,11 @@ class Graph(object):
         graph = pydot.Dot("graph_vis", graph_type="digraph")
 
         edges = list(self._graph.edges(data=True))  # get list of edges
+        # print(len(edges))
 
         for (n0, n1, edge_data) in edges:
             edge_type = edge_data["edge_type"]
+            print(edge_type)
             if edge_type == "cause":
                 graph.add_edge(pydot.Edge(n0, n1, style="bold", color="black"))
             elif edge_type == "correlate":
@@ -303,8 +364,14 @@ class Graph(object):
 
     # TODO: Add repetitions for between/within; I think make repetitions an int not a variable
     def add_relationship(
-        self, relationship: Union[Has, Treatment, Nest, Associate, Cause, Moderate]
+        self, relationship: Union[Has, Treatment, Nests, Associates, Causes, Moderates]
     ):
+        def relclass(clazz):
+            return isinstance(relationship, clazz)
+        print("adding relationship {}".format(type(relationship)))
+        added = relclass(Has) or relclass(Treatment) or relclass(Nests) or relclass(Associates) or relclass(Causes) or relclass(Moderates)
+        if added:
+            print("Adding")
         if isinstance(relationship, Has):
             identifier = relationship.variable
             measure = relationship.measure
@@ -315,19 +382,19 @@ class Graph(object):
             treatment = relationship.treatment
             repetitions = relationship.num_assignments
             self.treat(unit=identifier, treatment=treatment, treatment_obj=relationship)
-        elif isinstance(relationship, Nest):
+        elif isinstance(relationship, Nests):
             base = relationship.base
             group = relationship.group
             self.nest(base, group, relationship)
-        elif isinstance(relationship, Associate):
+        elif isinstance(relationship, Associates):
             lhs = relationship.lhs
             rhs = relationship.rhs
             self.associate(lhs, rhs)
-        elif isinstance(relationship, Cause):
+        elif isinstance(relationship, Causes):
             cause = relationship.cause
             effect = relationship.effect
             self.cause(cause, effect)
-        elif isinstance(relationship, Moderate):
+        elif isinstance(relationship, Moderates):
             self.moderate(
                 moderator=relationship.moderator,
                 on=relationship.on,
@@ -344,7 +411,7 @@ class Graph(object):
         self,
         identifier: AbstractVariable,
         variable: AbstractVariable,
-        has_obj: Union[Has, Treatment, Nest, RepeatedMeasure],
+        has_obj: Union[Has, Treatment, Nests, RepeatedMeasure],
         repetitions: Union[int, GreaterThanOne],
     ):
         if not self.has_variable(identifier):
@@ -382,7 +449,7 @@ class Graph(object):
         self,
         moderator: List[AbstractVariable],
         on: AbstractVariable,
-        moderate_obj: Moderate,
+        moderate_obj: Moderates,
     ):
         # Create new interaction variable
         m_names = [m.name for m in moderator]
@@ -431,7 +498,7 @@ class Graph(object):
 
     # Add a 'nest' edge to the graph
     def nest(
-        self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nest = None
+        self, base: AbstractVariable, group: AbstractVariable, nest_obj: Nests = None
     ):
         # Is this edge new?
         if not self.has_edge(start=base, end=group, edge_type="nest"):
