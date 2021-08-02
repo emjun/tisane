@@ -41,6 +41,65 @@ pig.has(vitaminE, 1)
 pig.has(copper, 1)
 ```
 
+
+## Tisane data analysis 
+
+#### DV: Weight
+In study design, there is a distinction between assignments and observations
+- Assignments (e.g., conditions) should exist in the constructors
+- Observations (e.g., measures)
+
+Trying to distinguish between two types of statements: 
+- There are X types of a condition
+- The unit receives N (of the X) types
+
+--> Both read: Unit (LHS) "has" N instances (param) of Measure (RHS)
+
+
+```
+df = pd.read_csv("./examples/data/dietox.csv")
+
+#vitaminE = litter.nominal("Evit", cardinality=3)
+#copper = litter.nominal("Cu", cardinality=3)
+
+# Without cardinality info, pass data instead
+time = ts.Control("Time", data=df['time'])
+pig = ts.Unit("Pig", data=df['pig id'])
+litter = ts.Unit("Litter", data=df['litter'])
+
+# With cardinality info, don't pass data
+pig = ts.Unit("Pig", cardinality=82)
+litter = ts.Unit("Litter", cardinality=22)
+week = ts.Control("Week", cardinality=12)
+
+pig.nests_within(litter, number_of_instances=NUMBER_OF_PIGS_IN_A_LITTER) # pigs nested within litters
+diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_instances=1) # Each pig has 1 diet
+# Reads: Pig contributes/has a weight value for each week
+weight = pig.numeric("Weight", number_of_instances=week.cardinality()) # Each pig has 1 instance of a Weight measure corresponding to each week
+feed = pig.numeric("Feed consumption", number_of_instances=week) # Each pig has a feed consumption measure corresponding to each week
+# The assumption is that there is a "for each" variable passed as number_of_instances @param
+
+# Hypothetical: 
+diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_instances=2) # Each pic has two instances of a diet
+
+# Conceptual relationship
+time.cause(weight)
+
+# Specify and execute query
+design = ts.Design(dv=weight, ivs=[time]).assign_data(df)
+
+ts.infer_statistical_model_from_design(design=design)
+```
+
+High-level points: 
+- number_of_instances = ratio of Unit to Measure. Unit is always set to "1" 
+- number_of_instances can be set to an INT, variable (syntactic sugar for variable.cardinality which returns an INT), which get cast to an internal INT type (i.e., ExactlyOne, GreaterThanOne)
+- "exactly" comes in the form of INT
+- "up_to" comes in the form of either a function tisane provides (e.g., ts.up_to(....)) or "one_of" (e.g., ts.one_of([1, 2, 3])) which outputs an internal INT type (i.e., ExactlyOne, GreaterThanOne)
+
+
+
+
 ## Original data analysis 
 ### Types of clustering the authors were concerned about and aware of: 
 - _``For growth and feed intake data, repeated measurements were made on the same experimental unit (i.e., pig), and data were, therefore, expected to exhibit some sort of correlation. This was accounted for by considering statistical models in which performance was modeled as a function of time; all measurements, not only total weight gain or feed intake at the end of the experimental period, were used in the statistical analysis.''_
@@ -115,61 +174,3 @@ _``The rates of Fe2+-induced lipid oxidation in livers of pigs on the different 
 
 
 ## Of note: Statsmodels data analysis
-
-
-## Tisane data analysis 
-
-#### DV: Weight
-In study design, there is a distinction between assignments and observations
-- Assignments (e.g., conditions) should exist in the constructors
-- Observations (e.g., measures)
-
-Trying to distinguish between two types of statements: 
-- There are X types of a condition
-- The unit receives N (of the X) types
-
---> Both read: Unit (LHS) "has" N instances (param) of Measure (RHS)
-
-
-```
-df = pd.read_csv("./examples/data/dietox.csv")
-
-#vitaminE = litter.nominal("Evit", cardinality=3)
-#copper = litter.nominal("Cu", cardinality=3)
-
-# Without cardinality info, pass data instead
-time = ts.Control("Time", data=df['time'])
-pig = ts.Unit("Pig", data=df['pig id'])
-litter = ts.Unit("Litter", data=df['litter'])
-
-# With cardinality info, don't pass data
-pig = ts.Unit("Pig", cardinality=82)
-litter = ts.Unit("Litter", cardinality=22)
-week = ts.Control("Week", cardinality=12)
-
-pig.nests_within(litter, number_of_instances=NUMBER_OF_PIGS_IN_A_LITTER) # pigs nested within litters
-diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_instances=1) # Each pig has 1 diet
-weight = pig.numeric("Weight", number_of_instances=week.cardinality()) # Each pig has 1 instance of a Weight measure corresponding to each week
-feed = pig.numeric("Feed consumption", number_of_instances=week) # Each pig has a feed consumption measure corresponding to each week
-# The assumption is that there is a "for each" variable passed as number_of_instances @param
-
-# Hypothetical: 
-diet = pig.nominal("Diet", data=df["Evit" * "Cu"], number_of_instances=2) # Each pic has two instances of a diet
-
-# Conceptual relationship
-time.cause(weight)
-
-# Specify and execute query
-design = ts.Design(dv=weight, ivs=[time]).assign_data(df)
-
-ts.infer_statistical_model_from_design(design=design)
-```
-
-High-level points: 
-- number_of_instances = ratio of Unit to Measure. Unit is always set to "1" 
-- number_of_instances can be set to an INT, variable (syntactic sugar for variable.cardinality which returns an INT), which get cast to an internal INT type (i.e., ExactlyOne, GreaterThanOne)
-- "exactly" comes in the form of INT
-- "up_to" comes in the form of either a function tisane provides (e.g., ts.up_to(....)) or "one_of" (e.g., ts.one_of([1, 2, 3])) which outputs an internal INT type (i.e., ExactlyOne, GreaterThanOne)
-
-
-
