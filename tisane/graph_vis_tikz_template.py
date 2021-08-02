@@ -14,11 +14,18 @@ graph = """    \graph[spring layout,sibling distance={},level distance={}]{}
 tikz_template_end = """    };
 \end{tikzpicture}"""
 
+
 def indent(code):
     return "\t" + re.sub(r"\n", "\n\t", code)
 
-def formatTikzVis(graphCode="",
-                  nodesCode="",
-                  siblingDistance=1,
-                  levelDistance=1):
-    return template_begin + indent(nodesCode) + "\n" + graph.format(f"{siblingDistance}cm", f"{levelDistance}cm", "{") + indent(indent(graphCode)) + "\n" + tikz_template_end
+
+def formatTikzVis(graphCode="", nodesCode="", siblingDistance=1, levelDistance=1):
+    return (
+        template_begin
+        + indent(nodesCode)
+        + "\n"
+        + graph.format(f"{siblingDistance}cm", f"{levelDistance}cm", "{")
+        + indent(indent(graphCode))
+        + "\n"
+        + tikz_template_end
+    )

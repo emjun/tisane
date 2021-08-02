@@ -5,6 +5,7 @@ from tisane.smt.synthesizer import Synthesizer
 
 import unittest
 
+
 class GraphVisTest(unittest.TestCase):
     # def test_vis(self):
     #     v1 = ts.Nominal("V1")
@@ -38,6 +39,7 @@ class GraphVisTest(unittest.TestCase):
         gr._get_graph_tikz()
 
         # gr.visualize_graph()
+
     def test_more_complex(self):
 
         student = ts.Unit(
@@ -48,13 +50,11 @@ class GraphVisTest(unittest.TestCase):
         test_score = student.nominal("Test score")
         tutoring = student.nominal("treatment")
 
-
         race.associates_with(test_score)
         student.associates_with(test_score)
         race.causes(tutoring)
 
         race.moderate(ses, on=test_score)
-
 
         design = ts.Design(dv=test_score, ivs=[race, ses])
         print(design.get_variables())

@@ -8,7 +8,7 @@ from tisane.variable import (
     Causes,
     Moderates,
     Nests,
-    Repeats
+    Repeats,
 )
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel

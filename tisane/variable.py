@@ -8,19 +8,18 @@ Distinguish between Unit and Measures (Nominal, Ordinal, Numeric).
 TODO: Added Time variable, not sure if we should include it? 
 """
 
-class AbstractVariable():
+
+class AbstractVariable:
     name: str
     data: DataVector
-    relationships: List[
-        typing.Union["Has", "Repeats", "Nests"]
-    ]
+    relationships: List[typing.Union["Has", "Repeats", "Nests"]]
 
     def __init__(self, name: str, data: None):
         self.name = name
-        self.data = data # or replace with DataVector()?
+        self.data = data  # or replace with DataVector()?
         self.relationships = list()
 
-    def add_data(self, data): 
+    def add_data(self, data):
         self.data = data
 
     # @param effect the variable causes
@@ -69,12 +68,15 @@ class AbstractVariable():
 """
 Class for Units
 """
-class Unit(AbstractVariable): 
-    
-    def __init__(self, name: str, data=None, **kwargs): 
+
+
+class Unit(AbstractVariable):
+    def __init__(self, name: str, data=None, **kwargs):
         super(Unit, self).__init__(name, data)
 
-    def nominal(self, name: str, data=None, exactly: int = 1, up_to: int = None, **kwargs): 
+    def nominal(
+        self, name: str, data=None, exactly: int = 1, up_to: int = None, **kwargs
+    ):
         # Create new measure
         measure = Nominal(name, data=data, **kwargs)
         # Add relationship to self and to measure
@@ -82,73 +84,88 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def ordinal(self, name: str, order: list, cardinality: int = None, data=None, exactly: int = 1, up_to: int = None): 
-        # Create new measure 
+    def ordinal(
+        self,
+        name: str,
+        order: list,
+        cardinality: int = None,
+        data=None,
+        exactly: int = 1,
+        up_to: int = None,
+    ):
+        # Create new measure
         measure = Ordinal(name=name, order=order, cardinality=cardinality, data=data)
         # Add relationship to self and to measure
         self._has(measure=measure, exactly=exactly, up_to=up_to)
         # Return handle to measure
         return measure
 
-    def numeric(self, name: str, data=None, exactly: int = 1, up_to: int = None): 
-        # Create new measure 
+    def numeric(self, name: str, data=None, exactly: int = 1, up_to: int = None):
+        # Create new measure
         measure = Numeric(name=name, data=data)
         # Add relationship to self and to measure
         self._has(measure=measure, exactly=exactly, up_to=up_to)
         # Return handle to measure
         return measure
-        
+
     def _has(self, measure: AbstractVariable, exactly: int, up_to: int):
         # Figure out the number of times/repetitions this Unit (self) has of the measure
         repet = 0
-        if up_to is None: 
+        if up_to is None:
             assert exactly is not None
-            repet = exactly 
-        else: 
-            assert exactly==1
+            repet = exactly
+        else:
+            assert exactly == 1
             repet = up_to
         # if exactly == 1:
-        #     if up_to is not None: 
+        #     if up_to is not None:
         #         repet = up_to
-        #     else: 
+        #     else:
         #         repet = exactly
         # else:  # exactly!=0
         #     assert up_to is None
         #     repet = exactly
-        
+
         # Associate measure and unit to each other
         has_relat = Has(variable=self, measure=measure, repetitions=repet)
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
 
-    def repeats(self, measure: "Measure", according_to: "Measure"): 
+    def repeats(self, measure: "Measure", according_to: "Measure"):
         repeats_relat = Repeats(unit=self, measure=measure, according_to=according_to)
 
         self.relationships.append(repeats_relat)
-        measure.relationships.append(repeats_relat) # is this necessary? 
+        measure.relationships.append(repeats_relat)  # is this necessary?
 
-    def nests_within(self, group: "Unit"): 
+    def nests_within(self, group: "Unit"):
         nest_relat = Nests(base=self, group=group)
 
         self.relationships.append(nest_relat)
         group.relationships.append(nest_relat)
 
+
 """
 Super class for Measures
 """
-class Measure(AbstractVariable): 
-    def __init__(self, name: str, data: None, **kwargs): 
+
+
+class Measure(AbstractVariable):
+    def __init__(self, name: str, data: None, **kwargs):
         super(Measure, self).__init__(name, data)
 
 
 """
 Class for Nominal measures
 """
+
+
 class Nominal(Measure):
     cardinality: int
     categories = list
 
-    def __init__(self, name: str, data=None, exactly: int = 1, up_to: int = None, **kwargs):
+    def __init__(
+        self, name: str, data=None, exactly: int = 1, up_to: int = None, **kwargs
+    ):
         super(Nominal, self).__init__(name=name, data=data)
         self.data = data
         self.categories = None
@@ -204,11 +221,21 @@ class Nominal(Measure):
 """
 Class for Ordinal measures
 """
+
+
 class Ordinal(Measure):
     cardinality: int
     ordered_cat: list
 
-    def __init__(self, name: str, order: list, cardinality: int = None, data=None, exactly: int = 1, up_to: int = None):
+    def __init__(
+        self,
+        name: str,
+        order: list,
+        cardinality: int = None,
+        data=None,
+        exactly: int = 1,
+        up_to: int = None,
+    ):
         super(Ordinal, self).__init__(name=name, data=data)
         self.ordered_cat = order
         self.data = data
@@ -227,9 +254,9 @@ class Ordinal(Measure):
         else:
             assert num_categories > 2
             # self.assert_property(prop="cardinality", val="multi")
-        
+
         # Verify that order and cardinality match
-        if cardinality is not None: 
+        if cardinality is not None:
             assert self.cardinality == len(order)
         self.cardinality = len(order)
 
@@ -246,6 +273,8 @@ class Ordinal(Measure):
 """
 Class for Numeric measures
 """
+
+
 class Numeric(Measure):
     def __init__(self, name: str, data=None, exactly: int = 1, up_to: int = None):
         super(Numeric, self).__init__(name=name, data=data)
@@ -271,6 +300,8 @@ class Numeric(Measure):
 """
 Class for Cause relationships
 """
+
+
 class Causes(object):
     cause: AbstractVariable
     effect: AbstractVariable
@@ -283,6 +314,8 @@ class Causes(object):
 """
 Class for Associate relationships
 """
+
+
 class Associates(object):
     lhs: AbstractVariable
     rhs: AbstractVariable
@@ -295,6 +328,8 @@ class Associates(object):
 """
 Class for Moderate relationships (for Interactions)
 """
+
+
 class Moderates(object):
     moderator: List[AbstractVariable]
     on: AbstractVariable
@@ -308,7 +343,9 @@ class Moderates(object):
 """
 Class for Has relationships
 """
-class Has():
+
+
+class Has:
     variable: Unit
     measure: AbstractVariable
     repetitions: int
@@ -323,19 +360,18 @@ class Has():
         self.measure = measure
         self.repetitions = repetitions
 
+
 """
 Class for expressing repeated measures
 """
+
+
 class Repeats(object):
     unit: Unit
     measure: Measure
     according_to: Measure
-    def __init__(
-        self,
-        unit: Unit, 
-        measure: Measure,
-        according_to: Measure
-    ): 
+
+    def __init__(self, unit: Unit, measure: Measure, according_to: Measure):
         self.unit = unit
         self.measure = measure
         self.according_to = according_to
@@ -344,6 +380,8 @@ class Repeats(object):
 """
 Class for expressing nesting relationship between units
 """
+
+
 class Nests(object):
     base: Unit
     group: Unit

@@ -11,7 +11,7 @@ from tisane.variable import (
     Causes,
     Moderates,
     Nests,
-    Repeats
+    Repeats,
 )
 
 import unittest
@@ -69,7 +69,7 @@ class VariableTest(unittest.TestCase):
         self.assertIn(relat, test_score.relationships)
 
         self.assertEqual(relat.repetitions, 2)
-        
+
     # Test that the has relationship update both variables
     def test_has(self):
         pid = ts.Unit("participant")
@@ -125,12 +125,12 @@ class VariableTest(unittest.TestCase):
 
         # Test race variable's conceptual relationships
         conceptual_relationships = list()
-        for r in race.relationships: 
-            if isinstance(r, Causes): 
+        for r in race.relationships:
+            if isinstance(r, Causes):
                 conceptual_relationships.append(r)
-            elif isinstance(r, Associates): 
+            elif isinstance(r, Associates):
                 conceptual_relationships.append(r)
-            else: 
+            else:
                 pass
         self.assertEqual(len(conceptual_relationships), 1)
         self.assertIsInstance(conceptual_relationships[0], Associates)
@@ -139,13 +139,13 @@ class VariableTest(unittest.TestCase):
 
         # Test ses variable's conceptual relationships
         conceptual_relationships = list()
-        for r in ses.relationships: 
-            if isinstance(r, Causes): 
+        for r in ses.relationships:
+            if isinstance(r, Causes):
                 conceptual_relationships.append(r)
-            elif isinstance(r, Associates): 
+            elif isinstance(r, Associates):
                 conceptual_relationships.append(r)
-            else: 
-                pass        
+            else:
+                pass
         self.assertEqual(len(conceptual_relationships), 1)
         self.assertIsInstance(conceptual_relationships[0], Causes)
         self.assertEqual(conceptual_relationships[0].cause, ses)
@@ -153,13 +153,13 @@ class VariableTest(unittest.TestCase):
 
         # Test hw variable's conceptual relationships
         conceptual_relationships = list()
-        for r in hw.relationships: 
-            if isinstance(r, Causes): 
+        for r in hw.relationships:
+            if isinstance(r, Causes):
                 conceptual_relationships.append(r)
-            elif isinstance(r, Associates): 
+            elif isinstance(r, Associates):
                 conceptual_relationships.append(r)
-            else: 
-                pass        
+            else:
+                pass
         self.assertEqual(len(conceptual_relationships), 2)
         self.assertIsInstance(conceptual_relationships[0], Causes)
         self.assertEqual(conceptual_relationships[0].cause, ses)
@@ -170,12 +170,12 @@ class VariableTest(unittest.TestCase):
 
         # Test math variable's conceptual relationships
         conceptual_relationships = list()
-        for r in math.relationships: 
-            if isinstance(r, Causes): 
+        for r in math.relationships:
+            if isinstance(r, Causes):
                 conceptual_relationships.append(r)
-            elif isinstance(r, Associates): 
+            elif isinstance(r, Associates):
                 conceptual_relationships.append(r)
-            else: 
+            else:
                 pass
         self.assertEqual(len(conceptual_relationships), 2)
         self.assertIsInstance(conceptual_relationships[0], Associates)
@@ -195,12 +195,12 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(len(v1.relationships), 2)
         self.assertEqual(len(v2.relationships), 2)
         self.assertEqual(len(v3.relationships), 2)
-        
+
         relat = None
-        for r in v1.relationships: 
-            if isinstance(r, Moderates): 
+        for r in v1.relationships:
+            if isinstance(r, Moderates):
                 relat = r
-        
+
         self.assertIsNotNone(relat)
         self.assertIn(v1, relat.moderator)
         self.assertIn(v2, relat.moderator)
@@ -216,12 +216,12 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(len(race.relationships), 2)
         self.assertEqual(len(ses.relationships), 2)
         self.assertEqual(len(test_score.relationships), 2)
-        
+
         relat = None
-        for r in race.relationships: 
-            if isinstance(r, Moderates): 
+        for r in race.relationships:
+            if isinstance(r, Moderates):
                 relat = r
-        
+
         self.assertIn(relat, race.relationships)
         self.assertIn(relat, ses.relationships)
         self.assertIn(relat, test_score.relationships)
@@ -239,9 +239,9 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(len(v3.relationships), 2)
         self.assertEqual(len(v4.relationships), 2)
 
-        relat = None 
-        for r in v1.relationships: 
-            if isinstance(r, Moderates): 
+        relat = None
+        for r in v1.relationships:
+            if isinstance(r, Moderates):
                 relat = r
 
         self.assertIn(relat, v1.relationships)
@@ -281,8 +281,8 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(len(test_score.relationships), 2)
 
         relat = None
-        for r in student.relationships: 
-            if isinstance(r, Repeats): 
+        for r in student.relationships:
+            if isinstance(r, Repeats):
                 relat = r
 
         self.assertIsNotNone(relat)
@@ -310,51 +310,63 @@ class VariableTest(unittest.TestCase):
         self.assertEqual(school.relationships[0].base, student)
         self.assertEqual(school.relationships[0].group, school)
 
-    def test_has_variables(self): 
+    def test_has_variables(self):
         # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects
 
         # Simple case: Tutoring is between-subjects
         student = ts.Unit("Student ID")
-        race = student.nominal("Race") # exactly=1 by default 
-        tutoring = student.nominal("Tutoring") # exactly=1 by default 
-        score = student.numeric("Test score") # exactly=1 by default 
+        race = student.nominal("Race")  # exactly=1 by default
+        tutoring = student.nominal("Tutoring")  # exactly=1 by default
+        score = student.numeric("Test score")  # exactly=1 by default
 
         # Tutoring is within-subjects
         student = ts.Unit("Student ID")
-        race = student.nominal("Race") # exactly=1 by default 
-        tutoring = student.nominal("Tutoring", exactly=2) # each student receives 2 conditions of tutoring
-        score = student.numeric("Test score", exactly=2) 
-        student.repeats(score, according_to=tutoring) # 1 score per tutoring condition
-        # There need to be checks that validate the number of scores per student == number of tutoring conditions per student 
+        race = student.nominal("Race")  # exactly=1 by default
+        tutoring = student.nominal(
+            "Tutoring", exactly=2
+        )  # each student receives 2 conditions of tutoring
+        score = student.numeric("Test score", exactly=2)
+        student.repeats(score, according_to=tutoring)  # 1 score per tutoring condition
+        # There need to be checks that validate the number of scores per student == number of tutoring conditions per student
         # Maybe some minimal upper bound checking if use up_to instead of exactly OR require both statements to use exactly/up_to
 
         # Repeated measures with time
         student = ts.Unit("Student ID")
-        race = student.nominal("Race") # exactly=1 by default 
-        score = student.numeric("Test score", exactly="week") 
-        week = student.ordinal("Week", cardinality=10) # Week in quarter 
+        race = student.nominal("Race")  # exactly=1 by default
+        score = student.numeric("Test score", exactly="week")
+        week = student.ordinal("Week", cardinality=10)  # Week in quarter
 
-        student.repeats(score, according_to=week) # 1 score per week (10:10)
-    
+        student.repeats(score, according_to=week)  # 1 score per week (10:10)
+
         # Repeated measures with Tutoring X Time
         student = ts.Unit("Student ID")
-        race = student.nominal("Race") # exactly=1 by default 
-        tutoring = student.nominal("Tutoring", exactly=2) # each student receives 2 conditions of tutoring
-        score = student.numeric("Test score", exactly=20) # TODO: how often variable is measured according to turoring * week, no need to express repeats/what 20 corresponds to
+        race = student.nominal("Race")  # exactly=1 by default
+        tutoring = student.nominal(
+            "Tutoring", exactly=2
+        )  # each student receives 2 conditions of tutoring
+        score = student.numeric(
+            "Test score", exactly=20
+        )  # TODO: how often variable is measured according to turoring * week, no need to express repeats/what 20 corresponds to
         # + operator: tutoring + something else
         # repeated measure as how often measured according to what
-        week = ts.CONTROL("Week", cardinality=10) # Week in quarter 
+        week = ts.CONTROL("Week", cardinality=10)  # Week in quarter
 
-        student.repeats(score, according_to=tutoring) # 1 score per tutoring condition
-        student.repeats(score, according_to=week) # ?? 2 scores per week in quarter if test both conditions each week 
-        # OR 
-        student.repeats(score, according_to=[tutoring, week]) # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
-        student.repeats(score, according_to=tutoring*week) # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
+        student.repeats(score, according_to=tutoring)  # 1 score per tutoring condition
+        student.repeats(
+            score, according_to=week
+        )  # ?? 2 scores per week in quarter if test both conditions each week
+        # OR
+        student.repeats(
+            score, according_to=[tutoring, week]
+        )  # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
+        student.repeats(
+            score, according_to=tutoring * week
+        )  # Does this mean that the cross product of tutoring x week is unique identifier for each repeat measure?
 
         ## TODO: How are repeated measures used to generate random effects????
-        # time as a within-subjects condition for a unit 
+        # time as a within-subjects condition for a unit
         score = student.numeric("Test score", exactly=20)
-        time = student.nominal("Week",  exactly=10)
+        time = student.nominal("Week", exactly=10)
         student.repeats(score, according_to=10)
 
         # Is the more general problem: What happens when there are multiple within-subjects variables?
