@@ -200,16 +200,6 @@ class GraphTest(unittest.TestCase):
         # Conceptual relationships
         race.associates_with(test_score)
         student.associates_with(test_score)
-    
-        # Data measurement relationships
-        # student.has(race, exactly=1)
-        # student.has(ses, exactly=1)
-        # student.has(test_score, exactly=1)
-        # student.has(tutoring, exactly=3) # complete factorial design
-        # student.has(tutoring, up_to=3) # incomplete factorial design 
-
-        # tutoring.has(student, exactly=30) # introduces ambiguity
-
         race.moderate(ses, on=test_score)
 
         self.assertEqual(len(student.relationships), 5)
@@ -250,11 +240,9 @@ class GraphTest(unittest.TestCase):
             else:
                 count_other_edges += 1
         
-        import pdb; pdb.set_trace()
         self.assertEqual(count_has_edges, 4) # Should this be 5?
         self.assertEqual(count_associates_edges, 6)
         self.assertEqual(count_other_edges, 0)
-
 
         # Identifier has interaction effect only once (no duplicates)
         # Associate (between Race*SES and Test score introduces to edges)
@@ -271,17 +259,3 @@ class GraphTest(unittest.TestCase):
 
         # Check that the interaction effect inherits from Student unit
         self.assertTrue(gr.has_edge(student, lhs, "has"))
-
-    # # def test_add_interaction_effects_units(self):
-    # #     student = ts.Unit("Student")
-    # #     race = ts.Nominal("Race")
-    # #     ses = ts.Numeric("SES")
-    # #     test_score = ts.Numeric("Test score")
-
-    # #     race.moderate(ses, on=test_score)
-
-    # #     design = ts.Design(dv=test_score, ivs=[race, ses])
-
-    # #     gr = design.graph
-
-    # #     edges = gr.get_edges()
