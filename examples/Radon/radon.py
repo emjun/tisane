@@ -25,6 +25,7 @@ household.nests_within(county)
 # Specify and execute query
 design = ts.Design(dv=radon, ivs=[is_first_floor, uranium]).assign_data(df)
 
+
 ts.infer_statistical_model_from_design(design=design)
 
 

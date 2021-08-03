@@ -74,7 +74,7 @@ Without supporting model revision, we don't need to ask for weights for variable
 
 
 # [] Implement the updated variable API just for nested and repeated measures
-# Write test cases and implement the main, interaction, and random effects generation functions
+# [] Write test cases and implement the main, interaction, and random effects generation functions
 # Write test cases and implement the family/link function generation functions
 # [start here tomorrow] Write function for generating all combinations of model effects + family/link
 # Sketch through GUI again
