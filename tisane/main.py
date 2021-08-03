@@ -5,6 +5,7 @@ from tisane.effect_set import EffectSet
 from tisane.graph import Graph
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
+
 # from tisane.conceptual_model import ConceptualModel
 from tisane.smt.results import AllStatisticalResults
 import tisane.smt.rules as rules

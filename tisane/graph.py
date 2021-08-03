@@ -8,12 +8,13 @@ from tisane.variable import (
     Causes,
     Moderates,
     Nests,
-    Repeats
+    Repeats,
 )
 import networkx as nx
 import pydot
 from typing import List, Union, Tuple
 import copy
+from tisane.graph_vis_tikz_template import formatTikzVis
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -149,15 +150,66 @@ class Graph(object):
                 repetitions=repetitions,
             )
 
+    def _get_graph_tikz(self):
+        edges = list(self._graph.edges(data=True))
+        tikz_edges = []
+        nodes = []
+        for (n0, n1, edge_data) in edges:
+            if n0 not in nodes:
+                nodes.append(n0)
+                pass
+            if n1 not in nodes:
+                nodes.append(n1)
+            print("{}, {}, {}".format(n0, n1, edge_data))
+            print("{}, {}, {}".format(type(n0), type(n1), type(edge_data)))
+            edge_type = edge_data["edge_type"]
+            tikz_edges.append({"start": n0, "end": n1, "style": edge_type})
+            pass
+
+        # variables = self.get_variables()
+        nodeStyles = {}
+        for n in nodes:
+            var = self.get_variable(n)
+            if var:
+                nodeStyles[n] = (
+                    "unit"
+                    if isinstance(var, Unit) and not isinstance(var, Measure)
+                    else "measure"
+                )
+        nodes_code = ""
+        # for n in nodes:
+        #     # TODO: get the type of the node
+        #     nodes_code += "\\node ({}) at ()"
+        graph_code = ""
+        seen_nodes = []
+        for tedge in tikz_edges:
+            start_style = ""
+            end_style = ""
+            if tedge["start"] not in seen_nodes:
+                start_style = f"[{nodeStyles[tedge['start']]}]"
+                seen_nodes.append(tedge["start"])
+                pass
+            if tedge["end"] not in seen_nodes:
+                end_style = f"[{nodeStyles[tedge['end']]}]"
+                seen_nodes.append(tedge["end"])
+                pass
+            graph_code += "{} -> [{}] {};\n".format(
+                tedge["start"] + start_style, tedge["style"], tedge["end"] + end_style
+            )
+            pass
+        print(formatTikzVis(graph_code, siblingDistance=3, levelDistance=3))
+
     # @returns pydot object (representing DOT graph)representing conceptual graph info
     # Iterates through internal graph object and constructs vis
     def _get_graph_vis(self):
         graph = pydot.Dot("graph_vis", graph_type="digraph")
 
         edges = list(self._graph.edges(data=True))  # get list of edges
+        # print(len(edges))
 
         for (n0, n1, edge_data) in edges:
             edge_type = edge_data["edge_type"]
+            print(edge_type)
             if edge_type == "cause":
                 graph.add_edge(pydot.Edge(n0, n1, style="bold", color="black"))
             elif edge_type == "correlate":
@@ -301,6 +353,20 @@ class Graph(object):
     def add_relationship(
         self, relationship: Union[Has, Nests, Associates, Causes, Moderates]
     ):
+        def relclass(clazz):
+            return isinstance(relationship, clazz)
+
+        print("adding relationship {}".format(type(relationship)))
+        added = (
+            relclass(Has)
+            or relclass(Treatment)
+            or relclass(Nests)
+            or relclass(Associates)
+            or relclass(Causes)
+            or relclass(Moderates)
+        )
+        if added:
+            print("Adding")
         if isinstance(relationship, Has):
             identifier = relationship.variable
             measure = relationship.measure
@@ -361,18 +427,28 @@ class Graph(object):
 
     # Add an ''associate'' edge to the graph
     # Adds two edges, one in each direction
-    def associates(self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: Associates):
+    def associates(
+        self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: Associates
+    ):
         # Is this edge new?
         if not self.has_edge(start=lhs, end=rhs, edge_type="associate"):
             assert not self.has_edge(start=rhs, end=lhs, edge_type="associate")
-            self._add_edge(start=lhs, end=rhs, edge_type="associate", edge_obj=associates_obj)
-            self._add_edge(start=rhs, end=lhs, edge_type="associate", edge_obj=associates_obj)
+            self._add_edge(
+                start=lhs, end=rhs, edge_type="associate", edge_obj=associates_obj
+            )
+            self._add_edge(
+                start=rhs, end=lhs, edge_type="associate", edge_obj=associates_obj
+            )
 
     # Add a causal edge to the graph
-    def causes(self, cause: AbstractVariable, effect: AbstractVariable, causes_obj: Causes):
+    def causes(
+        self, cause: AbstractVariable, effect: AbstractVariable, causes_obj: Causes
+    ):
         # Is this edge new?
         if not self.has_edge(start=cause, end=effect, edge_type="cause"):
-            self._add_edge(start=cause, end=effect, edge_type="cause", edge_obj=causes_obj)
+            self._add_edge(
+                start=cause, end=effect, edge_type="cause", edge_obj=causes_obj
+            )
 
     def moderates(
         self,
@@ -420,7 +496,7 @@ class Graph(object):
         self,
         unit: AbstractVariable,
         treatment: AbstractVariable,
-        treatment_obj: Measure, # Used to be Treatment
+        treatment_obj: Measure,  # Used to be Treatment
     ):
         # Is this edge new?
         if not self.has_edge(start=treatment, end=unit, edge_type="treat"):
@@ -429,9 +505,7 @@ class Graph(object):
             )
 
     # Add a 'nest' edge to the graph
-    def nests(
-        self, base: Unit, group: Unit, nests_obj: Nests = None
-    ):
+    def nests(self, base: Unit, group: Unit, nests_obj: Nests = None):
         # Is this edge new?
         if not self.has_edge(start=base, end=group, edge_type="nest"):
             # Mark as identifiers

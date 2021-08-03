@@ -42,11 +42,13 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph() 
+        gr = ts.Graph()
         causes_obj = Causes(v1, v2)
         gr.causes(v1, v2, causes_obj)
         associates_obj = Associates(v2, v3)
-        gr.associates(v2, v3, associates_obj) # Question: When should the edge_obj be created? by whom? --> make consistent for all edges; Why do some edge types create them sooner than others?
+        gr.associates(
+            v2, v3, associates_obj
+        )  # Question: When should the edge_obj be created? by whom? --> make consistent for all edges; Why do some edge types create them sooner than others?
 
         has_obj = v1.relationships[0]
         self.assertIsInstance(has_obj, Has)
@@ -102,7 +104,6 @@ class GraphTest(unittest.TestCase):
         expl = pid.nominal("explanation type")
         variables = [acc, expl]
 
-    
         design = ts.Design(dv=acc, ivs=[expl])
 
         # Pre-transformation
@@ -164,7 +165,7 @@ class GraphTest(unittest.TestCase):
 
         # pig.nests_within(litter, up_to=30)
         pig.nests_within(litter)
-        
+
         design = ts.Design(dv=weight, ivs=[pig, litter])
 
         gr = design.graph
@@ -187,7 +188,7 @@ class GraphTest(unittest.TestCase):
         for obj in litter.relationships:
             self.assertIsInstance(obj, Nests)
             self.assertEqual(pig, obj.base)
-            self.assertEqual(litter, obj.group)        
+            self.assertEqual(litter, obj.group)
 
     def test_add_interaction_effects(self):
         student = ts.Unit("Student")
@@ -218,7 +219,9 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(gr.has_edge(student, race, "has"))
         self.assertTrue(gr.has_edge(student, ses, "has"))
         self.assertTrue(gr.has_edge(student, test_score, "has"))
-        self.assertFalse(gr.has_edge(student, tutoring, "has")) # SHOULD THIS BE TRUE OR FALSE
+        self.assertFalse(
+            gr.has_edge(student, tutoring, "has")
+        )  # SHOULD THIS BE TRUE OR FALSE
 
         variables = gr.get_variables()
         self.assertEqual(
@@ -239,17 +242,17 @@ class GraphTest(unittest.TestCase):
         count_associates_edges = 0
         count_other_edges = 0
         for (start, end, data) in edges:
-            if isinstance(data['edge_obj'], Has):
+            if isinstance(data["edge_obj"], Has):
                 count_has_edges += 1
-            elif isinstance(data['edge_obj'], Associates):
+            elif isinstance(data["edge_obj"], Associates):
                 count_associates_edges += 1
             else:
                 count_other_edges += 1
-        
-        self.assertEqual(count_has_edges, 4) # Should this be 5?
+
+        self.assertEqual(count_has_edges, 4)  # Should this be 5?
         self.assertEqual(count_associates_edges, 6)
         self.assertEqual(count_other_edges, 0)
- 
+
         # Identifier has interaction effect only once (no duplicates)
         # Associate (between Race*SES and Test score introduces to edges)
         self.assertEqual(len(edges), 10)
