@@ -65,10 +65,17 @@ pre-empt
 
 Omit important variables that should be included as IVs
 
+In terms of *validity*, Tisane avoids common threats to validity. See here.
+
 # Implementation details
 Not clear that SMT is necessary. The generation of possible effects structures seems to be doable just on the graph alone through different graph traversals.
 
 Without supporting model revision, we don't need to ask for weights for variables.
 
 
-In terms of validity, Tisane avoids common threats to validity. See here.
+# [] Implement the updated variable API just for nested and repeated measures
+# Write test cases and implement the main, interaction, and random effects generation functions
+# Write test cases and implement the family/link function generation functions
+# [start here tomorrow] Write function for generating all combinations of model effects + family/link
+# Sketch through GUI again
+
