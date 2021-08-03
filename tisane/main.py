@@ -273,8 +273,22 @@ def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]):
     # Generate code from SM
     script = generate_code(sm)
 
-    return scipt
+    return script
 
+    # @param query is of type Design, but if we rename Design to Query, this would still work
+    def query_relationships_for_statistical_model(query: Design):
+        # Checks
+
+        # Generate possible main effects
+
+        # Generate possible interaction effects
+
+        # Generate random effects 
+        
+        # Generate candidate family and link functions
+
+
+        # Interaction loop(?) with user
 
 # def verify(
 #     input_: Union[Design, ConceptualModel, StatisticalModel],
