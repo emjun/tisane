@@ -73,7 +73,7 @@ Not clear that SMT is necessary. The generation of possible effects structures s
 Without supporting model revision, we don't need to ask for weights for variables.
 
 
-# [] Implement the updated variable API just for nested and repeated measures
+# [x] Implement the updated variable API just for nested and repeated measures
 # [] Write test cases and implement the main, interaction, and random effects generation functions
 # Write test cases and implement the family/link function generation functions
 # [start here tomorrow] Write function for generating all combinations of model effects + family/link
@@ -81,4 +81,4 @@ Without supporting model revision, we don't need to ask for weights for variable
 
 
 # Questions: 
-1. What should we do about Repeats that are declared? An associates/cause relationship between Time and DV is implied. What should we do about that? 
+1. What should we do about Repeats that are declared? An associates/cause relationship between Time and DV is implied. What should we do about that? - This was implicit before, so why not also add Associates(Time, DV) now?
