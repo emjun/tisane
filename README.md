@@ -79,3 +79,6 @@ Without supporting model revision, we don't need to ask for weights for variable
 # [start here tomorrow] Write function for generating all combinations of model effects + family/link
 # Sketch through GUI again
 
+
+# Questions: 
+1. What should we do about Repeats that are declared? An associates/cause relationship between Time and DV is implied. What should we do about that? 

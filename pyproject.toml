@@ -5,7 +5,7 @@ description = ""
 authors = ["Eunice Jun <eunice.m.jun@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7.1"
+python = "^3.7.11"
 pandas = "^1.2.4"
 networkx = "^2.5.1"
 z3-solver = "^4.8.10"

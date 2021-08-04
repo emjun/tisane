@@ -376,7 +376,7 @@ class Nests(object):
 """
 Wrapper class for expressing values for the number of repetitions of a condition, etc.
 """
-class Value(): 
+class NumberValue(): 
     value: int 
 
     def __init__(self, value: int): 
@@ -391,14 +391,14 @@ class Value():
 """
 Class for expressing exact values
 """
-class Exactly(Value): 
+class Exactly(NumberValue): 
     def __init__(self, value: int): 
         super(Exactly, self).__init__(value)
 
 """
 Class for expressing an upper bound of values
 """
-class AtMost(Value): 
+class AtMost(NumberValue): 
     def __init__(self, value: typing.Union[int, AbstractVariable]): 
         if isinstance(value, int): 
             super(AtMost, self).__init__(value)

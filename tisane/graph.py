@@ -407,7 +407,7 @@ class Graph(object):
         identifier: AbstractVariable,
         variable: AbstractVariable,
         has_obj: Union[Has, Nests, Repeats],
-        repetitions: Union[int],
+        repetitions: NumberValue,
     ):
         if not self.has_variable(identifier):
             self._add_variable(variable=identifier, is_identifier=True)
