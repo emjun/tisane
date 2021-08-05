@@ -5,6 +5,7 @@ Inputs: Graph IR conceptual subgraph, query (all variables included have the sam
 Output: Set of candidate main effects
 
 Rule 1: Shared ancestor (confounding variable): For all IVs included in the query, find any common ancestors of two or more IVs. Add these ancestors to a temporary set of candidates. For the ancestors in this temporary set, find any of their common ancestors. Repeat this process recursively until there are no more shared ancestors. At this point, add the candidates to final set of main effects. [recursive]
+>>> Causal ancestors only 
 
 Rule 2: Causal parent (underlying variable): For each IV in the query, identify their conceptual parents. For these conceptual parents, identify their conceptual ancestors. Repeat recursively until there is a set of conceptual ancestors to the original IVs in the query that do not have any parents. Add these root variables to the set of candidate main effects. 
 >>> We only look at causal relationships in this step because we are interested in potentially underlying confounding factors that exert causal influence on one or more of the specified independent variables. 
