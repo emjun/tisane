@@ -2,9 +2,12 @@
 Inferring model effects structures from the graph IR
 """
 
+from tisane.variable import AbstractVariable
 from tisane.graph import Graph
 from tisane.design import Design
 from itertools import chain, combinations
+from typing import List
+import networkx as nx
 
 ##### HELPER #####
 def powerset(iterable):
@@ -12,24 +15,127 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-def find_common_ancestors(): 
-    pass
+## Rule 1: Find common ancestors 
+def find_common_ancestors(variables: List[AbstractVariable], gr: Graph): 
+    common_ancestors = set()
+
+    # Map counting ancestors of all @param variables
+    _ancestor_to_count_ = dict()
+    # Get causal subgraph
+    causal_sub = gr.get_causal_subgraph()
+
+    # Take transitive closure of causal subgraph
+    tc = nx.transitive_closure_dag(causal_sub._graph)
+
+    # For each variable in @param variables: 
+    # Get its predecessors from the transitive closure
+    # Add them to a map (key is variable, count is value)   
+    for v in variables: 
+        node = causal_sub.get_node(variable=v)
+        predecessors = tc.get_predecessors(node)
+        
+        # Add each predecessor to the dictionary
+        for p in predecessors:
+            # Have we seen this ancestor before?
+            if p in _ancestor_to_count_.keys(): 
+                _ancestor_to_count_[p] += 1
+            else:
+                _ancestor_to_count_[p] = 1
+    
+    # At the end, add to set and return set of variables that have count > 1
+    for key, value in _ancestor_to_count_.items():
+        if value > 1: 
+            common_ancestors.add(key)
+
+    return common_ancestors
+
+## Rule 2: Find causal ancestors
+# Moved outside for testing purposes
+def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph):
+        causal_ancestors = set()
+
+        causal_sub = gr.get_causal_subgraph()
+        if gr.has_variable(variable):
+            pred = causal_sub._graph.predecessors(variable) # Returns an iterator obj
+            # Add each predecessor to the set
+            for p in pred: 
+                causal_ancestors.add(p)  
+                find_variable_causal_ancestors(p, gr)
+        # Else: There is nothing to add to the set of causal ancestors
+        return causal_ancestors
+
+def find_all_causal_ancestors(variables: List[AbstractVariable], gr: Graph):
+    all_causal_ancestors = set()
+    for v in variables: 
+        ancestors = find_variable_causal_ancestors(variable=v, gr=gr)
+        all_causal_ancestors = all_causal_ancestors.union(ancestors)
+
+    return all_causal_ancestors
+
+## Rule 3: Find associated causes 
+def find_variable_associates_that_causes_or_associates_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph):
+    intermediaries = set()
+
+    assert(gr.has_variable(source))
+    assert(gr.has_variable(sink))
+    
+    # Get all the variables that @param source variable is associated with
+    associates_neighbors = gr.get_neighbors(source, edge_type="associates") # Returns list of AbstractVariables
+    # Check if the neighbors also cause or are associated with @param sink variable
+    for var in associates_neighbors:
+        if gr.has_edge(start=var, end=sink, edge_type="causes"): 
+            intermediaries.add(var)
+        elif gr.has_edge(start=var, end=sink, edge_type="associates"): 
+            intermediaries.add(var)
+
+    return intermediaries
+
+def find_all_associates_that_causes_or_associates_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph):
+    all_intermediaries = set()
+    for var in sources: 
+        intermediaries = find_variable_associates_that_causes_or_associates_another(source=var, sink=sink, gr=gr)
+        all_intermediaries = all_intermediaries.union(intermediaries)
+
+    return all_intermediaries
+    
+## Rule 4: Find common cause
+def find_variable_parent_that_causes_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph):
+    parents_cause_sink = set()
+
+    # Get parents of @param source
+    parents = gr.get_predecessors(var=source)
+    # Check to see if any parents cause @param sink
+    for p in parents: 
+        if gr.has_edge(start=p, end=sink, edge_type="causes"):
+            parents_cause_sink.add(p)
+
+    return parents_cause_sink
+
+def find_all_parents_that_causes_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph):
+    all_parents_cause_sink = set()
+    for var in sources: 
+        parents_cause_sink = find_variable_parent_that_causes_another(source=var, sink=sink, gr=gr)
+        all_parents_cause_sink = all_parents_cause_sink.union(parents_cause_sink)
+    
+    return all_parents_cause_sink
 
 def infer_main_effects(gr: Graph, query: Design):
     main_candidates = set()
 
-    conceptual_subgraph = gr.get_conceptual_subgraph()
-    
     ivs = query.ivs
-    ## Rule 1: Find common ancestors 
-    # Get powerset of ivs 
-    pset_ivs = powerset(ivs)
-    import pdb; pdb.set_trace()
-    # For each elt in the powerset, find_common_ancestors()
-    for e in pset_ivs: 
-        if len(e) >= 2: 
-            main_candidates.add(find_common_ancestors(e))
+    dv = query.dv
+    common_ancestors = find_common_ancestors(variables=ivs, gr=gr)
+    main_candidates = main_candidates.union(common_ancestors)
 
+    causal_ancestors = find_all_causal_ancestors(variables=ivs, gr=gr)
+    main_candidates = main_candidates.union(causal_ancestors)
+
+    # TODO: "intermediaries" might not be the best variable name
+    intermediaries = find_all_associates_that_causes_or_associates_another(sources=ivs, sink=dv, gr=gr)
+    main_candidates = main_candidates.union(intermediaries)
+
+    parents_cause_dv = find_all_parents_that_causes_another(sources=ivs, sink=dv, gr=gr)
+    main_candidates = main_candidates.union(parents_cause_dv)
 
     return main_candidates
 

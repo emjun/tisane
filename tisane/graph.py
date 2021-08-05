@@ -211,7 +211,7 @@ class Graph(object):
         for (n0, n1, edge_data) in edges:
             edge_type = edge_data["edge_type"]
             print(edge_type)
-            if edge_type == "cause":
+            if edge_type == "causes":
                 graph.add_edge(pydot.Edge(n0, n1, style="bold", color="black"))
             elif edge_type == "correlate":
                 graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="black"))
@@ -288,6 +288,7 @@ class Graph(object):
                 return n_var
         return None
 
+    # @return iterator over predecessors of @param var
     def get_predecessors(self, var: AbstractVariable):
         if self.has_variable(var):
             nodes = self.get_nodes()
@@ -360,7 +361,7 @@ class Graph(object):
         print("adding relationship {}".format(type(relationship)))
         added = (
             relclass(Has)
-            or relclass(Treatment)
+            # or relclass(Treatment)
             or relclass(Nests)
             or relclass(Associates)
             or relclass(Causes)
@@ -432,13 +433,13 @@ class Graph(object):
         self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: Associates
     ):
         # Is this edge new?
-        if not self.has_edge(start=lhs, end=rhs, edge_type="associate"):
-            assert not self.has_edge(start=rhs, end=lhs, edge_type="associate")
+        if not self.has_edge(start=lhs, end=rhs, edge_type="associates"):
+            assert not self.has_edge(start=rhs, end=lhs, edge_type="associates")
             self._add_edge(
-                start=lhs, end=rhs, edge_type="associate", edge_obj=associates_obj
+                start=lhs, end=rhs, edge_type="associates", edge_obj=associates_obj
             )
             self._add_edge(
-                start=rhs, end=lhs, edge_type="associate", edge_obj=associates_obj
+                start=rhs, end=lhs, edge_type="associates", edge_obj=associates_obj
             )
 
     # Add a causal edge to the graph
@@ -446,9 +447,9 @@ class Graph(object):
         self, cause: AbstractVariable, effect: AbstractVariable, causes_obj: Causes
     ):
         # Is this edge new?
-        if not self.has_edge(start=cause, end=effect, edge_type="cause"):
+        if not self.has_edge(start=cause, end=effect, edge_type="causes"):
             self._add_edge(
-                start=cause, end=effect, edge_type="cause", edge_obj=causes_obj
+                start=cause, end=effect, edge_type="causes", edge_obj=causes_obj
             )
 
     def moderates(
@@ -538,7 +539,7 @@ class Graph(object):
         edges = self.get_edges()
         for (n0, n1, edge_data) in edges:
             edge_type = edge_data["edge_type"]
-            if edge_type == "cause" or edge_type == "associate":
+            if edge_type == "causes" or edge_type == "associates":
                 pass
             else:
                 gr._graph.remove_edge(n0, n1)
@@ -552,7 +553,7 @@ class Graph(object):
         edges = self.get_edges()
         for (n0, n1, edge_data) in edges:
             edge_type = edge_data["edge_type"]
-            if edge_type == "cause":
+            if edge_type == "causes":
                 pass
             else:
                 gr._graph.remove_edge(n0, n1)
