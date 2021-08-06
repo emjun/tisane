@@ -148,29 +148,36 @@ def find_all_parents_that_causes_or_associates_another(sources: List[AbstractVar
     return all_parents_cause_sink
 
 def infer_main_effects(gr: Graph, query: Design):
-    main_candidates = set()
+    main_candidates = set()    
 
     ivs = query.ivs
+    # Add IVs already included in query
+    for v in ivs: 
+        main_candidates.add(v)
+    assert(len(main_candidates) == len(ivs))
     dv = query.dv
     all_variables_in_graph = gr.get_variables()
 
     common_ancestors_names = find_common_ancestors(variables=ivs, gr=gr)
     common_ancestors_variables = cast_to_variables(names=common_ancestors_names, variables=all_variables_in_graph)
     main_candidates = main_candidates.union(common_ancestors_variables)
+    # import pdb; pdb.set_trace()
 
     causal_ancestors = find_all_causal_ancestors(variables=ivs, gr=gr)
     causal_ancestors_variables = cast_to_variables(names=causal_ancestors, variables=all_variables_in_graph) 
     main_candidates = main_candidates.union(causal_ancestors_variables)
+    # import pdb; pdb.set_trace()
 
     # TODO: "intermediaries" might not be the best variable name
     intermediaries = find_all_associates_that_causes_or_associates_another(sources=ivs, sink=dv, gr=gr)
     intermediaries_variables = cast_to_variables(names=intermediaries, variables=all_variables_in_graph)
     main_candidates = main_candidates.union(intermediaries_variables)
+    # import pdb; pdb.set_trace()
 
     parents_cause_dv = find_all_parents_that_causes_or_associates_another(sources=ivs, sink=dv, gr=gr)
     parents_cause_dv_variables = cast_to_variables(names=parents_cause_dv, variables=all_variables_in_graph)
     main_candidates = main_candidates.union(parents_cause_dv_variables)
-
+    # import pdb; pdb.set_trace()
 
     return main_candidates
 
@@ -179,4 +186,3 @@ def infer_interaction_effects(gr: Graph):
 
 def infer_random_effects(gr: Graph):
     pass
-
