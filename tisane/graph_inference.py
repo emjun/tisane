@@ -2,6 +2,7 @@
 Inferring model effects structures from the graph IR
 """
 
+from tisane import variable
 from tisane.variable import AbstractVariable
 from tisane.graph import Graph
 from tisane.design import Design
@@ -121,19 +122,24 @@ def find_all_associates_that_causes_or_associates_another(sources: List[Abstract
     return all_intermediaries
     
 ## Rule 4: Find common cause
-def find_variable_parent_that_causes_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph):
+def find_variable_parent_that_causes_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph) -> Set[str]:
     parents_cause_sink = set()
 
     # Get parents of @param source
     parents = gr.get_predecessors(var=source)
     # Check to see if any parents cause @param sink
     for p in parents: 
-        if gr.has_edge(start=p, end=sink, edge_type="causes"):
-            parents_cause_sink.add(p)
-
+        p_var = gr.get_variable(name=p)
+        assert(isinstance(p_var, AbstractVariable))
+        if gr.has_edge(start=p_var, end=source, edge_type="causes"):
+            if gr.has_edge(start=p_var, end=sink, edge_type="causes"): 
+                parents_cause_sink.add(p)
+            elif gr.has_edge(start=p_var, end=sink, edge_type="associates"): 
+                parents_cause_sink.add(p)
+    
     return parents_cause_sink
 
-def find_all_parents_that_causes_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph):
+def find_all_parents_that_causes_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph) -> Set[str]:
     all_parents_cause_sink = set()
     for var in sources: 
         parents_cause_sink = find_variable_parent_that_causes_another(source=var, sink=sink, gr=gr)
