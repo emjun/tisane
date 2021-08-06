@@ -6,7 +6,7 @@ from tisane.variable import AbstractVariable
 from tisane.graph import Graph
 from tisane.design import Design
 from itertools import chain, combinations
-from typing import List
+from typing import List, Set
 import networkx as nx
 
 ##### HELPER #####
@@ -14,6 +14,16 @@ def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
+
+def cast_to_variables(names: Set[str], variables: List[AbstractVariable]):
+    named_variables = set()
+
+    for n in names: 
+        for v in variables: 
+            if n == v.name: 
+                named_variables.add(v)
+        
+    return named_variables
 
 ## Rule 1: Find common ancestors 
 def find_common_ancestors(variables: List[AbstractVariable], gr: Graph): 
@@ -24,6 +34,16 @@ def find_common_ancestors(variables: List[AbstractVariable], gr: Graph):
     # Get causal subgraph
     causal_sub = gr.get_causal_subgraph()
 
+    # Remove any edges between variables (IVs)
+    var_names = [v.name for v in variables]
+
+    edges = causal_sub.get_edges()
+    for (n0, n1, edge_data) in edges:
+        edge_type = edge_data["edge_type"]
+        if edge_type == "causes":
+            if n0 in var_names and n1 in var_names: 
+                causal_sub._graph.remove_edge(n0, n1)
+
     # Take transitive closure of causal subgraph
     tc = nx.transitive_closure_dag(causal_sub._graph)
 
@@ -31,8 +51,8 @@ def find_common_ancestors(variables: List[AbstractVariable], gr: Graph):
     # Get its predecessors from the transitive closure
     # Add them to a map (key is variable, count is value)   
     for v in variables: 
-        node = causal_sub.get_node(variable=v)
-        predecessors = tc.get_predecessors(node)
+        # node = causal_sub.get_node(variable=v)
+        predecessors = tc.predecessors(v.name)
         
         # Add each predecessor to the dictionary
         for p in predecessors:
@@ -124,8 +144,9 @@ def infer_main_effects(gr: Graph, query: Design):
 
     ivs = query.ivs
     dv = query.dv
-    common_ancestors = find_common_ancestors(variables=ivs, gr=gr)
-    main_candidates = main_candidates.union(common_ancestors)
+    common_ancestors_names = find_common_ancestors(variables=ivs, gr=gr)
+    common_ancestors_variables = cast_to_variables(names=common_ancestors_names, variables=ivs)
+    main_candidates = main_candidates.union(common_ancestors_variables)
 
     causal_ancestors = find_all_causal_ancestors(variables=ivs, gr=gr)
     main_candidates = main_candidates.union(causal_ancestors)
