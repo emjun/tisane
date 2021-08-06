@@ -45,171 +45,171 @@ class EffectsInferenceTest(unittest.TestCase):
         self.assertIn(m0, main_effects)
         self.assertIn(m1, main_effects)
 
-    # def test_main_included_associates(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_included_associates(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.associates_with(dv)
-    #     m1.associates_with(dv)
+        m0.associates_with(dv)
+        m1.associates_with(dv)
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+        design = ts.Design(dv=dv, ivs=[m0, m1])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 2)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
+        self.assertEqual(len(main_effects), 2)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
 
-    # def test_main_excluded_causes(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_excluded_causes(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
+        m0.causes(dv)
+        m1.causes(dv)
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+        design = ts.Design(dv=dv, ivs=[m0, m1])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 2)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
-    #     self.assertNotIn(m2, main_effects)
+        self.assertEqual(len(main_effects), 2)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
+        self.assertNotIn(m2, main_effects)
 
-    # def test_main_excluded_associates(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_excluded_associates(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.associates_with(dv)
-    #     m1.associates_with(dv)
+        m0.associates_with(dv)
+        m1.associates_with(dv)
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+        design = ts.Design(dv=dv, ivs=[m0, m1])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 2)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
-    #     self.assertNotIn(m2, main_effects)
+        self.assertEqual(len(main_effects), 2)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
+        self.assertNotIn(m2, main_effects)
 
-    # def test_main_conceptual_parent_causes(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_conceptual_parent_causes(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     m2.causes(m0) # conceptual parent
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.causes(m0) # conceptual parent
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+        design = ts.Design(dv=dv, ivs=[m0, m1])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 3)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
-    #     self.assertIn(m2, main_effects)
+        self.assertEqual(len(main_effects), 3)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
+        self.assertIn(m2, main_effects)
 
-    # def test_main_shared_ancestor_causes(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_shared_ancestor_causes(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     m2.causes(m0) # shared ancestor
-    #     m2.causes(m1) # shared ancestor
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.causes(m0) # shared ancestor
+        m2.causes(m1) # shared ancestor
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+        design = ts.Design(dv=dv, ivs=[m0, m1])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 3)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
-    #     self.assertIn(m2, main_effects)
+        self.assertEqual(len(main_effects), 3)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
+        self.assertIn(m2, main_effects)
 
-    # def test_main_ivs_associated_and_causes_dv(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_ivs_associated_and_causes_dv(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     m1.associates_with(m0) 
+        m0.causes(dv)
+        m1.causes(dv)
+        m1.associates_with(m0) 
 
-    #     design = ts.Design(dv=dv, ivs=[m0])
+        design = ts.Design(dv=dv, ivs=[m0])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 2)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
+        self.assertEqual(len(main_effects), 2)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
 
-    # def test_main_ivs_associated_and_associates_with_dv(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_ivs_associated_and_associates_with_dv(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.associates_with(dv)
-    #     m1.associates_with(dv)
-    #     m1.associates_with(m0) 
+        m0.associates_with(dv)
+        m1.associates_with(dv)
+        m1.associates_with(m0) 
 
-    #     design = ts.Design(dv=dv, ivs=[m0])
+        design = ts.Design(dv=dv, ivs=[m0])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 2)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
+        self.assertEqual(len(main_effects), 2)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
 
-    # def test_main_ivs_cause(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     dv = u0.numeric("Dependent variable")
+    def test_main_ivs_cause(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     m1.causes(m0) 
+        m0.causes(dv)
+        m1.causes(dv)
+        m1.causes(m0) 
 
-    #     design = ts.Design(dv=dv, ivs=[m0])
+        design = ts.Design(dv=dv, ivs=[m0])
         
-    #     gr = design.graph
+        gr = design.graph
 
-    #     main_effects = infer_main_effects(gr, design)
+        main_effects = infer_main_effects(gr, design)
 
-    #     self.assertEqual(len(main_effects), 2)
-    #     self.assertIn(m0, main_effects)
-    #     self.assertIn(m1, main_effects)
+        self.assertEqual(len(main_effects), 2)
+        self.assertIn(m0, main_effects)
+        self.assertIn(m1, main_effects)
     
     # def test_interaction_moderates_one_variable(self): 
     #     u0 = ts.Unit("Unit")

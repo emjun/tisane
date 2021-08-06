@@ -122,7 +122,7 @@ def find_all_associates_that_causes_or_associates_another(sources: List[Abstract
     return all_intermediaries
     
 ## Rule 4: Find common cause
-def find_variable_parent_that_causes_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph) -> Set[str]:
+def find_variable_parent_that_causes_or_associates_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph) -> Set[str]:
     parents_cause_sink = set()
 
     # Get parents of @param source
@@ -139,10 +139,10 @@ def find_variable_parent_that_causes_another(source: AbstractVariable, sink: Abs
     
     return parents_cause_sink
 
-def find_all_parents_that_causes_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph) -> Set[str]:
+def find_all_parents_that_causes_or_associates_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph) -> Set[str]:
     all_parents_cause_sink = set()
     for var in sources: 
-        parents_cause_sink = find_variable_parent_that_causes_another(source=var, sink=sink, gr=gr)
+        parents_cause_sink = find_variable_parent_that_causes_or_associates_another(source=var, sink=sink, gr=gr)
         all_parents_cause_sink = all_parents_cause_sink.union(parents_cause_sink)
     
     return all_parents_cause_sink
@@ -152,20 +152,26 @@ def infer_main_effects(gr: Graph, query: Design):
 
     ivs = query.ivs
     dv = query.dv
+    all_variables_in_graph = gr.get_variables()
+
     common_ancestors_names = find_common_ancestors(variables=ivs, gr=gr)
-    common_ancestors_variables = cast_to_variables(names=common_ancestors_names, variables=ivs)
+    common_ancestors_variables = cast_to_variables(names=common_ancestors_names, variables=all_variables_in_graph)
     main_candidates = main_candidates.union(common_ancestors_variables)
 
     causal_ancestors = find_all_causal_ancestors(variables=ivs, gr=gr)
-    main_candidates = main_candidates.union(causal_ancestors)
+    causal_ancestors_variables = cast_to_variables(names=causal_ancestors, variables=all_variables_in_graph) 
+    main_candidates = main_candidates.union(causal_ancestors_variables)
 
     # TODO: "intermediaries" might not be the best variable name
     intermediaries = find_all_associates_that_causes_or_associates_another(sources=ivs, sink=dv, gr=gr)
-    main_candidates = main_candidates.union(intermediaries)
+    intermediaries_variables = cast_to_variables(names=intermediaries, variables=all_variables_in_graph)
+    main_candidates = main_candidates.union(intermediaries_variables)
 
     parents_cause_dv = find_all_parents_that_causes_another(sources=ivs, sink=dv, gr=gr)
+    parents_cause_dv
     main_candidates = main_candidates.union(parents_cause_dv)
 
+    
     return main_candidates
 
 def infer_interaction_effects(gr: Graph):

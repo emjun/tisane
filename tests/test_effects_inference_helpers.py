@@ -12,7 +12,8 @@ from tisane.graph_inference import (
     find_all_causal_ancestors,
     find_variable_associates_that_causes_or_associates_another,
     find_all_associates_that_causes_or_associates_another,
-    find_variable_parent_that_causes_another
+    find_variable_parent_that_causes_or_associates_another,
+    find_all_parents_that_causes_or_associates_another
 )
 from tisane.variable import (
     AbstractVariable,
@@ -309,10 +310,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        tmp = find_variable_parent_that_causes_another(source=m0, sink=dv, gr=gr)
+        tmp = find_variable_parent_that_causes_or_associates_another(source=m0, sink=dv, gr=gr)
         self.assertEqual(len(tmp), 1)
 
-        parent_associates_with_dv = cast_to_variables(find_variable_parent_that_causes_another(source=m0, sink=dv, gr=gr), [m0, m1])
+        parent_associates_with_dv = cast_to_variables(find_variable_parent_that_causes_or_associates_another(source=m0, sink=dv, gr=gr), [m0, m1])
         self.assertEqual(len(parent_associates_with_dv), 1)
         self.assertIn(m1, parent_associates_with_dv)
 
@@ -330,10 +331,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        tmp = find_variable_parent_that_causes_another(source=m0, sink=dv, gr=gr)
+        tmp = find_variable_parent_that_causes_or_associates_another(source=m0, sink=dv, gr=gr)
         self.assertEqual(len(tmp), 1)
 
-        parent_associates_with_dv = cast_to_variables(find_variable_parent_that_causes_another(source=m0, sink=dv, gr=gr), [m0, m1])
+        parent_associates_with_dv = cast_to_variables(find_variable_parent_that_causes_or_associates_another(source=m0, sink=dv, gr=gr), [m0, m1])
         self.assertEqual(len(parent_associates_with_dv), 1)
         self.assertIn(m1, parent_associates_with_dv)
 
@@ -353,10 +354,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        tmp = find_variable_parent_that_causes_another(source=m0, sink=dv, gr=gr)
+        tmp = find_variable_parent_that_causes_or_associates_another(source=m0, sink=dv, gr=gr)
         self.assertEqual(len(tmp), 2)
 
-        parent_associates_with_dv = cast_to_variables(find_variable_parent_that_causes_another(source=m0, sink=dv, gr=gr), [m0, m1, m2])
+        parent_associates_with_dv = cast_to_variables(find_all_parents_that_causes_or_associates_another(sources=[m0], sink=dv, gr=gr), [m0, m1, m2])
         self.assertEqual(len(parent_associates_with_dv), 2)
         self.assertIn(m1, parent_associates_with_dv)
         self.assertIn(m2, parent_associates_with_dv)
