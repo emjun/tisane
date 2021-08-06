@@ -11,6 +11,7 @@ from tisane.graph_inference import (
     find_variable_causal_ancestors,
     find_all_causal_ancestors,
     find_variable_associates_that_causes_or_associates_another,
+    find_all_associates_that_causes_or_associates_another,
     infer_main_effects,
     infer_interaction_effects,
     infer_random_effects
@@ -251,6 +252,61 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
 
         associates_that_cause_dv = cast_to_variables(find_variable_associates_that_causes_or_associates_another(source=m0, sink=dv, gr=gr), [m0, m1])
         self.assertEqual(len(associates_that_cause_dv), 0)
+
+    def test_find_all_associates_that_causes_or_associates_with_dv(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.associates_with(dv)
+        m1.associates_with(m0)
+        m2.causes(dv)
+        m2.associates_with(m1)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        associates_that_cause_dv = cast_to_variables(find_all_associates_that_causes_or_associates_another(sources=[m0, m1], sink=dv, gr=gr), [m0, m1, m2])
+        self.assertEqual(len(associates_that_cause_dv), 3)
+        self.assertIn(m0, associates_that_cause_dv)
+        self.assertIn(m1, associates_that_cause_dv)
+        self.assertIn(m2, associates_that_cause_dv)
+    
+    def test_find_all_associates_that_causes_or_associates_with_dv_is_not_recursive(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.associates_with(dv)
+        m1.associates_with(m0)
+        m2.causes(dv)
+        m1.associates_with(m2)
+
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        associates_that_cause_dv = cast_to_variables(find_all_associates_that_causes_or_associates_another(sources=[m0, m1], sink=dv, gr=gr), [m0, m1, m2])
+        self.assertEqual(len(associates_that_cause_dv), 2)
+        self.assertIn(m0, associates_that_cause_dv)
+        self.assertIn(m1, associates_that_cause_dv)
+        self.assertNotIn(m2, associates_that_cause_dv)
+    
+    # def test_find_variable_parent_that_causes_dv(self):
+    #     u0 = ts.Unit("Unit")
+    #     m0 = u0.numeric("Measure 0")
+    #     m1 = u0.numeric("Measure 1")
+    #     m2 = u0.numeric("Measure 2")
+    #     dv = u0.numeric("Dependent variable")
+
+    #     m0.causes(dv)
+    #     m1.associates_with(dv)
+    #     m1.causes(m0)
 
     
 
