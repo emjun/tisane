@@ -167,11 +167,11 @@ def infer_main_effects(gr: Graph, query: Design):
     intermediaries_variables = cast_to_variables(names=intermediaries, variables=all_variables_in_graph)
     main_candidates = main_candidates.union(intermediaries_variables)
 
-    parents_cause_dv = find_all_parents_that_causes_another(sources=ivs, sink=dv, gr=gr)
-    parents_cause_dv
-    main_candidates = main_candidates.union(parents_cause_dv)
+    parents_cause_dv = find_all_parents_that_causes_or_associates_another(sources=ivs, sink=dv, gr=gr)
+    parents_cause_dv_variables = cast_to_variables(names=parents_cause_dv, variables=all_variables_in_graph)
+    main_candidates = main_candidates.union(parents_cause_dv_variables)
 
-    
+
     return main_candidates
 
 def infer_interaction_effects(gr: Graph):
