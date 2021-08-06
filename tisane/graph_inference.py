@@ -18,7 +18,7 @@ def powerset(iterable):
 def cast_to_variables(names: Set[str], variables: List[AbstractVariable]):
     named_variables = set()
 
-    for n in names: 
+    for n in names:
         for v in variables: 
             if n == v.name: 
                 named_variables.add(v)
@@ -75,12 +75,14 @@ def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph):
         causal_ancestors = set()
 
         causal_sub = gr.get_causal_subgraph()
+        assert(isinstance(variable, AbstractVariable))
         if gr.has_variable(variable):
-            pred = causal_sub._graph.predecessors(variable) # Returns an iterator obj
+            pred = causal_sub._graph.predecessors(variable.name) # Returns an iterator obj
             # Add each predecessor to the set
             for p in pred: 
                 causal_ancestors.add(p)  
-                find_variable_causal_ancestors(p, gr)
+                ancestors = find_variable_causal_ancestors(gr.get_variable(p), gr)
+                causal_ancestors = causal_ancestors.union(ancestors)
         # Else: There is nothing to add to the set of causal ancestors
         return causal_ancestors
 

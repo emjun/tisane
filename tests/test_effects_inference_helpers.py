@@ -8,6 +8,8 @@ from tisane import graph_inference
 from tisane.graph_inference import (
     cast_to_variables,
     find_common_ancestors,
+    find_variable_causal_ancestors,
+    find_all_causal_ancestors,
     infer_main_effects,
     infer_interaction_effects,
     infer_random_effects
@@ -90,4 +92,65 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self.assertEqual(len(common_ancestors), 0)
 
     def test_find_variable_causal_ancestors(self):
-        pass
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(m1)
+        m1.causes(m2)
+        m2.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        causal_ancestors = cast_to_variables(find_variable_causal_ancestors(m0, gr), design.ivs)
+        self.assertEqual(len(causal_ancestors), 0)
+        
+        causal_ancestors = cast_to_variables(find_variable_causal_ancestors(m1, gr), design.ivs)
+        self.assertEqual(len(causal_ancestors), 1)
+        self.assertIn(m0, causal_ancestors)
+
+        causal_ancestors = cast_to_variables(find_variable_causal_ancestors(m2, gr), design.ivs)
+        self.assertEqual(len(causal_ancestors), 2)
+        self.assertIn(m0, causal_ancestors)
+        self.assertIn(m1, causal_ancestors)
+        
+    # def test_find_all_causal_ancestors(self):
+    #     u0 = ts.Unit("Unit")
+    #     m0 = u0.numeric("Measure 0")
+    #     m1 = u0.numeric("Measure 1")
+    #     m2 = u0.numeric("Measure 2")
+    #     dv = u0.numeric("Dependent variable")
+
+    #     m0.causes(m1)
+    #     m1.causes(m2)
+    #     m2.causes(dv)
+
+    #     design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+    #     gr = design.graph
+
+    #     causal_ancestors = cast_to_variables(find_all_causal_ancestors([m2], gr), design.ivs)
+
+    #     self.assertEqual(len(causal_ancestors), 2)
+    #     self.assertIn(m0, causal_ancestors)
+    #     self.assertIn(m1, causal_ancestors)
+
+    def test_find_all_causal_ancestors_partial(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(m1)
+        m1.causes(m2)
+        m2.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[m2])
+        gr = design.graph
+
+        causal_ancestors = cast_to_variables(find_all_causal_ancestors([m2], gr), [m0, m1, m2])
+
+        self.assertEqual(len(causal_ancestors), 1)
