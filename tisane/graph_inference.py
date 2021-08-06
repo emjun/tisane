@@ -147,7 +147,9 @@ def find_all_parents_that_causes_or_associates_another(sources: List[AbstractVar
     
     return all_parents_cause_sink
 
-def infer_main_effects(gr: Graph, query: Design):
+# Infer candidate main effects for @param query given the relationships contained in @param gr
+# The resulting set of candidate main effects include the ivs included in the query
+def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
     main_candidates = set()    
 
     ivs = query.ivs
