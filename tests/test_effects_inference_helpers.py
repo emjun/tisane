@@ -10,6 +10,7 @@ from tisane.graph_inference import (
     find_common_ancestors,
     find_variable_causal_ancestors,
     find_all_causal_ancestors,
+    find_variable_associates_that_causes_or_associates_another,
     infer_main_effects,
     infer_interaction_effects,
     infer_random_effects
@@ -30,27 +31,64 @@ import unittest
 
 
 class EffectsInferenceHelpersTest(unittest.TestCase):
-    # def test_find_common_causal_ancestors(self):
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_cast_to_variables_one(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
 
-    #     # m0 is the common (causal) ancestor
-    #     m0.causes(m1)
-    #     m0.causes(m2)
+        names = set()
+        names.add("Measure 0")
 
-    #     m1.causes(dv)
-    #     m2.causes(dv)
+        vars = cast_to_variables(names, [m0])
+        self.assertEqual(len(vars), 1)
+        self.assertIn(m0, vars)
+        
+    def test_cast_to_variables_not_found(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1, m2])
-    #     gr = design.graph
+        names = set()
+        names.add("Measure 1")
 
-    #     common_ancestors = cast_to_variables(find_common_ancestors([m1, m2], gr), design.ivs)
+        vars = cast_to_variables(names, [m0])
+        self.assertEqual(len(vars), 0)
 
-    #     self.assertEqual(len(common_ancestors), 1)
-    #     self.assertIn(m0, common_ancestors)
+    def test_cast_to_variables_multiple(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+
+        names = set()
+        names.add("Measure 0")
+        names.add("Measure 1")
+
+        vars = cast_to_variables(names, [m0, m1, m2])
+        self.assertEqual(len(vars), 2)
+        self.assertIn(m0, vars)
+        self.assertIn(m1, vars)
+
+    def test_find_common_causal_ancestors(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        # m0 is the common (causal) ancestor
+        m0.causes(m1)
+        m0.causes(m2)
+
+        m1.causes(dv)
+        m2.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        common_ancestors = cast_to_variables(find_common_ancestors([m1, m2], gr), design.ivs)
+
+        self.assertEqual(len(common_ancestors), 1)
+        self.assertIn(m0, common_ancestors)
     
     def test_find_common_causal_ancestors_none(self):
         u0 = ts.Unit("Unit")
@@ -117,27 +155,27 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self.assertIn(m0, causal_ancestors)
         self.assertIn(m1, causal_ancestors)
         
-    # def test_find_all_causal_ancestors(self):
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_find_all_causal_ancestors(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(m1)
-    #     m1.causes(m2)
-    #     m2.causes(dv)
+        m0.causes(m1)
+        m1.causes(m2)
+        m2.causes(dv)
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1, m2])
-    #     gr = design.graph
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
 
-    #     causal_ancestors = cast_to_variables(find_all_causal_ancestors([m2], gr), design.ivs)
+        causal_ancestors = cast_to_variables(find_all_causal_ancestors([m2], gr), design.ivs)
 
-    #     self.assertEqual(len(causal_ancestors), 2)
-    #     self.assertIn(m0, causal_ancestors)
-    #     self.assertIn(m1, causal_ancestors)
+        self.assertEqual(len(causal_ancestors), 2)
+        self.assertIn(m0, causal_ancestors)
+        self.assertIn(m1, causal_ancestors)
 
-    def test_find_all_causal_ancestors_partial(self):
+    def test_find_all_causal_ancestors_partial_graph(self):
         u0 = ts.Unit("Unit")
         m0 = u0.numeric("Measure 0")
         m1 = u0.numeric("Measure 1")
@@ -154,3 +192,65 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         causal_ancestors = cast_to_variables(find_all_causal_ancestors([m2], gr), [m0, m1, m2])
 
         self.assertEqual(len(causal_ancestors), 1)
+
+    def test_find_variable_associates_that_causes_dv(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+        
+        m0.causes(dv)
+        m1.causes(dv)
+        m1.associates_with(m0)     
+
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph   
+
+        tmp = find_variable_associates_that_causes_or_associates_another(source=m0, sink=dv, gr=gr)
+        self.assertEqual(len(tmp), 1) 
+        name = tmp.pop()
+        self.assertIsInstance(name, str)
+        tmp.add(name)
+        
+        associates_that_cause_dv = cast_to_variables(tmp, [m0, m1])
+        self.assertEqual(len(associates_that_cause_dv), 1)
+        self.assertIn(m1, associates_that_cause_dv)
+        var = associates_that_cause_dv.pop()
+        self.assertIsInstance(var, AbstractVariable)
+
+    def test_find_variable_associates_that_associates_with_dv(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.associates_with(dv)
+        m1.associates_with(m0)
+
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        associates_that_cause_dv = cast_to_variables(find_variable_associates_that_causes_or_associates_another(source=m0, sink=dv, gr=gr), [m0, m1])
+        self.assertEqual(len(associates_that_cause_dv), 1)
+        self.assertIn(m1, associates_that_cause_dv)
+
+    def test_find_variable_causes_that_causes_dv_wrong_rule_function(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.associates_with(dv)
+        m1.causes(m0)
+
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        associates_that_cause_dv = cast_to_variables(find_variable_associates_that_causes_or_associates_another(source=m0, sink=dv, gr=gr), [m0, m1])
+        self.assertEqual(len(associates_that_cause_dv), 0)
+
+    
+

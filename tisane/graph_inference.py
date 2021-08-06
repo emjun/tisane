@@ -15,7 +15,7 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-def cast_to_variables(names: Set[str], variables: List[AbstractVariable]):
+def cast_to_variables(names: Set[str], variables: List[AbstractVariable]) -> Set[AbstractVariable]:
     named_variables = set()
 
     for n in names:
@@ -26,7 +26,7 @@ def cast_to_variables(names: Set[str], variables: List[AbstractVariable]):
     return named_variables
 
 ## Rule 1: Find common ancestors 
-def find_common_ancestors(variables: List[AbstractVariable], gr: Graph): 
+def find_common_ancestors(variables: List[AbstractVariable], gr: Graph) -> Set[str]: 
     common_ancestors = set()
 
     # Map counting ancestors of all @param variables
@@ -71,7 +71,7 @@ def find_common_ancestors(variables: List[AbstractVariable], gr: Graph):
 
 ## Rule 2: Find causal ancestors
 # Moved outside for testing purposes
-def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph):
+def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph) -> Set[str]:
         causal_ancestors = set()
 
         causal_sub = gr.get_causal_subgraph()
@@ -86,7 +86,7 @@ def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph):
         # Else: There is nothing to add to the set of causal ancestors
         return causal_ancestors
 
-def find_all_causal_ancestors(variables: List[AbstractVariable], gr: Graph):
+def find_all_causal_ancestors(variables: List[AbstractVariable], gr: Graph) -> Set[str]:
     all_causal_ancestors = set()
     for v in variables: 
         ancestors = find_variable_causal_ancestors(variable=v, gr=gr)
@@ -95,7 +95,7 @@ def find_all_causal_ancestors(variables: List[AbstractVariable], gr: Graph):
     return all_causal_ancestors
 
 ## Rule 3: Find associated causes 
-def find_variable_associates_that_causes_or_associates_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph):
+def find_variable_associates_that_causes_or_associates_another(source: AbstractVariable, sink: AbstractVariable, gr: Graph) -> Set[str]:
     intermediaries = set()
 
     assert(gr.has_variable(source))
@@ -106,13 +106,13 @@ def find_variable_associates_that_causes_or_associates_another(source: AbstractV
     # Check if the neighbors also cause or are associated with @param sink variable
     for var in associates_neighbors:
         if gr.has_edge(start=var, end=sink, edge_type="causes"): 
-            intermediaries.add(var)
+            intermediaries.add(var.name)
         elif gr.has_edge(start=var, end=sink, edge_type="associates"): 
-            intermediaries.add(var)
+            intermediaries.add(var.name)
 
     return intermediaries
 
-def find_all_associates_that_causes_or_associates_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph):
+def find_all_associates_that_causes_or_associates_another(sources: List[AbstractVariable], sink: AbstractVariable, gr: Graph) -> Set[str]:
     all_intermediaries = set()
     for var in sources: 
         intermediaries = find_variable_associates_that_causes_or_associates_another(source=var, sink=sink, gr=gr)
