@@ -150,20 +150,28 @@ class Graph(object):
                 repetitions=repetitions,
             )
 
-    def _get_graph_tikz(self):
+    def get_causes_associates_tikz_graph(self):
+        self._get_graph_tikz(
+            edge_filter=lambda edge_data: edge_data["edge_type"] == "causes"
+            or edge_data["edge_type"] == "associates"
+        )
+
+    def _get_graph_tikz(self, edge_filter=lambda x: True):
         edges = list(self._graph.edges(data=True))
         tikz_edges = []
         nodes = []
         for (n0, n1, edge_data) in edges:
-            if n0 not in nodes:
-                nodes.append(n0)
+            if edge_filter(edge_data):
+                if n0 not in nodes:
+                    nodes.append(n0)
+                    pass
+                if n1 not in nodes:
+                    nodes.append(n1)
+                print("{}, {}, {}".format(n0, n1, edge_data))
+                print("{}, {}, {}".format(type(n0), type(n1), type(edge_data)))
+                edge_type = edge_data["edge_type"]
+                tikz_edges.append({"start": n0, "end": n1, "style": edge_type})
                 pass
-            if n1 not in nodes:
-                nodes.append(n1)
-            print("{}, {}, {}".format(n0, n1, edge_data))
-            print("{}, {}, {}".format(type(n0), type(n1), type(edge_data)))
-            edge_type = edge_data["edge_type"]
-            tikz_edges.append({"start": n0, "end": n1, "style": edge_type})
             pass
 
         # variables = self.get_variables()
@@ -198,6 +206,35 @@ class Graph(object):
             )
             pass
         print(formatTikzVis(graph_code, siblingDistance=3, levelDistance=3))
+
+    def _get_causes_associates_dot_graph(self):
+        return self._get_dot_graph(
+            edge_filter=lambda edge_data: edge_data["edge_type"] == "cause"
+            or edge_data["edge_type"] == "associate"
+        )
+
+    def _get_dot_graph(
+        self,
+        edge_filter=lambda x: True,
+        style={"cause": "bold", "default": "dotted"},
+        color={"default": "black"},
+    ):
+        graph = pydot.Dot("graph_vis", graph_type="digraph")
+        edges = list(self._graph.edges(data=True))
+
+        for (n0, n1, edge_data) in edges:
+            if edge_filter(edge_data):
+                edge_type = edge_data["edge_type"]
+                edge_style = (
+                    style[edge_type] if edge_type in style else style["default"]
+                )
+                edge_color = (
+                    color[edge_type] if edge_type in color else color["default"]
+                )
+                graph.add_edge(pydot.Edge(n0, n1, style=edge_style, color=edge_color))
+                pass
+            pass
+        return graph
 
     # @returns pydot object (representing DOT graph)representing conceptual graph info
     # Iterates through internal graph object and constructs vis
@@ -359,7 +396,7 @@ class Graph(object):
         print("adding relationship {}".format(type(relationship)))
         added = (
             relclass(Has)
-            or relclass(Treatment)
+            # or relclass(Treatment)
             or relclass(Nests)
             or relclass(Associates)
             or relclass(Causes)

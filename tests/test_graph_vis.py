@@ -27,18 +27,22 @@ class GraphVisTest(unittest.TestCase):
         school = ts.Unit("school id")
         test_score = student.numeric("test score")
 
-        gr = ts.Graph()
-        gr._add_variable(student)
-        gr._add_variable(school)
-        gr._add_variable(test_score)
         school.causes(test_score)
-        # gr.has(student, test_score)
-        gr.cause(school, test_score)
-        gr.associate(student, test_score)
+
+        design = ts.Design(dv=test_score, ivs=[student, school])
+        # gr = ts.Graph()
+        # gr._add_variable(student)
+        # gr._add_variable(school)
+        # gr._add_variable(test_score)
+        # school.causes(test_score)
+        # # gr.has(student, test_score)
+        # gr.causes(school, test_score)
+        # gr.associates(student, test_score)
+        gr = design.graph
 
         gr._get_graph_tikz()
 
-        # gr.visualize_graph()
+        gr.visualize_graph()
 
     def test_more_complex(self):
 
@@ -64,3 +68,14 @@ class GraphVisTest(unittest.TestCase):
         gr._get_graph_tikz()
         # self.assertTrue(gr.has_variable(test_score))
         gr.visualize_graph()
+
+        allgraph = gr._get_dot_graph()
+        allgraph.write_png("test_more_complex.png")
+
+        causes_associates_only = gr._get_causes_associates_dot_graph()
+        causes_associates_only.write_png("test_more_complex-causes_associates.png")
+
+        hasgraph = gr._get_dot_graph(
+            edge_filter=lambda edge_data: edge_data["edge_type"] == "has"
+        )
+        hasgraph.write_png("test_more_complex-has.png")
