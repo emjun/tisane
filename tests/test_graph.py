@@ -39,7 +39,7 @@ class GraphTest(unittest.TestCase):
         self.assertIn(m0, variables)
         self.assertIn(m1, variables)
         self.assertIn(m2, variables)
-    
+
     def test_graph_construction_recursive_2(self):
         u0 = ts.Unit("Unit")
         m0 = u0.numeric("Measure 0")

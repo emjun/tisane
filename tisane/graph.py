@@ -9,7 +9,7 @@ from tisane.variable import (
     Moderates,
     Nests,
     Repeats,
-    NumberValue
+    NumberValue,
 )
 import networkx as nx
 import pydot
