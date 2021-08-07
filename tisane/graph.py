@@ -430,7 +430,10 @@ class Graph(object):
     # Add an ''associate'' edge to the graph
     # Adds two edges, one in each direction
     def associates(
-        self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: typing.Union[Associates, Moderates]
+        self,
+        lhs: AbstractVariable,
+        rhs: AbstractVariable,
+        associates_obj: typing.Union[Associates, Moderates],
     ):
         # Is this edge new?
         if not self.has_edge(start=lhs, end=rhs, edge_type="associates"):
