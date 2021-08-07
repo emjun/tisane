@@ -1,84 +1,70 @@
 # tisane
-Mixed Initiative System for Linear Modeling 
+Tisane: Authoring Statistical Models via Formal Reasoning from Conceptual and Data Relationships
 
-Interface + DSL + Knowledge Base 
+TL;DR: Analysts can use Tisane to author generalized linear models with or without mixed effects. Tisane infers statistical models from variable relationships (from domain knowledge) that analysts specify. By doing so, Tisane helps analysts avoid common threats to external and statistical conclusion validity. Analysts do not need to be statistical experts! 
 
-DSL and Knowledge Base: 
-1. Effects sets generation
-    - Interaction: Select which sets of variables the end-user is interested in.
-2. Dynamically generate the constraints according to the set of variables. (in a for-loop)
-    - The next step happens in a loop 
-    - For the next step, need a way to store results of vis for anything that is not specific to a set of effects... (can be reused)
-3. Property verification for selected sets. 
-    - Interaction: Variable data types
-    - Interaction: 
-        - If have no data: assumptions that hold (checkboxes or something)
-        - If have data: Visualization for all residual properties.
-4. Steps 1 and 2 generate constraints that are used to figure out the set of statistical models that hold. 
-5. Parse Knowledge Base output into statistical scripts for each set of effects! (Draco example: https://github.com/uwdata/draco/blob/master/js/src/asp2vl.ts)
+Tisane provides (i) a graph specification language for expressing relationships between variables and (ii) an interactive query and compilation process for inferring a valid statistical model from a set of variables in the graph. 
 
-Important files: 
-tests/sample.py : Sample program. 
+## Graph specification language
+### Variables
+There are three types of variables: (i) Units, (ii) Measures, and (iii) SetUp, or environmental, variables. 
+- ``Unit`` types represent entities that are observed (``observed units`` in the experimental design literature) or the recipients of experimental conditions (``experimental units``). 
+Ex: 
+- ``Measure`` types represent attributes of units that are proxies of underlying constructs. Measures can have one of the following data types: numeric, nominal, or ordinal. Numeric measures have values that lie on an interval or ratio scale. Nominal measures are categorical variables without an ordering between categories. Ordinal measures are categorical variables with an ordering between categories. 
+Ex: 
+- ``SetUp`` types represent study or experimental settings that are global and unrelated to any of the units involved. For example, time is often an environmental variable that differentiates repeated measures but is neither a unit nor a measure. 
+Ex: 
 
-# Design Rationale
-Design API
-- Definitions: https://docs.google.com/document/d/16b1u8WUQFcYdcswJJqIjKzV11VLG2p7ozFQkYX51JaI/edit
-- Early prototype feedback: https://gist.github.com/emjun/97acf6666ed6d4d457efa2edf55eee86 
-- Formative, related work: https://docs.google.com/document/d/1LGfZ3_WKsyGOeZecA-w-cFqDslFRYdqlKCyo6fgdexM/edit
+Design rationale: We derived this type system from how other software tools focused on study design separate their concerns. 
 
+### Relationships between variables
+Analysts can use Tisane to express (i) conceptual and (ii) data measurement relationships between variables. 
 
+There are three different types of conceptual relationships.
+- A variable can *cause* another variable.
+- A variable can be *associated with* another variable. 
+- One or more variables can *moderate* the effect of a variable on another variable. 
+Currently, a variable, V1, can have a moderated relationship with a variable, V2, without also having a causal or associative relationship with V2. --> Should this be the case? Initially, I though that moderation (which is later translated into an interaction effect) is another way/type of how two variables relate. At the same time, if V1 has a moderated effec on V2, it is implied that V1 has some kind of associative relationship with V2. 
 
-# Benefits of using Tisane
-```
-# These are all different phases/steps in compilation
+These relationships are used to construct an internal graph representation of variables and their relationships with one another. 
 
-# Checks
-# Generate possible main effects
-# Generate possible interaction effects [nope, must be specified when writing program]
-# Generate random effects [depends on main effects]
-# Generate candidate family and link functions
-# Interaction loop(?) with user --> how to go about structuring this?
-```
+## Query 
+Analysts query the relationships they have specified (technically, the internal graph represenation) for a statistical model. For each query, analysts must specify (i) a dependent variable to explain using (ii) a set of independent variables. 
 
-Overall: Author statistical models that are conceptually and statistically sensical and valid (?). 
-1. Conceptual check: Tisane ensures that only variables that have a conceptual influence on the DV are included. 
-2. Data measurement check: Tiasne ensures that data measurement details are properly accounted for by automatically inferring and including random effects. Units and measures must be associated with one another. (Another way to say this: Tisane avoids a common mistake to omit random effects structures that should be included)
-3. Conceptual and statistical check: 
+Query validation: To be a valid query, Tisane verifies that the dependent variable does not cause an independent variable. It would be conceptually incorrect to explain a cause from an effect. 
 
+## Statistical model inference
+After validating a query, Tisane traverses the internal graph representation in order to generate candidate generalized linear models with or without mixed effects. A generalized linear model consists of a model effects structure and a family/link function pair. 
 
-pre-empt 
-(Another way to say this: omit important variables that should be included as ivs --> How?)
+### Model effects structure 
+<!-- generate possible statistical model effects structures and family/link functions.  -->
+Tisane generates candidate main effects, interaction effects, and, if applicable, random effects based on analysts' expressed relationships. 
 
-- What happens if include all the variables
-- What happens if include only some of the variables (there are mediators that are not included)
+- Tisane aims to direct analysts' attention to variables, especially possible confounders, that the analyst may have overlooked. When generating main effects candidates, Tisane looks for other variables in the graph that may exert causal influence on the dependent variable and are related to the input independent variables. 
+- Tisane aims to represent conceptual relationships between variables accurately. Based on the main effects analysts choose to include in their output statistical model, Tisane suggests interaction effects to include. Tisane relies on the moderate relationships analysts specified in their input program to infer interaction effects. 
+- Tisane aims to increase the generalizability of statistical analyses and results by automatically detecting the need for and including random effects. Tisane follows the guidelines outlined in [] and [] to generat the maximal random effects structure. 
 
+[INFERENCE.md](tisane/INFERENCE.md) explains all inference rules in greater detail. 
 
+### Family/link function 
+Family and link functions depend on the data types of dependent variables and their distributions. 
 
-# - omit important variables that should be included as ivs --> How?
-    
-    Simplest case: Only main effects 
+Based on the data type of the dependent variable, Tisane suggests matched pairs of possible family and link functions to consider. Tisane ensures that analysts consider only valid pairs of family and link functions. 
 
-    Two types of errors that are avoided: 
-    
-    
+## Interaction model 
+A key aspect of Tisane that distinguishes it from other systems, such as [Tea](), is the importance of user interaction in guiding the statistical model that is inferred as output and ultimately fit. 
 
+Tisane generates a space of candidate statistical models and asks analysts disambiguation questions for (i) including additional main or interaction effects and, if applicable, correlating (or uncorrelating) random slopes and random intercepts as well as (ii) selecting among viable family/link function pairs.
 
-Omit important variables that should be included as IVs
+To help analysts, Tisane provides text explanations and visualizations. For example, to show possible family functions, Tisane simulates data to fit a family function and visualizes it on top of a histogram of the analyst's data and explains to the how to use the visualization to compare family functions. 
 
-In terms of *validity*, Tisane avoids common threats to validity. See here.
+Would love to include/looking into: Tisane also provides the results of statistical tests (e.g., Shapiro-Wilk) that test if the underlying data follows a family distribution. 
 
-# Implementation details
-Not clear that SMT is necessary. The generation of possible effects structures seems to be doable just on the graph alone through different graph traversals.
+<!-- Two aspects: 
+- generating the space
+- narrowing the space -->
 
-Without supporting model revision, we don't need to ask for weights for variables.
+### Tisane helps analysts avoid common threats to external and statistical conclusion validity. 
+TODO: Specifically, Tisane helps....
 
-
-# [x] Implement the updated variable API just for nested and repeated measures
-# [] Write test cases and implement the main, interaction, and random effects generation functions
-# Write test cases and implement the family/link function generation functions
-# [start here tomorrow] Write function for generating all combinations of model effects + family/link
-# Sketch through GUI again
-
-
-# Questions: 
-1. What should we do about Repeats that are declared? An associates/cause relationship between Time and DV is implied. What should we do about that? - This was implicit before, so why not also add Associates(Time, DV) now?
+Tisane elicits conceptual and data measurement relationships between variables. Tisane considers and asks users during disambiguation only about conceptually plausible effects based on variable relationships, and plausible family/link functions based on variable data types. This means that all candidate models are conceptually justifiable. Tisane also does not show model results during disambiguation, preventing users from providing answers that lead to desired findings and p-values. As a result, Tisane discourages cherry-picking (e.g., p-hacking). It would likely be easier to “p-hack” a linear model using existing tools because to “p-hack” Tisane, a user would have to manipulate their conceptual model and/or the underlying model generation process. Locking (see below) is another way to discourage cherry-picking. 
