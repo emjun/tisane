@@ -220,7 +220,9 @@ def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
 
     return main_candidates
 
-
+def find_all_moderates(gr: Graph): 
+    pass
+# Infer candidate interaction effects for @param query given the relationships contained in @param gr
 def infer_interaction_effects(gr: Graph):
     pass
 

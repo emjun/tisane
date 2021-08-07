@@ -430,7 +430,7 @@ class Graph(object):
     # Add an ''associate'' edge to the graph
     # Adds two edges, one in each direction
     def associates(
-        self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: Associates
+        self, lhs: AbstractVariable, rhs: AbstractVariable, associates_obj: typing.Union[Associates, Moderates]
     ):
         # Is this edge new?
         if not self.has_edge(start=lhs, end=rhs, edge_type="associates"):
@@ -472,8 +472,9 @@ class Graph(object):
         )  # Interaction variables are cast as nominal variables
 
         # Add associate edges between interaction and @param on variable
-        associates_obj = Associates(lhs=var, rhs=on)
-        self.associates(lhs=var, rhs=on, associates_obj=associates_obj)
+        # associates_obj = Associates(lhs=var, rhs=on)
+        # Store Moderates obj even though edge is an Associates edge
+        self.associates(lhs=var, rhs=on, associates_obj=moderates_obj)
 
         # Inherit unit has relationships from moderators
         for m in moderator:
