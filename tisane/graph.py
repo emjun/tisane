@@ -14,6 +14,7 @@ from tisane.variable import (
 import networkx as nx
 import pydot
 from typing import List, Union, Tuple
+import typing
 import copy
 from tisane.graph_vis_tikz_template import formatTikzVis
 

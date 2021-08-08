@@ -7,6 +7,7 @@ import tisane as ts
 from tisane import graph_inference
 from tisane.graph_inference import (
     cast_to_variables,
+    filter_interactions_involving_variables,
     find_common_ancestors,
     find_variable_causal_ancestors,
     find_all_causal_ancestors,
@@ -14,6 +15,7 @@ from tisane.graph_inference import (
     find_all_associates_that_causes_or_associates_another,
     find_variable_parent_that_causes_or_associates_another,
     find_all_parents_that_causes_or_associates_another,
+    find_moderates_edges_on_variable
 )
 from tisane.variable import (
     AbstractVariable,
@@ -422,3 +424,100 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self.assertEqual(len(parent_associates_with_dv), 2)
         self.assertIn(m1, parent_associates_with_dv)
         self.assertIn(m2, parent_associates_with_dv)
+
+    def test_find_moderates_on_dv(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.moderates(moderator=[m0], on=dv) 
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        ixn = moderates.pop()
+        self.assertIsInstance(ixn, str)
+        self.assertTrue("Measure 0" in ixn)
+        self.assertTrue("Measure 1" in ixn)
+        self.assertTrue("*" in ixn)
+
+    def test_find_moderates_on_dv_interaction_order_agnostic(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        ixn = moderates.pop()
+        self.assertIsInstance(ixn, str)
+        self.assertTrue("Measure 0" in ixn)
+        self.assertTrue("Measure 1" in ixn)
+        self.assertTrue("*" in ixn)
+
+    def test_filter_interactions_involving_variables_both_variables_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        interactions = filter_interactions_involving_variables(variables=[m0, m1, m2], interaction_names=moderates)
+        self.assertEqual(len(interactions), 1)
+
+    def test_filter_interactions_involving_variables_only_one_variable_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        interactions = filter_interactions_involving_variables(variables=[m0, m2], interaction_names=moderates)
+        self.assertEqual(len(interactions), 0)
+    
+    def test_filter_interactions_involving_variables_none_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        interactions = filter_interactions_involving_variables(variables=[m2], interaction_names=moderates)
+        self.assertEqual(len(interactions), 0)
+        

@@ -2,43 +2,51 @@ from tisane.variable import AbstractVariable, Nominal, Ordinal, Numeric
 
 from typing import Union
 
-
+# TODO: Remove RandomEffect
 class RandomEffect(object):
     groups: AbstractVariable
-    # The _iv_ is allowed to vary per each group in _groups_
+#     # The _iv_ is allowed to vary per each group in _groups_
 
-
-class RandomSlope(RandomEffect):
-    iv: Union[AbstractVariable, int]
+class RandomSlope():
+    iv: AbstractVariable
+    groups: AbstractVariable 
 
     def __init__(
-        self, iv: Union[AbstractVariable, int, tuple], groups: AbstractVariable
+        self, iv: AbstractVariable, groups: AbstractVariable
     ):
-        # Check if @param iv is 1? (meaning intercept)
         self.iv = iv
         self.groups = groups
 
-
-class RandomIntercept(RandomEffect):
-    def __init__(self, groups: Union[AbstractVariable, int]):
-        # Check if @param iv is 1? (meaning intercept)
+class RandomIntercept():
+    def __init__(self, groups: AbstractVariable):
         self.groups = groups
 
-
-# By default, random slope and intercept are assumed to not be correlated?
-class CorrelatedRandomSlopeAndIntercept(RandomEffect):
-    groups: AbstractVariable  # Each group can have a different random intercept
-    iv: AbstractVariable  # Each group in groups is allowed to have a different slope along iv (random slope)
-
+class CorrelatedRandomSlopeAndIntercept():
+    random_slope: RandomSlope
+    random_intercept: RandomIntercept
+    
     def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable):
-        self.groups = groups
-        self.iv = iv
+        self.random_slope = RandomSlope(iv=iv, groups=groups)
+        self.random_intercept = RandomIntercept(groups=groups)
 
-
-class UncorrelatedRandomSlopeAndIntercept(RandomEffect):
-    groups: AbstractVariable  # Each group can have a different random intercept
-    iv: AbstractVariable  # Each group in groups is allowed to have a different slope along iv (random slope)
-
+# Each group can have a different random intercept
+# Each group in groups is allowed to have a different slope along iv (random slope)
+class UncorrelatedRandomSlopeAndIntercept():
+    random_slope: RandomSlope
+    random_intercept: RandomIntercept
+    
     def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable):
-        self.groups = groups
-        self.iv = iv
+        self.random_slope = RandomSlope(iv=iv, groups=groups)
+        self.random_intercept = RandomIntercept(groups=groups)
+
+def correlate_random_slope_and_intercept(random_slope: RandomSlope, random_intercept: RandomIntercept) -> CorrelatedRandomSlopeAndIntercept: 
+    iv = random_slope.iv
+    assert(random_slope.groups == random_intercept.groups) # Assert that tha random slope and intercept pertain to the same groups
+    groups = random_slope.groups 
+    return CorrelatedRandomSlopeAndIntercept(iv=iv, groups=groups)
+
+def uncorrelate_random_slope_and_intercept(random_slope: RandomSlope, random_intercept: RandomIntercept) -> UncorrelatedRandomSlopeAndIntercept: 
+    iv = random_slope.iv
+    assert(random_slope.groups == random_intercept.groups) # Assert that tha random slope and intercept pertain to the same groups
+    groups = random_slope.groups 
+    return UncorrelatedRandomSlopeAndIntercept(iv=iv, groups=groups)

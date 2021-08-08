@@ -37,7 +37,7 @@ class AbstractVariable:
         variable.relationships.append(assoc_relat)
 
     # @param moderator contains variables that moderates the effect of self on @param on variable
-    def moderate(
+    def moderates(
         self,
         moderator: typing.Union["AbstractVariable", List["AbstractVariable"]],
         on: "AbstractVariable",
