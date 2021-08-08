@@ -482,8 +482,32 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
 
         moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
         self.assertEqual(len(moderates), 1)
-        interactions = filter_interactions_involving_variables(variables=[m0, m1, m2], interaction_names=moderates)
+        selected_main_effects = [m0, m1]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
         self.assertEqual(len(interactions), 1)
+    
+    def test_filter_interactions_involving_variables_two_variables_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1, m2], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        selected_main_effects = [m0, m1, m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 1)
+        ixn = interactions.pop() 
+        self.assertTrue("Measure 0" in ixn)
+        self.assertTrue("Measure 1" in ixn)
+        self.assertTrue("Measure 2" in ixn)
 
     def test_filter_interactions_involving_variables_only_one_variable_found(self): 
         u0 = ts.Unit("Unit")
@@ -500,7 +524,8 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
 
         moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
         self.assertEqual(len(moderates), 1)
-        interactions = filter_interactions_involving_variables(variables=[m0, m2], interaction_names=moderates)
+        selected_main_effects = [m0, m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
         self.assertEqual(len(interactions), 0)
     
     def test_filter_interactions_involving_variables_none_found(self): 
@@ -518,6 +543,50 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
 
         moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
         self.assertEqual(len(moderates), 1)
-        interactions = filter_interactions_involving_variables(variables=[m2], interaction_names=moderates)
+        selected_main_effects = [m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
         self.assertEqual(len(interactions), 0)
         
+    def test_filter_interactions_involving_variables_multiple_interactions_all_included(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        m3 = u0.numeric("Measure 3")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1, m2], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        m3.moderates(moderator=[m0], on=dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 2)
+        selected_main_effects = [m0, m1, m2, m3]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 2)
+        self.assertIn("Measure 0*Measure 1*Measure 2", interactions)
+        self.assertIn("Measure 3*Measure 0", interactions)
+ 
+    def test_filter_interactions_involving_variables_multiple_interactions_excluded(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        m3 = u0.numeric("Measure 3")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1, m2], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        m3.moderates(moderator=[m0], on=dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 2)
+        selected_main_effects = [m0, m1, m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 1)
