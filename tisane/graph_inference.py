@@ -2,6 +2,7 @@
 Inferring model effects structures from the graph IR
 """
 
+from abc import abstractmethod
 from tisane import variable
 from tisane.variable import AbstractVariable, Has, Moderates, NumberValue
 from tisane.random_effects import RandomSlope, RandomIntercept
@@ -262,16 +263,15 @@ def find_interactions_for_main_effects(variables: List[AbstractVariable]):
     pass
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_interaction_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
+def infer_interaction_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable]) -> Set[AbstractVariable]:
     interaction_candidates = set() 
 
     ivs = query.ivs
     dv = query.dv
     interactions = find_moderates_edges_on_variable(gr=gr, on=dv) # Find all possible interactions
-    interactions = filter_interactions_involving_variables(variables=ivs, interaction_names=interactions) # Filter to interactions involving two or more ivs
+    interactions = filter_interactions_involving_variables(variables=main_effects, interaction_names=interactions) # Filter to interactions involving two or more ivs
     interactions_variables = cast_to_variables(names=interactions, variables=gr.get_variables())
     interaction_candidates = interaction_candidates.union(interactions_variables)
-
     return interaction_candidates
 
 def construct_random_effects_for_repeated_measures(gr: Graph, query: Design): 
@@ -350,7 +350,7 @@ def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variable
     return random_effects
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_random_effects(gr: Graph):
+def infer_random_effects(gr: Graph, main_effects: List[AbstractVariable]): 
     pass
 
 def gnerate_all_model_candidates(gr: Graph, query: Design): 

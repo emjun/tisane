@@ -211,57 +211,60 @@ class EffectsInferenceTest(unittest.TestCase):
         self.assertIn(m0, main_effects)
         self.assertIn(m1, main_effects)
 
-    # def test_interaction_moderates_one_variable(self):
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_interaction_moderates_one_variable(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     m2.moderate(moderator=m1, on=dv)
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.moderates(moderator=m1, on=dv)
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1]) # omit m2
+        design = ts.Design(dv=dv, ivs=[m0, m1]) # omit m2
 
-    #     gr = design.graph
+        gr = design.graph
 
-    #     interaction_effects = infer_interaction_effects(gr, design)
-    #     self.assertEqual(len(interaction_effects), 0)
+        main_effects = [m0, m1]
+        interaction_effects = infer_interaction_effects(gr, design, main_effects)
+        self.assertEqual(len(interaction_effects), 0)
 
-    #     self.assertEqual(len(m2.relationships), 2)
-    #     ixn = None
-    #     for r in m2.relationships:
-    #         if isinstance(r, Moderates):
-    #             ixn = r
-    #     self.assertIsNotNone(ixn)
-    #     self.assertNotIn(ixn, interaction_effects)
+        self.assertEqual(len(m2.relationships), 2)
+        ixn = None
+        for r in m2.relationships:
+            if isinstance(r, Moderates):
+                ixn = r
+        self.assertIsNotNone(ixn)
 
-    # def test_interaction_moderates_two_variables(self):
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     dv = u0.numeric("Dependent variable")
+    def test_interaction_moderates_two_variables(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     m2.moderate(moderator=m1, on=dv)
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.moderates(moderator=m1, on=dv)
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
 
-    #     gr = design.graph
+        gr = design.graph
 
-    #     interaction_effects = infer_interaction_effects(gr, design)
-    #     self.assertEqual(len(interaction_effects), 1)
+        main_effects = [m0, m1, m2]
+        interaction_effects = infer_interaction_effects(gr, design, main_effects)
+        self.assertEqual(len(interaction_effects), 1)
+        var = interaction_effects.pop()
 
-    #     self.assertEqual(len(m2.relationships), 2)
-    #     ixn = None
-    #     for r in m2.relationships:
-    #         if isinstance(r, Moderates):
-    #             ixn = r
-    #     self.assertIsNotNone(ixn)
-    #     self.assertIn(ixn, interaction_effects)
+        self.assertEqual(len(m2.relationships), 2)
+        ixn = None
+        for r in m2.relationships:
+            if isinstance(r, Moderates):
+                ixn = r
+        self.assertIsNotNone(ixn)
+        for x in ixn.moderator: 
+            self.assertIn(x.name, var.name)
 
     # def test_random_repeats(self):
     #     u0 = ts.Unit("Unit")

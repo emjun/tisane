@@ -21,27 +21,25 @@ lost.
 
 # Load data
 
-df = pd.read_csv("./examples/data/ccwa_mlm_data.csv")
+df = pd.read_csv("./exercise_groups.csv")
 
 # Observed variables
-group = ts.Nominal("group", cardinality=40)  # 40 groups
-member = ts.Nominal("member", cardinality=386)  # 386 participants
-treatment = ts.Nominal("treatment", cardinality=2)  # 2 treatment groups
-motivation = ts.Ordinal(
-    "motivation", order=[1, 2, 3, 4, 5, 6]
-)  # Motivation score on a 6-point scale
-pounds_lost = ts.Numeric("pounds_lost")
+adult = ts.Unit("member", cardinality=386) # 386 adults
+# Each adult has a value for motivation, which is ordinal 
+motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
+pounds_lost = adult.numeric("pounds_lost")
+group = ts.Unit("group", cardinality=40)  # 40 groups
+# Each group has one of two approaches to weight loss they promote
+# Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity. 
+treatment_approach = group.nominal("treatment", cardinality=2, number_of_instances=1) # 2 approaches to weight loss ("Control" and "Treatment")
 
 # Conceptual relationships between the observed variables
-motivation.cause(pounds_lost)
-treatment.causes(pounds_lost)
+motivation_level.cause(pounds_lost)
+treatment_approach.causes(pounds_lost)
 
-# Data measurement relationships between the observed variables
-treatment.treats(
-    group, num_assignments=1
-)  # Each group receives one treatment condition
-member.nests_under(group)  # Members are part of groups
-member.has(motivation)  # Each member has motivation (self-motivation)
+# Data measurement relationships 
+# Declare nesting relationship
+adult.nests_with(group)  # Members are part of groups
 
 # Query Tisane to infer a statistical model and generate a script
 design = ts.Design(dv=pounds_lost, ivs=[treatment, motivation]).assign_data(

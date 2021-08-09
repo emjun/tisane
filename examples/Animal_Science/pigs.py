@@ -5,7 +5,7 @@ df = pd.read_csv("./examples/data/dietox.csv")
 
 ## Initialize variables with data
 # Bind measures to units at the time of declaration
-week = ts.Setup("Time", data=df["time"])
+week = ts.Setup("Time", data=df["time"], cardinality=12)
 pig = ts.Unit("Pig", data=df["pig id"])
 litter = ts.Unit("Litter", data=df["litter"])
 # Each pig has 1 instance of an ordinal Evit measure
