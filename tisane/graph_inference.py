@@ -270,7 +270,7 @@ def infer_interaction_effects(gr: Graph, query: Design) -> Set[AbstractVariable]
 
     return interaction_candidates
 
-def get_random_effects_for_repeated_measures(gr: Graph, query: Design): 
+def construct_random_effects_for_repeated_measures(gr: Graph, query: Design): 
     random_effects = set() 
     # Get dv's unit
     dv = query.dv
@@ -279,7 +279,7 @@ def get_random_effects_for_repeated_measures(gr: Graph, query: Design):
     if gr.has_edge(start=dv_unit, end=dv, edge_type="has"): 
         (n0, n1, edge_data) = gr.get_edge(start=dv_unit, end=dv, edge_type="has")
         edge_obj = edge_data["edge_obj"]
-        assert(isinstance(edge_obj), Has)
+        assert(isinstance(edge_obj, Has))
         assert(edge_obj.variable == dv_unit)
         assert(edge_obj.measure == dv)
         # How many repeated measures are there? 
@@ -289,10 +289,6 @@ def get_random_effects_for_repeated_measures(gr: Graph, query: Design):
             # Add a random intercept for the unit U 
             ri = RandomIntercept(groups=dv_unit)
             random_effects.add(ri)
-    elif gr.has_edge(start=dv_unit, end=dv, edge_type="repeats"): 
-        (n0, n1, edge_data) = gr.get_edge(start=dv_unit, end=dv, edge_type="repeats")
-        import pdb; pdb.set_trace()  # Check what edge is (type, data)
-        repeats_obj = edge_data["edge_obj"]
         
     return random_effects
 

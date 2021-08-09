@@ -3,6 +3,7 @@ Tests helper functions used to infer model effects structures
 NOTE: The tests are only to test, not to make any statements about how these variables relate in the real world
 """
 
+from tisane.random_effects import RandomIntercept
 import tisane as ts
 from tisane import graph_inference
 from tisane.graph_inference import (
@@ -15,7 +16,9 @@ from tisane.graph_inference import (
     find_all_associates_that_causes_or_associates_another,
     find_variable_parent_that_causes_or_associates_another,
     find_all_parents_that_causes_or_associates_another,
-    find_moderates_edges_on_variable
+    find_moderates_edges_on_variable,
+    # construct_random_effects_for_nests,
+    construct_random_effects_for_repeated_measures
 )
 from tisane.variable import (
     AbstractVariable,
@@ -590,3 +593,55 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         selected_main_effects = [m0, m1, m2]
         interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
         self.assertEqual(len(interactions), 1)
+
+    def test_construct_random_effects_for_repeated_measures_no_nesting(self): 
+        u0 = ts.Unit("Unit")
+        s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) # e.g., 10 weeks
+        m0 = u0.numeric("Measure 0")
+        dv = u0.numeric("Dependent variable", number_of_instances=s0) # repeated measure
+
+        m0.causes(dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        random_effects = construct_random_effects_for_repeated_measures(gr=gr, query=design)
+        self.assertEqual(len(random_effects), 1)
+        ri = random_effects.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIsInstance(ri.groups, ts.Unit)
+        self.assertIs(ri.groups, u0)
+
+    def test_construct_random_effects_does_not_construct(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        random_from_repeats = construct_random_effects_for_repeated_measures(gr=gr, query=design)
+        self.assertEqual(len(random_from_repeats), 0)
+
+        # random_from_nests = construct_random_effects_for_nests(gr=gr, query=design)
+    
+    # def test_construct_random_effects_for_nests_no_measures_for_one_unit(self): 
+    #     u0 = ts.Unit("Unit")
+    #     u1 = ts.Unit("Unit")
+    #     m0 = u0.numeric("Measure 0")
+    #     m1 = u0.numeric("Measure 1")
+    #     m2 = u0.numeric("Measure 2")
+    #     m3 = u0.numeric("Measure 3")
+    #     dv = u0.numeric("Dependent variable")
+
+    #     m0.causes(dv)
+    #     m1.causes(dv)
+    #     u0.nests_within(u1)
+        
+        
+    #     design = ts.Design(dv=dv, ivs=[m0])
+    #     gr = design.graph

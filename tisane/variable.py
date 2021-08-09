@@ -73,21 +73,24 @@ Class for SetUp (experiment's environment) settings
 class SetUp(AbstractVariable):
     variable: "Measure"
 
-    def __init__(self, name: str, data=None, **kwargs):
+    def __init__(self, name: str, order: List=None, cardinality: int=None, data=None, **kwargs):
         super(SetUp, self).__init__(name, data)
 
         # If there is an order of values provided
-        if "order" in kwargs.keys():
-            if "cardinality" in kwargs.keys():
+        if order is not None:
+            if cardinality is not None: 
                 self.variable = Ordinal(
-                    name, order=kwargs["order"], cardinality=kwargs["cardinality"]
+                    name, order=order, cardinality=cardinality, data=data
                 )
-            else:
-                self.variable = Ordinal(name, kwargs["order"])
-        elif "cardinality" in kwargs.keys():
-            self.variable = Nominal(name, data, cardinality=kwargs["cardinality"])
-        else:
-            self.variable = Numeric(name, data)
+            else: 
+                self.variable = Ordinal(
+                    name, order=order, data=data
+                )
+        else: 
+            if cardinality is not None: 
+                self.variable = Nominal(name, data=data, cardinality=cardinality)
+            else: 
+                self.variable = Numeric(name, data)
 
     def get_cardinality(self):
         return self.variable.get_cardinality()
@@ -272,6 +275,7 @@ class Ordinal(Measure):
         # Order must be provided
         self.ordered_cat = order
         num_categories = len(self.ordered_cat)
+        self.cardinality = num_categories
         if num_categories == 1:
             pass
             # self.assert_property(prop="cardinality", val="unary")
