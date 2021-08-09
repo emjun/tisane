@@ -11,7 +11,7 @@ For all API examples, add comment for what the line of code means in plain Engli
 --- 
 
 ## Simple linear model without any clustering
-Source: This example comes from [1]. 
+Source: This example comes from [3]. 
 
 ### Authoring a simple model with only main effects
 This is an example "in which physical endurance of n = 245 adults is predicted form their age and the number of years of vigorous physical exercise in which they have engaged." Each adult has an _age_, a number of years of physical _exercise_, and a number of minutes of sustained jogging on a treadmill (a proxy for _endurance_) at the time of this study.
@@ -27,16 +27,16 @@ df = pd.read_csv("./exercise_simple.csv")
 # The researchers observe participants/cases (observational unit). 
 pid = ts.Unit("case", cardinality=245) # pid is an observational unit. There are 245 adults.
 
-# Each pid (cause/adult) has an age value, which is numeric.
+# Each pid (cause/adult) has an age measure, which is numeric.
 # Verbose: Each instance of pid has one instance of a numeric variable age.
 # Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity. 
 age = pid.numeric("age", number_of_instances=1)  # participant age
 
-# Each pid has an exercise value, which is numeric .
+# Each pid has an exercise measure, which is numeric .
 # Verbose: Each instance of pid has one instance of a numeric variable exercise. 
 exercise = pid.numeric("exercise")  # years of vigorous physical exercise
 
-# Each pid has an endurance value, which is numeric. 
+# Each pid has an endurance measure, which is numeric. 
 # Verbose: Each instance of pid has one instance of a numeric variable endurance. 
 endurance = pid.numeric("endurance") # number of minutes of sustained jogging on a treadmill
     
@@ -59,12 +59,12 @@ age.moderates(moderator=[exercise], on=endurance)
 ```
 > Maybe we should rename "moderator" parameter to simply "variables"? 
 
-> Should we also ensure that age.moderates(moderator=[exercise], on=endurance) is equivalent to exercise.moderates(moderator=[age], on=endurance)? In the current implementation, these two statements are treated as two different conceptual relationships (different node and edges), but they are statistically equivalent. The same interaction effect (i.e., age*exercise) is included in the statistical model. 
+> FEEDBACK REQUESTED: Should we also ensure that age.moderates(moderator=[exercise], on=endurance) is equivalent to exercise.moderates(moderator=[age], on=endurance)? In the current implementation, these two statements are treated as two different conceptual relationships (different node and edges), but they are statistically equivalent. The same interaction effect (i.e., age*exercise) is included in the statistical model. 
 
 --- 
 
 ## Nested/hierarchical data
-Source: This example comes from [1]. 
+Source: This example comes from [3]. 
 
 Consider another health dataset where adults participate in exercise groups that promote different approaches to weight loss. Researchers are interested in understanding how motivation and group approaches affect weight loss. Researchers observe that individuals nested within the same group tend to cluster together: 
 
@@ -87,20 +87,19 @@ df = pd.read_csv("./exercise_groups.csv")
 ## Declare observed variables
 # Researchers observe adults/members as the observational unit.
 adult = ts.Unit("member", cardinality=386) # 386 adults
-# Each adult has a value for motivation, which is ordinal 
 
 # Each adult has a motivation level value, which is ordinal.
 # Verbose: Each instance of adult has one instance of an ordinal variable motivation level. 
 motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
 
-# Each adult has a pounds lost value, which is numeric 
+# Each adult has a pounds lost measure, which is numeric 
 # Verbose: Each instance of adult has one instance of a numeric variable pounds lost. 
 pounds_lost = adult.numeric("pounds_lost")
 
 # Researchers treat groups of adults. In other words, groups are an experimental unit. 
 group = ts.Unit("group", cardinality=40)  # 40 groups
 # Each group has one of two weight loss treatment approaches, which is nominal. 
-# Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity. 
+# Note: By default, number_of_instances equals 1. The parameter measure is explicitly set below for clarity. 
 treatment_approach = group.nominal("treatment", cardinality=2, number_of_instances=1) # 2 choices of approach: "Control" and "Treatment"
 
 ## Declare conceptual relationships between the observed variables
@@ -123,7 +122,7 @@ ts.infer_statistical_model_from_design(design=design)
 --- 
 
 ## Repeated measures 
-So far, we have considered examples in which each observational unit is measured once. However, it is common to collect data at multiple time points (e.g., longitudinal study). Consider the next example from a research article on pig growth over time due to feed nutrition [4]. 
+So far, we have considered examples in which each observational unit is measured once. However, it is common to collect data at multiple time points (e.g., longitudinal study). Consider the next example from a research article on pig growth over time due to feed nutrition [6]. 
 
 Researchers tracked 82 pigs for 12 weeks. Each pig received one of three levels of vitamin E and one of three levels of copper. 
 ```
@@ -137,20 +136,20 @@ week = ts.SetUp("Week", cardinality=12)
 ## Declare observed variables
 # Researchers treat pigs as the experimental unit.
 pig = ts.Unit("Pig", cardinality=82)
-# Each pig has a vitamin E value, which is ordinal.
+# Each pig has a vitamin E measure, which is ordinal.
 # Verbose: Each instance of pig has one instance of an ordinal variable vitamin E level. 
 # Informally: Each pig receives a specific amount of vitamin E. 
-# Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity. Note: 
+# Note: By default, number_of_instances equals 1. The parameter measure is explicitly set below for clarity. Note: 
 vitamin_e = pig.ordinal("Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1)
 
-# Each pig has a copper value, which is ordinal.
+# Each pig has a copper measure, which is ordinal.
 # Verbose: Each instance of pig has one instance of an ordinal variable copper level. 
 # Informally: Each pig receives a specific amount of copper. 
 # Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity. 
 copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
 
 # Repeated measure
-# Each pig has a weight value, which is numeric, for each value of week. 
+# Each pig has a weight measure, which is numeric, for each value of week. 
 # Verbose: Each instance of pig has one instance of a numeric variable weight for each value of week. 
 weight = pig.numeric("Weight", number_of_instances=week) 
 
@@ -166,8 +165,8 @@ ts.infer_statistical_model_from_design(design=design)
 
 --- 
 
-## Nesting + Repeated measures 
-Source: This example comes from [4]. 
+## Nested + Repeated measures 
+Source: This example comes from [6]. 
 
 What if we have nested/hierarchical data AND repeated measures? We can express BOTH in a Tisane program, and Tisane will handle both!
 
@@ -218,35 +217,70 @@ ts.infer_statistical_model_from_design(design=design)
 --- 
 
 ## Non-nesting 
-NOTE: I feel least certain about this API. 
-Note: These non-nesting settings require
+GLMMs are useful for analyzing non-nested data where multiple ways to group the observations are justifiable. For example, study participants may be grouped by age, location, and occupation. As another example, experimental results may be examined by participant, condition, or stimulus. Gelman and Hill provide examples of both. Barr et al.'s recommendations for maximal mixed effects structures use the latter as a motivating example [1, 2]. Below, we will draw on Barr et al.'s example from [1]. 
 
-Source: This example comes from [2]. 
+Barr et al. describe a ``hypothetical lexical decision experiment, [where] subjects see strings of letters and have to decide whether or not each string forms an English word, while their response times are measured. Each subject is exposed to two types of words, forming condition A and condition B of the experiment. The words in one condition differ from those in the other condition on some intrinsic categorical dimension (e.g., syntactic class), comprising a word-type manipulation that is within-subjects and between-items. The question is whether reaction times are systematically different between condition A and condition B.'
 
-Non-nested occur because there are multiple ways to divide the observations. Two ways this happens is when there are multiple categorizing values. For example, <social science example>. 
-Another example, which may at first seem a bit unexpected is looking at trial vs. participant perspectives, which, as Barr et al. describe, is common in linguistics []. For example….
-This is also similar to the motivating example in Barr et al. [] and []. 
+```
+## Load data 
+df = pd.read_csv("./linguistics.csv") 
 
-Node: Cannot account for lower level than level of DV in a GLM
+## Declare observed variables
+# Subjects are an experimental unit. 
+subject = ts.Unit("Subject")
 
-## Edge cases 
-Models with only random effects
+# Words are also an experimental/observational unit. 
+word = ts.Unit("Word")
+
+# Each subject has a two values for condition, which is nominal.
+# Verbose: Each instance of subject has two instances of a nominal variable condition. 
+# Informally: Each subjects sees two (both) conditions. 
+condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+
+# Repeated measures
+# Each subject has a measure reaction time, which is numeric, for each instance of a word
+# Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word. 
+# Informally: Each subject has a reaction time for each word.
+reaction_time = subject.numeric("Time", number_of_instances=word) 
+
+# Each word has one value for condition (already defined above as a measure of subject)
+word.has(condition, number_of_instances=1) # Condition has two units
+
+## Query relatioships to infer a statistical model and generate a script
+design = ts.Design(dv=reaction_time, ivs=[condition]).assign_data(df)
+ts.infer_statistical_model_from_design(design=design)
+```
+
+> FEEDBACK REQUESTED: The primary limitation/wrinkle in the graph specification language is that it works really well when a measure (i.e., condition) only belongs to one unit (e.g., subject). However, it is difficult when the measure could be used to parition the data in multiple different ways, i.e., according to subject vs. according to word vs. according to condition.  On one hand, it's okay that the language is a bit clunky for non-nesting relationships because they tend to be less common. On the other hand, this edge case may suggest that our language primitives, specifically declaring measures through unit interfaces (e.g., subject.numeric) isn't quite right. 
+
+--- 
 
 ## Limitations 
+In the non-nested case, choosing between main effects or random effects for multiple grouping variables (e.g., age, location, occupation) pertains to assumptions about variance and clustering analysts are willing to make as well as the specific research question an analyst wants to answer (perhaps?). Adding the grouping variables as main effects assumes independence of variance. Adding the grouping variables as random effects assumes non-independence of variance. Picking between these (and other) alternatives seems like a well defined and scoped question to explore during model revision. 
+> FEEDBACK REQUESTED: Given the above, is it reasonable to not tackle this particular example in Tisane right now? And argue for out of scope in the paper? 
+
+--- 
+
+## Edge cases 
+Currently, a query must specify at least one independent variable. This means that it is not possible to author a GLMM without at least one main effect or interaction effect. My main motivation for this is that analysts typically have a specific main or interaction effect of interest when authoring linear models. At the same time, it would be relatively easy to add this functionality to increase expressivity. 
+> FEEDBACK REQUESTED: Which edge cases do you think we should make sure to address/make possible? How do you think about central vs. edge case in GLMMs?
+
+--- 
 
 ## STILL IN PROGRESS: 
-I re-implemented the candidate model generation procedure to no longer rely on any SMT. I am still in the progress of adding graph inference rules for generating random effects for interactions following Barr's updated recommendations []. 
+I re-implemented the candidate model generation procedure to no longer rely on any SMT. I am still in the progress of adding graph inference rules for generating random effects for interactions following Barr's updated recommendations [2]. 
 
-## QUESTIONS: 
-1. For constructing queries, should we rename ``ts.Design`` to ``ts.Query`` so that it's clear that the analyst is authoring a query? 
+> FEEDBACK REQUESTED: For constructing queries, should we rename ``ts.Design`` to ``ts.Query`` so that it's clear that the analyst is authoring a query? 
 
 
 --- 
 
 ## References 
-Gelman and Hill provide an overview of GLMMs and related methods [2]. Kreft and De Leeuw discuss the usage of GLMMs with nested, or hierarchical data, in education research [3]. Cohen, Cohen, West, and Aiken provide overview of key principles and modeling basics [1].
+Gelman and Hill provide an overview of GLMMs and related methods [4]. Kreft and De Leeuw discuss the usage of GLMMs with nested, or hierarchical data, in education research [5]. Cohen, Cohen, West, and Aiken provide overview of key principles and modeling basics [3].
 
-1. Cohen, P., West, S. G., & Aiken, L. S. (2014). Applied multiple regression/correlation analysis for the behavioral sciences. Psychology press.
-2. Gelman, A., & Hill, J. (2006). Data analysis using regression and multilevel/hierarchical models. Cambridge university press.
-3. Kreft, I. G., Kreft, I., & de Leeuw, J. (1998). Introducing multilevel modeling. Sage.
-4. Lauridsen, C., Højsgaard, S.,Sørensen, M.T. C. (1999) Influence of Dietary Rapeseed Oli, Vitamin E, and Copper on Performance and Antioxidant and Oxidative Status of Pigs. J. Anim. Sci.77:906-916 
+1. Barr, D. J. (2013). Random effects structure for testing interactions in linear mixed-effects models. Frontiers in psychology, 4, 328.
+2. Barr, D. J., Levy, R., Scheepers, C., & Tily, H. J. (2013). Random effects structure for confirmatory hypothesis testing: Keep it maximal. Journal of memory and language, 68(3), 255-278.
+3. Cohen, P., West, S. G., & Aiken, L. S. (2014). Applied multiple regression/correlation analysis for the behavioral sciences. Psychology press.
+4. Gelman, A., & Hill, J. (2006). Data analysis using regression and multilevel/hierarchical models. Cambridge university press.
+5. Kreft, I. G., Kreft, I., & de Leeuw, J. (1998). Introducing multilevel modeling. Sage.
+6. Lauridsen, C., Højsgaard, S.,Sørensen, M.T. C. (1999) Influence of Dietary Rapeseed Oli, Vitamin E, and Copper on Performance and Antioxidant and Oxidative Status of Pigs. J. Anim. Sci.77:906-916 
