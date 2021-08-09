@@ -8,6 +8,7 @@ import tisane as ts
 from tisane import graph_inference
 from tisane.graph_inference import (
     cast_to_variables,
+    construct_random_effects_for_nests,
     filter_interactions_involving_variables,
     find_common_ancestors,
     find_variable_causal_ancestors,
@@ -18,6 +19,7 @@ from tisane.graph_inference import (
     find_all_parents_that_causes_or_associates_another,
     find_moderates_edges_on_variable,
     # construct_random_effects_for_nests,
+    find_ordered_list_of_units,
     construct_random_effects_for_repeated_measures
 )
 from tisane.variable import (
@@ -629,19 +631,133 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
 
         # random_from_nests = construct_random_effects_for_nests(gr=gr, query=design)
     
-    # def test_construct_random_effects_for_nests_no_measures_for_one_unit(self): 
-    #     u0 = ts.Unit("Unit")
-    #     u1 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     m2 = u0.numeric("Measure 2")
-    #     m3 = u0.numeric("Measure 3")
-    #     dv = u0.numeric("Dependent variable")
+    def test_find_ordered_list_units_one_unit(self): 
+        u0 = ts.Unit("Unit 0")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.causes(dv)
-    #     m1.causes(dv)
-    #     u0.nests_within(u1)
+        u0.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[u0])
+        gr = design.graph
+
+        ordered_units = find_ordered_list_of_units(gr=gr)
+        self.assertEqual(len(ordered_units), len(design.ivs))
+        self.assertIn(u0.name, ordered_units)
+
+    def test_find_ordered_list_units_multiple_units(self): 
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        u2 = ts.Unit("Unit 2")
+        dv = u0.numeric("Dependent variable")
+
+        u0.nests_within(u1)
+        u1.nests_within(u2)
+
+        design = ts.Design(dv=dv, ivs=[u0, u1, u2])
+        gr = design.graph
+
+        ordered_units = find_ordered_list_of_units(gr=gr)
+        self.assertEqual(len(ordered_units), len(design.ivs))
         
+    def test_construct_random_effects_for_nests_none_one_unit(self): 
+        u0 = ts.Unit("Unit 0")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 0)
+
+    def test_construct_random_effects_for_nests_for_two_units_excludes_lower_unit(self): 
+        
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        m0 = u1.numeric("Measure 0")
+        m1 = u1.numeric("Measure 1")
+        m2 = u1.numeric("Measure 2")
+        dv = u1.numeric("Dependent variable") # because u1 has dv, this analysis effectively becomes a single unit analysis
+
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.causes(dv)
+        u0.nests_within(u1)
+        
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        random_effects = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_effects), 0) # There are no random effects because this analysis is focused on u0 main effects
+
+    def test_construct_random_effects_for_nests_two_units_no_measures_for_higher_unit(self): 
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        u0.nests_within(u1)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 1)
+        ri = random_from_nests.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIs(ri.groups, u1)
+
+    def test_construct_random_effects_for_nests_two_units_measures_for_both(self): 
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u1.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        u0.nests_within(u1)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 1)
+        ri = random_from_nests.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIs(ri.groups, u1)
+        
+    def test_construct_random_effects_for_nests_for_three_units_measures_for_lower_two(self): 
+        # e.g., students within schools within districts
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        u2 = ts.Unit("Unit 2")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u1.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        u0.nests_within(u1)
+        u1.nests_within(u2)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 2)
+
+    # def test_construct_random_effects_for_nests_analysis_excludes_upper_level(self): 
+    #     pass
         
     #     design = ts.Design(dv=dv, ivs=[m0])
     #     gr = design.graph

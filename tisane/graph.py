@@ -127,7 +127,7 @@ class Graph(object):
                 edge_obj=edge_obj,
                 repetitions=repetitions,
             )
-        elif edge_type == "nest":
+        elif edge_type == "nests":
             self._graph.add_edge(
                 start_node[0],
                 end_node[0],
@@ -508,14 +508,14 @@ class Graph(object):
                 start=treatment, end=unit, edge_type="treat", edge_obj=treatment_obj
             )
 
-    # Add a 'nest' edge to the graph
+    # Add a 'nests' edge to the graph
     def nests(self, base: Unit, group: Unit, nests_obj: Nests = None):
         # Is this edge new?
-        if not self.has_edge(start=base, end=group, edge_type="nest"):
+        if not self.has_edge(start=base, end=group, edge_type="nests"):
             # Mark as identifiers
             self._add_variable(base, is_identifier=True)
             self._add_variable(group, is_identifier=True)
-            self._add_edge(start=base, end=group, edge_type="nest", edge_obj=nests_obj)
+            self._add_edge(start=base, end=group, edge_type="nests", edge_obj=nests_obj)
 
     # Add a 'repeat' edge to the graph
     def repeat(
@@ -559,6 +559,35 @@ class Graph(object):
                 pass
             else:
                 gr._graph.remove_edge(n0, n1)
+
+        return gr
+
+    # @returns sub-graph containing only NESTS edges 
+    def get_nesting_subgraph(self): 
+        gr = copy.deepcopy(self)
+        nodes_to_remove = set()
+
+        edges = self.get_edges() 
+        for (n0, n1, edge_data) in edges:
+            edge_type = edge_data["edge_type"]
+            if edge_type == "nests":
+                edge_obj = edge_data["edge_obj"]
+                assert(isinstance(edge_obj, Nests))
+            else:
+                gr._graph.remove_edge(n0, n1)
+                n0_var = gr.get_variable(n0)
+                n1_var = gr.get_variable(n1)
+                # If all the edges have been removed from a node, remove the node from the graph 
+                # but make sure not to prematurely remove Units
+                if len(gr._graph.edges(n0)) == 0 and not isinstance(n0_var, Unit): 
+                    # gr._graph.remove_node(n0)
+                    nodes_to_remove.add(n0)
+                if len(gr._graph.edges(n1)) == 0 and not isinstance(n1_var, Unit): 
+                    # gr._graph.remove_node(n1)
+                    nodes_to_remove.add(n1)
+        
+        for n in nodes_to_remove: 
+            gr._graph.remove_node(n)
 
         return gr
 
