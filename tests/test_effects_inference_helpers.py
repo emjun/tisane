@@ -3,10 +3,13 @@ Tests helper functions used to infer model effects structures
 NOTE: The tests are only to test, not to make any statements about how these variables relate in the real world
 """
 
+from tisane.random_effects import RandomIntercept
 import tisane as ts
 from tisane import graph_inference
 from tisane.graph_inference import (
     cast_to_variables,
+    construct_random_effects_for_nests,
+    filter_interactions_involving_variables,
     find_common_ancestors,
     find_variable_causal_ancestors,
     find_all_causal_ancestors,
@@ -14,6 +17,10 @@ from tisane.graph_inference import (
     find_all_associates_that_causes_or_associates_another,
     find_variable_parent_that_causes_or_associates_another,
     find_all_parents_that_causes_or_associates_another,
+    find_moderates_edges_on_variable,
+    # construct_random_effects_for_nests,
+    find_ordered_list_of_units,
+    construct_random_effects_for_repeated_measures
 )
 from tisane.variable import (
     AbstractVariable,
@@ -422,3 +429,335 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self.assertEqual(len(parent_associates_with_dv), 2)
         self.assertIn(m1, parent_associates_with_dv)
         self.assertIn(m2, parent_associates_with_dv)
+
+    def test_find_moderates_on_dv(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.moderates(moderator=[m0], on=dv) 
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        ixn = moderates.pop()
+        self.assertIsInstance(ixn, str)
+        self.assertTrue("Measure 0" in ixn)
+        self.assertTrue("Measure 1" in ixn)
+        self.assertTrue("*" in ixn)
+
+    def test_find_moderates_on_dv_interaction_order_agnostic(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        ixn = moderates.pop()
+        self.assertIsInstance(ixn, str)
+        self.assertTrue("Measure 0" in ixn)
+        self.assertTrue("Measure 1" in ixn)
+        self.assertTrue("*" in ixn)
+
+    def test_filter_interactions_involving_variables_both_variables_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        selected_main_effects = [m0, m1]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 1)
+    
+    def test_filter_interactions_involving_variables_two_variables_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1, m2], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        selected_main_effects = [m0, m1, m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 1)
+        ixn = interactions.pop() 
+        self.assertTrue("Measure 0" in ixn)
+        self.assertTrue("Measure 1" in ixn)
+        self.assertTrue("Measure 2" in ixn)
+
+    def test_filter_interactions_involving_variables_only_one_variable_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        selected_main_effects = [m0, m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 0)
+    
+    def test_filter_interactions_involving_variables_none_found(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 1)
+        selected_main_effects = [m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 0)
+        
+    def test_filter_interactions_involving_variables_multiple_interactions_all_included(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        m3 = u0.numeric("Measure 3")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1, m2], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        m3.moderates(moderator=[m0], on=dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 2)
+        selected_main_effects = [m0, m1, m2, m3]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 2)
+        self.assertIn("Measure 0*Measure 1*Measure 2", interactions)
+        self.assertIn("Measure 3*Measure 0", interactions)
+ 
+    def test_filter_interactions_involving_variables_multiple_interactions_excluded(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        m3 = u0.numeric("Measure 3")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m0.moderates(moderator=[m1, m2], on=dv) # Checks that ts.Design with ivs = m1 also returns same (flips above)
+        m3.moderates(moderator=[m0], on=dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        moderates = find_moderates_edges_on_variable(gr=gr, on=design.dv)
+        self.assertEqual(len(moderates), 2)
+        selected_main_effects = [m0, m1, m2]
+        interactions = filter_interactions_involving_variables(variables=selected_main_effects, interaction_names=moderates)
+        self.assertEqual(len(interactions), 1)
+
+    def test_construct_random_effects_for_repeated_measures_no_nesting(self): 
+        u0 = ts.Unit("Unit")
+        s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]) # e.g., 10 weeks
+        m0 = u0.numeric("Measure 0")
+        dv = u0.numeric("Dependent variable", number_of_instances=s0) # repeated measure
+
+        m0.causes(dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        random_effects = construct_random_effects_for_repeated_measures(gr=gr, query=design)
+        self.assertEqual(len(random_effects), 1)
+        ri = random_effects.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIsInstance(ri.groups, ts.Unit)
+        self.assertIs(ri.groups, u0)
+
+    def test_construct_random_effects_does_not_construct(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        random_from_repeats = construct_random_effects_for_repeated_measures(gr=gr, query=design)
+        self.assertEqual(len(random_from_repeats), 0)
+
+        # random_from_nests = construct_random_effects_for_nests(gr=gr, query=design)
+    
+    def test_find_ordered_list_units_one_unit(self): 
+        u0 = ts.Unit("Unit 0")
+        dv = u0.numeric("Dependent variable")
+
+        u0.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[u0])
+        gr = design.graph
+
+        ordered_units = find_ordered_list_of_units(gr=gr)
+        self.assertEqual(len(ordered_units), len(design.ivs))
+        self.assertIn(u0.name, ordered_units)
+
+    def test_find_ordered_list_units_multiple_units(self): 
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        u2 = ts.Unit("Unit 2")
+        dv = u0.numeric("Dependent variable")
+
+        u0.nests_within(u1)
+        u1.nests_within(u2)
+
+        design = ts.Design(dv=dv, ivs=[u0, u1, u2])
+        gr = design.graph
+
+        ordered_units = find_ordered_list_of_units(gr=gr)
+        self.assertEqual(len(ordered_units), len(design.ivs))
+        
+    def test_construct_random_effects_for_nests_none_one_unit(self): 
+        u0 = ts.Unit("Unit 0")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 0)
+
+    def test_construct_random_effects_for_nests_for_two_units_excludes_lower_unit(self): 
+        
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        m0 = u1.numeric("Measure 0")
+        m1 = u1.numeric("Measure 1")
+        m2 = u1.numeric("Measure 2")
+        dv = u1.numeric("Dependent variable") # because u1 has dv, this analysis effectively becomes a single unit analysis
+
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.causes(dv)
+        u0.nests_within(u1)
+        
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        random_effects = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_effects), 0) # There are no random effects because this analysis is focused on u0 main effects
+
+    def test_construct_random_effects_for_nests_two_units_no_measures_for_higher_unit(self): 
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        u0.nests_within(u1)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 1)
+        ri = random_from_nests.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIs(ri.groups, u1)
+
+    def test_construct_random_effects_for_nests_two_units_measures_for_both(self): 
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u1.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        u0.nests_within(u1)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 1)
+        ri = random_from_nests.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIs(ri.groups, u1)
+        
+    def test_construct_random_effects_for_nests_for_three_units_measures_for_lower_two(self): 
+        # e.g., students within schools within districts
+        u0 = ts.Unit("Unit 0")
+        u1 = ts.Unit("Unit 1")
+        u2 = ts.Unit("Unit 2")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u1.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        u0.nests_within(u1)
+        u1.nests_within(u2)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1, m2])
+        gr = design.graph
+
+        random_from_nests = construct_random_effects_for_nests(gr=gr, dv=design.dv, variables=design.ivs)
+        self.assertEqual(len(random_from_nests), 2)
+
+    # def test_construct_random_effects_for_nests_analysis_excludes_upper_level(self): 
+    #     pass
+        
+    #     design = ts.Design(dv=dv, ivs=[m0])
+    #     gr = design.graph

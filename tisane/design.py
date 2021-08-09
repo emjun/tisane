@@ -125,7 +125,7 @@ class Design(object):
                 unit = g.unit
                 group = g.group
 
-                self.graph.nest(unit=unit, group=group, nest_obj=g)
+                self.graph.nests(unit=unit, group=group, nest_obj=g)
 
             elif isinstance(g, Repeats):
                 unit = g.unit
@@ -292,7 +292,7 @@ class Design(object):
             edge_type = edge_data["edge_type"]
             n0_var = gr.get_variable(n0)
             n1_var = gr.get_variable(n1)
-            if edge_type == "nest":
+            if edge_type == "nests":
                 pass
             elif edge_type == "treat":
                 pass
@@ -317,7 +317,7 @@ class Design(object):
                 edge_type = edge_data["edge_type"]
                 n0_var = gr.get_variable(n0)
                 n1_var = gr.get_variable(n1)
-                if edge_type == "nest":
+                if edge_type == "nests":
                     pass
                 elif edge_type == "treat":
                     pass
@@ -370,7 +370,7 @@ class Design(object):
                     facts.append(Correlate(n0_var.const, n1_var.const))
             elif edge_type == "treat":
                 pass
-            elif edge_type == "nest":
+            elif edge_type == "nests":
                 # TODO: Mixed Effect
                 raise NotImplementedError
             else:
@@ -417,7 +417,7 @@ class Design(object):
             edge_type = edge_data["edge_type"]
             if edge_type == "treat":
                 graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="blue"))
-            elif edge_type == "nest":
+            elif edge_type == "nests":
                 graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="green"))
             else:
                 pass
