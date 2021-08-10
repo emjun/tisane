@@ -50,6 +50,8 @@ Rule A: If two units do not point to the same measure, following the below rules
 
     <!-- Rule 4: For the DV included, get its unit U. If U is nested within another unit, add its parent as a random intercept to the set of random effects. Do this recursively until there are no more nested relationships between units.  -->
 
+    For example, this means that if DV is unit 0 and unit 0 is nested under unit 1, unit 1 is added but unit 0 is not (e.g., test_random_nested in tests_effects_inference.py)
+
 
 Non-nested
 Rule B: If two units point to the same measure, follow the below rules: 

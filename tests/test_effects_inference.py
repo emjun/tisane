@@ -22,6 +22,7 @@ from tisane.variable import (
     AtMost,  # Subclass of NumberValue
     Repeats,
 )
+from tisane.random_effects import RandomIntercept
 import unittest
 
 
@@ -266,36 +267,35 @@ class EffectsInferenceTest(unittest.TestCase):
         for x in ixn.moderator: 
             self.assertIn(x.name, var.name)
 
-    # def test_random_repeats(self):
-    #     u0 = ts.Unit("Unit")
-    #     s0 = ts.SetUp("Time")
-    #     dv = u0.numeric("Dependent variable", number_of_instances=s0)
+    def test_random_repeats(self):
+        u0 = ts.Unit("Unit")
+        s0 = ts.SetUp("Time", order=[1,2,3,4,5])
+        dv = u0.numeric("Dependent variable", number_of_instances=s0)
 
-    #     design = ts.Design(dv=dv, ivs=[s0]) # main effect of Time
+        design = ts.Design(dv=dv, ivs=[s0]) # main effect of Time
+        gr = design.graph
 
-    #     gr = design.graph
+        main_effects = [s0]
+        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
+        self.assertEqual(len(random_effects), 1)
+        ri = random_effects.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIs(ri.groups, u0)
 
-    #     random_effects = infer_random_effects(gr, design)
-    #     self.assertEqual(len(random_effects), 1)
-    #     # TODO: assert that it's some kind of random slope?
-    #     rs = random_effects[0]
-    #     self.assertIsInstance(rs, RandomIntercept)
-    #     self.assertIsInstance(rs.unit, u0)
+    def test_random_nested(self):
+        u0 = ts.Unit("Unit 0")
+        m0 = u0.numeric("Measure 0")
+        u1 = ts.Unit("Unit 1")
+        dv = u0.numeric("Dependent variable")
 
-    # def test_random_nested(self):
-    #     u0 = ts.Unit("Unit 0")
-    #     m0 = u0.numeric("Measure 0")
-    #     u1 = ts.Unit("Unit 1")
+        u0.nests_within(u1)
 
-    #     u0.nests_within(u1)
-
-    #     design = ts.Design(dv=dv, ivs=[m0])
-
-    #     gr = design.graph
-
-    #     random_effects = infer_random_effects(gr, design)
-    #     self.assertEqual(len(random_effects), 1)
-    #     # TODO: assert that it's some kind of random intercept?
-    #     ri = random_effects[0]
-    #     self.assertIsInstance(ri, RandomIntercept)
-    #     self.assertIsInstance(ri.unit, u1)
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+        
+        main_effects = design.ivs
+        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
+        self.assertEqual(len(random_effects), 1)
+        ri = random_effects.pop()
+        self.assertIsInstance(ri, RandomIntercept)
+        self.assertIs(ri.groups, u1)

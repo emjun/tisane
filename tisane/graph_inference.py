@@ -10,6 +10,7 @@ from tisane.graph import Graph
 from tisane.design import Design
 from itertools import chain, combinations
 from typing import Dict, List, Set, Any, Tuple
+import typing # for Union
 import networkx as nx
 
 ##### HELPER #####
@@ -274,7 +275,7 @@ def infer_interaction_effects(gr: Graph, query: Design, main_effects: List[Abstr
     interaction_candidates = interaction_candidates.union(interactions_variables)
     return interaction_candidates
 
-def construct_random_effects_for_repeated_measures(gr: Graph, query: Design): 
+def construct_random_effects_for_repeated_measures(gr: Graph, query: Design) -> Set[RandomIntercept]: 
     random_effects = set() 
     # Get dv's unit
     dv = query.dv
@@ -292,9 +293,24 @@ def construct_random_effects_for_repeated_measures(gr: Graph, query: Design):
         if edge_obj.repetitions.is_greater_than_one(): 
             # Add a random intercept for the unit U 
             ri = RandomIntercept(groups=dv_unit)
-            random_effects.add(ri)
-        
+            random_effects.add(ri)  
+
     return random_effects
+
+# def filter_random_effects_involving_variables(main_effects: List[AbstractVariable], random_effects: Set[typing.Union[RandomIntercept, RandomSlope]]) -> Set[str]: 
+#     random_effects = set() 
+
+#     for re in random_effects:
+#         assert(isinstance(re, RandomIntercept) or isinstance(re, RandomSlope)) 
+#         num_vars = 0
+#         for v in variables: 
+#             if v.name in ixn: 
+#                 num_vars += 1
+#         if num_vars >=2: 
+#             interactions.add(ixn)
+
+#     return interactions
+
 
 # @returns an ordered list of unitts included in @param gr, the lowest unit/level is in the lowest index
 def find_ordered_list_of_units(gr: Graph) -> List[str]: 
@@ -312,7 +328,7 @@ def find_ordered_list_of_units(gr: Graph) -> List[str]:
 
 # Make random effects for main effects in @param variables
 # The number of 
-def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable]) -> Set[str]: 
+def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
     random_effects = set() 
     random_effects_names = set() # used to keep track of the random inercepts for variable names already added
     variable_units = set()
@@ -335,7 +351,8 @@ def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variable
             variable_units.add(v_unit.name)
 
         else: 
-            assert(v_unit.name in units_to_consider)
+            if v_unit is not None: 
+                assert(v_unit.name in units_to_consider)
 
     # Add any nesting units whose measures are not included in the list of variables 
     for u in units_to_consider: 
@@ -350,8 +367,18 @@ def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variable
     return random_effects
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_random_effects(gr: Graph, main_effects: List[AbstractVariable]): 
-    pass
+def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable]): 
+    random_candidates = set()
+
+    repeats_effects = construct_random_effects_for_repeated_measures(gr=gr, query=query)
+    # repeats_names = filter_random_effects_involving_variables(main_effects, random_names=repeats_names)
+    random_candidates = random_candidates.union(repeats_effects)
+
+    nests_effects = construct_random_effects_for_nests(gr=gr, dv=query.dv, variables=main_effects)
+    # nests_variables = cast_to_variables(names=nests_names, variables=main_effects)
+    random_candidates = random_candidates.union(nests_effects)
+
+    return random_candidates
 
 def gnerate_all_model_candidates(gr: Graph, query: Design): 
     # Combine all the main effects, interaction effects, and random effects
