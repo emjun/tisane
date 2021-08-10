@@ -64,3 +64,24 @@ class GraphVisTest(unittest.TestCase):
         gr._get_graph_tikz()
         # self.assertTrue(gr.has_variable(test_score))
         gr.visualize_graph()
+
+    # As of August 10, this is the example used in the README
+    def test_exercise_group_simplified(self):
+        adult = ts.Unit("member", cardinality=386)
+        motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
+        # Adults have pounds lost. 
+        pounds_lost = adult.numeric("pounds_lost")
+        age = adult.numeric("age")
+        # Adults have one of four racial identities in this study. 
+        race = adult.nominal("race group", cardinality=4)
+        week = ts.SetUp("Week", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+
+        motivation_level.causes(pounds_lost)
+        race.associates_with(pounds_lost)
+        week.associates_with(pounds_lost)
+
+        age.moderates(moderator=[motivation_level], on=pounds_lost)
+
+        design = ts.Design(dv=pounds_lost, ivs=[age, race, week])
+        gr = design.graph
+        gr.visualize_graph()
