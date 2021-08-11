@@ -236,35 +236,6 @@ class Graph(object):
             pass
         return graph
 
-    # @returns pydot object (representing DOT graph)representing conceptual graph info
-    # Iterates through internal graph object and constructs vis
-    def _get_graph_vis(self):
-        graph = pydot.Dot("graph_vis", graph_type="digraph")
-
-        edges = list(self._graph.edges(data=True))  # get list of edges
-        # print(len(edges))
-
-        for (n0, n1, edge_data) in edges:
-            edge_type = edge_data["edge_type"]
-            print(edge_type)
-            if edge_type == "cause":
-                graph.add_edge(pydot.Edge(n0, n1, style="bold", color="black"))
-            elif edge_type == "correlate":
-                graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="black"))
-                graph.add_edge(pydot.Edge(n1, n0, style="dotted", color="black"))
-            elif edge_type == "contribute":
-                graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="red"))
-            else:
-                pass
-                # raise ValueError (f"Unsupported edge type: {edge_type}")
-
-        return graph
-
-    def visualize_graph(self):
-        graph = self._get_graph_vis()
-
-        graph.write_png("graph_vis.png")
-
     # @return List of variables represented in this graph as nodes
     def get_variables(self) -> List[AbstractVariable]:
         variables = list()
