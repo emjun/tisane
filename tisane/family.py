@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from os import PRIO_PGRP
-from tisane.og_variable import AbstractVariable
+from tisane.variable import AbstractVariable
 from tisane.data import Dataset, DataVector
 from typing import Any, List
 import typing  # for typing.Unit
