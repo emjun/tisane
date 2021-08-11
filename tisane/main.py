@@ -284,13 +284,13 @@ def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]):
 
         # Generate possible interaction effects
 
-        # Generate random effects 
-        
+        # Generate random effects
+
         # Generate candidate family and link functions
 
 
         # Interaction loop(?) with user
-
+        pass
 # def verify(
 #     input_: Union[Design, ConceptualModel, StatisticalModel],
 #     output_: Union[Design, ConceptualModel, StatisticalModel],

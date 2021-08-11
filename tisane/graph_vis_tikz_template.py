@@ -1,6 +1,13 @@
 import re
 
 template_begin = """
+\\documentclass{standalone}
+\\usepackage{tikz}
+
+\\usetikzlibrary{graphs,graphdrawing,quotes}
+\\usegdlibrary{force,layered}
+\\begin{document}
+
 \\begin{tikzpicture}[cause/.style={draw=red, "c", text=red},
                     associate/.style={draw=black},
                     min/.style={minimum size=2cm},
@@ -8,11 +15,13 @@ template_begin = """
                     measure/.style={min,circle,draw=black}]
 """
 
-graph = """    \graph[spring layout,sibling distance={},level distance={}]{}
+graph = """    \graph[layered layout,sibling distance={},level distance={}]{}
 """
 
 tikz_template_end = """    };
-\end{tikzpicture}"""
+\end{tikzpicture}
+\end{document}
+"""
 
 
 def indent(code):
