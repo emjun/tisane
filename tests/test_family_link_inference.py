@@ -352,8 +352,6 @@ class FamilyLinkInferenceTest(unittest.TestCase):
             l_type = type(l)
             self.assertIn(l_type, DataForTests.multinomial_links)
 
-    # TODO: Add implementation for generating/simulating data
-
 class DataForTests: 
     numeric_families_types = [GaussianFamily, InverseGaussianFamily, GammaFamily, TweedieFamily, PoissonFamily]
     ordinal_families_types = [GaussianFamily, InverseGaussianFamily, GammaFamily, TweedieFamily, PoissonFamily, BinomialFamily, NegativeBinomialFamily, MultinomialFamily]
