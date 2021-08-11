@@ -3,10 +3,9 @@ Inferring candidnate statistical models from the IR (model effects structures) a
 """
 
 from abc import abstractmethod
-from tisane.og_variable import Numeric, Ordinal, Nominal
-from tisane.family import AbstractFamily, GaussianFamily, InverseGaussianFamily, GammaFamily, TweedieFamily, PoissonFamily, BinomialFamily, NegativeBinomialFamily, MultinomialFamily
+from tisane.family import AbstractFamily, AbstractLink, BinomialFamily, GammaFamily, GaussianFamily, IdentityLink, InverseGaussianFamily, MultinomialFamily, NegativeBinomialFamily, PoissonFamily, TweedieFamily, IdentityLink, InverseLink, InverseSquaredLink, LogLink, LogitLink, ProbitLink, CLogLogLink, PowerLink, OPowerLink, NegativeBinomialLink, LogLogLink
 from tisane import variable
-from tisane.variable import AbstractVariable, Numeric, Has, Moderates, NumberValue
+from tisane.variable import AbstractVariable, Numeric, Nominal, Ordinal, Has, Moderates, NumberValue
 from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
@@ -22,83 +21,88 @@ def generate_family_functions(query: Design) -> Set[AbstractFamily]:
 
     dv = query.dv
     if isinstance(dv, Numeric): 
-        family_candidates.add(GaussianFamily())    
-        family_candidates.add(InverseGaussianFamily())    
-        family_candidates.add(GammaFamily())
-        family_candidates.add(TweedieFamily())
-        family_candidates.add(PoissonFamily())
+        family_candidates.add(GaussianFamily(dv))    
+        family_candidates.add(InverseGaussianFamily(dv))    
+        family_candidates.add(GammaFamily(dv))
+        family_candidates.add(TweedieFamily(dv))
+        family_candidates.add(PoissonFamily(dv))
     elif isinstance(dv, Ordinal): 
         # Treats ordinal data as continuous
-        family_candidates.add(GaussianFamily())    
-        family_candidates.add(InverseGaussianFamily())    
-        family_candidates.add(GammaFamily())
-        family_candidates.add(TweedieFamily())
-        family_candidates.add(PoissonFamily())
+        family_candidates.add(GaussianFamily(dv))    
+        family_candidates.add(InverseGaussianFamily(dv))    
+        family_candidates.add(GammaFamily(dv))
+        family_candidates.add(TweedieFamily(dv))
+        family_candidates.add(PoissonFamily(dv))
         # Treats ordinal data as discrete
-        family_candidates.add(BinomialFamily())
-        family_candidates.add(NegativeBinomialFamily())
-        family_candidates.add(MultinomialFamily())
+        family_candidates.add(BinomialFamily(dv))
+        family_candidates.add(NegativeBinomialFamily(dv))
+        family_candidates.add(MultinomialFamily(dv))
     else: 
         assert(isinstance(dv, Nominal))
+        
         if dv.get_cardinality() == 2: 
-            family_candidates.add(BinomialFamily())
-            family_candidates.add(NegativeBinomialFamily())
+            family_candidates.add(BinomialFamily(dv))
+            family_candidates.add(NegativeBinomialFamily(dv))
         else: 
             assert(dv.get_cardinality() > 2)
-            family_candidates.add(MultinomialFamily())
+            family_candidates.add(MultinomialFamily(dv))
 
     return family_candidates
 
 def generate_link_functions(query: Design, family: AbstractFamily): 
     link_candidates = set()
+
     # TODO: Identify which of these is actually implemented in Statsmodels
+    dv = query.dv
     if isinstance(family, GaussianFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(LogitLink())
-        link_candidates.add(ProbitLink())
-        link_candidates.add(CLogLogLink())
-        link_candidates.add(PowerLink())
-        link_candidates.add(OPowerLink())
-        link_candidates.add(NegativeBinomialLink())
-        link_candidates.add(LogLogLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(LogitLink(dv))
+        link_candidates.add(ProbitLink(dv))
+        link_candidates.add(CLogLogLink(dv))
+        link_candidates.add(PowerLink(dv))
+        link_candidates.add(OPowerLink(dv))
+        link_candidates.add(NegativeBinomialLink(dv))
+        link_candidates.add(LogLogLink(dv))
     elif isinstance(family, InverseGaussianFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(PowerLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(PowerLink(dv))
     elif isinstance(family, GammaFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(PowerLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(PowerLink(dv))
     elif isinstance(family, TweedieFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(PowerLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(PowerLink(dv))
     elif isinstance(family, PoissonFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(PowerLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(PowerLink(dv))
     elif isinstance(family, BinomialFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(LogitLink())
-        link_candidates.add(ProbitLink())
-        link_candidates.add(CLogLogLink())
-        link_candidates.add(PowerLink())
-        link_candidates.add(OPowerLink())
-        link_candidates.add(LogLogLink())
-        link_candidates.add(LogCLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(LogitLink(dv))
+        link_candidates.add(ProbitLink(dv))
+        link_candidates.add(CLogLogLink(dv))
+        link_candidates.add(PowerLink(dv))
+        link_candidates.add(OPowerLink(dv))
+        link_candidates.add(LogLogLink(dv))
+        # link_candidates.add(LogCLink(dv))
     elif isinstance(family, NegativeBinomialFamily): 
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(PowerLink())
-        link_candidates.add(NegativeBinomialLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(PowerLink(dv))
+        link_candidates.add(NegativeBinomialLink(dv))
     else: 
         assert(isinstance(family, MultinomialFamily))
-        link_candidates.add(IdentityLink())
-        link_candidates.add(LogLink())
-        link_candidates.add(LogitLink())
-        link_candidates.add(ProbitLink())
+        link_candidates.add(IdentityLink(dv))
+        link_candidates.add(LogLink(dv))
+        link_candidates.add(LogitLink(dv))
+        link_candidates.add(ProbitLink(dv))
+    
+    return link_candidates
 
 # Combine all the main effects, interaction effects, and random effects
 # TODO: In order to make it easy to populate the GUI/disambiguation questions and react to analysts' selections, what should the right data structure be?
