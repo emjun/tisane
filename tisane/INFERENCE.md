@@ -70,3 +70,5 @@ Limitation: If user does not include any variables at one level, no random effec
 Discussion: It would be really neat if we could connect each of these rules and the errors they prevent to threats of validity that Tisane helps users avoid. 
 
 
+### Deriving candidate family functions 
+Cite a source for what the possible family functions are for a given data type -- double check that implementation correct

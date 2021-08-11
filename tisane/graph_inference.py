@@ -379,8 +379,3 @@ def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVa
     random_candidates = random_candidates.union(nests_effects)
 
     return random_candidates
-
-def gnerate_all_model_candidates(gr: Graph, query: Design): 
-    # Combine all the main effects, interaction effects, and random effects
-    # In order to make it easy to populate the GUI/disambiguation questions and react to analysts' selections, what should the right data structure be?
-    pass
