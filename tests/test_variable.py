@@ -6,6 +6,8 @@ NOTE: The API tests are only to test the API, not to make any statements about h
 import tisane as ts
 from tisane.variable import (
     AbstractVariable,
+    Unit, 
+    Measure,
     Associates,
     Has,
     Causes,
@@ -199,7 +201,7 @@ class VariableTest(unittest.TestCase):
         v2 = u.nominal("V2")
         v3 = u.nominal("V3")
 
-        v1.moderate([v2], on=v3)
+        v1.moderates([v2], on=v3)
         self.assertEqual(len(v1.relationships), 2)
         self.assertEqual(len(v2.relationships), 2)
         self.assertEqual(len(v3.relationships), 2)
@@ -220,7 +222,7 @@ class VariableTest(unittest.TestCase):
         ses = u.numeric("SES")
         test_score = u.numeric("Test score")
 
-        race.moderate(ses, on=test_score)
+        race.moderates(ses, on=test_score)
         self.assertEqual(len(race.relationships), 2)
         self.assertEqual(len(ses.relationships), 2)
         self.assertEqual(len(test_score.relationships), 2)
@@ -241,7 +243,7 @@ class VariableTest(unittest.TestCase):
         v3 = u.nominal("V3")
         v4 = u.nominal("V4")
 
-        v1.moderate([v2, v3], on=v4)
+        v1.moderates([v2, v3], on=v4)
         self.assertEqual(len(v1.relationships), 2)
         self.assertEqual(len(v2.relationships), 2)
         self.assertEqual(len(v3.relationships), 2)
@@ -309,6 +311,37 @@ class VariableTest(unittest.TestCase):
         self.assertIsInstance(school.relationships[0], Nests)
         self.assertEqual(school.relationships[0].base, student)
         self.assertEqual(school.relationships[0].group, school)
+
+    # Test that the has/composition relationship updates both variables involved
+    def test_has(self):
+        participant = ts.Unit("participant id", cardinality=12) # 12 participants
+        condition = participant.nominal("condition", cardinality=2)
+        word = ts.Unit("word", cardinality=4) # 4 different words
+        
+        # Each condition has exactly 2 words
+        # Measure has measure
+        condition.has(word, number_of_instances=2)
+
+        self.assertEqual(len(condition.relationships), 2)
+        cond_has_relat = None
+        for r in condition.relationships:
+            self.assertIsInstance(r, Has)
+            if isinstance(r.variable, Measure) and isinstance(r.measure, Unit):
+                condit_has_relat = r
+        self.assertIsNotNone(condit_has_relat)
+        self.assertIs(condit_has_relat.variable, condition)
+        self.assertIs(condit_has_relat.measure, word)
+
+        self.assertEqual(len(word.relationships), 1)
+        word_has_relat = None
+        for r in word.relationships:
+            self.assertIsInstance(r, Has)
+            if isinstance(r.variable, Measure) and isinstance(r.measure, Unit):
+                word_has_relat = r
+        self.assertIsNotNone(word_has_relat)
+        self.assertIs(condit_has_relat, word_has_relat)
+
+
 
     # def test_has_variables(self):
     #     # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects

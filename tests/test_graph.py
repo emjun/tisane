@@ -1,6 +1,6 @@
 from tisane import graph
 import tisane as ts
-from tisane.variable import Causes, Has, Nests, Associates
+from tisane.variable import Causes, Has, Moderates, Nests, Associates
 from tisane.smt.synthesizer import Synthesizer
 
 import unittest
@@ -241,7 +241,7 @@ class GraphTest(unittest.TestCase):
         # Conceptual relationships
         race.associates_with(test_score)
         student.associates_with(test_score)
-        race.moderate(ses, on=test_score)
+        race.moderates(ses, on=test_score)
 
         self.assertEqual(len(student.relationships), 5)
 
@@ -280,17 +280,26 @@ class GraphTest(unittest.TestCase):
 
         count_has_edges = 0
         count_associates_edges = 0
+        count_associates_edges_associates_objs = 0
+        count_associates_edges_moderates_objs = 0
         count_other_edges = 0
         for (start, end, data) in edges:
-            if isinstance(data["edge_obj"], Has):
+            if data["edge_type"] == "has":
                 count_has_edges += 1
-            elif isinstance(data["edge_obj"], Associates):
+            elif data["edge_type"] == "associates":
                 count_associates_edges += 1
+                if isinstance(data["edge_obj"], Associates):
+                    count_associates_edges_associates_objs += 1
+                elif isinstance(data["edge_obj"], Moderates):
+                    count_associates_edges_moderates_objs += 1
             else:
                 count_other_edges += 1
 
         self.assertEqual(count_has_edges, 4)  # Should this be 5?
-        self.assertEqual(count_associates_edges, 6)
+        self.assertEqual(count_associates_edges, 6) 
+        # Check that Moderates stores a Moderates obj in the edge meta-data for associates edges created for moderations
+        self.assertEqual(count_associates_edges_associates_objs, 4)
+        self.assertEqual(count_associates_edges_moderates_objs, 2)
         self.assertEqual(count_other_edges, 0)
 
         # Identifier has interaction effect only once (no duplicates)
@@ -308,3 +317,18 @@ class GraphTest(unittest.TestCase):
 
         # Check that the interaction effect inherits from Student unit
         self.assertTrue(gr.has_edge(student, lhs, "has"))
+    
+    def test_specify_non_nesting_relationship(self):
+        participant = ts.Unit("participant id", cardinality=12) # 12 participants
+        condition = participant.nominal("condition", cardinality=2, number_of_instances=2)
+        word = ts.Unit("word", cardinality=4) # 4 different words
+        reaction_time = participant.numeric("reaction time", number_of_instances=word)
+        
+        # Each condition has exactly 2 words
+        # Measure has measure
+        condition.has(word, number_of_instances=2)
+
+        design = ts.Design(dv=reaction_time, ivs=[condition])
+        gr = design.graph
+
+        self.assertTrue(gr.has_edge(start=condition, end=word, edge_type="has"))

@@ -5,8 +5,8 @@ from tisane.variable import (
     Ordinal,
     Numeric,
     Has,
-    Associate,
-    Cause,
+    Associates,
+    Causes,
 )
 from tisane.random_effects import (
     RandomEffect,

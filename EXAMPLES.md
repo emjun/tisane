@@ -243,6 +243,9 @@ condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
 # Informally: Each subject has a reaction time for each word.
 reaction_time = subject.numeric("Time", number_of_instances=word) 
 
+# Each condition has/is comprised of two words. 
+condition.has(word, number_of_instances=2)
+# ALTERNATIVELY, we could do something like the below (not implemented). It is a bit more complicated to calculate the number of instances, but still doable I think.
 # Each word has one value for condition (already defined above as a measure of subject)
 word.has(condition, number_of_instances=1) # Condition has two units
 
@@ -252,6 +255,7 @@ ts.infer_statistical_model_from_design(design=design)
 ```
 
 > FEEDBACK REQUESTED: The primary limitation/wrinkle in the graph specification language is that it works really well when a measure (i.e., condition) only belongs to one unit (e.g., subject). However, it is difficult when the measure could be used to parition the data in multiple different ways, i.e., according to subject vs. according to word vs. according to condition.  On one hand, it's okay that the language is a bit clunky for non-nesting relationships because they tend to be less common. On the other hand, this edge case may suggest that our language primitives, specifically declaring measures through unit interfaces (e.g., subject.numeric) isn't quite right. 
+> The central trouble with a non-nesting relationship is that it's somewhere between an attribution and nesting relationship. It's sort of a composition relationship, but it seems distinct from a strictly nesting relationship where the nested unit (e.g., student) could theoretically be nested in any other nesting unit (e.g., classroom). It also feels inconsistent to describe it as a "has" relationship because attribution relationships can be read off as "<Entity/Unit> has <Attribute/Measure>."
 
 --- 
 

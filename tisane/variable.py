@@ -102,8 +102,9 @@ Class for Units
 
 
 class Unit(AbstractVariable):
-    def __init__(self, name: str, data=None, **kwargs):
+    def __init__(self, name: str, data=None, cardinality: int=None, **kwargs):
         super(Unit, self).__init__(name, data)
+        self.cardinality = cardinality
 
     def nominal(
         self,
@@ -183,6 +184,9 @@ class Unit(AbstractVariable):
         self.relationships.append(nest_relat)
         group.relationships.append(nest_relat)
 
+    def get_cardinality(self):
+        return self.cardinality
+
 
 """
 Super class for Measures
@@ -192,6 +196,26 @@ Super class for Measures
 class Measure(AbstractVariable):
     def __init__(self, name: str, data: None, **kwargs):
         super(Measure, self).__init__(name, data)
+    
+    # Composition relationship between two measures
+    def has(self, measure: AbstractVariable, number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1):
+        repet = None
+        according_to = None
+        if isinstance(number_of_instances, int):
+            repet = Exactly(number_of_instances)
+        elif isinstance(number_of_instances, AbstractVariable):
+            repet = Exactly(number_of_instances.get_cardinality())
+            according_to = number_of_instances
+        elif isinstance(number_of_instances, AtMost):
+            repet = number_of_instances
+
+        # Bind measure and unit to each other
+        has_relat = Has(
+            variable=self, measure=measure, repetitions=repet, according_to=according_to
+        )
+        self.relationships.append(has_relat)
+        measure.relationships.append(has_relat)
+
 
 
 """
@@ -377,7 +401,7 @@ Class for Has relationships
 
 
 class Has:
-    variable: Unit
+    variable: AbstractVariable
     measure: AbstractVariable
     repetitions: int
     according_to: AbstractVariable
