@@ -4,6 +4,7 @@ Tisane: Authoring Statistical Models via Formal Reasoning from Conceptual and Da
 **TL;DR:** Analysts can use Tisane to author generalized linear models with or without mixed effects. Tisane infers statistical models from variable relationships (from domain knowledge) that analysts specify. By doing so, Tisane helps analysts avoid common threats to external and statistical conclusion validity. Analysts do not need to be statistical experts! 
 
 [Jump to see examples here.](EXAMPLES.md) Below, we provide an overview of the API and language primitives. 
+
 ----
 
 Tisane provides (i) a graph specification language for expressing relationships between variables and (ii) an interactive query and compilation process for inferring a valid statistical model from a set of variables in the graph. 
