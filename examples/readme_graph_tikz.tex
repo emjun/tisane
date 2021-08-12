@@ -5,22 +5,23 @@
 \usegdlibrary{force,layered}
 \begin{document}
 
-\begin{tikzpicture}[cause/.style={draw=red, "c", text=red},
-                    associate/.style={draw=black},
+\begin{tikzpicture}[cause/.style={draw=red, "causes", text=red, densely dotted},
+                    associate/.style={draw=red, "assoc."},
                     min/.style={minimum size=2cm},
                     unit/.style={min,draw=black},
-                    measure/.style={min,circle,draw=black}]
+                    measure/.style={min,circle,draw=black},
+                    dv/.style={draw=blue}]
 
     \graph[layered layout,sibling distance=3cm,level distance=3cm]{
-		member[unit] -> [has] pounds_lost[measure];
+		member[unit, draw=red] -> [has] pounds lost[measure, fill=grey!30];
 		member -> [has] age[measure];
 		member -> [has] age*motivation[measure];
 		member -> [has] race group[measure];
-		pounds_lost -> [associate] race group;
-		pounds_lost -> [associate] age*motivation;
-		motivation[measure] -> [cause] pounds_lost;
-		race group -> [associate] pounds_lost;
-		age*motivation -> [associate] pounds_lost;
+		pounds lost -> [associate] race group;
+		pounds lost -> [associate] age*motivation;
+		motivation[measure] -> [cause] pounds lost;
+		race group -> [associate] pounds lost;
+		age*motivation -> [associate] pounds lost;
 
     };
 \end{tikzpicture}
