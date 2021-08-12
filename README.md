@@ -53,8 +53,6 @@ Currently, a variable, V1, can have a moderated relationship with a variable, V2
 These relationships are used to construct an internal graph representation of variables and their relationships with one another. 
 
 
-----
-
 ## Interactive query and compilation 
 Analysts query the relationships they have specified (technically, the internal graph represenation) for a statistical model. For each query, analysts must specify (i) a dependent variable to explain using (ii) a set of independent variables. 
 
