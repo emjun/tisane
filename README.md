@@ -3,7 +3,7 @@ Tisane: Authoring Statistical Models via Formal Reasoning from Conceptual and Da
 
 **TL;DR:** Analysts can use Tisane to author generalized linear models with or without mixed effects. Tisane infers statistical models from variable relationships (from domain knowledge) that analysts specify. By doing so, Tisane helps analysts avoid common threats to external and statistical conclusion validity. Analysts do not need to be statistical experts! 
 
-
+[Jump to see examples here.](EXAMPLES.md) Below, we provide an overview of the API and language primitives. 
 ----
 
 Tisane provides (i) a graph specification language for expressing relationships between variables and (ii) an interactive query and compilation process for inferring a valid statistical model from a set of variables in the graph. 
@@ -103,3 +103,8 @@ TODO: Specifically, Tisane helps....
 
 Incorporate from rebuttal: 
 Tisane elicits conceptual and data measurement relationships between variables. Tisane considers and asks users during disambiguation only about conceptually plausible effects based on variable relationships, and plausible family/link functions based on variable data types. This means that all candidate models are conceptually justifiable. Tisane also does not show model results during disambiguation, preventing users from providing answers that lead to desired findings and p-values. As a result, Tisane discourages cherry-picking (e.g., p-hacking). It would likely be easier to “p-hack” a linear model using existing tools because to “p-hack” Tisane, a user would have to manipulate their conceptual model and/or the underlying model generation process. Locking (see below) is another way to discourage cherry-picking. 
+
+---
+
+### Examples
+[Check out examples here!](EXAMPLES.md)
