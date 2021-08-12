@@ -15,6 +15,7 @@ import pydot
 from typing import List, Union, Tuple
 import copy
 from tisane.graph_vis_tikz_template import formatTikzVis
+import re
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -157,11 +158,17 @@ class Graph(object):
         )
 
     def _get_graph_tikz(self, edge_filter=lambda x: True):
+        def sanitize_characters(string):
+            # Remove all underscores from the string, and replace them with
+            # spaces. LaTeX doesn't like underscores, because of math mode.
+            return re.sub(r"_", " ", string)
         edges = list(self._graph.edges(data=True))
         tikz_edges = []
         nodes = []
-        for (n0, n1, edge_data) in edges:
+        for (nstart, nend, edge_data) in edges:
             if edge_filter(edge_data):
+                n0 = sanitize_characters(nstart)
+                n1 = sanitize_characters(nend)
                 if n0 not in nodes:
                     nodes.append(n0)
                     pass
