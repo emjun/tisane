@@ -24,6 +24,7 @@ from tisane.graph_vis_support import (
     default_dot_edge_label,
 )
 import re
+import os
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -172,6 +173,9 @@ class Graph(object):
     def get_tikz_graph(
         self, path="graph.tex", edge_filter=lambda x: True, dv: AbstractVariable = None
     ):
+        path_dir = os.path.dirname(path)
+        if path_dir and not os.path.exists(path_dir):
+            os.makedirs(path_dir)
         with open(path, "w") as f:
             f.write(self._get_tikz_graph(edge_filter=edge_filter, dv=dv))
             pass
@@ -208,7 +212,7 @@ class Graph(object):
                     "unit"
                     if isinstance(var, Unit) and not isinstance(var, Measure)
                     else "measure"
-                ) + ("dv" if var == dv else "")
+                ) + (",depvar" if var == dv else "")
         nodes_code = ""
         # for n in nodes:
         #     # TODO: get the type of the node
@@ -241,6 +245,7 @@ class Graph(object):
         style=default_dot_edge_style,
         color=default_dot_edge_color,
         label=default_dot_edge_label,
+        dv: AbstractVariable = None,
     ):
         """Write a DOT graph representation to a file, containing only the edges with types "causes" or "associates"
 
@@ -269,6 +274,10 @@ class Graph(object):
             )
             and edge_filter(edge_data),
             add_extension=add_extension,
+            style=style,
+            color=color,
+            label=label,
+            dv=dv,
         )
 
     def get_dot_graph(
@@ -280,6 +289,7 @@ class Graph(object):
         style=default_dot_edge_style,
         color=default_dot_edge_color,
         label=default_dot_edge_label,
+        dv: AbstractVariable = None,
     ):
         """Write the DOT graph representation to a file.
 
@@ -301,7 +311,7 @@ class Graph(object):
         """
         # TODO: Add style, color, and label parameter descriptions
         graph = self._get_dot_graph(
-            edge_filter=edge_filter, style=style, color=color, label=label
+            edge_filter=edge_filter, style=style, color=color, label=label, dv=dv
         )
         assert (
             format in dot_formats
@@ -316,7 +326,15 @@ class Graph(object):
                 ):
                     first_extension = dot_formats_extensions[format]["extensions"][0]
                     path = path + "." + first_extension
-
+                    pass
+                pass
+            pass
+        path_dir = os.path.dirname(path)
+        if path_dir and not os.path.exists(path_dir):
+            # print("Path directory: {}".format(path_dir))
+            # Create the directory, if it doesn't exist
+            os.makedirs(path_dir)
+            pass
         graph.write(path, format=format)
 
     def _get_dot_graph(
@@ -325,8 +343,9 @@ class Graph(object):
         style=default_dot_edge_style,
         color=default_dot_edge_color,
         label=default_dot_edge_label,
+        dv: AbstractVariable=None,
     ):
-        """Internal method to obtain a DOT graph object representing this graph.
+        """ Internal method to obtain a DOT graph object representing this graph.
 
         Parameters
         ----------
@@ -350,6 +369,27 @@ class Graph(object):
         # TODO: fix style parameter description
         graph = pydot.Dot("graph_vis", graph_type="digraph")
         edges = list(self._graph.edges(data=True))
+        nodes = []
+        for (n0, n1, _) in edges:
+            if n0 not in nodes:
+                nodes.append(n0)
+                pass
+            if n1 not in nodes:
+                nodes.append(n1)
+                pass
+            pass
+        for n0 in nodes:
+            var0 = self.get_variable(n0)
+            shape = "box" if isinstance(var0, Unit) and not isinstance(var0, Measure) else "ellipse"
+            nodestyle=""
+            fillcolor="white"
+            if var0 == dv:
+                nodestyle = "filled"
+                fillcolor = "#AAAAAA"
+                pass
+            graph.add_node(pydot.Node(n0, label=n0, style=nodestyle, fillcolor=fillcolor, shape=shape))
+            pass
+
 
         for (n0, n1, edge_data) in edges:
             if edge_filter(edge_data):

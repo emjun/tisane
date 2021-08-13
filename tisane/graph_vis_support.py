@@ -16,7 +16,8 @@ template_begin = """
                     unit/.style={min,draw=black},
                     measure/.style={min,circle,draw=black},
                     has/.style={densely dotted},
-                    nests/.style={dashed}]
+                    nests/.style={dashed},
+                    depvar/.style={draw=none,fill=grey!30}]
 """
 
 graph = """    \\graph[layered layout,sibling distance={},level distance={}]{}
@@ -192,7 +193,8 @@ default_dot_edge_style = {
     "associates": "",
     "causes": "",
     "nests": "dashed",
-    "default": "dotted",
+    "has": "dotted",
+    "default": "solid",
 }
 default_dot_edge_color = {"default": "black"}
 default_dot_edge_label = {"associates": "assoc.", "causes": "cause", "default": ""}

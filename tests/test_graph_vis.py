@@ -89,21 +89,22 @@ class GraphVisTest(unittest.TestCase):
         age = adult.numeric("age")
         # Adults have one of four racial identities in this study.
         race = adult.nominal("race group", cardinality=4)
-        # week = ts.SetUp("Week", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+        week = ts.SetUp("Week", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
         motivation_level.causes(pounds_lost)
         race.associates_with(pounds_lost)
-        # week.associates_with(pounds_lost)
+        week.associates_with(pounds_lost)
 
         age.moderate(moderator=[motivation_level], on=pounds_lost)
 
         design = ts.Design(dv=pounds_lost, ivs=[age, race])
         gr = design.graph
-        gr.get_tikz_graph("test_exercise_group_simplified.tex")
+        gr.get_tikz_graph("examples/readme_graph_tikz.tex", dv=pounds_lost)
         # gr._get_graph_tikz()
-        dot_gr = gr.get_dot_graph("readme_dot_graph.png")
+        dot_gr = gr.get_dot_graph("examples/readme_dot_graph.png", dv=pounds_lost)
         # dot_gr.write_png("readme_dot_graph.png")
 
-        dot = gr._get_dot_graph()
-        for f in dot_formats:
-            dot.write("dot_example_{}".format(f), format=f)
+        gr.get_dot_graph("dot_example/dot_example.png", format="png")
+        # dot = gr._get_dot_graph()
+        # for f in dot_formats:
+        #     dot.write("dot_example_{}".format(f), format=f)
