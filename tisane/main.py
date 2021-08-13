@@ -291,7 +291,6 @@ def infer_statistical_model(dv: AbstractVariable, ivs=List[AbstractVariable]):
         # Interaction loop(?) with user
         pass
 
-
 # def verify(
 #     input_: Union[Design, ConceptualModel, StatisticalModel],
 #     output_: Union[Design, ConceptualModel, StatisticalModel],

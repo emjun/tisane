@@ -64,64 +64,39 @@ class AbstractVariable:
         # Add relationship to @param on
         on.relationships.append(moderate_relat)
 
-
 """
-Wrapper class for expressing values for the number of repetitions of a condition, etc.
+Class for SetUp (experiment's environment) settings
 """
+class SetUp(AbstractVariable):
+    variable: "Measure"
 
+    def __init__(self, name: str, data=None, **kwargs):
+        super(SetUp, self).__init__(name, data)
 
-class Value:
-    value: int
+        # If there is an order of values provided
+        if "order" in kwargs.keys():
+            if "cardinality" in kwargs.keys():
+                self.variable = Ordinal(name, order=kwargs["order"], cardinality=kwargs["cardinality"])
+            else:
+                self.variable = Ordinal(name, kwargs["order"])
+        elif "cardinality" in kwargs.keys():
+            self.variable = Nominal(name, data, cardinality=kwargs["cardinality"])
+        else:
+            self.variable = Numeric(name, data)
 
-    def __init__(self, value: int):
-        self.value = value
-
-    def is_greater_than_one(self):
-        return self.value > 1
-
-    def is_equal_to_one(self):
-        return self.value == 1
-
-
-"""
-Class for expressing exact values
-"""
-
-
-class Exactly(Value):
-    def __init__(self, value: int):
-        super(Exactly, self).__init__(value)
-
-
-"""
-Class for expressing an upper bound of values
-"""
-
-
-class AtMost(Value):
-    def __init__(self, value: typing.Union[int, AbstractVariable]):
-        if isinstance(value, int):
-            super(AtMost, self).__init__(value)
-        elif isinstance(value, AbstractVariable):
-            super(AtMost, self).__init__(value.get_cardinality())
+    def get_cardinality(self):
+        return self.variable.get_cardinality()
 
 
 """
 Class for Units
 """
 
-
 class Unit(AbstractVariable):
     def __init__(self, name: str, data=None, **kwargs):
         super(Unit, self).__init__(name, data)
 
-    def nominal(
-        self,
-        name: str,
-        data=None,
-        number_of_instances: typing.Union[int, AbstractVariable, AtMost] = 1,
-        **kwargs,
-    ):
+    def nominal(self, name: str, data=None, number_of_instances:typing.Union[int, AbstractVariable, "AtMost"]=1, **kwargs):
         # Create new measure
         measure = Nominal(name, data=data, **kwargs)
         # Add relationship to self and to measure
@@ -129,14 +104,7 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def ordinal(
-        self,
-        name: str,
-        order: list,
-        cardinality: int = None,
-        data=None,
-        number_of_instances: typing.Union[int, AbstractVariable, AtMost] = 1,
-    ):
+    def ordinal(self, name: str, order: list, cardinality: int = None, data=None, number_of_instances:typing.Union[int, AbstractVariable, "AtMost"]=1):
         # Create new measure
         measure = Ordinal(name=name, order=order, cardinality=cardinality, data=data)
         # Add relationship to self and to measure
@@ -144,12 +112,7 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def numeric(
-        self,
-        name: str,
-        data=None,
-        number_of_instances: typing.Union[int, AbstractVariable, AtMost] = 1,
-    ):
+    def numeric(self, name: str, data=None, number_of_instances:typing.Union[int, AbstractVariable, "AtMost"]=1):
         # Create new measure
         measure = Numeric(name=name, data=data)
         # Add relationship to self and to measure
@@ -157,23 +120,21 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def _has(
-        self,
-        measure: AbstractVariable,
-        number_of_instances: typing.Union[int, AbstractVariable, AtMost],
-    ):
+    def _has(self, measure: AbstractVariable, number_of_instances:typing.Union[int, AbstractVariable, "AtMost"]):
         # Figure out the number of times/repetitions this Unit (self) has of the measure
 
         repet = None
+        according_to = None
         if isinstance(number_of_instances, int):
             repet = Exactly(number_of_instances)
         elif isinstance(number_of_instances, AbstractVariable):
-            repet = Exactly(number_of_instances.cardinality)
+            repet = Exactly(number_of_instances.get_cardinality())
+            according_to = number_of_instances
         elif isinstance(number_of_instances, AtMost):
             repet = number_of_instances
 
         # Bind measure and unit to each other
-        has_relat = Has(variable=self, measure=measure, repetitions=repet)
+        has_relat = Has(variable=self, measure=measure, repetitions=repet, according_to=according_to)
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
 
@@ -210,7 +171,7 @@ class Nominal(Measure):
     categories = list
 
     def __init__(
-        self, name: str, data=None, exactly: int = 1, up_to: int = None, **kwargs
+        self, name: str, data=None, **kwargs
     ):
         super(Nominal, self).__init__(name=name, data=data)
         self.data = data
@@ -278,9 +239,7 @@ class Ordinal(Measure):
         name: str,
         order: list,
         cardinality: int = None,
-        data=None,
-        exactly: int = 1,
-        up_to: int = None,
+        data=None
     ):
         super(Ordinal, self).__init__(name=name, data=data)
         self.ordered_cat = order
@@ -322,7 +281,7 @@ Class for Numeric measures
 
 
 class Numeric(Measure):
-    def __init__(self, name: str, data=None, exactly: int = 1, up_to: int = None):
+    def __init__(self, name: str, data=None):
         super(Numeric, self).__init__(name=name, data=data)
         self.data = data
         self.properties = dict()
@@ -391,20 +350,31 @@ Class for Has relationships
 """
 
 
-class Has:
+class Has():
     variable: Unit
     measure: AbstractVariable
     repetitions: int
+    according_to: AbstractVariable
 
     def __init__(
         self,
         variable: AbstractVariable,
         measure: AbstractVariable,
         repetitions: int,
+        **kwargs
     ):
         self.variable = variable
         self.measure = measure
         self.repetitions = repetitions
+
+        # This allows us to keep track of the "time reference" variable for repeated measures
+        if "according_to" in kwargs.keys():
+            if kwargs["according_to"] is not None:
+                assert(isinstance(kwargs["according_to"], AbstractVariable))
+                self.according_to = kwargs["according_to"]
+        else:
+            self.according_to = None
+
 
 
 """
@@ -412,7 +382,7 @@ Class for expressing repeated measures
 """
 
 
-class Repeats(object):
+class Repeats():
     unit: Unit
     measure: Measure
     according_to: Measure
@@ -428,10 +398,42 @@ Class for expressing nesting relationship between units
 """
 
 
-class Nests(object):
+class Nests():
     base: Unit
     group: Unit
 
     def __init__(self, base: Unit, group: Unit):
         self.base = base
         self.group = group
+
+"""
+Wrapper class for expressing values for the number of repetitions of a condition, etc.
+"""
+class NumberValue():
+    value: int
+
+    def __init__(self, value: int):
+        self.value = value
+
+    def is_greater_than_one(self):
+        return self.value > 1
+
+    def is_equal_to_one(self):
+        return self.value == 1
+
+"""
+Class for expressing exact values
+"""
+class Exactly(NumberValue):
+    def __init__(self, value: int):
+        super(Exactly, self).__init__(value)
+
+"""
+Class for expressing an upper bound of values
+"""
+class AtMost(NumberValue):
+    def __init__(self, value: typing.Union[int, AbstractVariable]):
+        if isinstance(value, int):
+            super(AtMost, self).__init__(value)
+        elif isinstance(value, AbstractVariable):
+            super(AtMost, self).__init__(value.get_cardinality())

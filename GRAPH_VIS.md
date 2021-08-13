@@ -76,3 +76,7 @@ After typesetting using `LuaTeX` or `LuaLaTeX`, you should have the following:
 ![A graph containing four nodes, Student (square shaped), Test Score (circle shaped), Race (circle shaped), Race*SES (circle shaped), SES (circle shaped), and treatment (circle shaped).](examples/standalone1.png?raw=true)
 
 ![A graph containing the nodes student id, test score, and school. Student id and school are circles, and test score is a rectangle. There are arrows between student id and test score, and school id and test score. The arrow from school id to test score is red, and has a c next to it.](examples/standalone2.png?raw=true)
+
+## DOT
+
+Using the `tisane.Graph.get_dot_graph` method, you can obtain 

@@ -19,6 +19,48 @@ class GraphTest(unittest.TestCase):
 
         self.assertEqual(len(gr.get_variables()), len(gr.get_nodes()))
 
+    def test_graph_construction_recursive_1(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.associates_with(dv)
+        m1.associates_with(m0)
+        m2.causes(dv)
+        m1.associates_with(m2)
+
+        design = ts.Design(dv=dv, ivs=[m0])
+        gr = design.graph
+
+        variables = gr.get_variables()
+        self.assertIn(m0, variables)
+        self.assertIn(m1, variables)
+        self.assertIn(m2, variables)
+    
+    def test_graph_construction_recursive_2(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.associates_with(dv)
+        m1.associates_with(m0)
+        m2.causes(dv)
+        m1.associates_with(m2)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
+
+        variables = gr.get_variables()
+        self.assertIn(m0, variables)
+        self.assertIn(m1, variables)
+        self.assertIn(m2, variables)
+
     def test_get_conceptual_subgraph(self):
         v1 = ts.Unit("V1")
         v2 = v1.nominal("V2")
@@ -116,9 +158,7 @@ class GraphTest(unittest.TestCase):
     def test_get_identifiers_repeat(self):
         pig = ts.Unit("pig id", cardinality=24)  # 24 pigs
         time = pig.nominal("week number", cardinality=12)
-        weight = pig.numeric("weight")
-
-        pig.repeats(measure=weight, according_to=time)
+        weight = pig.numeric("weight", number_of_instances=time)
 
         design = ts.Design(dv=weight, ivs=[time])
         gr = design.graph
@@ -263,8 +303,8 @@ class GraphTest(unittest.TestCase):
             if v.name == "Race*SES":
                 lhs = v
         self.assertIsNotNone(lhs)
-        self.assertTrue(gr.has_edge(lhs, test_score, "associate"))
-        self.assertTrue(gr.has_edge(test_score, lhs, "associate"))
+        self.assertTrue(gr.has_edge(lhs, test_score, "associates"))
+        self.assertTrue(gr.has_edge(test_score, lhs, "associates"))
 
         # Check that the interaction effect inherits from Student unit
         self.assertTrue(gr.has_edge(student, lhs, "has"))

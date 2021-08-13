@@ -189,13 +189,13 @@ pydot_formats = [
 ]
 
 default_dot_edge_style = {
-    "associate": "",
-    "cause": "",
+    "associates": "",
+    "causes": "",
     "nests": "dashed",
     "default": "dotted",
 }
 default_dot_edge_color = {"default": "black"}
-default_dot_edge_label = {"associate": "assoc.", "cause": "cause", "default": ""}
+default_dot_edge_label = {"associates": "assoc.", "causes": "cause", "default": ""}
 
 
 def indent(code):
