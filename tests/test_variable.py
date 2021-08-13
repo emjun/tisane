@@ -12,8 +12,8 @@ from tisane.variable import (
     Moderates,
     Nests,
     NumberValue,
-    Exactly, # Subclass of NumberValue
-    AtMost, # Subclass of NumberValue
+    Exactly,  # Subclass of NumberValue
+    AtMost,  # Subclass of NumberValue
     Repeats,
 )
 
