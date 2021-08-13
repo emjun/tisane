@@ -85,6 +85,9 @@ class Graph(object):
     def _add_variable(self, variable: AbstractVariable, is_identifier: bool = False):
         if not self._graph:
             self._graph = nx.MultiDiGraph()
+        # Depends on composing/non-nesting relationship: This might not make sense in the long term
+        if isinstance(variable, Unit):
+            is_identifier = True
         self._graph.add_node(
             variable.name, variable=variable, is_identifier=is_identifier
         )
@@ -311,10 +314,11 @@ class Graph(object):
             if isinstance(n_var, Unit):
                 assert is_id
                 identifiers.append(n_var)
+            # Removed this when add composing/has relationships between measure and unit
             # This is to be backwards compatible with code that does not use the Unit type
-            else:
-                if is_id:
-                    identifiers.append(n_var)
+            # else:
+            #     if is_id:
+            #         identifiers.append(n_var)
 
         return identifiers
 

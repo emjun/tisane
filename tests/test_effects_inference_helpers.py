@@ -3,11 +3,12 @@ Tests helper functions used to infer model effects structures
 NOTE: The tests are only to test, not to make any statements about how these variables relate in the real world
 """
 
-from tisane.random_effects import RandomIntercept
+from tisane.random_effects import RandomIntercept, RandomSlope
 import tisane as ts
 from tisane import graph_inference
 from tisane.graph_inference import (
     cast_to_variables,
+    construct_random_effects_for_composed_measures,
     construct_random_effects_for_nests,
     filter_interactions_involving_variables,
     find_common_ancestors,
@@ -761,3 +762,52 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         
     #     design = ts.Design(dv=dv, ivs=[m0])
     #     gr = design.graph
+
+    # Barr et al. 2013 example
+    def test_construct_random_effects_for_composed_measures_between_items_within_participants_repeats(self):
+        subject = ts.Unit("Subject")
+        word = ts.Unit("Word")
+
+        condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+        reaction_time = subject.numeric("Time", number_of_instances=word) # repeats
+        condition.has(word, number_of_instances=2)
+        
+        design = ts.Design(dv=reaction_time, ivs=[condition])
+        gr = design.graph
+        main_effects = design.ivs
+        random_effects = construct_random_effects_for_composed_measures(gr=gr, variables=main_effects)
+        self.assertEqual(len(random_effects), 1)
+        rs = random_effects.pop()
+        self.assertIsInstance(rs, RandomSlope)
+        self.assertIs(rs.iv, condition)
+        self.assertIs(rs.groups, subject)
+
+    # TODO: make a more generic version of this test        
+    def test_construct_random_effects_for_composed_measures_between_items_within_participants_no_repeats(self):
+        subject = ts.Unit("Subject")
+        word = ts.Unit("Word")
+        # Each subject has a two values for condition, which is nominal.
+        # Verbose: Each instance of subject has two instances of a nominal variable condition. 
+        # Informally: Each subjects sees two (both) conditions. 
+        condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+        # Repeated measures
+        # Each subject has a measure reaction time, which is numeric, for each instance of a word
+        # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word. 
+        # Informally: Each subject has a reaction time for each word.
+        reaction_time = subject.numeric("Time", number_of_instances=word) 
+
+        # Each condition has/is comprised of two words. 
+        condition.has(word, number_of_instances=2)
+        # ALTERNATIVELY, we could do something like the below (not implemented). It is a bit more complicated to calculate the number of instances, but still doable I think.
+        # Each word has one value for condition (already defined above as a measure of subject)
+        # word.has(condition, number_of_instances=1) # Condition has two units
+
+        design = ts.Design(dv=reaction_time, ivs=[condition])
+        gr = design.graph
+        main_effects = design.ivs
+        random_effects = construct_random_effects_for_composed_measures(gr=gr, variables=main_effects)
+        self.assertEqual(len(random_effects), 1)
+        rs = random_effects.pop()
+        self.assertIsInstance(rs, RandomSlope)
+        self.assertIs(rs.iv, condition)
+        self.assertIs(rs.groups, subject)

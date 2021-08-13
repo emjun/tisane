@@ -216,7 +216,7 @@ ts.infer_statistical_model_from_design(design=design)
 
 --- 
 
-## Non-nesting 
+## Non-nesting
 GLMMs are useful for analyzing non-nested data where multiple ways to group the observations are justifiable. For example, study participants may be grouped by age, location, and occupation. As another example, experimental results may be examined by participant, condition, or stimulus. Gelman and Hill provide examples of both. Barr et al.'s recommendations for maximal mixed effects structures use the latter as a motivating example [1, 2]. Below, we will draw on Barr et al.'s example from [1]. 
 
 Barr et al. describe a ``hypothetical lexical decision experiment, [where] subjects see strings of letters and have to decide whether or not each string forms an English word, while their response times are measured. Each subject is exposed to two types of words, forming condition A and condition B of the experiment. The words in one condition differ from those in the other condition on some intrinsic categorical dimension (e.g., syntactic class), comprising a word-type manipulation that is within-subjects and between-items. The question is whether reaction times are systematically different between condition A and condition B.'
@@ -255,7 +255,8 @@ ts.infer_statistical_model_from_design(design=design)
 ```
 
 > FEEDBACK REQUESTED: The primary limitation/wrinkle in the graph specification language is that it works really well when a measure (i.e., condition) only belongs to one unit (e.g., subject). However, it is difficult when the measure could be used to parition the data in multiple different ways, i.e., according to subject vs. according to word vs. according to condition.  On one hand, it's okay that the language is a bit clunky for non-nesting relationships because they tend to be less common. On the other hand, this edge case may suggest that our language primitives, specifically declaring measures through unit interfaces (e.g., subject.numeric) isn't quite right. 
-> The central trouble with a non-nesting relationship is that it's somewhere between an attribution and nesting relationship. It's sort of a composition relationship, but it seems distinct from a strictly nesting relationship where the nested unit (e.g., student) could theoretically be nested in any other nesting unit (e.g., classroom). It also feels inconsistent to describe it as a "has" relationship because attribution relationships can be read off as "<Entity/Unit> has <Attribute/Measure>."
+> The central trouble with a non-nesting relationship is that it's somewhere between an attribution and nesting relationship. It's sort of a composition relationship, but it seems distinct from a strictly nesting relationship where the nested unit (e.g., student) could theoretically be nested in any other nesting unit (e.g., classroom). It also feels inconsistent to describe it as a "has" relationship because attribution relationships can be read off as "<Entity/Unit> has <Attribute/Measure>." 
+> FEEDBACK REQUESTED: Maybe we could name this "composed"?
 
 --- 
 

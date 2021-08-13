@@ -4,7 +4,7 @@ Inferring model effects structures from the graph IR
 
 from abc import abstractmethod
 from tisane import variable
-from tisane.variable import AbstractVariable, Has, Moderates, NumberValue
+from tisane.variable import AbstractVariable, Has, Measure, Moderates, NumberValue, Unit
 from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
@@ -297,21 +297,6 @@ def construct_random_effects_for_repeated_measures(gr: Graph, query: Design) -> 
 
     return random_effects
 
-# def filter_random_effects_involving_variables(main_effects: List[AbstractVariable], random_effects: Set[typing.Union[RandomIntercept, RandomSlope]]) -> Set[str]: 
-#     random_effects = set() 
-
-#     for re in random_effects:
-#         assert(isinstance(re, RandomIntercept) or isinstance(re, RandomSlope)) 
-#         num_vars = 0
-#         for v in variables: 
-#             if v.name in ixn: 
-#                 num_vars += 1
-#         if num_vars >=2: 
-#             interactions.add(ixn)
-
-#     return interactions
-
-
 # @returns an ordered list of unitts included in @param gr, the lowest unit/level is in the lowest index
 def find_ordered_list_of_units(gr: Graph) -> List[str]: 
     measurement_sub = gr.get_nesting_subgraph() # returns subgraph containing nests edges only  
@@ -330,7 +315,6 @@ def find_ordered_list_of_units(gr: Graph) -> List[str]:
 # The number of 
 def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
     random_effects = set() 
-    random_effects_names = set() # used to keep track of the random inercepts for variable names already added
     variable_units = set()
     
     # Find all the units for all the variables involved    
@@ -365,6 +349,48 @@ def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variable
     # TODO: If len(units_to_consider) > 1 (there are multiple chains of nesting), there may be a more concise way to express this rather than adding each as a separat random intercept
     # TODO: Does this approach work for non-nested as well?
     return random_effects
+
+def construct_random_effects_for_composed_measures(gr: Graph, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
+    random_effects = set() 
+
+    # Go through the selected main effects
+    # If they Have other measures, this means that we need to add a random slope
+
+    # "If a factor is within-unit and there are multiple observations per
+    # treatment level per unit, then you need a by-unit random slope for that
+    # TODO: take step back, does this rule also apply if all the variables are units? or all measures?
+    # factor...." - Barr et al. 2013
+    for v in variables: 
+        # This rule only applies to measures
+        if isinstance(v, Measure):
+            for r in v.relationships:
+                if isinstance(r, Has):
+                    # Does this measure have/consist of units?
+                    if v == r.variable and isinstance(r.measure, Unit):
+                        v_unit = gr.get_identifier_for_variable(v)
+                        (n0, n1, edge_data) = gr.get_edge(start=v_unit, end=v, edge_type="has")
+                        v_unit_has_obj = edge_data["edge_obj"]
+                        assert(isinstance(v_unit_has_obj.repetitions, NumberValue))
+                        # Is variable v within-subjects?
+                        if v_unit_has_obj.repetitions.is_greater_than_one():
+                            # Does variable v have multiple instances of the unit r.measure?
+                            if r.repetitions.is_greater_than_one():
+                                rs = RandomSlope(iv=v, groups=v_unit)
+                                random_effects.add(rs)
+                            # There is only one observation of r.measure per
+                            # each v. This is like saying r.measure and v are
+                            # 1:1, meaning they are redundant measures of each
+                            # other. By transitive property, v_unit has multiple
+                            # r.measure instances. 
+                            else:
+                                assert(v_unit_has_obj.repetitions.is_equal_to_one())
+                                ri = RandomIntercept(groups=v_unit)
+                                random_effects.add(ri)
+
+    return random_effects
+
+
+
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
 def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable]): 
