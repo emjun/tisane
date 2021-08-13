@@ -2,7 +2,7 @@ from tisane import graph
 import tisane as ts
 from tisane.variable import Has
 from tisane.smt.synthesizer import Synthesizer
-
+from tisane.graph_vis_support import dot_formats
 import unittest
 
 
@@ -40,9 +40,9 @@ class GraphVisTest(unittest.TestCase):
         # gr.associates(student, test_score)
         gr = design.graph
 
-        gr._get_graph_tikz()
+        gr.get_tikz_graph("test_units.tex")
 
-        gr.visualize_graph()
+        # gr.visualize_graph()
 
     def test_more_complex(self):
 
@@ -61,19 +61,19 @@ class GraphVisTest(unittest.TestCase):
         race.moderate(ses, on=test_score)
 
         design = ts.Design(dv=test_score, ivs=[race, ses])
-        print(design.get_variables())
+        # print(design.get_variables())
 
         gr = design.graph
-        print(gr.get_nodes())
-        gr._get_graph_tikz()
+        # print(gr.get_nodes())
+        gr.get_tikz_graph("test_more_complex.tex")
         # self.assertTrue(gr.has_variable(test_score))
-        gr.visualize_graph()
+        # gr.visualize_graph()
 
-        allgraph = gr._get_dot_graph()
-        allgraph.write_png("test_more_complex.png")
+        allgraph = gr.get_dot_graph(path="test_more_complex.png")
 
-        causes_associates_only = gr._get_causes_associates_dot_graph()
-        causes_associates_only.write_png("test_more_complex-causes_associates.png")
+        gr.get_causes_associates_dot_graph(
+            path="test_more_complex-causes_associates.png"
+        )
 
         hasgraph = gr._get_dot_graph(
             edge_filter=lambda edge_data: edge_data["edge_type"] == "has"
@@ -84,10 +84,10 @@ class GraphVisTest(unittest.TestCase):
     def test_exercise_group_simplified(self):
         adult = ts.Unit("member", cardinality=386)
         motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
-        # Adults have pounds lost. 
+        # Adults have pounds lost.
         pounds_lost = adult.numeric("pounds lost")
         age = adult.numeric("age")
-        # Adults have one of four racial identities in this study. 
+        # Adults have one of four racial identities in this study.
         race = adult.nominal("race group", cardinality=4)
         # week = ts.SetUp("Week", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
@@ -99,8 +99,11 @@ class GraphVisTest(unittest.TestCase):
 
         design = ts.Design(dv=pounds_lost, ivs=[age, race])
         gr = design.graph
+        gr.get_tikz_graph("test_exercise_group_simplified.tex")
         # gr._get_graph_tikz()
-        dot_gr = gr._get_dot_graph()
-        dot_gr.write_png("readme_dot_graph.png")
-        
+        dot_gr = gr.get_dot_graph("readme_dot_graph.png")
+        # dot_gr.write_png("readme_dot_graph.png")
 
+        dot = gr._get_dot_graph()
+        for f in dot_formats:
+            dot.write("dot_example_{}".format(f), format=f)

@@ -1,16 +1,21 @@
-# Creating Graph Visualizations with TikZ
+# Creating Graph Visualizations
+Using the `tisane.Graph` class, you can obtain both TikZ and DOT figures.
+
+
+## TikZ
 
 After obtaining a `tisane.Graph` object `g`, a visualization of a graph containing
-all the nodes can be obtained by running `g._get_graph_tikz()`. A `standalone`
+all the nodes can be obtained by running `g.get_tikz_graph()`. A `standalone`
 class of LaTeX document is
-printed to standard out, which produces PDFs that exactly fit the figures created.
+written to a `.tex` file, which produces PDFs that exactly fit the figures created.
 Note that in order to use automatic layout features, from the `graphdrawing` tikz
 library, you have to typeset these documents with LuaLaTeX or LuaTeX.
 
 For example, after running the unit tests in `tests/test_graph_vis.py`, we get the
 following output.
 
-```
+```LaTeX
+% test_more_complex.tex
 \documentclass{standalone}
 \usepackage{tikz}
 
@@ -40,7 +45,10 @@ following output.
     };
 \end{tikzpicture}
 \end{document}
+```
 
+```LaTeX
+% test_units.tex
 \documentclass{standalone}
 \usepackage{tikz}
 

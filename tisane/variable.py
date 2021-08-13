@@ -68,7 +68,9 @@ class AbstractVariable:
 """
 Wrapper class for expressing values for the number of repetitions of a condition, etc.
 """
-class Value():
+
+
+class Value:
     value: int
 
     def __init__(self, value: int):
@@ -80,16 +82,22 @@ class Value():
     def is_equal_to_one(self):
         return self.value == 1
 
+
 """
 Class for expressing exact values
 """
+
+
 class Exactly(Value):
     def __init__(self, value: int):
         super(Exactly, self).__init__(value)
 
+
 """
 Class for expressing an upper bound of values
 """
+
+
 class AtMost(Value):
     def __init__(self, value: typing.Union[int, AbstractVariable]):
         if isinstance(value, int):
@@ -97,17 +105,23 @@ class AtMost(Value):
         elif isinstance(value, AbstractVariable):
             super(AtMost, self).__init__(value.get_cardinality())
 
+
 """
 Class for Units
 """
-
 
 
 class Unit(AbstractVariable):
     def __init__(self, name: str, data=None, **kwargs):
         super(Unit, self).__init__(name, data)
 
-    def nominal(self, name: str, data=None, number_of_instances:typing.Union[int, AbstractVariable, AtMost]=1, **kwargs):
+    def nominal(
+        self,
+        name: str,
+        data=None,
+        number_of_instances: typing.Union[int, AbstractVariable, AtMost] = 1,
+        **kwargs,
+    ):
         # Create new measure
         measure = Nominal(name, data=data, **kwargs)
         # Add relationship to self and to measure
@@ -115,7 +129,14 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def ordinal(self, name: str, order: list, cardinality: int = None, data=None, number_of_instances:typing.Union[int, AbstractVariable, AtMost]=1):
+    def ordinal(
+        self,
+        name: str,
+        order: list,
+        cardinality: int = None,
+        data=None,
+        number_of_instances: typing.Union[int, AbstractVariable, AtMost] = 1,
+    ):
         # Create new measure
         measure = Ordinal(name=name, order=order, cardinality=cardinality, data=data)
         # Add relationship to self and to measure
@@ -123,7 +144,12 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def numeric(self, name: str, data=None, number_of_instances:typing.Union[int, AbstractVariable, AtMost]=1):
+    def numeric(
+        self,
+        name: str,
+        data=None,
+        number_of_instances: typing.Union[int, AbstractVariable, AtMost] = 1,
+    ):
         # Create new measure
         measure = Numeric(name=name, data=data)
         # Add relationship to self and to measure
@@ -131,7 +157,11 @@ class Unit(AbstractVariable):
         # Return handle to measure
         return measure
 
-    def _has(self, measure: AbstractVariable, number_of_instances:typing.Union[int, AbstractVariable, AtMost]):
+    def _has(
+        self,
+        measure: AbstractVariable,
+        number_of_instances: typing.Union[int, AbstractVariable, AtMost],
+    ):
         # Figure out the number of times/repetitions this Unit (self) has of the measure
 
         repet = None

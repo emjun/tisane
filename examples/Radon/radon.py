@@ -29,7 +29,7 @@ design = ts.Design(dv=radon, ivs=[is_first_floor, uranium]).assign_data(df)
 ts.infer_statistical_model_from_design(design=design)
 
 
-## EXPERIMENT: Add "weights" to query 
+## EXPERIMENT: Add "weights" to query
 # TODO: Look at Z3 hard/soft constraint/weighting API
 design = ts.Design(dv=radon)
 design.specify_must_have_iv(is_first_floor)
@@ -38,4 +38,6 @@ design.specify_must_have_iv(uranium)
 design.specify_would_be_nice_to_have(is_first_floor)
 design.specify_would_be_nice_to_have(uranium)
 
-design = ts.Design(dv=radon, ivs={'must_have': [is_first_floor], 'would_be_nice_to_have': [uranium]})
+design = ts.Design(
+    dv=radon, ivs={"must_have": [is_first_floor], "would_be_nice_to_have": [uranium]}
+)
