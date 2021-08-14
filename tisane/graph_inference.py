@@ -290,6 +290,7 @@ def construct_random_effects_for_repeated_measures(gr: Graph, query: Design) -> 
         # How many repeated measures are there? 
         assert(isinstance(edge_obj.repetitions, NumberValue))
         # There is more than one observation of the DV for each unit
+        # import pdb; pdb.set_trace()
         if edge_obj.repetitions.is_greater_than_one(): 
             # Add a random intercept for the unit U 
             ri = RandomIntercept(groups=dv_unit)
@@ -350,18 +351,15 @@ def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variable
     # TODO: Does this approach work for non-nested as well?
     return random_effects
 
+# "If a factor is within-unit and there are multiple observations per
+# treatment level per unit, then you need a by-unit random slope for that
+# TODO: take step back, does this rule also apply if all the variables are units? or all measures?
+# factor...." - Barr et al. 2013
 def construct_random_effects_for_composed_measures(gr: Graph, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
     random_effects = set() 
 
-    # Go through the selected main effects
-    # If they Have other measures, this means that we need to add a random slope
-
-    # "If a factor is within-unit and there are multiple observations per
-    # treatment level per unit, then you need a by-unit random slope for that
-    # TODO: take step back, does this rule also apply if all the variables are units? or all measures?
-    # factor...." - Barr et al. 2013
+    # Go through the selected main effects, looking only for Measures
     for v in variables: 
-        # This rule only applies to measures
         if isinstance(v, Measure):
             for r in v.relationships:
                 if isinstance(r, Has):
@@ -375,8 +373,12 @@ def construct_random_effects_for_composed_measures(gr: Graph, variables: List[Ab
                         if v_unit_has_obj.repetitions.is_greater_than_one():
                             # Does variable v have multiple instances of the unit r.measure?
                             if r.repetitions.is_greater_than_one():
+                                # If so, for each instance of v_unit account for clusters in r.measure observations within each instance of v.
                                 rs = RandomSlope(iv=v, groups=v_unit)
                                 random_effects.add(rs)
+                                # Also account for the fact that r.measure appears multiple times across instances of v_unit
+                                # By comparing repetition of r.measure (e.g., word), r.measure cardinality, and v (e.g., condition) cardinality
+                                ri = RandomIntercept(groups=r.measure)
                             # There is only one observation of r.measure per
                             # each v. This is like saying r.measure and v are
                             # 1:1, meaning they are redundant measures of each
@@ -403,5 +405,8 @@ def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVa
     nests_effects = construct_random_effects_for_nests(gr=gr, dv=query.dv, variables=main_effects)
     # nests_variables = cast_to_variables(names=nests_names, variables=main_effects)
     random_candidates = random_candidates.union(nests_effects)
+
+    composed_effects = construct_random_effects_for_composed_measures(gr=gr, variables=main_effects)
+    random_candidates = random_candidates.union(composed_effects)
 
     return random_candidates
