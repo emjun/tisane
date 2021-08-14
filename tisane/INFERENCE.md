@@ -1,5 +1,6 @@
 # Overview (and pseudocode) for inferring model structures
 FYI: The candidate statistical model generation passes over the graph are implemented in ``graph_inference.py``
+
 As of August 14, 2021: I (Eunice) is still re-implementing and testing passes, so it is not complete!
 
 ## Inferring main effects
@@ -37,11 +38,11 @@ Because we provide a language construct for specifying ``moderates`` relationshi
 Inputs: Graph IR, specifically data measurement subgraph, selected main effects and interaction effects
 Output: Set of random effects must include to obtain maximal random effects structure
 
-### Deriving random effects for main effects: 
+### Inferring random effects for main effects: 
 The below rules operationalize the recommendations from Barr et al. 2013 [2]. Barr et al. use the terms "unit" and "treatment" in a couple different ways throughout the paper that does not always align with our usage of the terms, but I have translated the recommendations into our definitions below. 
 
 <!-- Rule A: If two units do not point to the same measure, following the below rules:  -->
-**Rule 1: Repated measures*:* For the DV included, get its unit U. If U has more than one instance of the DV (repeated measure) according to a SetUp variable (e.g., time) in the graph, include a random intercept of U to the set of random effects. Also include a random intercept for the SetUp variable. In other words, make sure to pool across observational unit and stimulus/differentiator.
+**Rule 1: Repated measures:** For the DV included, get its unit U. If U has more than one instance of the DV (repeated measure) according to a SetUp variable (e.g., time) in the graph, include a random intercept of U to the set of random effects. Also include a random intercept for the SetUp variable. In other words, make sure to pool across observational unit and stimulus/differentiator.
 
 *Assumption:*
 1. The study design is either fully factorial/fully crossed or fractionally factorial with multiple observations per time/treatment unit (implied in a fully factorial design)
@@ -62,7 +63,7 @@ Note: Must specify if the random slope and effect are correlated
 
 > MORE TO COME...
 
-## Deriving candidate family and link functions 
+## Inferring candidate family and link functions 
 Tisane generates candidate family functions based on the dependent variable's data type. Specifically...
 
 - Numeric data type: Gaussian, Inverse Gaussian, Gamma, Tweedie, Poisson
