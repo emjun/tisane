@@ -94,22 +94,28 @@ Based on the data type of the dependent variable, Tisane suggests matched pairs 
 - generating the space
 - narrowing the space -->
 
+----
+
+## Limitations
+- **Tisane is designed for researchers or analysts who are domain experts and can accurately express their domain knowledge and data measurement/collection details using the Tisane graph specification language.** We performed an initial evaluation of the expressive coverage of Tisane's language and found that it is useful for expressing a breadth of study designs common in HCI. 
+
+<!-- Limitation: If user does not include any variables at one level, no random effects will be generated, cross-level interactions included. Is this justifiable? -->
 
 ----
+
 ## Benefits
-### Tisane helps analysts avoid common threats to external and statistical conclusion validity. 
-TODO: Specifically, Tisane helps....
+### Tisane helps analysts avoid common threats to statistical conclusion and external validity. 
+Specifically, Tisane helps analysts 
+- avoid violations of GLM assumptions by inferring random effects and plausible family and link functions
+- fishing and false discovery due to conceptually incomplete statistical models
+- interaction of the causal relationships with units, interaction of the causal realtionships with settings due to not controlling for the appropriate clusters/non-independence of observations as random effects
 
-Incorporate from rebuttal: 
-Tisane elicits conceptual and data measurement relationships between variables. Tisane considers and asks users during disambiguation only about conceptually plausible effects based on variable relationships, and plausible family/link functions based on variable data types. This means that all candidate models are conceptually justifiable. Tisane also does not show model results during disambiguation, preventing users from providing answers that lead to desired findings and p-values. As a result, Tisane discourages cherry-picking (e.g., p-hacking). It would likely be easier to “p-hack” a linear model using existing tools because to “p-hack” Tisane, a user would have to manipulate their conceptual model and/or the underlying model generation process. Locking (see below) is another way to discourage cherry-picking. 
-
-
-Limitation: If user does not include any variables at one level, no random effects will be generated, cross-level interactions included. Is this justifiable?
-
-Discussion: It would be really neat if we could connect each of these rules and the errors they prevent to threats of validity that Tisane helps users avoid. 
-
+These are four of the 37 threats to validity Shadish, Cook, and Campbell outline across internal, external, statistical conclusion, and construct validity [1]. 
 
 ---
 
-### Examples
+## Examples
 [Check out examples here!](EXAMPLES.md)
+
+## References 
+[1] Cook, T. D., Campbell, D. T., & Shadish, W. (2002). Experimental and quasi-experimental designs for generalized causal inference. Boston, MA: Houghton Mifflin.
