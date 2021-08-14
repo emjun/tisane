@@ -4,10 +4,9 @@ from typing import Union
 
 # TODO: Remove RandomEffect
 class RandomEffect(object):
-    groups: AbstractVariable
-#     # The _iv_ is allowed to vary per each group in _groups_
+    pass 
 
-class RandomSlope():
+class RandomSlope(RandomEffect):
     iv: AbstractVariable
     groups: AbstractVariable 
 
@@ -17,7 +16,7 @@ class RandomSlope():
         self.iv = iv
         self.groups = groups
 
-class RandomIntercept():
+class RandomIntercept(RandomEffect):
     def __init__(self, groups: AbstractVariable):
         self.groups = groups
 

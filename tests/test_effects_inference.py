@@ -324,7 +324,6 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
         main_effects = design.ivs
         random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
-        import pdb; pdb.set_trace()
         self.assertEqual(len(random_effects), 3) # two random intercepts, 1 random slope
         for re in random_effects:
             if isinstance(re, RandomSlope):

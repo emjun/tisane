@@ -5,7 +5,7 @@ Inferring model effects structures from the graph IR
 from abc import abstractmethod
 from tisane import variable
 from tisane.variable import AbstractVariable, Has, Measure, Moderates, NumberValue, Unit
-from tisane.random_effects import RandomSlope, RandomIntercept
+from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
 from itertools import chain, combinations
@@ -296,6 +296,9 @@ def construct_random_effects_for_repeated_measures(gr: Graph, query: Design) -> 
             ri = RandomIntercept(groups=dv_unit)
             random_effects.add(ri)  
 
+            ri = RandomIntercept(groups=edge_obj.according_to)
+            random_effects.add(ri)  
+
     return random_effects
 
 # @returns an ordered list of unitts included in @param gr, the lowest unit/level is in the lowest index
@@ -353,7 +356,7 @@ def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variable
 
 # "If a factor is within-unit and there are multiple observations per
 # treatment level per unit, then you need a by-unit random slope for that
-# TODO: take step back, does this rule also apply if all the variables are units? or all measures?
+# TODO: Could this rule also apply if all the variables are units? or all measures?
 # factor...." - Barr et al. 2013
 def construct_random_effects_for_composed_measures(gr: Graph, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
     random_effects = set() 
@@ -376,9 +379,6 @@ def construct_random_effects_for_composed_measures(gr: Graph, variables: List[Ab
                                 # If so, for each instance of v_unit account for clusters in r.measure observations within each instance of v.
                                 rs = RandomSlope(iv=v, groups=v_unit)
                                 random_effects.add(rs)
-                                # Also account for the fact that r.measure appears multiple times across instances of v_unit
-                                # By comparing repetition of r.measure (e.g., word), r.measure cardinality, and v (e.g., condition) cardinality
-                                ri = RandomIntercept(groups=r.measure)
                             # There is only one observation of r.measure per
                             # each v. This is like saying r.measure and v are
                             # 1:1, meaning they are redundant measures of each
@@ -391,8 +391,25 @@ def construct_random_effects_for_composed_measures(gr: Graph, variables: List[Ab
 
     return random_effects
 
+# Filter a set such that only one of each random effect per variable is returned
+def filter_random_candidates(random_candidates: Set[RandomEffect]) -> Set[RandomEffect]: 
+    random_effects_names = set() 
+    random_effects = set()
 
+    for rc in random_candidates: 
+        if isinstance(rc, RandomIntercept): 
+            name_key = (rc.groups.name, rc.__class__)
+        else: 
+            assert(isinstance(rc, RandomSlope))
+            name_key = (rc.groups.name, rc.iv.name, rc.__class__)
+        # Have we seen this before? 
+        if name_key in random_effects_names: 
+            pass 
+        else: # This random effect is new!
+            random_effects_names.add(name_key)
+            random_effects.add(rc)
 
+    return random_effects
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
 def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable]): 
@@ -409,4 +426,5 @@ def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVa
     composed_effects = construct_random_effects_for_composed_measures(gr=gr, variables=main_effects)
     random_candidates = random_candidates.union(composed_effects)
 
+    random_candidates = filter_random_candidates(random_candidates)
     return random_candidates
