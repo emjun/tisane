@@ -103,6 +103,12 @@ TODO: Specifically, Tisane helps....
 Incorporate from rebuttal: 
 Tisane elicits conceptual and data measurement relationships between variables. Tisane considers and asks users during disambiguation only about conceptually plausible effects based on variable relationships, and plausible family/link functions based on variable data types. This means that all candidate models are conceptually justifiable. Tisane also does not show model results during disambiguation, preventing users from providing answers that lead to desired findings and p-values. As a result, Tisane discourages cherry-picking (e.g., p-hacking). It would likely be easier to “p-hack” a linear model using existing tools because to “p-hack” Tisane, a user would have to manipulate their conceptual model and/or the underlying model generation process. Locking (see below) is another way to discourage cherry-picking. 
 
+
+Limitation: If user does not include any variables at one level, no random effects will be generated, cross-level interactions included. Is this justifiable?
+
+Discussion: It would be really neat if we could connect each of these rules and the errors they prevent to threats of validity that Tisane helps users avoid. 
+
+
 ---
 
 ### Examples

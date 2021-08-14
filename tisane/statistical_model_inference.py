@@ -42,9 +42,9 @@ def generate_family_functions(query: Design) -> Set[AbstractFamily]:
         
         if dv.get_cardinality() == 2: 
             family_candidates.add(BinomialFamily(dv))
-            family_candidates.add(NegativeBinomialFamily(dv))
         else: 
             assert(dv.get_cardinality() > 2)
+            family_candidates.add(NegativeBinomialFamily(dv))
             family_candidates.add(MultinomialFamily(dv))
 
     return family_candidates

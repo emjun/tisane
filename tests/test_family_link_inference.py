@@ -33,7 +33,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         gr = design.graph
 
         families = generate_family_functions(query=design)
-        self.assertEqual(len(families), 5)
+        self.assertEqual(len(families), len(DataForTests.numeric_families_types))
         for f in families: 
             f_type = type(f)
             self.assertIn(f_type, DataForTests.numeric_families_types)
@@ -47,7 +47,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         gr = design.graph
 
         families = generate_family_functions(query=design)
-        self.assertEqual(len(families), 8)
+        self.assertEqual(len(families), len(DataForTests.ordinal_families_types))
         for f in families: 
             f_type = type(f)
             self.assertIn(f_type, DataForTests.ordinal_families_types)
@@ -61,7 +61,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         gr = design.graph
 
         families = generate_family_functions(query=design)
-        self.assertEqual(len(families), 2)
+        self.assertEqual(len(families), len(DataForTests.nominal_binary_families_types))
         for f in families: 
             f_type = type(f)
             self.assertIn(f_type, DataForTests.nominal_binary_families_types)
@@ -75,7 +75,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         gr = design.graph
 
         families = generate_family_functions(query=design)
-        self.assertEqual(len(families), 1)
+        self.assertEqual(len(families), len(DataForTests.nominal_nary_families_types))
         for f in families: 
             f_type = type(f)
             self.assertIn(f_type, DataForTests.nominal_nary_families_types)
@@ -321,7 +321,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
     def test_generate_link_for_NegativeBinomial_family_nominal_dv(self): 
         u0 = ts.Unit("Unit 0")
         m0 = u0.numeric("Measure 0")
-        dv = u0.nominal("Dependent variable", cardinality=2)
+        dv = u0.nominal("Dependent variable", cardinality=3)
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -355,8 +355,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 class DataForTests: 
     numeric_families_types = [GaussianFamily, InverseGaussianFamily, GammaFamily, TweedieFamily, PoissonFamily]
     ordinal_families_types = [GaussianFamily, InverseGaussianFamily, GammaFamily, TweedieFamily, PoissonFamily, BinomialFamily, NegativeBinomialFamily, MultinomialFamily]
-    nominal_binary_families_types = [BinomialFamily, NegativeBinomialFamily]
-    nominal_nary_families_types = [MultinomialFamily]
+    nominal_binary_families_types = [BinomialFamily]
+    nominal_nary_families_types = [MultinomialFamily, NegativeBinomialFamily]
 
     gaussian_links = [IdentityLink, LogLink, LogitLink, ProbitLink, CLogLogLink, PowerLink, OPowerLink, NegativeBinomialLink, LogLogLink]
     inverse_gaussian_links = [IdentityLink, LogLink, PowerLink]
