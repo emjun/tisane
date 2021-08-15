@@ -38,7 +38,7 @@ Because we provide a language construct for specifying ``moderates`` relationshi
 Inputs: Graph IR, specifically data measurement subgraph, selected main effects and interaction effects
 Output: Set of random effects must include to obtain maximal random effects structure
 
-### Inferring random effects for main effects: 
+### Inferring random effects for main effects
 The below rules operationalize the recommendations from Barr et al. 2013 [2]. Barr et al. use the terms "unit" and "treatment" in a couple different ways throughout the paper that does not always align with our usage of the terms, but I have translated the recommendations into our definitions below. 
 
 <!-- Rule A: If two units do not point to the same measure, following the below rules:  -->
@@ -58,10 +58,13 @@ The below rules operationalize the recommendations from Barr et al. 2013 [2]. Ba
 
 *Rule 3 operationalizes the following recommendations from Barr et al.:* "If a factor is within-unit (i.e., main effect) and there are multiple observations per treatment level per unit, then you need a by-unit random slope for that factor. The only exception to this rule is when you only have a single observation for every treatment level of every unit; in this case...a ranndom intercept would be sufficient."
 
-### [WIP] Deriving random effects for interaction effects: 
-Note: Must specify if the random slope and effect are correlated
+### [WIP] Inferring random effects for interaction effects
+The below rules operationalize the updated recommendations for interaction effects from Barr 2013 [1]. Barr recommends "...when testing interactions in mixed designs with replications, it is critical to include the random slope corresponding to the highest-order combination of within-subject factors subsumed by each interaction of interest." 
+*Note:* Barr's recommendation is straightforward for within-level interactions that involve variables pertaining to the same unit. For cross-level interactions that invovle variables from two or more units, we include the "oldest" unit (highest nest) in the random slope. 
 
-> MORE TO COME...
+**Rule 4: Random slopes for all within-subject units subsumed by an interaction effect:** For each interaction effect that involves n variables, find all k within-subjects variables. Of these k within-subjects variables, find the "oldest" unit (there may be only one unit that all the variables share). Then add a random slope involving an interaction term involving the k terms and the oldest unit. 
+
+Finally, for any random effects where there is a random slope and a random intercept involving a unit, analysts must specify if the random slope and intercept are correlated or uncorrelated. By default, they are treated as correlated. 
 
 ## Inferring candidate family and link functions 
 Tisane generates candidate family functions based on the dependent variable's data type. Specifically...
