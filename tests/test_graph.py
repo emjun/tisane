@@ -317,7 +317,28 @@ class GraphTest(unittest.TestCase):
 
         # Check that the interaction effect inherits from Student unit
         self.assertTrue(gr.has_edge(student, lhs, "has"))
-    
+
+    def test_interaction_effect_variables_not_as_ivs(self):
+        u = ts.Unit("Unit")
+        a = u.nominal("Measure A", cardinality=2) # A is between-subjects
+        b = u.nominal("Measure B", cardinality=2) # B is between-subjects
+        c = u.nominal("Measure C", cardinality=2, number_of_instances=2) # B is within-subjects
+        dv = u.numeric("Dependent variable")
+
+        a.moderates(moderator=[b, c], on=dv)
+
+        design = ts.Design(dv=dv, ivs=[a, b])
+        gr = design.graph
+
+        variables = [u, a, b, c, dv]
+        self.assertEqual(len(gr.get_variables()), len(variables) + 1) # + 1 for interaction node that is created
+        for v in variables: 
+            self.assertIn(v, gr.get_variables())
+        self.assertTrue(gr.has_edge(u, a, "has"))
+        self.assertTrue(gr.has_edge(u, b, "has"))
+        self.assertTrue(gr.has_edge(u, c, "has"))
+        self.assertTrue(gr.has_edge(u, dv, "has"))
+        
     def test_specify_non_nesting_relationship(self):
         participant = ts.Unit("participant id", cardinality=12) # 12 participants
         condition = participant.nominal("condition", cardinality=2, number_of_instances=2)

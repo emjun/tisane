@@ -216,6 +216,24 @@ class Measure(AbstractVariable):
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
 
+    # @returns the unit this measure is an attribute of
+    def get_unit(self) -> Unit: 
+        for r in self.relationships: 
+            if isinstance(r, Has): 
+                if r.measure is self and isinstance(r.variable, Unit): 
+                    return r.variable
+
+        return None
+
+    # @returns the unit relationship, None otherwise
+    def get_unit_relationsihp(self) -> "Has": 
+        for r in self.relationships: 
+            if isinstance(r, Has): 
+                if r.measure is self and isinstance(r.variable, Unit): 
+                    return r
+
+        return None
+
 
 
 """
@@ -403,14 +421,14 @@ Class for Has relationships
 class Has:
     variable: AbstractVariable
     measure: AbstractVariable
-    repetitions: int
+    repetitions: "NumberValue"
     according_to: AbstractVariable
 
     def __init__(
         self,
         variable: AbstractVariable,
         measure: AbstractVariable,
-        repetitions: int,
+        repetitions: "NumberValue",
         **kwargs,
     ):
         self.variable = variable

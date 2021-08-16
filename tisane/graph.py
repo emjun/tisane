@@ -362,7 +362,6 @@ class Graph(object):
     def add_identifier(self, identifier: AbstractVariable):
         self._add_variable(variable=identifier, is_identifier=True)
 
-    # TODO: Add repetitions for between/within; I think make repetitions an int not a variable
     def add_relationship(
         self, relationship: Union[Has, Nests, Associates, Causes, Moderates]
     ):
@@ -469,6 +468,17 @@ class Graph(object):
         on: AbstractVariable,
         moderates_obj: Moderates,
     ):
+        # First make sure that all the moderators are in the graph itself 
+        for m in moderator: 
+            if isinstance(m, Measure): 
+                # Get identifier for each moderator
+                identifier = m.get_unit()
+                assert(identifier is not None)
+                # If the moderator is not in the graph, add it first
+                if not self.has_edge(start=identifier, end=m, edge_type="has"): 
+                    relationship = m.get_unit_relationsihp()
+                    self.has(identifier, m, relationship, repetitions=relationship.repetitions)
+                    
         # Create new interaction variable
         m_names = [m.name for m in moderator]
         name = "*".join(m_names)
@@ -496,8 +506,6 @@ class Graph(object):
                     variable=identifier, measure=var, repetitions=m_cardinality
                 )
                 self.has(identifier, var, relationship, repetitions=m_cardinality)
-            # else:
-            #     import pdb; pdb.set_trace()
 
     # Add an ambiguous/contribute edge to the graph
     def contribute(self, lhs: AbstractVariable, rhs: AbstractVariable):
