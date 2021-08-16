@@ -4,6 +4,7 @@ from tisane.family_link_inference import infer_family_functions, infer_link_func
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.code_generator import *
+from tisane.gui.gui import TisaneGUI
 
 from enum import Enum
 from typing import List, Union
@@ -119,3 +120,10 @@ def infer_statistical_model_from_design(design: Design):
     script = generate_code(sm)
 
     return script
+
+def start_gui():
+    gui = TisaneGUI()
+    
+    gui.start_app()
+
+start_gui()
