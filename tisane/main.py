@@ -1,5 +1,9 @@
 from tisane.graph import Graph
-from tisane.graph_inference import infer_main_effects, infer_interaction_effects, infer_random_effects
+from tisane.graph_inference import (
+    infer_main_effects,
+    infer_interaction_effects,
+    infer_random_effects,
+)
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
@@ -41,6 +45,7 @@ def check_design_dv(design: Design):
                 f"The dependent variable {dv.name} causes the independent variable {i.name}."
             )
 
+
 # @returns statistical model that reflects the study design
 def infer_statistical_model_from_design(design: Design):
     gr = design.graph
@@ -51,24 +56,29 @@ def infer_statistical_model_from_design(design: Design):
     # Check that the DV does not cause one or more IVs
     check_design_dv(design)
 
-
     ### Step 2: Candidate statistical model inference/generation
     main_effects_candidates = infer_main_effects(gr=gr, query=design)
-    # Assume all the main effects will be selected 
+    # Assume all the main effects will be selected
     main_effects_candidates = list(main_effects_candidates)
-    
-    interaction_effects_candidates = infer_interaction_effects(gr=gr, query=design, main_effects=main_effects_candidates)
-    interaction_effects_candidates = list(interaction_effects_candidates) 
 
-    random_effects_candidates = infer_random_effects(gr=gr, query=design, main_effects=main_effects_candidates, interaction_effects=interaction_effects_candidates)
+    interaction_effects_candidates = infer_interaction_effects(
+        gr=gr, query=design, main_effects=main_effects_candidates
+    )
+    interaction_effects_candidates = list(interaction_effects_candidates)
+
+    random_effects_candidates = infer_random_effects(
+        gr=gr,
+        query=design,
+        main_effects=main_effects_candidates,
+        interaction_effects=interaction_effects_candidates,
+    )
 
     family_candidates = infer_family_functions(query=design)
-    for f in family_candidates: 
+    for f in family_candidates:
         # TODO: store the family-links somewhere!
         infer_link_functions(query=design, family=f)
 
-    # Put everything together 
-
+    # Put everything together
 
     ### Generate possible effects, family, and link based on input design (graph)
     gr = synth.transform_to_has_edges(design.graph)
@@ -84,8 +94,7 @@ def infer_statistical_model_from_design(design: Design):
     family_link_options = synth.generate_family_link(design=design)
     default_family_link = synth.generate_default_family_link(design=design)
 
-
-    ### Step 3: Disambiguation loop 
+    ### Step 3: Disambiguation loop
     input_cli = InputInterface(
         main_effects_options,
         interaction_effects_options,
@@ -108,7 +117,7 @@ def infer_statistical_model_from_design(design: Design):
     sm = None
     f = open("model_spec.json", "r")
 
-    ### Step 4: Code generation 
+    ### Step 4: Code generation
     # Construct StatisticalModel from JSON spec
     model_json = f.read()
     sm = synth.create_statistical_model(model_json, design).assign_data(
