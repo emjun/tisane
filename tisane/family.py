@@ -8,64 +8,72 @@ import typing  # for typing.Unit
 """
 Abstract super class for all family functions. 
 """
-class AbstractFamily(ABC): 
+
+
+class AbstractFamily(ABC):
     variable: AbstractVariable
 
     @abstractmethod
-    def simulate_data(self): 
+    def simulate_data(self):
         pass
 
     def set_link(self, link: "AbstractLink"):
         self.link = link
 
-    # TODO: Should this be an abstract super class method? 
+    # TODO: Should this be an abstract super class method?
     # @abstractmethod
-    # def generate_code(self): 
+    # def generate_code(self):
     #     pass
 
-class AbstractLink(ABC): 
+
+class AbstractLink(ABC):
     variable: AbstractVariable
 
-    def set_variable(self, variable: AbstractVariable): 
+    def set_variable(self, variable: AbstractVariable):
         self.variable = variable
 
-    @abstractmethod 
-    def transform_data(self, data): 
+    @abstractmethod
+    def transform_data(self, data):
         pass
 
-class IdentityLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class IdentityLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
-    
+
     def transform_data(self, data):
         # return data
         pass
 
-class InverseLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class InverseLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
-    def transform_data(self, data): 
+    def transform_data(self, data):
         pass
 
-class InverseSquaredLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class InverseSquaredLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
-    
+
     def transform_data(self, data):
         # wrapper around python statsmodels?
         pass
 
-class LogLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class LogLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
     def transform_data(self, data):
         # return np.log(data)
         pass
 
-class LogitLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class LogitLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
     def transform_data(self, data):
@@ -74,24 +82,27 @@ class LogitLink(AbstractLink):
         # return pd.DataFrame(data=transformed_data)
         pass
 
-class ProbitLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class ProbitLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
     def transform_data(self, data):
         # wrapper around python statsmodels?
         pass
 
-class CLogLogLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class CLogLogLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
     def transform_data(self, data):
         # wrapper around python statsmodels?
         pass
 
-class PowerLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class PowerLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
     def transform_data(self, data):
@@ -100,36 +111,39 @@ class PowerLink(AbstractLink):
         # return pd.DataFrame(data=transformed_data)
         pass
 
-class OPowerLink(AbstractLink): # TODO: Is this implemented in statsmodels?
-    def __init__(self, variable: AbstractVariable): 
+
+class OPowerLink(AbstractLink):  # TODO: Is this implemented in statsmodels?
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
     def transform_data(self, data):
         # wrapper around python statsmodels?
         pass
 
-class NegativeBinomialLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class NegativeBinomialLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
-    
+
     def transform_data(self, data):
         # wrapper around python statsmodels?
         pass
 
-class LogLogLink(AbstractLink): 
-    def __init__(self, variable: AbstractVariable): 
+
+class LogLogLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
-    
+
     def transform_data(self, data):
         # wrapper around python statsmodels?
         pass
 
-class GaussianFamily(AbstractFamily): 
 
+class GaussianFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = IdentityLink(variable)
 
-    def simulate_data(self, data): 
+    def simulate_data(self, data):
         # if "GaussianFamily" in str(fact) and "Inverse" not in str(fact):
         # if design.dataset is not None:
         #     mean = design.dataset.get_column(dv.name).mean()
@@ -141,12 +155,12 @@ class GaussianFamily(AbstractFamily):
         # return np.random.default_rng().normal(loc=mean, scale=std, size=size)
         pass
 
-class InverseGaussianFamily(AbstractFamily): 
 
+class InverseGaussianFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = InverseSquaredLink(variable)
 
-    def simulate_data(self): 
+    def simulate_data(self):
         # if design.dataset is not None:
         #     mean = design.dataset.get_column(dv.name).mean()  # should be > 0
         #     std = design.dataset.get_column(dv.name).std()  # should be >= 0
@@ -161,24 +175,24 @@ class InverseGaussianFamily(AbstractFamily):
         # return np.random.default_rng().wald(mean=mean, scale=std, size=size)
         pass
 
-class GammaFamily(AbstractFamily): 
-    
+
+class GammaFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = InverseLink(variable)
 
-    def simulate_data(self): 
+    def simulate_data(self):
         # shape = 2.0  # k, >= 0
         # scale = 1.0  # theta, np default, >= 0
 
         # return np.random.default_rng().gamma(shape=shape, scale=scale, size=size)
         pass
 
+
 class TweedieFamily(AbstractFamily):
-    
     def __init__(self, variable: AbstractVariable):
         self.link = LogLink(variable)
-    
-    def simulate_data(self): 
+
+    def simulate_data(self):
         # if design.dataset is not None:
         #     mean = design.dataset.get_column(dv.name).mean()
         # else:
@@ -188,9 +202,9 @@ class TweedieFamily(AbstractFamily):
         # n = size
         # return tweedie.tweedie(mu=mean, p=p, phi=phi).rvs(n)
         pass
-    
-class PoissonFamily(AbstractFamily): 
 
+
+class PoissonFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = LogLink(variable)
 
@@ -199,8 +213,8 @@ class PoissonFamily(AbstractFamily):
         # return np.random.default_rng().poisson(lam=lam, size=size)
         pass
 
-class BinomialFamily(AbstractFamily):
 
+class BinomialFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = LogitLink(variable)
 
@@ -210,10 +224,10 @@ class BinomialFamily(AbstractFamily):
         # p = 0.5  # probability of success [0, 1]
 
         # return np.random.default_rng().binomial(n=n, p=p, size=size)
-        pass 
+        pass
 
-class NegativeBinomialFamily(AbstractFamily): 
 
+class NegativeBinomialFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = LogLink(variable)
 
@@ -224,8 +238,8 @@ class NegativeBinomialFamily(AbstractFamily):
         # return np.random.default_rng().negative_binomial(n=n, p=p, size=size)
         pass
 
-class MultinomialFamily(AbstractFamily): 
 
+class MultinomialFamily(AbstractFamily):
     def __init__(self, variable: AbstractVariable):
         self.link = LogitLink(variable)
 

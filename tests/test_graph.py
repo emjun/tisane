@@ -296,7 +296,7 @@ class GraphTest(unittest.TestCase):
                 count_other_edges += 1
 
         self.assertEqual(count_has_edges, 4)  # Should this be 5?
-        self.assertEqual(count_associates_edges, 6) 
+        self.assertEqual(count_associates_edges, 6)
         # Check that Moderates stores a Moderates obj in the edge meta-data for associates edges created for moderations
         self.assertEqual(count_associates_edges_associates_objs, 4)
         self.assertEqual(count_associates_edges_moderates_objs, 2)
@@ -320,9 +320,11 @@ class GraphTest(unittest.TestCase):
 
     def test_interaction_effect_variables_not_as_ivs(self):
         u = ts.Unit("Unit")
-        a = u.nominal("Measure A", cardinality=2) # A is between-subjects
-        b = u.nominal("Measure B", cardinality=2) # B is between-subjects
-        c = u.nominal("Measure C", cardinality=2, number_of_instances=2) # B is within-subjects
+        a = u.nominal("Measure A", cardinality=2)  # A is between-subjects
+        b = u.nominal("Measure B", cardinality=2)  # B is between-subjects
+        c = u.nominal(
+            "Measure C", cardinality=2, number_of_instances=2
+        )  # B is within-subjects
         dv = u.numeric("Dependent variable")
 
         a.moderates(moderator=[b, c], on=dv)
@@ -331,20 +333,24 @@ class GraphTest(unittest.TestCase):
         gr = design.graph
 
         variables = [u, a, b, c, dv]
-        self.assertEqual(len(gr.get_variables()), len(variables) + 1) # + 1 for interaction node that is created
-        for v in variables: 
+        self.assertEqual(
+            len(gr.get_variables()), len(variables) + 1
+        )  # + 1 for interaction node that is created
+        for v in variables:
             self.assertIn(v, gr.get_variables())
         self.assertTrue(gr.has_edge(u, a, "has"))
         self.assertTrue(gr.has_edge(u, b, "has"))
         self.assertTrue(gr.has_edge(u, c, "has"))
         self.assertTrue(gr.has_edge(u, dv, "has"))
-        
+
     def test_specify_non_nesting_relationship(self):
-        participant = ts.Unit("participant id", cardinality=12) # 12 participants
-        condition = participant.nominal("condition", cardinality=2, number_of_instances=2)
-        word = ts.Unit("word", cardinality=4) # 4 different words
+        participant = ts.Unit("participant id", cardinality=12)  # 12 participants
+        condition = participant.nominal(
+            "condition", cardinality=2, number_of_instances=2
+        )
+        word = ts.Unit("word", cardinality=4)  # 4 different words
         reaction_time = participant.numeric("reaction time", number_of_instances=word)
-        
+
         # Each condition has exactly 2 words
         # Measure has measure
         condition.has(word, number_of_instances=2)

@@ -73,23 +73,28 @@ Class for SetUp (experiment's environment) settings
 class SetUp(AbstractVariable):
     variable: "Measure"
 
-    def __init__(self, name: str, order: List=None, cardinality: int=None, data=None, **kwargs):
+    def __init__(
+        self,
+        name: str,
+        order: List = None,
+        cardinality: int = None,
+        data=None,
+        **kwargs,
+    ):
         super(SetUp, self).__init__(name, data)
 
         # If there is an order of values provided
         if order is not None:
-            if cardinality is not None: 
+            if cardinality is not None:
                 self.variable = Ordinal(
                     name, order=order, cardinality=cardinality, data=data
                 )
-            else: 
-                self.variable = Ordinal(
-                    name, order=order, data=data
-                )
-        else: 
-            if cardinality is not None: 
+            else:
+                self.variable = Ordinal(name, order=order, data=data)
+        else:
+            if cardinality is not None:
                 self.variable = Nominal(name, data=data, cardinality=cardinality)
-            else: 
+            else:
                 self.variable = Numeric(name, data)
 
     def get_cardinality(self):
@@ -102,7 +107,7 @@ Class for Units
 
 
 class Unit(AbstractVariable):
-    def __init__(self, name: str, data=None, cardinality: int=None, **kwargs):
+    def __init__(self, name: str, data=None, cardinality: int = None, **kwargs):
         super(Unit, self).__init__(name, data)
         self.cardinality = cardinality
 
@@ -196,9 +201,13 @@ Super class for Measures
 class Measure(AbstractVariable):
     def __init__(self, name: str, data: None, **kwargs):
         super(Measure, self).__init__(name, data)
-    
+
     # Composition relationship between two measures
-    def has(self, measure: AbstractVariable, number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1):
+    def has(
+        self,
+        measure: AbstractVariable,
+        number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
+    ):
         repet = None
         according_to = None
         if isinstance(number_of_instances, int):
@@ -217,23 +226,22 @@ class Measure(AbstractVariable):
         measure.relationships.append(has_relat)
 
     # @returns the unit this measure is an attribute of
-    def get_unit(self) -> Unit: 
-        for r in self.relationships: 
-            if isinstance(r, Has): 
-                if r.measure is self and isinstance(r.variable, Unit): 
+    def get_unit(self) -> Unit:
+        for r in self.relationships:
+            if isinstance(r, Has):
+                if r.measure is self and isinstance(r.variable, Unit):
                     return r.variable
 
         return None
 
     # @returns the unit relationship, None otherwise
-    def get_unit_relationsihp(self) -> "Has": 
-        for r in self.relationships: 
-            if isinstance(r, Has): 
-                if r.measure is self and isinstance(r.variable, Unit): 
+    def get_unit_relationsihp(self) -> "Has":
+        for r in self.relationships:
+            if isinstance(r, Has):
+                if r.measure is self and isinstance(r.variable, Unit):
                     return r
 
         return None
-
 
 
 """

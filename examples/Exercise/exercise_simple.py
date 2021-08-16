@@ -17,8 +17,10 @@ df = pd.read_csv("./exercise_simple.csv")
 pid = ts.Unit("case", cardinality=50)  # 50 participants
 age = pid.numeric("age")  # participant age
 exercise = pid.numeric("exercise")  # years of vigorous physical exercise
-endurance = pid.numeric("endurance") # number of minutes of sustained jogging on a treadmill
-    
+endurance = pid.numeric(
+    "endurance"
+)  # number of minutes of sustained jogging on a treadmill
+
 # Declare conceptual relationships between the observed variables
 exercise.cause(endurance)
 age.associates_with(endurance)

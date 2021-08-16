@@ -337,7 +337,7 @@ class Graph(object):
         # Is the variable itself an identifier?
         if variable in identifiers:
             return variable
-        
+
         for i in identifiers:
             if self.has_edge(i, variable, "has"):
                 return i
@@ -471,17 +471,22 @@ class Graph(object):
         on: AbstractVariable,
         moderates_obj: Moderates,
     ):
-        # First make sure that all the moderators are in the graph itself 
-        for m in moderator: 
-            if isinstance(m, Measure): 
+        # First make sure that all the moderators are in the graph itself
+        for m in moderator:
+            if isinstance(m, Measure):
                 # Get identifier for each moderator
                 identifier = m.get_unit()
-                assert(identifier is not None)
+                assert identifier is not None
                 # If the moderator is not in the graph, add it first
-                if not self.has_edge(start=identifier, end=m, edge_type="has"): 
+                if not self.has_edge(start=identifier, end=m, edge_type="has"):
                     relationship = m.get_unit_relationsihp()
-                    self.has(identifier, m, relationship, repetitions=relationship.repetitions)
-                    
+                    self.has(
+                        identifier,
+                        m,
+                        relationship,
+                        repetitions=relationship.repetitions,
+                    )
+
         # Create new interaction variable
         m_names = [m.name for m in moderator]
         name = "*".join(m_names)
@@ -583,31 +588,31 @@ class Graph(object):
 
         return gr
 
-    # @returns sub-graph containing only NESTS edges 
-    def get_nesting_subgraph(self): 
+    # @returns sub-graph containing only NESTS edges
+    def get_nesting_subgraph(self):
         gr = copy.deepcopy(self)
         nodes_to_remove = set()
 
-        edges = self.get_edges() 
+        edges = self.get_edges()
         for (n0, n1, edge_data) in edges:
             edge_type = edge_data["edge_type"]
             if edge_type == "nests":
                 edge_obj = edge_data["edge_obj"]
-                assert(isinstance(edge_obj, Nests))
+                assert isinstance(edge_obj, Nests)
             else:
                 gr._graph.remove_edge(n0, n1)
                 n0_var = gr.get_variable(n0)
                 n1_var = gr.get_variable(n1)
-                # If all the edges have been removed from a node, remove the node from the graph 
+                # If all the edges have been removed from a node, remove the node from the graph
                 # but make sure not to prematurely remove Units
-                if len(gr._graph.edges(n0)) == 0 and not isinstance(n0_var, Unit): 
+                if len(gr._graph.edges(n0)) == 0 and not isinstance(n0_var, Unit):
                     # gr._graph.remove_node(n0)
                     nodes_to_remove.add(n0)
-                if len(gr._graph.edges(n1)) == 0 and not isinstance(n1_var, Unit): 
+                if len(gr._graph.edges(n1)) == 0 and not isinstance(n1_var, Unit):
                     # gr._graph.remove_node(n1)
                     nodes_to_remove.add(n1)
-        
-        for n in nodes_to_remove: 
+
+        for n in nodes_to_remove:
             gr._graph.remove_node(n)
 
         return gr

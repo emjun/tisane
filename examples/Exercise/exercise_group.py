@@ -24,20 +24,22 @@ lost.
 df = pd.read_csv("./exercise_groups.csv")
 
 # Observed variables
-adult = ts.Unit("member", cardinality=386) # 386 adults
-# Each adult has a value for motivation, which is ordinal 
+adult = ts.Unit("member", cardinality=386)  # 386 adults
+# Each adult has a value for motivation, which is ordinal
 motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
 pounds_lost = adult.numeric("pounds_lost")
 group = ts.Unit("group", cardinality=40)  # 40 groups
 # Each group has one of two approaches to weight loss they promote
-# Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity. 
-treatment_approach = group.nominal("treatment", cardinality=2, number_of_instances=1) # 2 approaches to weight loss ("Control" and "Treatment")
+# Note: By default, number_of_instances equals 1. The parameter value is explicitly set below for clarity.
+treatment_approach = group.nominal(
+    "treatment", cardinality=2, number_of_instances=1
+)  # 2 approaches to weight loss ("Control" and "Treatment")
 
 # Conceptual relationships between the observed variables
 motivation_level.cause(pounds_lost)
 treatment_approach.causes(pounds_lost)
 
-# Data measurement relationships 
+# Data measurement relationships
 # Declare nesting relationship
 adult.nests_with(group)  # Members are part of groups
 

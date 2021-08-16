@@ -223,7 +223,7 @@ class EffectsInferenceTest(unittest.TestCase):
         m1.causes(dv)
         m2.moderates(moderator=m1, on=dv)
 
-        design = ts.Design(dv=dv, ivs=[m0, m1]) # omit m2
+        design = ts.Design(dv=dv, ivs=[m0, m1])  # omit m2
 
         gr = design.graph
 
@@ -264,19 +264,21 @@ class EffectsInferenceTest(unittest.TestCase):
             if isinstance(r, Moderates):
                 ixn = r
         self.assertIsNotNone(ixn)
-        for x in ixn.moderator: 
+        for x in ixn.moderator:
             self.assertIn(x.name, var.name)
 
     def test_random_repeats(self):
         u0 = ts.Unit("Unit")
-        s0 = ts.SetUp("Time", order=[1,2,3,4,5])
+        s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5])
         dv = u0.numeric("Dependent variable", number_of_instances=s0)
 
-        design = ts.Design(dv=dv, ivs=[s0]) # main effect of Time
+        design = ts.Design(dv=dv, ivs=[s0])  # main effect of Time
         gr = design.graph
 
         main_effects = [s0]
-        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
+        random_effects = infer_random_effects(
+            gr=gr, query=design, main_effects=main_effects
+        )
         self.assertEqual(len(random_effects), 1)
         ri = random_effects.pop()
         self.assertIsInstance(ri, RandomIntercept)
@@ -292,29 +294,31 @@ class EffectsInferenceTest(unittest.TestCase):
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
-        
+
         main_effects = design.ivs
-        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
+        random_effects = infer_random_effects(
+            gr=gr, query=design, main_effects=main_effects
+        )
         self.assertEqual(len(random_effects), 1)
         ri = random_effects.pop()
         self.assertIsInstance(ri, RandomIntercept)
         self.assertIs(ri.groups, u1)
-    
+
     # Barr et al. 2013 example
     def test_composed_measures_with_repeats(self):
         subject = ts.Unit("Subject", cardinality=12)
         word = ts.Unit("Word", cardinality=4)
         # Each subject has a two values for condition, which is nominal.
-        # Verbose: Each instance of subject has two instances of a nominal variable condition. 
-        # Informally: Each subjects sees two (both) conditions. 
+        # Verbose: Each instance of subject has two instances of a nominal variable condition.
+        # Informally: Each subjects sees two (both) conditions.
         condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
         # Repeated measures
         # Each subject has a measure reaction time, which is numeric, for each instance of a word
-        # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word. 
+        # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
         # Informally: Each subject has a reaction time for each word.
-        reaction_time = subject.numeric("Time", number_of_instances=word) 
+        reaction_time = subject.numeric("Time", number_of_instances=word)
 
-        # Each condition has/is comprised of two words. 
+        # Each condition has/is comprised of two words.
         condition.has(word, number_of_instances=2)
         # ALTERNATIVELY, we could do something like the below (not implemented). It is a bit more complicated to calculate the number of instances, but still doable I think.
         # Each word has one value for condition (already defined above as a measure of subject)
@@ -323,13 +327,17 @@ class EffectsInferenceTest(unittest.TestCase):
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
         main_effects = design.ivs
-        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
-        self.assertEqual(len(random_effects), 3) # two random intercepts, 1 random slope
+        random_effects = infer_random_effects(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        self.assertEqual(
+            len(random_effects), 3
+        )  # two random intercepts, 1 random slope
         for re in random_effects:
             if isinstance(re, RandomSlope):
                 self.assertIs(re.iv, condition)
                 self.assertIs(re.groups, subject)
-            else: 
+            else:
                 self.assertIsInstance(re, RandomIntercept)
                 if re.groups != subject:
                     self.assertIs(re.groups, word)
@@ -339,16 +347,16 @@ class EffectsInferenceTest(unittest.TestCase):
     #     subject = ts.Unit("Subject")
     #     word = ts.Unit("Word")
     #     # Each subject has a two values for condition, which is nominal.
-    #     # Verbose: Each instance of subject has two instances of a nominal variable condition. 
-    #     # Informally: Each subjects sees two (both) conditions. 
+    #     # Verbose: Each instance of subject has two instances of a nominal variable condition.
+    #     # Informally: Each subjects sees two (both) conditions.
     #     condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
     #     # Repeated measures
     #     # Each subject has a measure reaction time, which is numeric, for each instance of a word
-    #     # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word. 
+    #     # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
     #     # Informally: Each subject has a reaction time for each word.
     #     reaction_time = subject.numeric("Time", number_of_instances=1) # TODO: DOES THIS EVEN MAKE SENSE!?
 
-    #     # Each condition has/is comprised of two words. 
+    #     # Each condition has/is comprised of two words.
     #     condition.has(word, number_of_instances=2)
     #     # ALTERNATIVELY, we could do something like the below (not implemented). It is a bit more complicated to calculate the number of instances, but still doable I think.
     #     # Each word has one value for condition (already defined above as a measure of subject)
@@ -360,5 +368,3 @@ class EffectsInferenceTest(unittest.TestCase):
     #     random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
     #     self.assertEqual(len(random_effects), 3) # two random intercepts, 1 random slope
     #     # TODO: How to ask if slope and intercept are correlated?
-
-    

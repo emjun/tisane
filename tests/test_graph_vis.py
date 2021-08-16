@@ -69,10 +69,10 @@ class GraphVisTest(unittest.TestCase):
     def test_exercise_group_simplified(self):
         adult = ts.Unit("member", cardinality=386)
         motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
-        # Adults have pounds lost. 
+        # Adults have pounds lost.
         pounds_lost = adult.numeric("pounds_lost")
         age = adult.numeric("age")
-        # Adults have one of four racial identities in this study. 
+        # Adults have one of four racial identities in this study.
         race = adult.nominal("race group", cardinality=4)
         week = ts.SetUp("Week", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 
@@ -85,6 +85,7 @@ class GraphVisTest(unittest.TestCase):
         design = ts.Design(dv=pounds_lost, ivs=[age, race, week])
         gr = design.graph
         gr._get_graph_tikz()
+
 
 #         \begin{tikzpicture}[cause/.style={draw=red, "c", text=red},
 #                     associate/.style={draw=black},

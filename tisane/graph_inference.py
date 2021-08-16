@@ -6,13 +6,22 @@ from abc import abstractmethod
 import pdb
 from tisane import variable
 from tisane import random_effects
-from tisane.variable import AbstractVariable, Has, Measure, Moderates, Nests, NumberValue, Unit, Nominal
+from tisane.variable import (
+    AbstractVariable,
+    Has,
+    Measure,
+    Moderates,
+    Nests,
+    NumberValue,
+    Unit,
+    Nominal,
+)
 from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
 from itertools import chain, combinations
 from typing import Dict, List, Set, Any, Tuple
-import typing # for Union
+import typing  # for Union
 import networkx as nx
 
 ##### HELPER #####
@@ -225,155 +234,185 @@ def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
 
     return main_candidates
 
+
 # @param on is outcome/dependent variable of interest
 # @returns set of variable names representing interaction effects in @param gr
-def find_moderates_edges_on_variable(gr: Graph, on: AbstractVariable) -> Set[str]: 
-    moderates = set() 
+def find_moderates_edges_on_variable(gr: Graph, on: AbstractVariable) -> Set[str]:
+    moderates = set()
 
     # Get causal subgraph
     conceptual_sub = gr.get_conceptual_subgraph()
 
     edges = conceptual_sub.get_edges()
-    for e in edges: 
+    for e in edges:
         (n0, n1, edge_data) = e
-        if n1 == on.name: 
-            if edge_data["edge_type"] == "associates": 
+        if n1 == on.name:
+            if edge_data["edge_type"] == "associates":
                 edge_obj = edge_data["edge_obj"]
-                if isinstance(edge_obj, Moderates): 
+                if isinstance(edge_obj, Moderates):
                     moderates.add(n0)
-    
+
     return moderates
+
 
 # Filters the list of interaction_names to only include those that involve two or more of the variables named in @param variables
 # @returns the names of moderates/interaction variables that contain two or more of the @param variables
-def filter_interactions_involving_variables(variables: List[AbstractVariable], interaction_names=Set[str]) -> Set[str]: 
-    interactions = set() 
+def filter_interactions_involving_variables(
+    variables: List[AbstractVariable], interaction_names=Set[str]
+) -> Set[str]:
+    interactions = set()
 
-    for ixn in interaction_names: 
-        assert(isinstance(ixn, str)) # ixn should be a string like "Measure 0*Measure 1"
-        assert("*" in ixn)
+    for ixn in interaction_names:
+        assert isinstance(ixn, str)  # ixn should be a string like "Measure 0*Measure 1"
+        assert "*" in ixn
         num_vars = 0
-        for v in variables: 
-            if v.name in ixn: 
+        for v in variables:
+            if v.name in ixn:
                 num_vars += 1
-        if num_vars >=2: 
+        if num_vars >= 2:
             interactions.add(ixn)
 
     return interactions
 
-# More computationally efficient: Look through list of main effects in @param variables and find any interaction effects involving them 
-def find_interactions_for_main_effects(variables: List[AbstractVariable]): 
+
+# More computationally efficient: Look through list of main effects in @param variables and find any interaction effects involving them
+def find_interactions_for_main_effects(variables: List[AbstractVariable]):
     pass
 
+
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_interaction_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable]) -> Set[AbstractVariable]:
-    interaction_candidates = set() 
+def infer_interaction_effects(
+    gr: Graph, query: Design, main_effects: List[AbstractVariable]
+) -> Set[AbstractVariable]:
+    interaction_candidates = set()
 
     ivs = query.ivs
     dv = query.dv
-    interactions = find_moderates_edges_on_variable(gr=gr, on=dv) # Find all possible interactions
-    interactions = filter_interactions_involving_variables(variables=main_effects, interaction_names=interactions) # Filter to interactions involving two or more ivs
-    interactions_variables = cast_to_variables(names=interactions, variables=gr.get_variables())
+    interactions = find_moderates_edges_on_variable(
+        gr=gr, on=dv
+    )  # Find all possible interactions
+    interactions = filter_interactions_involving_variables(
+        variables=main_effects, interaction_names=interactions
+    )  # Filter to interactions involving two or more ivs
+    interactions_variables = cast_to_variables(
+        names=interactions, variables=gr.get_variables()
+    )
     interaction_candidates = interaction_candidates.union(interactions_variables)
     return interaction_candidates
 
-def construct_random_effects_for_repeated_measures(gr: Graph, query: Design) -> Set[RandomIntercept]: 
-    random_effects = set() 
+
+def construct_random_effects_for_repeated_measures(
+    gr: Graph, query: Design
+) -> Set[RandomIntercept]:
+    random_effects = set()
     # Get dv's unit
     dv = query.dv
     dv_unit = gr.get_identifier_for_variable(dv)
 
-    if gr.has_edge(start=dv_unit, end=dv, edge_type="has"): 
+    if gr.has_edge(start=dv_unit, end=dv, edge_type="has"):
         (n0, n1, edge_data) = gr.get_edge(start=dv_unit, end=dv, edge_type="has")
         edge_obj = edge_data["edge_obj"]
-        assert(isinstance(edge_obj, Has))
-        assert(edge_obj.variable == dv_unit)
-        assert(edge_obj.measure == dv)
-        # How many repeated measures are there? 
-        assert(isinstance(edge_obj.repetitions, NumberValue))
+        assert isinstance(edge_obj, Has)
+        assert edge_obj.variable == dv_unit
+        assert edge_obj.measure == dv
+        # How many repeated measures are there?
+        assert isinstance(edge_obj.repetitions, NumberValue)
         # There is more than one observation of the DV for each unit
         # import pdb; pdb.set_trace()
-        if edge_obj.repetitions.is_greater_than_one(): 
-            # Add a random intercept for the unit U 
+        if edge_obj.repetitions.is_greater_than_one():
+            # Add a random intercept for the unit U
             ri = RandomIntercept(groups=dv_unit)
-            random_effects.add(ri)  
+            random_effects.add(ri)
 
             ri = RandomIntercept(groups=edge_obj.according_to)
-            random_effects.add(ri)  
+            random_effects.add(ri)
 
     return random_effects
 
+
 # @returns an ordered list of unitts included in @param gr, the lowest unit/level is in the lowest index
-def find_ordered_list_of_units(gr: Graph) -> List[str]: 
-    measurement_sub = gr.get_nesting_subgraph() # returns subgraph containing nests edges only  
-    # Topologically sort the edges/nodes 
+def find_ordered_list_of_units(gr: Graph) -> List[str]:
+    measurement_sub = (
+        gr.get_nesting_subgraph()
+    )  # returns subgraph containing nests edges only
+    # Topologically sort the edges/nodes
     # Note: this may need to be revised to more fully support units/levels where one unit can nest within multiple other units (e.g., in some non-nested cases)
-    ordered_units = list(nx.topological_sort(measurement_sub._graph)) 
-    # If there is only one unit, there would be no nesting relationships to the set of ordered_units in case all measures come from the same unit 
-    if len(ordered_units) == 0: 
+    ordered_units = list(nx.topological_sort(measurement_sub._graph))
+    # If there is only one unit, there would be no nesting relationships to the set of ordered_units in case all measures come from the same unit
+    if len(ordered_units) == 0:
         identifiers = gr.get_identifiers()
-        assert(len(identifiers), 1)
+        assert (len(identifiers), 1)
         ordered_units = [i.name for i in identifiers]
 
     return ordered_units
 
+
 # Make random effects for main effects in @param variables
-# The number of 
-def construct_random_effects_for_nests(gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
-    random_effects = set() 
+# The number of
+def construct_random_effects_for_nests(
+    gr: Graph, dv: AbstractVariable, variables: List[AbstractVariable]
+) -> Set[RandomIntercept]:
+    random_effects = set()
     variable_units = set()
-    
-    # Find all the units for all the variables involved    
+
+    # Find all the units for all the variables involved
     dv_unit = gr.get_identifier_for_variable(dv)
     # Get list of all units
-    all_ordered_units = find_ordered_list_of_units(gr=gr) # returns a list of unit names for which there are nests relationships
-    assert(dv_unit.name in all_ordered_units)
-    idx = all_ordered_units.index(dv_unit.name) 
+    all_ordered_units = find_ordered_list_of_units(
+        gr=gr
+    )  # returns a list of unit names for which there are nests relationships
+    assert dv_unit.name in all_ordered_units
+    idx = all_ordered_units.index(dv_unit.name)
     # For random effects due to nesting, focus on those that nest the unit that has the DV
-    units_to_consider = all_ordered_units[idx+1:]
+    units_to_consider = all_ordered_units[idx + 1 :]
 
     # Add random effects for nested variables now
-    for v in variables: 
+    for v in variables:
         v_unit = gr.get_identifier_for_variable(v)
         # Is the variable's unit the same as the dv's
-        if v_unit is dv_unit: 
-            assert(v_unit.name not in units_to_consider)
+        if v_unit is dv_unit:
+            assert v_unit.name not in units_to_consider
             variable_units.add(v_unit.name)
 
-        else: 
-            if v_unit is not None: 
-                assert(v_unit.name in units_to_consider)
+        else:
+            if v_unit is not None:
+                assert v_unit.name in units_to_consider
 
-    # Add any nesting units whose measures are not included in the list of variables 
-    for u in units_to_consider: 
-        if u not in variable_units: 
+    # Add any nesting units whose measures are not included in the list of variables
+    for u in units_to_consider:
+        if u not in variable_units:
             unit = gr.get_variable(name=u)
             ri = RandomIntercept(groups=unit)
             random_effects.add(ri)
 
-    # Check if there are other units in which v_unit is nested 
+    # Check if there are other units in which v_unit is nested
     # TODO: If len(units_to_consider) > 1 (there are multiple chains of nesting), there may be a more concise way to express this rather than adding each as a separat random intercept
     # TODO: Does this approach work for non-nested as well?
     return random_effects
+
 
 # "If a factor is within-unit and there are multiple observations per
 # treatment level per unit, then you need a by-unit random slope for that
 # TODO: Could this rule also apply if all the variables are units? or all measures?
 # factor...." - Barr et al. 2013
-def construct_random_effects_for_composed_measures(gr: Graph, variables: List[AbstractVariable]) -> Set[RandomIntercept]: 
-    random_effects = set() 
+def construct_random_effects_for_composed_measures(
+    gr: Graph, variables: List[AbstractVariable]
+) -> Set[RandomIntercept]:
+    random_effects = set()
 
     # Go through the selected main effects, looking only for Measures
-    for v in variables: 
+    for v in variables:
         if isinstance(v, Measure):
             for r in v.relationships:
                 if isinstance(r, Has):
                     # Does this measure have/consist of units?
                     if v == r.variable and isinstance(r.measure, Unit):
                         v_unit = gr.get_identifier_for_variable(v)
-                        (n0, n1, edge_data) = gr.get_edge(start=v_unit, end=v, edge_type="has")
+                        (n0, n1, edge_data) = gr.get_edge(
+                            start=v_unit, end=v, edge_type="has"
+                        )
                         v_unit_has_obj = edge_data["edge_obj"]
-                        assert(isinstance(v_unit_has_obj.repetitions, NumberValue))
+                        assert isinstance(v_unit_has_obj.repetitions, NumberValue)
                         # Is variable v within-subjects?
                         if v_unit_has_obj.repetitions.is_greater_than_one():
                             # Does variable v have multiple instances of the unit r.measure?
@@ -385,58 +424,65 @@ def construct_random_effects_for_composed_measures(gr: Graph, variables: List[Ab
                             # each v. This is like saying r.measure and v are
                             # 1:1, meaning they are redundant measures of each
                             # other. By transitive property, v_unit has multiple
-                            # r.measure instances. 
+                            # r.measure instances.
                             else:
-                                assert(v_unit_has_obj.repetitions.is_equal_to_one())
+                                assert v_unit_has_obj.repetitions.is_equal_to_one()
                                 ri = RandomIntercept(groups=v_unit)
                                 random_effects.add(ri)
 
     return random_effects
 
+
 # Filter a set such that only one of each random effect per variable is returned
-def filter_random_candidates(random_candidates: Set[RandomEffect]) -> Set[RandomEffect]: 
-    random_effects_names = set() 
+def filter_random_candidates(random_candidates: Set[RandomEffect]) -> Set[RandomEffect]:
+    random_effects_names = set()
     random_effects = set()
 
-    for rc in random_candidates: 
-        if isinstance(rc, RandomIntercept): 
+    for rc in random_candidates:
+        if isinstance(rc, RandomIntercept):
             name_key = (rc.groups.name, rc.__class__)
-        else: 
-            assert(isinstance(rc, RandomSlope))
+        else:
+            assert isinstance(rc, RandomSlope)
             name_key = (rc.groups.name, rc.iv.name, rc.__class__)
-        # Have we seen this before? 
-        if name_key in random_effects_names: 
-            pass 
-        else: # This random effect is new!
+        # Have we seen this before?
+        if name_key in random_effects_names:
+            pass
+        else:  # This random effect is new!
             random_effects.add(rc)
             random_effects_names.add(name_key)
 
     return random_effects
 
 
-def get_variables_in_interaction_effect(gr: Graph, interaction_effect: AbstractVariable) -> List[AbstractVariable]:
+def get_variables_in_interaction_effect(
+    gr: Graph, interaction_effect: AbstractVariable
+) -> List[AbstractVariable]:
     variables = list()
 
     interaction_effect_name = interaction_effect.name
     names = interaction_effect_name.split("*")
     # Get the variables that comprise @param interaction_effect
-    for n in names: 
+    for n in names:
         var = gr.get_variable(name=n)
         if var is None:
-            import pdb;pdb.set_trace()
+            import pdb
 
-        assert(var is not None)
+            pdb.set_trace()
+
+        assert var is not None
         # Add to list of variables
         variables.append(var)
 
     return variables
 
 
-def create_variable_from_set_of_variables(variables: Set[AbstractVariable]) -> AbstractVariable:
+def create_variable_from_set_of_variables(
+    variables: Set[AbstractVariable],
+) -> AbstractVariable:
     # Create new interaction variable
     names = [v.name for v in variables]
     name = "*".join(names)
-    
+
     cardinality = 1
     for v in variables:
         if v.get_cardinality() is not None:
@@ -448,68 +494,90 @@ def create_variable_from_set_of_variables(variables: Set[AbstractVariable]) -> A
 
     return var
 
-def find_largest_subset_of_variables_that_vary_within_unit(gr: Graph, interaction_effect: AbstractVariable) -> AbstractVariable:
-    variables = get_variables_in_interaction_effect(gr=gr, interaction_effect=interaction_effect)
+
+def find_largest_subset_of_variables_that_vary_within_unit(
+    gr: Graph, interaction_effect: AbstractVariable
+) -> AbstractVariable:
+    variables = get_variables_in_interaction_effect(
+        gr=gr, interaction_effect=interaction_effect
+    )
     subset = set()
-    for v in variables: 
-        assert(gr.has_variable(variable=v))
+    for v in variables:
+        assert gr.has_variable(variable=v)
         v_unit = gr.get_identifier_for_variable(variable=v)
         # Is the variable a unit variable?
-        if v == v_unit: 
+        if v == v_unit:
             # Get nesting parent
             for r in v.relationships:
                 if isinstance(r, Nests):
-                    if r.base == v: 
+                    if r.base == v:
                         subset.add(r.group)
-        else: 
-            assert(gr.has_variable(variable=v))
+        else:
+            assert gr.has_variable(variable=v)
             v_unit = gr.get_identifier_for_variable(variable=v)
             if v_unit is None:
-                import pdb; pdb.set_trace()
+                import pdb
+
+                pdb.set_trace()
             (n0, n1, edge_data) = gr.get_edge(start=v_unit, end=v, edge_type="has")
             edge_obj = edge_data["edge_obj"]
             # Is v is within-subjects?
-            if edge_obj.repetitions.is_greater_than_one(): 
+            if edge_obj.repetitions.is_greater_than_one():
                 subset.add(v)
 
     return subset
-    
-def get_identifier_for_subset_interaction(gr: Graph, interaction_effect: AbstractVariable) -> AbstractVariable: 
+
+
+def get_identifier_for_subset_interaction(
+    gr: Graph, interaction_effect: AbstractVariable
+) -> AbstractVariable:
     units = set()
 
-    variables = get_variables_in_interaction_effect(gr=gr, interaction_effect=interaction_effect)
-    for v in variables: 
+    variables = get_variables_in_interaction_effect(
+        gr=gr, interaction_effect=interaction_effect
+    )
+    for v in variables:
         v_unit = gr.get_identifier_for_variable(variable=v)
-        assert(v_unit is not None)
+        assert v_unit is not None
         units.add(v_unit)
-    
-    if len(units) == 1: 
+
+    if len(units) == 1:
         return units.pop()
-    else: 
+    else:
         ordered_list_units = find_ordered_list_of_units(gr=gr)
-        highest_unit = units.pop() 
-        for u in units: 
-            if ordered_list_units.index(highest_unit.name) < ordered_list_units.index(u.name): 
+        highest_unit = units.pop()
+        for u in units:
+            if ordered_list_units.index(highest_unit.name) < ordered_list_units.index(
+                u.name
+            ):
                 highest_unit = u
         return highest_unit
 
-def interaction_is_all_within(interaction: AbstractVariable, within_subset: Set[AbstractVariable]) -> bool:
-        within_subset_names = [w.name for w in within_subset]
-        ixn_var_names = interaction.name.split("*")
-        if len(ixn_var_names) == len(within_subset_names):
-            assert(len(within_subset) > 0)
-            for v_name in ixn_var_names: 
-                if v_name not in within_subset_names:
-                    return False
-        else: 
-            return False
-        
-        return True
 
-def construct_random_effects_for_interactions(gr: Graph, interactions: Set[AbstractVariable]) -> Set[RandomEffect]:
+def interaction_is_all_within(
+    interaction: AbstractVariable, within_subset: Set[AbstractVariable]
+) -> bool:
+    within_subset_names = [w.name for w in within_subset]
+    ixn_var_names = interaction.name.split("*")
+    if len(ixn_var_names) == len(within_subset_names):
+        assert len(within_subset) > 0
+        for v_name in ixn_var_names:
+            if v_name not in within_subset_names:
+                return False
+    else:
+        return False
+
+    return True
+
+
+def construct_random_effects_for_interactions(
+    gr: Graph, interactions: Set[AbstractVariable]
+) -> Set[RandomEffect]:
     random_effects = set()
-    for ixn in interactions: 
-        within_subset = find_largest_subset_of_variables_that_vary_within_unit(gr=gr, interaction_effect=ixn)
+    for ixn in interactions:
+        within_subset = find_largest_subset_of_variables_that_vary_within_unit(
+            gr=gr, interaction_effect=ixn
+        )
 
         # Are all the variables in ixn within-subjects?
         if interaction_is_all_within(interaction=ixn, within_subset=within_subset):
@@ -517,34 +585,52 @@ def construct_random_effects_for_interactions(gr: Graph, interactions: Set[Abstr
             rs = RandomSlope(ixn, ixn_unit)
             random_effects.add(rs)
         # Are there any within-subjects variables in ixn?
-        elif len(within_subset) > 0: 
+        elif len(within_subset) > 0:
             # TODO: Below, May want to see if we can get an existing variable from @param gr?
-            within_subset_variable = create_variable_from_set_of_variables(variables=within_subset)
-            within_subset_variable_unit = get_identifier_for_subset_interaction(gr=gr, interaction_effect=within_subset_variable)
+            within_subset_variable = create_variable_from_set_of_variables(
+                variables=within_subset
+            )
+            within_subset_variable_unit = get_identifier_for_subset_interaction(
+                gr=gr, interaction_effect=within_subset_variable
+            )
             if not isinstance(within_subset_variable_unit, Unit):
-                import pdb; pdb.set_trace()
-            assert(isinstance(within_subset_variable_unit, Unit))
+                import pdb
+
+                pdb.set_trace()
+            assert isinstance(within_subset_variable_unit, Unit)
             rs = RandomSlope(within_subset_variable, within_subset_variable_unit)
             random_effects.add(rs)
 
     return random_effects
 
+
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable], interaction_effects: Set[AbstractVariable]=None): 
+def infer_random_effects(
+    gr: Graph,
+    query: Design,
+    main_effects: List[AbstractVariable],
+    interaction_effects: Set[AbstractVariable] = None,
+):
     random_candidates = set()
 
     repeats_effects = construct_random_effects_for_repeated_measures(gr=gr, query=query)
     # repeats_names = filter_random_effects_involving_variables(main_effects, random_names=repeats_names)
     random_candidates = random_candidates.union(repeats_effects)
 
-    nests_effects = construct_random_effects_for_nests(gr=gr, dv=query.dv, variables=main_effects)
+    nests_effects = construct_random_effects_for_nests(
+        gr=gr, dv=query.dv, variables=main_effects
+    )
     # nests_variables = cast_to_variables(names=nests_names, variables=main_effects)
     random_candidates = random_candidates.union(nests_effects)
 
-    composed_effects = construct_random_effects_for_composed_measures(gr=gr, variables=main_effects)
+    composed_effects = construct_random_effects_for_composed_measures(
+        gr=gr, variables=main_effects
+    )
     random_candidates = random_candidates.union(composed_effects)
 
-    interaction_random_effects = construct_random_effects_for_interactions(gr=gr, interactions=interaction_effects)
+    interaction_random_effects = construct_random_effects_for_interactions(
+        gr=gr, interactions=interaction_effects
+    )
     random_candidates = random_candidates.union(interaction_random_effects)
 
     random_candidates = filter_random_candidates(random_candidates)

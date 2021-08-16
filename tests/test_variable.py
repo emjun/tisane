@@ -6,7 +6,7 @@ NOTE: The API tests are only to test the API, not to make any statements about h
 import tisane as ts
 from tisane.variable import (
     AbstractVariable,
-    Unit, 
+    Unit,
     Measure,
     Associates,
     Has,
@@ -314,10 +314,10 @@ class VariableTest(unittest.TestCase):
 
     # Test that the has/composition relationship updates both variables involved
     def test_has(self):
-        participant = ts.Unit("participant id", cardinality=12) # 12 participants
+        participant = ts.Unit("participant id", cardinality=12)  # 12 participants
         condition = participant.nominal("condition", cardinality=2)
-        word = ts.Unit("word", cardinality=4) # 4 different words
-        
+        word = ts.Unit("word", cardinality=4)  # 4 different words
+
         # Each condition has exactly 2 words
         # Measure has measure
         condition.has(word, number_of_instances=2)
@@ -340,8 +340,6 @@ class VariableTest(unittest.TestCase):
                 word_has_relat = r
         self.assertIsNotNone(word_has_relat)
         self.assertIs(condit_has_relat, word_has_relat)
-
-
 
     # def test_has_variables(self):
     #     # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects
