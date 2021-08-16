@@ -360,3 +360,5 @@ class EffectsInferenceTest(unittest.TestCase):
     #     random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
     #     self.assertEqual(len(random_effects), 3) # two random intercepts, 1 random slope
     #     # TODO: How to ask if slope and intercept are correlated?
+
+    

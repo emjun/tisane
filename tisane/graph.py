@@ -1,6 +1,7 @@
 from tisane.variable import (
     Nominal,
     Measure,
+    SetUp,
     Unit,
     AbstractVariable,
     Has,
@@ -13,7 +14,7 @@ from tisane.variable import (
 )
 import networkx as nx
 import pydot
-from typing import List, Union, Tuple
+from typing import List, Set, Union, Tuple
 import typing
 import copy
 from tisane.graph_vis_tikz_template import formatTikzVis
@@ -87,6 +88,8 @@ class Graph(object):
             self._graph = nx.MultiDiGraph()
         # Depends on composing/non-nesting relationship: This might not make sense in the long term
         if isinstance(variable, Unit):
+            is_identifier = True
+        elif isinstance(variable, SetUp):
             is_identifier = True
         self._graph.add_node(
             variable.name, variable=variable, is_identifier=is_identifier
@@ -314,6 +317,9 @@ class Graph(object):
             if isinstance(n_var, Unit):
                 assert is_id
                 identifiers.append(n_var)
+            elif isinstance(n_var, SetUp):
+                assert is_id
+                identifiers.append(n_var)
             # Removed this when add composing/has relationships between measure and unit
             # This is to be backwards compatible with code that does not use the Unit type
             # else:
@@ -331,7 +337,7 @@ class Graph(object):
         # Is the variable itself an identifier?
         if variable in identifiers:
             return variable
-
+        
         for i in identifiers:
             if self.has_edge(i, variable, "has"):
                 return i

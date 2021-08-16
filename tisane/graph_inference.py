@@ -3,8 +3,10 @@ Inferring model effects structures from the graph IR
 """
 
 from abc import abstractmethod
+import pdb
 from tisane import variable
-from tisane.variable import AbstractVariable, Has, Measure, Moderates, NumberValue, Unit
+from tisane import random_effects
+from tisane.variable import AbstractVariable, Has, Measure, Moderates, Nests, NumberValue, Unit, Nominal
 from tisane.random_effects import RandomEffect, RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
@@ -411,8 +413,107 @@ def filter_random_candidates(random_candidates: Set[RandomEffect]) -> Set[Random
 
     return random_effects
 
+def get_variables_in_interaction_effect(gr: Graph, interaction_effect: AbstractVariable) -> List[AbstractVariable]:
+    variables = list()
+
+    interaction_effect_name = interaction_effect.name
+    names = interaction_effect_name.split("*")
+    # Get the variables that comprise @param interaction_effect
+    for n in names: 
+        var = gr.get_variable(name=n)
+        if var is None:
+            import pdb;pdb.set_trace()
+
+        assert(var is not None)
+        # Add to list of variables
+        variables.append(var)
+
+    return variables
+
+
+def create_variable_from_set_of_variables(variables: Set[AbstractVariable]) -> AbstractVariable:
+    # Create new interaction variable
+    names = [v.name for v in variables]
+    name = "*".join(names)
+    
+    cardinality = 1
+    for v in variables:
+        if v.get_cardinality() is not None:
+            cardinality *= v.get_cardinality()
+
+    var = Nominal(
+        name, cardinality=cardinality
+    )  # Interaction variables are cast as nominal variables
+
+    return var
+
+def find_largest_subset_of_variables_that_vary_within_unit(gr: Graph, interaction_effect: AbstractVariable) -> AbstractVariable:
+    variables = get_variables_in_interaction_effect(gr=gr, interaction_effect=interaction_effect)
+    subset = set()
+    for v in variables: 
+        assert(gr.has_variable(variable=v))
+        v_unit = gr.get_identifier_for_variable(variable=v)
+        # Is the variable a unit variable?
+        if v == v_unit: 
+            # Get nesting parent
+            for r in v.relationships:
+                if isinstance(r, Nests):
+                    if r.base == v: 
+                        subset.add(r.group)
+        else: 
+            assert(gr.has_variable(variable=v))
+            v_unit = gr.get_identifier_for_variable(variable=v)
+            if v_unit is None:
+                import pdb; pdb.set_trace()
+            (n0, n1, edge_data) = gr.get_edge(start=v_unit, end=v, edge_type="has")
+            edge_obj = edge_data["edge_obj"]
+            # Is v is within-subjects?
+            if edge_obj.repetitions.is_greater_than_one(): 
+                subset.add(v)
+
+    return subset
+    
+def get_identifier_for_subset_interaction(gr=gr, variable=within_subset_variable):
+    pass
+
+def interaction_is_all_within(interaction: AbstractVariable, within_subset: Set[AbstractVariable]) -> bool:
+        within_subset_names = [w.name for w in within_subset]
+        ixn_var_names = interaction.name.split("*")
+        if len(ixn_var_names) == len(within_subset_names):
+            assert(len(within_subset) > 0)
+            for v_name in ixn_var_names: 
+                if v_name not in within_subset_names:
+                    return False
+        else: 
+            return False
+        
+        return True
+
+def construct_random_effects_for_interactions(gr: Graph, interactions: Set[AbstractVariable]) -> Set[RandomEffect]:
+    random_effects = set()
+    for ixn in interactions: 
+        within_subset = find_largest_subset_of_variables_that_vary_within_unit(gr=gr, interaction_effect=ixn)
+
+        # Are all the variables in ixn within-subjects?
+        if interaction_is_all_within(interaction=ixn, within_subset=within_subset):
+            ixn_unit = gr.get_identifier_for_variable(variable=ixn)
+            rs = RandomSlope(ixn, ixn_unit)
+            random_effects.add(rs)
+        # Are there any within-subjects variables in ixn?
+        elif len(within_subset) > 0: 
+            # TODO: Below, May want to see if we can get an existing variable from @param gr?
+            within_subset_variable = create_variable_from_set_of_variables(variables=within_subset)
+            within_subset_variable_unit = get_identifier_for_subset_interaction(gr=gr, variable=within_subset_variable)
+            if not isinstance(within_subset_variable_unit, Unit):
+                import pdb; pdb.set_trace()
+            assert(isinstance(within_subset_variable_unit, Unit))
+            rs = RandomSlope(within_subset_variable, within_subset_variable_unit)
+            random_effects.add(rs)
+
+    return random_effects
+
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable]): 
+def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVariable], interaction_effects: Set[AbstractVariable]=None): 
     random_candidates = set()
 
     repeats_effects = construct_random_effects_for_repeated_measures(gr=gr, query=query)
@@ -425,6 +526,9 @@ def infer_random_effects(gr: Graph, query: Design, main_effects: List[AbstractVa
 
     composed_effects = construct_random_effects_for_composed_measures(gr=gr, variables=main_effects)
     random_candidates = random_candidates.union(composed_effects)
+
+    interaction_random_effects = construct_random_effects_for_interactions(gr=gr, interactions=interaction_effects)
+    random_candidates = random_candidates.union(interaction_random_effects)
 
     random_candidates = filter_random_candidates(random_candidates)
     return random_candidates
