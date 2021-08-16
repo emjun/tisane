@@ -69,10 +69,6 @@ class Design(object):
         # Add all ivs
         for v in ivs:
             self._add_variable_to_graph(v)
-        # # Add all the units
-        # units = self.graph.get_identifiers()
-        # for u in units:
-        #     import pdb;pdb.set_trace()
 
         # Add any nesting relationships involving IVs that may be implicit
         self._add_nesting_relationships_to_graph()

@@ -408,10 +408,11 @@ def filter_random_candidates(random_candidates: Set[RandomEffect]) -> Set[Random
         if name_key in random_effects_names: 
             pass 
         else: # This random effect is new!
-            random_effects_names.add(name_key)
             random_effects.add(rc)
+            random_effects_names.add(name_key)
 
     return random_effects
+
 
 def get_variables_in_interaction_effect(gr: Graph, interaction_effect: AbstractVariable) -> List[AbstractVariable]:
     variables = list()
@@ -473,8 +474,24 @@ def find_largest_subset_of_variables_that_vary_within_unit(gr: Graph, interactio
 
     return subset
     
-def get_identifier_for_subset_interaction(gr=gr, variable=within_subset_variable):
-    pass
+def get_identifier_for_subset_interaction(gr: Graph, interaction_effect: AbstractVariable) -> AbstractVariable: 
+    units = set()
+
+    variables = get_variables_in_interaction_effect(gr=gr, interaction_effect=interaction_effect)
+    for v in variables: 
+        v_unit = gr.get_identifier_for_variable(variable=v)
+        assert(v_unit is not None)
+        units.add(v_unit)
+    
+    if len(units) == 1: 
+        return units.pop()
+    else: 
+        ordered_list_units = find_ordered_list_of_units(gr=gr)
+        highest_unit = units.pop() 
+        for u in units: 
+            if ordered_list_units.index(highest_unit.name) < ordered_list_units.index(u.name): 
+                highest_unit = u
+        return highest_unit
 
 def interaction_is_all_within(interaction: AbstractVariable, within_subset: Set[AbstractVariable]) -> bool:
         within_subset_names = [w.name for w in within_subset]
@@ -503,7 +520,7 @@ def construct_random_effects_for_interactions(gr: Graph, interactions: Set[Abstr
         elif len(within_subset) > 0: 
             # TODO: Below, May want to see if we can get an existing variable from @param gr?
             within_subset_variable = create_variable_from_set_of_variables(variables=within_subset)
-            within_subset_variable_unit = get_identifier_for_subset_interaction(gr=gr, variable=within_subset_variable)
+            within_subset_variable_unit = get_identifier_for_subset_interaction(gr=gr, interaction_effect=within_subset_variable)
             if not isinstance(within_subset_variable_unit, Unit):
                 import pdb; pdb.set_trace()
             assert(isinstance(within_subset_variable_unit, Unit))
