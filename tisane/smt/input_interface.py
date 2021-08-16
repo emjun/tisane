@@ -2051,7 +2051,7 @@ class InputInterface(object):
 
     def get_link_options(self, family_fact: z3.BoolRef):
 
-        link_functions = self.synthesizer.generate_link_functions(
+        link_functions = self.synthesizer.infer_link_functions(
             design=self.design, family_fact=family_fact
         )
 

@@ -40,9 +40,9 @@ from tisane.variable import (
     AtMost,  # Subclass of NumberValue
     Repeats,
 )
-from tisane.statistical_model_inference import (
-    generate_family_functions,
-    generate_link_functions,
+from tisane.family_link_inference import (
+    infer_family_functions,
+    infer_link_functions,
 )
 import unittest
 
@@ -56,7 +56,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        families = generate_family_functions(query=design)
+        families = infer_family_functions(query=design)
         self.assertEqual(len(families), len(DataForTests.numeric_families_types))
         for f in families:
             f_type = type(f)
@@ -70,7 +70,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        families = generate_family_functions(query=design)
+        families = infer_family_functions(query=design)
         self.assertEqual(len(families), len(DataForTests.ordinal_families_types))
         for f in families:
             f_type = type(f)
@@ -84,7 +84,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        families = generate_family_functions(query=design)
+        families = infer_family_functions(query=design)
         self.assertEqual(len(families), len(DataForTests.nominal_binary_families_types))
         for f in families:
             f_type = type(f)
@@ -98,7 +98,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        families = generate_family_functions(query=design)
+        families = infer_family_functions(query=design)
         self.assertEqual(len(families), len(DataForTests.nominal_nary_families_types))
         for f in families:
             f_type = type(f)
@@ -114,7 +114,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = GaussianFamily(dv)
         self.assertIsInstance(family.link, IdentityLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 9)
         for l in link_candidates:
@@ -131,7 +131,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = InverseGaussianFamily(dv)
         self.assertIsInstance(family.link, InverseSquaredLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -148,7 +148,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = GammaFamily(dv)
         self.assertIsInstance(family.link, InverseLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -165,7 +165,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = TweedieFamily(dv)
         self.assertIsInstance(family.link, LogLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -182,7 +182,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = PoissonFamily(dv)
         self.assertIsInstance(family.link, LogLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -199,7 +199,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = GaussianFamily(dv)
         self.assertIsInstance(family.link, IdentityLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 9)
         for l in link_candidates:
@@ -216,7 +216,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = InverseGaussianFamily(dv)
         self.assertIsInstance(family.link, InverseSquaredLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -233,7 +233,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = GammaFamily(dv)
         self.assertIsInstance(family.link, InverseLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -250,7 +250,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = TweedieFamily(dv)
         self.assertIsInstance(family.link, LogLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -267,7 +267,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = PoissonFamily(dv)
         self.assertIsInstance(family.link, LogLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 3)
         for l in link_candidates:
@@ -284,7 +284,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = BinomialFamily(dv)
         self.assertIsInstance(family.link, LogitLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 8)
         for l in link_candidates:
@@ -301,7 +301,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = NegativeBinomialFamily(dv)
         self.assertIsInstance(family.link, LogLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 4)
         for l in link_candidates:
@@ -318,7 +318,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = MultinomialFamily(dv)
         self.assertIsInstance(family.link, LogitLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 4)
         for l in link_candidates:
@@ -335,7 +335,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = BinomialFamily(dv)
         self.assertIsInstance(family.link, LogitLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 8)
         for l in link_candidates:
@@ -352,7 +352,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = NegativeBinomialFamily(dv)
         self.assertIsInstance(family.link, LogLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 4)
         for l in link_candidates:
@@ -369,7 +369,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
         family = MultinomialFamily(dv)
         self.assertIsInstance(family.link, LogitLink)
-        link_candidates = generate_link_functions(query=design, family=family)
+        link_candidates = infer_link_functions(query=design, family=family)
 
         self.assertEqual(len(link_candidates), 4)
         for l in link_candidates:

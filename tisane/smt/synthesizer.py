@@ -1017,7 +1017,7 @@ class Synthesizer(object):
         family_link = dict()
 
         for family_fact in self.generate_family_distributions(design):
-            family_link[family_fact] = self.generate_link_functions(
+            family_link[family_fact] = self.infer_link_functions(
                 design=design, family_fact=family_fact
             )
 
@@ -1054,7 +1054,7 @@ class Synthesizer(object):
 
         return family_facts
 
-    def generate_link_functions(self, design: Design, family_fact: z3.BoolRef):
+    def infer_link_functions(self, design: Design, family_fact: z3.BoolRef):
 
         # Find possible link functions
         dv = design.dv

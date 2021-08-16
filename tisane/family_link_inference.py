@@ -51,7 +51,7 @@ import typing  # for Union
 
 # Family functions are members of the exponential family of probability distributions that are widely used and implemented in statsmodels, the target backend for code generation
 # https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM
-def generate_family_functions(query: Design) -> Set[AbstractFamily]:
+def infer_family_functions(query: Design) -> Set[AbstractFamily]:
     family_candidates = set()
 
     dv = query.dv
@@ -85,7 +85,7 @@ def generate_family_functions(query: Design) -> Set[AbstractFamily]:
     return family_candidates
 
 
-def generate_link_functions(query: Design, family: AbstractFamily):
+def infer_link_functions(query: Design, family: AbstractFamily):
     link_candidates = set()
 
     # TODO: Identify which of these is actually implemented in Statsmodels
