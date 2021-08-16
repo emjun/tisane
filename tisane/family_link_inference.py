@@ -139,14 +139,3 @@ def infer_link_functions(query: Design, family: AbstractFamily):
         link_candidates.add(ProbitLink(dv))
 
     return link_candidates
-
-
-# Combine all the main effects, interaction effects, and random effects
-# TODO: In order to make it easy to populate the GUI/disambiguation questions and react to analysts' selections, what should the right data structure be?
-def generate_all_candidate_model_effects_structures(gr: Graph, query: Design):
-    pass
-
-
-# TODO: In order to make it easy to populate the GUI/disambiguation questions and react to analysts' selections, what should the right data structure be?
-def generate_all_statistical_model_candidates(gr: Graph, query: Design):
-    pass

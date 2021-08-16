@@ -43,6 +43,8 @@ def check_design_dv(design: Design):
 
 # @returns statistical model that reflects the study design
 def infer_statistical_model_from_design(design: Design):
+    gr = design.graph
+
     ### Step 1: Initial conceptual checks
     # Check that the IVs have a conceptual relationship (direct or transitive) with DV
     check_design_ivs(design)
@@ -50,8 +52,23 @@ def infer_statistical_model_from_design(design: Design):
     check_design_dv(design)
 
 
-    ### Step 2: Candidate statistical model inference/generation 
-    main_effects_candidates = 
+    ### Step 2: Candidate statistical model inference/generation
+    main_effects_candidates = infer_main_effects(gr=gr, query=design)
+    # Assume all the main effects will be selected 
+    main_effects_candidates = list(main_effects_candidates)
+    
+    interaction_effects_candidates = infer_interaction_effects(gr=gr, query=design, main_effects=main_effects_candidates)
+    interaction_effects_candidates = list(interaction_effects_candidates) 
+
+    random_effects_candidates = infer_random_effects(gr=gr, query=design, main_effects=main_effects_candidates, interaction_effects=interaction_effects_candidates)
+
+    family_candidates = infer_family_functions(query=design)
+    for f in family_candidates: 
+        # TODO: store the family-links somewhere!
+        infer_link_functions(query=design, family=f)
+
+    # Put everything together 
+
 
     ### Generate possible effects, family, and link based on input design (graph)
     gr = synth.transform_to_has_edges(design.graph)
