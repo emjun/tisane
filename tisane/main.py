@@ -68,7 +68,7 @@ def infer_statistical_model_from_design(design: Design):
         # TODO: store the family-links somewhere!
         infer_link_functions(query=design, family=f)
 
-    # Put everything together 
+    # TODO: Put everything together 
 
 
     ### Generate possible effects, family, and link based on input design (graph)
@@ -86,7 +86,7 @@ def infer_statistical_model_from_design(design: Design):
     default_family_link = synth.generate_default_family_link(design=design)
 
 
-    ### Step 3: Disambiguation loop 
+    ### Step 3: Disambiguation loop (GUI)
     input_cli = InputInterface(
         main_effects_options,
         interaction_effects_options,

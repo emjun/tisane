@@ -56,3 +56,34 @@ class TisaneGUI():
         self.app = app
         open_browser()
         app.run_server(debug=False, threaded=True, port=port)
+    
+    def progress_bar(self):
+        # Card components
+        cards = [
+            dbc.Card(
+                [
+                    html.H2(f"{train_acc*100:.2f}%", className="card-title"),
+                    html.P("Model Training Accuracy", className="card-text"),
+                ],
+                body=True,
+                color="light",
+            ),
+            dbc.Card(
+                [
+                    html.H2(f"{test_acc*100:.2f}%", className="card-title"),
+                    html.P("Model Test Accuracy", className="card-text"),
+                ],
+                body=True,
+                color="dark",
+                inverse=True,
+            ),
+            dbc.Card(
+                [
+                    html.H2(f"{dfTrain.shape[0]} / {dfTest.shape[0]}", className="card-title"),
+                    html.P("Train / Test Split", className="card-text"),
+                ],
+                body=True,
+                color="primary",
+                inverse=True,
+            ),
+        ]
