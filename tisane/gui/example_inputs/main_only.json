@@ -15,14 +15,14 @@
         "generated random effects": {},
         "generated family, link functions": {
             "InverseGaussianFamily": [
+                "PowerLink",
                 "LogLink",
-                "IdentityLink",
-                "PowerLink"
+                "IdentityLink"
             ],
             "PoissonFamily": [
+                "PowerLink",
                 "LogLink",
-                "IdentityLink",
-                "PowerLink"
+                "IdentityLink"
             ],
             "GammaFamily": [
                 "PowerLink",
@@ -30,6 +30,7 @@
                 "IdentityLink"
             ],
             "GaussianFamily": [
+                "LogLogLink",
                 "ProbitLink",
                 "CLogLogLink",
                 "PowerLink",
@@ -37,8 +38,7 @@
                 "OPowerLink",
                 "LogLink",
                 "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink"
+                "LogitLink"
             ],
             "TweedieFamily": [
                 "PowerLink",
