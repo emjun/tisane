@@ -574,6 +574,8 @@ def construct_random_effects_for_interactions(
     gr: Graph, interactions: Set[AbstractVariable]
 ) -> Set[RandomEffect]:
     random_effects = set()
+    if interactions is None: 
+        return random_effects
     for ixn in interactions:
         within_subset = find_largest_subset_of_variables_that_vary_within_unit(
             gr=gr, interaction_effect=ixn
