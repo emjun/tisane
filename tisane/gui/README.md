@@ -19,6 +19,9 @@ In order to address these challenges, we have specific design goals, below.
 
 > FEEDBACK REQUESTED: Do you think we should have any additional design goals/requirements? 
 
+## Features that I think would be cool
+- If a set of effects (e.g., interaction effects) is not necessary, maybe have an explanation of why that tab isn't necessary/applicable and suggestion for how to update program in order to specify interactions? 
+
 ## Development notes
 Example apps
 - Code for all these examples: https://github.com/plotly/dash-sample-apps/tree/main/apps
