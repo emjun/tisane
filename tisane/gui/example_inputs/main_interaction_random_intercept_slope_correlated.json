@@ -1,0 +1,64 @@
+{
+    "input": {
+        "query": {
+            "DV": "Time",
+            "IVs": [
+                "Word type"
+            ]
+        },
+        "generated main effects": [
+            "Word type"
+        ],
+        "generated interaction effects": [],
+        "generated random effects": {
+            "Word": {
+                "random intercept": {
+                    "groups": "Word"
+                }
+            },
+            "Subject": {
+                "random intercept": {
+                    "groups": "Subject"
+                },
+                "random slope": {
+                    "iv": "Word type",
+                    "groups": "Subject"
+                },
+                "correlated": true
+            }
+        },
+        "generated family, link functions": {
+            "GammaFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "GaussianFamily": [
+                "IdentityLink",
+                "NegativeBinomialLink",
+                "PowerLink",
+                "LogLogLink",
+                "LogitLink",
+                "OPowerLink",
+                "CLogLogLink",
+                "ProbitLink",
+                "LogLink"
+            ]
+        }
+    }
+}

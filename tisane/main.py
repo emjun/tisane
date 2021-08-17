@@ -90,7 +90,7 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     # If there is a random intercept and slope involving the same grouping variable, add correlation value
     for key, value in tmp_random.items(): 
         if len(value) == 2: 
-            tmp_random["correlated"] = True
+            tmp_random[key]["correlated"] = True
     
     data["input"][random_key] = tmp_random
     
