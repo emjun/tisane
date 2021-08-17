@@ -1,0 +1,34 @@
+
+\documentclass{standalone}
+\usepackage{tikz}
+
+\usetikzlibrary{graphs,graphdrawing,quotes}
+\usegdlibrary{force,layered}
+\begin{document}
+
+\begin{tikzpicture}[causes/.style={draw=black, "cause", text=black},
+                    associates/.style={draw=black, "assoc."},
+                    min/.style={minimum size=2cm},
+                    unit/.style={min,draw=black},
+                    measure/.style={min,circle,draw=black},
+                    has/.style={densely dotted},
+                    nests/.style={dashed},
+                    depvar/.style={draw=none,fill=grey!30}]
+	
+    \graph[layered layout,sibling distance=3cm,level distance=3cm]{
+		member[unit] -> [has] pounds lost[measure,depvar];
+		member -> [has] age[measure];
+		member -> [has] age*motivation[measure];
+		member -> [has] race group[measure];
+		pounds lost -> [associates] race group;
+		pounds lost -> [associates] Week[measure];
+		pounds lost -> [associates] age*motivation;
+		motivation[measure] -> [causes] pounds lost;
+		race group -> [associates] pounds lost;
+		Week -> [associates] pounds lost;
+		age*motivation -> [associates] pounds lost;
+		
+    };
+\end{tikzpicture}
+
+\end{document}

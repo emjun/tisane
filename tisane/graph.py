@@ -17,7 +17,16 @@ import pydot
 from typing import List, Set, Union, Tuple
 import typing
 import copy
-from tisane.graph_vis_tikz_template import formatTikzVis
+from tisane.graph_vis_support import (
+    formatTikzVis,
+    dot_formats,
+    dot_formats_extensions,
+    default_dot_edge_style,
+    default_dot_edge_color,
+    default_dot_edge_label,
+)
+import re
+import os
 
 """
 Class for expressing how variables (i.e., proxies) relate to one another at a
@@ -158,20 +167,47 @@ class Graph(object):
                 repetitions=repetitions,
             )
 
-    def _get_graph_tikz(self):
+    def get_causes_associates_tikz_graph(
+        self, path="causes_associates_graph.tex", dv: AbstractVariable = None
+    ):
+        self.get_tikz_graph(
+            edge_filter=lambda edge_data: edge_data["edge_type"] == "causes"
+            or edge_data["edge_type"] == "associates",
+            path=path,
+            dv=dv,
+        )
+
+    def get_tikz_graph(
+        self, path="graph.tex", edge_filter=lambda x: True, dv: AbstractVariable = None
+    ):
+        path_dir = os.path.dirname(path)
+        if path_dir and not os.path.exists(path_dir):
+            os.makedirs(path_dir)
+        with open(path, "w") as f:
+            f.write(self._get_tikz_graph(edge_filter=edge_filter, dv=dv))
+            pass
+
+    def _get_tikz_graph(self, edge_filter=lambda x: True, dv: AbstractVariable = None):
+        def sanitize_characters(string):
+            # Remove all underscores from the string, and replace them with
+            # spaces. LaTeX doesn't like underscores, because of math mode.
+            return re.sub(r"_", " ", string)
+
         edges = list(self._graph.edges(data=True))
         tikz_edges = []
         nodes = []
-        for (n0, n1, edge_data) in edges:
-            if n0 not in nodes:
-                nodes.append(n0)
+        for (nstart, nend, edge_data) in edges:
+            if edge_filter(edge_data):
+                n0 = sanitize_characters(nstart)
+                n1 = sanitize_characters(nend)
+                if n0 not in nodes:
+                    nodes.append(n0)
+                    pass
+                if n1 not in nodes:
+                    nodes.append(n1)
+                edge_type = edge_data["edge_type"]
+                tikz_edges.append({"start": n0, "end": n1, "style": edge_type})
                 pass
-            if n1 not in nodes:
-                nodes.append(n1)
-            print("{}, {}, {}".format(n0, n1, edge_data))
-            print("{}, {}, {}".format(type(n0), type(n1), type(edge_data)))
-            edge_type = edge_data["edge_type"]
-            tikz_edges.append({"start": n0, "end": n1, "style": edge_type})
             pass
 
         # variables = self.get_variables()
@@ -183,7 +219,7 @@ class Graph(object):
                     "unit"
                     if isinstance(var, Unit) and not isinstance(var, Measure)
                     else "measure"
-                )
+                ) + (",depvar" if var == dv else "")
         nodes_code = ""
         # for n in nodes:
         #     # TODO: get the type of the node
@@ -205,36 +241,190 @@ class Graph(object):
                 tedge["start"] + start_style, tedge["style"], tedge["end"] + end_style
             )
             pass
-        print(formatTikzVis(graph_code, siblingDistance=3, levelDistance=3))
+        return formatTikzVis(graph_code, siblingDistance=3, levelDistance=3)
 
-    # @returns pydot object (representing DOT graph)representing conceptual graph info
-    # Iterates through internal graph object and constructs vis
-    def _get_graph_vis(self):
+    def get_causes_associates_dot_graph(
+        self,
+        path="causes_associates_dot.png",
+        format="png",
+        edge_filter=lambda x: True,
+        add_extension=True,
+        style=default_dot_edge_style,
+        color=default_dot_edge_color,
+        label=default_dot_edge_label,
+        dv: AbstractVariable = None,
+    ):
+        """Write a DOT graph representation to a file, containing only the edges with types "causes" or "associates"
+
+        Parameters
+        ----------
+        path : str
+            The desired location of the graph. Defaults to "graph.png"
+        format : str
+            The format to use for the output file. This supports all formats supported by DOT (https://graphviz.org/docs/outputs/). Defaults to "png"
+        edge_filter : edge_data -> bool
+            An additional filter function to choose which edges to add to the graph. Defaults to `lambda x: True`, which adds all edges of types "causes" or "associates".
+        add_extension : bool
+            Whether to add the proper extension designated by "format"
+            to the end of the path. Defaults to `True`. If `True`, and
+            an extension is known for the specified format, such as `psd`, and `path=graph`, then the output graph will be
+            written to `graph.psd`.
+
+        """
+        # TODO: Add style, color, and label parameter descriptions
+        self.get_dot_graph(
+            path=path,
+            format=format,
+            edge_filter=lambda edge_data: (
+                edge_data["edge_type"] == "causes"
+                or edge_data["edge_type"] == "associates"
+            )
+            and edge_filter(edge_data),
+            add_extension=add_extension,
+            style=style,
+            color=color,
+            label=label,
+            dv=dv,
+        )
+
+    def get_dot_graph(
+        self,
+        path="graph.png",
+        format="png",
+        edge_filter=lambda x: True,
+        add_extension=True,
+        style=default_dot_edge_style,
+        color=default_dot_edge_color,
+        label=default_dot_edge_label,
+        dv: AbstractVariable = None,
+    ):
+        """Write the DOT graph representation to a file.
+
+        Parameters
+        ----------
+        path : str
+            The desired location of the graph. Defaults to "graph.png"
+        format : str
+            The format to use for the output file. This supports all formats supported by DOT (https://graphviz.org/docs/outputs/). Defaults to "png"
+        edge_filter : edge_data -> bool
+            An optional filter function to choose which edges to add to the graph. Defaults to `lambda x: True`, which adds
+            all edges.
+        add_extension : bool
+            Whether to add the proper extension designated by "format"
+            to the end of the path. Defaults to `True`. If `True`, and
+            an extension is known for the specified format, such as `psd`, and `path=graph`, then the output graph will be
+            written to `graph.psd`.
+
+        """
+        # TODO: Add style, color, and label parameter descriptions
+        graph = self._get_dot_graph(
+            edge_filter=edge_filter, style=style, color=color, label=label, dv=dv
+        )
+        assert (
+            format in dot_formats
+        ), "Format {} not supported. Supported formats are {}".format(
+            format, ",".join(dot_formats)
+        )
+        if add_extension:
+            if format in dot_formats_extensions:
+                if not any(
+                    path.endswith(ext)
+                    for ext in dot_formats_extensions[format]["extensions"]
+                ):
+                    first_extension = dot_formats_extensions[format]["extensions"][0]
+                    path = path + "." + first_extension
+                    pass
+                pass
+            pass
+        path_dir = os.path.dirname(path)
+        if path_dir and not os.path.exists(path_dir):
+            # print("Path directory: {}".format(path_dir))
+            # Create the directory, if it doesn't exist
+            os.makedirs(path_dir)
+            pass
+        graph.write(path, format=format)
+
+    def _get_dot_graph(
+        self,
+        edge_filter=lambda x: True,
+        style=default_dot_edge_style,
+        color=default_dot_edge_color,
+        label=default_dot_edge_label,
+        dv: AbstractVariable = None,
+    ):
+        """Internal method to obtain a DOT graph object representing this graph.
+
+        Parameters
+        ----------
+        edge_filter : edge_data -> bool
+            An optional filter function to choose which edges to add to the graph. Defaults to `lambda x: True`, which adds
+            all edges.
+        style : dict
+            A dictionary where keys are edge types and values are the DOT style to use. "nests" edges are dashed, "has" edges are dotted,
+            To customize edge style, provide a dictionary with a default defined (by the key `default`), and define the style for a edge type
+        color : dict
+            A dictionary where keys are edge types and values are the DOT color to use for an edge. All edges by default are black. To customize edge color, provide a dictionary with a default defined (by the key `default`), and edges customized by edge type.
+        label : dict
+            A dictionary where keys are edge types and values are the label to use for the edge. Associates and cause edges are labeled with their type, and all other edges have no label by default. To provide custom labels, use the edge keys `associate`, `cause`, etc., and provide a `default`
+
+        Returns
+        -------
+        pydot.Dot
+            A `pydot.Dot` graph object representing this graph
+
+        """
+        # TODO: fix style parameter description
         graph = pydot.Dot("graph_vis", graph_type="digraph")
-
-        edges = list(self._graph.edges(data=True))  # get list of edges
-        # print(len(edges))
+        edges = list(self._graph.edges(data=True))
+        nodes = []
+        for (n0, n1, _) in edges:
+            if n0 not in nodes:
+                nodes.append(n0)
+                pass
+            if n1 not in nodes:
+                nodes.append(n1)
+                pass
+            pass
+        for n0 in nodes:
+            var0 = self.get_variable(n0)
+            shape = (
+                "box"
+                if isinstance(var0, Unit) and not isinstance(var0, Measure)
+                else "ellipse"
+            )
+            nodestyle = ""
+            fillcolor = "white"
+            if var0 == dv:
+                nodestyle = "filled"
+                fillcolor = "#AAAAAA"
+                pass
+            graph.add_node(
+                pydot.Node(
+                    n0, label=n0, style=nodestyle, fillcolor=fillcolor, shape=shape
+                )
+            )
+            pass
 
         for (n0, n1, edge_data) in edges:
-            edge_type = edge_data["edge_type"]
-            print(edge_type)
-            if edge_type == "causes":
-                graph.add_edge(pydot.Edge(n0, n1, style="bold", color="black"))
-            elif edge_type == "correlate":
-                graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="black"))
-                graph.add_edge(pydot.Edge(n1, n0, style="dotted", color="black"))
-            elif edge_type == "contribute":
-                graph.add_edge(pydot.Edge(n0, n1, style="dotted", color="red"))
-            else:
+            if edge_filter(edge_data):
+                edge_type = edge_data["edge_type"]
+                edge_style = (
+                    style[edge_type] if edge_type in style else style["default"]
+                )
+                edge_color = (
+                    color[edge_type] if edge_type in color else color["default"]
+                )
+                edge_label = (
+                    label[edge_type] if edge_type in label else label["default"]
+                )
+                graph.add_edge(
+                    pydot.Edge(
+                        n0, n1, style=edge_style, color=edge_color, label=edge_label
+                    )
+                )
                 pass
-                # raise ValueError (f"Unsupported edge type: {edge_type}")
-
+            pass
         return graph
-
-    def visualize_graph(self):
-        graph = self._get_graph_vis()
-
-        graph.write_png("graph_vis.png")
 
     # @return List of variables represented in this graph as nodes
     def get_variables(self) -> List[AbstractVariable]:
@@ -365,20 +555,6 @@ class Graph(object):
     def add_relationship(
         self, relationship: Union[Has, Nests, Associates, Causes, Moderates]
     ):
-        def relclass(clazz):
-            return isinstance(relationship, clazz)
-
-        print("adding relationship {}".format(type(relationship)))
-        added = (
-            relclass(Has)
-            # or relclass(Treatment)
-            or relclass(Nests)
-            or relclass(Associates)
-            or relclass(Causes)
-            or relclass(Moderates)
-        )
-        if added:
-            print("Adding")
         if isinstance(relationship, Has):
             identifier = relationship.variable
             measure = relationship.measure

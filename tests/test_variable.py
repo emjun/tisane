@@ -1,5 +1,5 @@
 """
-Tests variable API. 
+Tests variable API.
 NOTE: The API tests are only to test the API, not to make any statements about how these variables relate in the real world
 """
 

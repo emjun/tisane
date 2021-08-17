@@ -3,9 +3,9 @@ from typing import Any, List
 import typing  # for typing.Unit
 
 """
-Abstract super class for all variables. 
-Distinguish between Unit and Measures (Nominal, Ordinal, Numeric). 
-TODO: Added Time variable, not sure if we should include it? 
+Abstract super class for all variables.
+Distinguish between Unit and Measures (Nominal, Ordinal, Numeric).
+TODO: Added Time variable, not sure if we should include it?
 """
 
 

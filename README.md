@@ -7,7 +7,7 @@ Tisane: Authoring Statistical Models via Formal Reasoning from Conceptual and Da
 
 ----
 
-Tisane provides (i) a graph specification language for expressing relationships between variables and (ii) an interactive query and compilation process for inferring a valid statistical model from a set of variables in the graph. 
+Tisane provides (i) a graph specification language for expressing relationships between variables and (ii) an interactive query and compilation process for inferring a valid statistical model from a set of variables in the graph.
 
 ## Graph specification language
 ### Variables
@@ -38,10 +38,10 @@ race = adult.nominal("race group", cardinality=4)
 week = ts.SetUp("Week", order=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
 ```
 
-Design rationale: We derived this type system from how other software tools focused on study design separate their concerns. 
+Design rationale: We derived this type system from how other software tools focused on study design separate their concerns.
 
 ### Relationships between variables
-Analysts can use Tisane to express (i) conceptual and (ii) data measurement relationships between variables. 
+Analysts can use Tisane to express (i) conceptual and (ii) data measurement relationships between variables.
 
 There are three different types of conceptual relationships.
 - A variable can *cause* another variable. (e.g., ``motivation_level.causes(pounds_lost)``)
@@ -50,12 +50,14 @@ There are three different types of conceptual relationships.
 Currently, a variable, V1, can have a moderated relationship with a variable, V2, without also having a causal or associative relationship with V2.
 > FEEDBACK REQUESTED: Should this be the case? Initially, I though that moderation (which is later translated into an interaction effect) is another way/type of how two variables relate. At the same time, if V1 has a moderated effec on V2, it is implied that V1 has some kind of associative relationship with V2. 
 
-These relationships are used to construct an internal graph representation of variables and their relationships with one another. 
+These relationships are used to construct an internal graph representation of variables and their relationships with one another.
 
 Internally, Tisane constructs a graph representing these relationships. Graph representation is useufl for inferring statistical models (next section). 
 
 For example, the below graph represents the above relationships. Rectangular nodes are units. Elliptical nodes are measures and set-up variables. The colored node is the dependent variable in the query.The dotted edges connect units to their measures. The solid edges represent conceptual relationships, as labeled. 
-> TODO: Add graph!
+![A graph representation created using DOT](examples/readme_dot_graph.png?raw=true)
+
+![A graph representation created using TikZ](examples/readme_graph_tikz.png?raw=true)
 
 ## Interactive query and compilation 
 Analysts query the relationships they have specified (technically, the internal graph represenation) for a statistical model. For each query, analysts must specify (i) a dependent variable to explain using (ii) a set of independent variables. 
@@ -79,20 +81,29 @@ To help analysts, Tisane provides text explanations and visualizations. For exam
 ### Statistical model inference
 After validating a query, Tisane traverses the internal graph representation in order to generate candidate generalized linear models with or without mixed effects. A generalized linear model consists of a model effects structure and a family/link function pair. 
 
-### Model effects structure 
+
+## Query
+Analysts query the relationships they have specified (technically, the internal graph represenation) for a statistical model. For each query, analysts must specify (i) a dependent variable to explain using (ii) a set of independent variables.
+
+Query validation: To be a valid query, Tisane verifies that the dependent variable does not cause an independent variable. It would be conceptually incorrect to explain a cause from an effect.
+
+## Statistical model inference
+After validating a query, Tisane traverses the internal graph representation in order to generate candidate generalized linear models with or without mixed effects. A generalized linear model consists of a model effects structure and a family/link function pair.
+
+### Model effects structure
 <!-- generate possible statistical model effects structures and family/link functions.  -->
-Tisane generates candidate main effects, interaction effects, and, if applicable, random effects based on analysts' expressed relationships. 
+Tisane generates candidate main effects, interaction effects, and, if applicable, random effects based on analysts' expressed relationships.
 
-- Tisane aims to direct analysts' attention to variables, especially possible confounders, that the analyst may have overlooked. When generating main effects candidates, Tisane looks for other variables in the graph that may exert causal influence on the dependent variable and are related to the input independent variables. 
-- Tisane aims to represent conceptual relationships between variables accurately. Based on the main effects analysts choose to include in their output statistical model, Tisane suggests interaction effects to include. Tisane relies on the moderate relationships analysts specified in their input program to infer interaction effects. 
-- Tisane aims to increase the generalizability of statistical analyses and results by automatically detecting the need for and including random effects. Tisane follows the guidelines outlined in [] and [] to generat the maximal random effects structure. 
+- Tisane aims to direct analysts' attention to variables, especially possible confounders, that the analyst may have overlooked. When generating main effects candidates, Tisane looks for other variables in the graph that may exert causal influence on the dependent variable and are related to the input independent variables.
+- Tisane aims to represent conceptual relationships between variables accurately. Based on the main effects analysts choose to include in their output statistical model, Tisane suggests interaction effects to include. Tisane relies on the moderate relationships analysts specified in their input program to infer interaction effects.
+- Tisane aims to increase the generalizability of statistical analyses and results by automatically detecting the need for and including random effects. Tisane follows the guidelines outlined in [] and [] to generat the maximal random effects structure.
 
-[INFERENCE.md](tisane/INFERENCE.md) explains all inference rules in greater detail. 
+[INFERENCE.md](tisane/INFERENCE.md) explains all inference rules in greater detail.
 
-### Family/link function 
-Family and link functions depend on the data types of dependent variables and their distributions. 
+### Family/link function
+Family and link functions depend on the data types of dependent variables and their distributions.
 
-Based on the data type of the dependent variable, Tisane suggests matched pairs of possible family and link functions to consider. Tisane ensures that analysts consider only valid pairs of family and link functions. 
+Based on the data type of the dependent variable, Tisane suggests matched pairs of possible family and link functions to consider. Tisane ensures that analysts consider only valid pairs of family and link functions.
 
 <!-- Two aspects: 
 - generating the space
