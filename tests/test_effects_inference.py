@@ -279,10 +279,19 @@ class EffectsInferenceTest(unittest.TestCase):
         random_effects = infer_random_effects(
             gr=gr, query=design, main_effects=main_effects
         )
-        self.assertEqual(len(random_effects), 1)
-        ri = random_effects.pop()
-        self.assertIsInstance(ri, RandomIntercept)
-        self.assertIs(ri.groups, u0)
+        self.assertEqual(len(random_effects), 2)
+        has_unit_ri = False
+        has_time_ri = False
+        for ri in random_effects:
+            self.assertIsInstance(ri, RandomIntercept)
+            if isinstance(ri.groups, ts.Unit):
+                self.assertIs(ri.groups, u0)
+                has_unit_ri = True
+            elif isinstance(ri.groups, ts.SetUp):
+                self.assertIs(ri.groups, s0)
+                has_time_ri = True
+        self.assertTrue(has_unit_ri)
+        self.assertTrue(has_time_ri)
 
     def test_random_nested(self):
         u0 = ts.Unit("Unit 0")
