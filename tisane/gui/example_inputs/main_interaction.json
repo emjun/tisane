@@ -1,0 +1,54 @@
+{
+    "input": {
+        "query": {
+            "DV": "Dependent variable",
+            "IVs": [
+                "Measure 0",
+                "Measure 1",
+                "Measure 2"
+            ]
+        },
+        "generated main effects": [
+            "Measure 0",
+            "Measure 2",
+            "Measure 1"
+        ],
+        "generated interaction effects": [
+            "Measure 2*Measure 1"
+        ],
+        "generated random effects": {},
+        "generated family, link functions": {
+            "GaussianFamily": [
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink"
+            ],
+            "GammaFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "PoissonFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ]
+        }
+    }
+}
