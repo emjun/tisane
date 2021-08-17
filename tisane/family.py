@@ -13,18 +13,17 @@ Abstract super class for all family functions.
 class AbstractFamily(ABC):
     variable: AbstractVariable
 
+    def set_link(self, link: "AbstractLink"):
+        self.link = link
+
     @abstractmethod
     def simulate_data(self):
         pass
-
-    def set_link(self, link: "AbstractLink"):
-        self.link = link
 
     # TODO: Should this be an abstract super class method?
     # @abstractmethod
     # def generate_code(self):
     #     pass
-
 
 class AbstractLink(ABC):
     variable: AbstractVariable
@@ -253,3 +252,5 @@ class MultinomialFamily(AbstractFamily):
         # else:
         #     raise ValueError(f"Unknown distribution fact: {str(fact)}")
         pass
+# AbstractFamily.register(InverseGaussianFamily)
+# AbstractFamily.register(TweedieFamily)

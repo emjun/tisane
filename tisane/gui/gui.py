@@ -43,14 +43,25 @@ class TisaneGUI():
     def __init__(self):
         pass
 
-    def start_app(self):
+    # @param input is a json file that has all the data to read in
+    def read_input(input: str): 
+        # TODO: Read in JSON all at once and store the data or read it in incrementally
+        pass
+
+    # @param input is a json file that has all the data to read in
+    def start_app(self, input: str):
+        ### Read in input data 
+        self.read_input(input)
+
         ### Create app
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
         ### Populate app
         # Get components
         progress = self.progress() # TODO: Add callback to update progress according to tabs
-        generate_code_button = dbc.Button("✨Generate code✨", color="dark", className="mr-1", disabled=True) # TODO: Add callback that enables this button once all the tabs/sections have been completed
+        # TODO: Add callback that enables this button once all the tabs/sections have been completed
+        # TODO: Output a JSON file as a result of clicking on generate code button
+        generate_code_button = dbc.Button("✨Generate code✨", color="dark", className="mr-1", disabled=True) 
         overview = self.overview()
         model_tabs = self.model_tabs()
 
@@ -86,7 +97,7 @@ class TisaneGUI():
         ### Start and run app on local server
         self.app = app
         open_browser()
-        app.run_server(debug=False, threaded=True, port=port)
+        app.run_server(debug=True, threaded=True, port=port)
     
     def progress(self):
         # TODO: Trying to make this feel like overview of installation progress on Mac

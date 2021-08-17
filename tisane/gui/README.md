@@ -16,21 +16,44 @@ In order to address these challenges, we have specific design goals, below.
 3. Guide users through rationale for why Tisane makes specific suggestsions. Imagine users who may not know what a "main effect" or "random effect" is. 
 - This means that we should define terms wherever possible.
 - This also means that we should indicate implications of decisions. (?) 
-
 > FEEDBACK REQUESTED: Do you think we should have any additional design goals/requirements? 
 
-## Features that I think would be cool
-- If a set of effects (e.g., interaction effects) is not necessary, maybe have an explanation of why that tab isn't necessary/applicable and suggestion for how to update program in order to specify interactions? 
+
+## Features to add
+> Feel free to update this list/keep track of them based on the design goals!
+- If a set of effects (e.g., interaction effects) is not necessary, maybe have an explanation of why that tab isn't necessary/applicable and suggestion for how to update program in order to specify interactions?  [Design goal 3]
+
+## Data flow overview
+1. Once an analyst runs a Tisane program, the Tisane compiler will generate candidate main, interaction, and random effects and candidate family/link functions.
+2. The Tisane compiler will ouptut a JSON file with all these candidates/options. 
+3. The Tisane GUI reads in this output JSON file and should keep track of/populate the app data according to the rules outlined in ``INFERENCE.md``. For example, only interaction effects with two or more main effects (including the variables included in the query) should be shown as options even though the Tisane compiler passes all possible interactions to the GUI. 
+4. When the analyst generates code, the Tisane GUI outputs a JSON file that the code generator reads in to generate the Python script.
+> We might need to update/tweak this data flow design
+
+## Sketches
+[Here are the sketches we went over August 17](https://drive.google.com/file/d/1IPP6tfCSAZF2ogX4PJFo-d_d1OcLbRjK/view?usp=sharing)
+
+## Previous code
+From UIST 2021 submission: https://github.com/emjun/tisane/blob/main/tisane/smt/input_interface.py
+- For generating family functions, see [LOC](https://github.com/emjun/tisane/blob/ed845debe44e5f1bf22b7ecabc1989c4df89a2f1/tisane/smt/input_interface.py#L670). It calls a helper function ``generate_data_dist_from_facts``, see [function definition](https://github.com/emjun/tisane/blob/ed845debe44e5f1bf22b7ecabc1989c4df89a2f1/tisane/helpers.py#L15). This functionality is now found in the Family instances themselves, see ``family.py`` [here](tisane/family.py). Each family has a ``simulate_data`` function that needs to be updated so that the appropriate parameters are passed. It might also make sense to make these ``simulate_data`` functions class functions rather that instance functions. 
 
 ## Development notes
-Example apps
-- Code for all these examples: https://github.com/plotly/dash-sample-apps/tree/main/apps
+### Example Plotly Dash apps
+- Example gallery: https://dash-gallery.plotly.host/Portal/
+- Code for example gallery, including the ones below: https://github.com/plotly/dash-sample-apps/tree/main/apps 
 
 - Overall layout with specific regions designated to specific tasks: https://dash-gallery.plotly.host/dash-daq-tektronix350/
 - Overall layout, breadcrumbs at top (might use something like this for tracking progress): https://dash-gallery.plotly.host/ddk-oil-and-gas-demo/
 - Overall layout, nice clean: https://dash-gallery.plotly.host/dash-aix360-heart/
 - [For the tabbed section on the left (could use for Main, Interaction, Random Effects, and Family/Link)](https://dash-gallery.plotly.host/dash-alignment-chart/)
 
+### Testing 
+- Make sure the app is running in debug mode (See line that reads something like``app.run_server(debug=True, threaded=True, port=port)``). This will update the app for you as you change the code. [More info on dev tools](https://dash.plotly.com/devtools).
+- Run the app during development: ``run tisane/gui/example.py`` (I use poetry as my python virutal environment and package manager, so I run from the command line: ``poetry run python3 gui/example.py``)
 
 ### Styling
 Dash Bootstrap documentation: https://dash-bootstrap-components.opensource.faculty.ai/docs/
+
+
+
+
