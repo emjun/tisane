@@ -112,6 +112,78 @@ def main_interaction_random_intercepts(path="./gui/example_inputs/", filename="m
     # Output combined dict to @param path 
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
+def main_interaction_random_slope_one_variable(path="./gui/example_inputs/", filename="main_interaction_random_slope_one_variable.json"): 
+    u = ts.Unit("Unit")
+    a = u.nominal(
+        "Measure A", cardinality=2, number_of_instances=2
+    )  # A is within-subjects
+    b = u.nominal("Measure B", cardinality=2)  # B is between-subjects
+    dv = u.numeric("Dependent variable")
+
+    a.causes(dv)
+    b.causes(dv)
+    a.moderates(moderator=[b], on=dv)
+
+    design = ts.Design(dv=dv, ivs=[a, b])
+    gr = design.graph
+
+    main_effects = design.ivs
+    interaction_effects = infer_interaction_effects(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    family_candidates = infer_family_functions(query=design)
+    link_candidates = set()
+    family_link_paired = dict()
+    for f in family_candidates: 
+        l = infer_link_functions(query=design, family=f)
+        # Add Family: Link options 
+        assert(f not in family_link_paired.keys())
+        family_link_paired[f] = l
+    
+    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+
+    # Output combined dict to @param path 
+    write_to_json(data=combined_dict, output_path=path, output_filename=filename)
+
+
+def main_interaction_random_slope_interaction(path="./gui/example_inputs/", filename="main_interaction_random_slope_interaction.json"): 
+    u = ts.Unit("Unit")
+    a = u.nominal(
+        "Measure A", cardinality=2, number_of_instances=2
+    )  # A is within-subjects
+    b = u.nominal(
+        "Measure B", cardinality=2, number_of_instances=2
+    )  # B is within-subjects
+    dv = u.numeric("Dependent variable")
+
+    a.causes(dv)
+    b.causes(dv)
+    a.moderates(moderator=[b], on=dv)
+
+    design = ts.Design(dv=dv, ivs=[a, b])
+    gr = design.graph
+
+    main_effects = design.ivs
+    interaction_effects = infer_interaction_effects(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    family_candidates = infer_family_functions(query=design)
+    link_candidates = set()
+    family_link_paired = dict()
+    for f in family_candidates: 
+        l = infer_link_functions(query=design, family=f)
+        # Add Family: Link options 
+        assert(f not in family_link_paired.keys())
+        family_link_paired[f] = l
+    
+    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+
+    # Output combined dict to @param path 
+    write_to_json(data=combined_dict, output_path=path, output_filename=filename)
+
+
 def main_interaction_random_intercept_slope_correlated(path="./gui/example_inputs/", filename="main_interaction_random_intercept_slope_correlated.json"): 
     subject = ts.Unit("Subject", cardinality=12)
     word = ts.Unit("Word", cardinality=4)
@@ -145,4 +217,6 @@ def main_interaction_random_intercept_slope_correlated(path="./gui/example_input
 main_effects_only()
 main_interaction()
 main_interaction_random_intercepts()
+main_interaction_random_slope_one_variable()
+main_interaction_random_slope_interaction()
 main_interaction_random_intercept_slope_correlated()

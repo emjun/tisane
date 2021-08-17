@@ -147,8 +147,114 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertEqual(len(input["generated random effects"]), 2)
         self.assertIsInstance(input["generated family, link functions"], dict)
         
-    def test_main_interaction_random_slope_from_interaction(self): 
-        pass
+    def test_main_interaction_random_slope_from_interaction_one_variable(self): 
+        u = ts.Unit("Unit")
+        a = u.nominal(
+            "Measure A", cardinality=2, number_of_instances=2
+        )  # A is within-subjects
+        b = u.nominal("Measure B", cardinality=2)  # B is between-subjects
+        dv = u.numeric("Dependent variable")
+
+        a.causes(dv)
+        b.causes(dv)
+        a.moderates(moderator=[b], on=dv)
+
+        design = ts.Design(dv=dv, ivs=[a, b])
+        gr = design.graph
+
+        main_effects = design.ivs
+        interaction_effects = infer_interaction_effects(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        family_candidates = infer_family_functions(query=design)
+        link_candidates = set()
+        family_link_paired = dict()
+        for f in family_candidates: 
+            l = infer_link_functions(query=design, family=f)
+            # Add Family: Link options 
+            assert(f not in family_link_paired.keys())
+            family_link_paired[f] = l
+        
+        combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+        self.assertEqual(len(random_effects), 1)
+        input = combined_dict["input"]
+        input_keys = input.keys()
+        self.assertIsInstance(input, dict)
+        self.assertEqual(len(input_keys), 5)
+        self.assertIn("query", input_keys)
+        self.assertIn("generated main effects", input_keys)
+        self.assertIn("generated interaction effects", input_keys)
+        self.assertIn("generated random effects", input_keys)
+        self.assertIn("generated family, link functions", input_keys)
+        self.assertIsInstance(input["query"], dict)
+        self.assertIsInstance(input["generated main effects"], list)
+        self.assertIsInstance(input["generated interaction effects"], list)
+        self.assertEqual(len(input["generated interaction effects"]), 1)
+        self.assertIsInstance(input["generated random effects"], dict)
+        self.assertEqual(len(input["generated random effects"]), 1)
+        self.assertIn(u.name, input["generated random effects"].keys())
+        self.assertEqual(len(input["generated random effects"][u.name].keys()), 1)
+        self.assertIn("random slope", input["generated random effects"][u.name].keys())
+        self.assertEqual(u.name, input["generated random effects"][u.name]["random slope"]["groups"])
+        self.assertEqual(a.name, input["generated random effects"][u.name]["random slope"]["iv"])
+        self.assertIsInstance(input["generated family, link functions"], dict)
+
+    def test_main_interaction_random_slope_from_interaction_two_variables(self): 
+        u = ts.Unit("Unit")
+        a = u.nominal(
+            "Measure A", cardinality=2, number_of_instances=2
+        )  # A is within-subjects
+        b = u.nominal(
+            "Measure B", cardinality=2, number_of_instances=2
+        )  # B is within-subjects
+        dv = u.numeric("Dependent variable")
+
+        a.causes(dv)
+        b.causes(dv)
+        a.moderates(moderator=[b], on=dv)
+
+        design = ts.Design(dv=dv, ivs=[a, b])
+        gr = design.graph
+
+        main_effects = design.ivs
+        interaction_effects = infer_interaction_effects(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        family_candidates = infer_family_functions(query=design)
+        link_candidates = set()
+        family_link_paired = dict()
+        for f in family_candidates: 
+            l = infer_link_functions(query=design, family=f)
+            # Add Family: Link options 
+            assert(f not in family_link_paired.keys())
+            family_link_paired[f] = l
+        
+        combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+        self.assertEqual(len(random_effects), 1)
+        input = combined_dict["input"]
+        input_keys = input.keys()
+        self.assertIsInstance(input, dict)
+        self.assertEqual(len(input_keys), 5)
+        self.assertIn("query", input_keys)
+        self.assertIn("generated main effects", input_keys)
+        self.assertIn("generated interaction effects", input_keys)
+        self.assertIn("generated random effects", input_keys)
+        self.assertIn("generated family, link functions", input_keys)
+        self.assertIsInstance(input["query"], dict)
+        self.assertIsInstance(input["generated main effects"], list)
+        self.assertIsInstance(input["generated interaction effects"], list)
+        self.assertEqual(len(input["generated interaction effects"]), 1)
+        self.assertIsInstance(input["generated random effects"], dict)
+        self.assertEqual(len(input["generated random effects"]), 1)
+        self.assertIn(u.name, input["generated random effects"].keys())
+        self.assertEqual(len(input["generated random effects"][u.name].keys()), 1)
+        self.assertIn("random slope", input["generated random effects"][u.name].keys())
+        self.assertEqual(u.name, input["generated random effects"][u.name]["random slope"]["groups"])
+        ixn = interaction_effects.pop()
+        self.assertEqual(ixn.name, input["generated random effects"][u.name]["random slope"]["iv"])
+        self.assertIsInstance(input["generated family, link functions"], dict)
 
     def test_main_interaction_random_intercept_slope_correlated(self): 
         subject = ts.Unit("Subject", cardinality=12)

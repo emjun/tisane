@@ -17,18 +17,28 @@
                 }
             },
             "Subject": {
-                "random intercept": {
-                    "groups": "Subject"
-                },
                 "random slope": {
                     "iv": "Word type",
+                    "groups": "Subject"
+                },
+                "random intercept": {
                     "groups": "Subject"
                 },
                 "correlated": true
             }
         },
         "generated family, link functions": {
+            "TweedieFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
             "GammaFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
@@ -38,26 +48,16 @@
                 "PowerLink",
                 "LogLink"
             ],
-            "InverseGaussianFamily": [
-                "LogLink",
-                "PowerLink",
-                "IdentityLink"
-            ],
-            "TweedieFamily": [
-                "PowerLink",
-                "IdentityLink",
-                "LogLink"
-            ],
             "GaussianFamily": [
-                "IdentityLink",
-                "NegativeBinomialLink",
-                "PowerLink",
-                "LogLogLink",
-                "LogitLink",
-                "OPowerLink",
                 "CLogLogLink",
-                "ProbitLink",
-                "LogLink"
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink"
             ]
         }
     }
