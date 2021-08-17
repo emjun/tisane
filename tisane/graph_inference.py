@@ -341,7 +341,7 @@ def find_ordered_list_of_units(gr: Graph) -> List[str]:
     # If there is only one unit, there would be no nesting relationships to the set of ordered_units in case all measures come from the same unit
     if len(ordered_units) == 0:
         identifiers = gr.get_identifiers()
-        assert(len(identifiers) == 1)
+        assert len(identifiers) == 1
         ordered_units = [i.name for i in identifiers]
 
     return ordered_units
