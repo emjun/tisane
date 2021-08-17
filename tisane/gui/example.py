@@ -4,10 +4,10 @@ from tisane.gui.gui import TisaneGUI
 def start_gui(input: str):
     gui = TisaneGUI()
     
-    gui.start_app()
+    gui.start_app(input)
 
 class ExampleData: 
     main_only_input="./example_inputs/main_only.json"
     # TODO: Add more input sources and json files here
 
-start_gui()
+start_gui(ExampleData.main_only_input)

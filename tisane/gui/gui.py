@@ -44,7 +44,7 @@ class TisaneGUI():
         pass
 
     # @param input is a json file that has all the data to read in
-    def read_input(input: str): 
+    def read_input(self, input: str): 
         # TODO: Read in JSON all at once and store the data or read it in incrementally
         pass
 
