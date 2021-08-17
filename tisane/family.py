@@ -252,5 +252,3 @@ class MultinomialFamily(AbstractFamily):
         # else:
         #     raise ValueError(f"Unknown distribution fact: {str(fact)}")
         pass
-# AbstractFamily.register(InverseGaussianFamily)
-# AbstractFamily.register(TweedieFamily)

@@ -25,8 +25,8 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         for f in family_candidates: 
             l = infer_link_functions(query=query, family=f)
             # Add Family: Link options 
-            assert(f.__class__ not in family_link_paired.keys())
-            family_link_paired[f.__class__] = l
+            assert(f not in family_link_paired.keys())
+            family_link_paired[f] = l
 
         combined_dict = collect_model_candidates(query=query, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
         self.assertEqual(len(combined_dict.keys()), 1) # "input"

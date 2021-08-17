@@ -97,7 +97,6 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     # {"Family 1": ["Link 1", "Link 2"]}, {"Family 2": ["Link 1", "Link 2"]}
     tmp_family_link = dict()
     for f, l_options in family_link_paired_candidates.items(): 
-        import pdb; pdb.set_trace()
         f_classname = type(f).__name__
         tmp_family_link[f_classname] = [type(l).__name__ for l in l_options]
     data["input"][family_link_key] = tmp_family_link
@@ -144,8 +143,8 @@ def infer_statistical_model_from_design(design: Design):
         # TODO: store the family-links somewhere!
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options 
-        assert(f.__class__ not in family_link_paired.keys())
-        family_link_paired[f.__class__] = l
+        assert(f not in family_link_paired.keys())
+        family_link_paired[f] = l
 
 
     # Write out to JSON in order to pass data to Tisane GUI for disambiguation
