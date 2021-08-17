@@ -4,7 +4,6 @@ Tests initialization, graph construction, and verification of several different 
 
 import tisane as ts
 from tisane.variable import Nests, Has, Associates, Causes
-from tisane.level import Level, LevelSet
 
 import unittest
 import pandas as pd
