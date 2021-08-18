@@ -3,46 +3,51 @@
         "query": {
             "DV": "Dependent variable",
             "IVs": [
-                "Measure 0",
-                "Measure 1",
-                "Measure 2"
+                "Measure A",
+                "Measure B"
             ]
         },
         "generated main effects": [
-            "Measure 0",
-            "Measure 2",
-            "Measure 1"
+            "Measure A",
+            "Measure B"
         ],
         "generated interaction effects": [
-            "Measure 2*Measure 1"
+            "Measure A*Measure B"
         ],
-        "generated random effects": {},
+        "generated random effects": {
+            "Unit": {
+                "random slope": {
+                    "iv": "Measure A",
+                    "groups": "Unit"
+                }
+            }
+        },
         "generated family, link functions": {
-            "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
             "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "PoissonFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
             "GaussianFamily": [
                 "CLogLogLink",
-                "PowerLink",
-                "IdentityLink",
                 "OPowerLink",
-                "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
+                "IdentityLink",
                 "LogLogLink",
-                "ProbitLink"
+                "LogitLink",
+                "PowerLink",
+                "NegativeBinomialLink",
+                "ProbitLink",
+                "LogLink"
+            ],
+            "PoissonFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
             ],
             "InverseGaussianFamily": [
                 "PowerLink",

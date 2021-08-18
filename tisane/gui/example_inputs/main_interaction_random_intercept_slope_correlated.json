@@ -1,22 +1,32 @@
 {
     "input": {
         "query": {
-            "DV": "Dependent variable",
+            "DV": "Time",
             "IVs": [
-                "Measure 0",
-                "Measure 1",
-                "Measure 2"
+                "Word type"
             ]
         },
         "generated main effects": [
-            "Measure 0",
-            "Measure 2",
-            "Measure 1"
+            "Word type"
         ],
-        "generated interaction effects": [
-            "Measure 2*Measure 1"
-        ],
-        "generated random effects": {},
+        "generated interaction effects": [],
+        "generated random effects": {
+            "Word": {
+                "random intercept": {
+                    "groups": "Word"
+                }
+            },
+            "Subject": {
+                "random slope": {
+                    "iv": "Word type",
+                    "groups": "Subject"
+                },
+                "random intercept": {
+                    "groups": "Subject"
+                },
+                "correlated": true
+            }
+        },
         "generated family, link functions": {
             "TweedieFamily": [
                 "LogLink",
@@ -28,10 +38,15 @@
                 "LogLink",
                 "IdentityLink"
             ],
-            "PoissonFamily": [
+            "InverseGaussianFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
+            ],
+            "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
             ],
             "GaussianFamily": [
                 "CLogLogLink",
@@ -43,11 +58,6 @@
                 "LogitLink",
                 "LogLogLink",
                 "ProbitLink"
-            ],
-            "InverseGaussianFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
             ]
         }
     }

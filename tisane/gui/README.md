@@ -38,6 +38,12 @@ From UIST 2021 submission: https://github.com/emjun/tisane/blob/main/tisane/smt/
 - For generating family functions, see [LOC](https://github.com/emjun/tisane/blob/ed845debe44e5f1bf22b7ecabc1989c4df89a2f1/tisane/smt/input_interface.py#L670). It calls a helper function ``generate_data_dist_from_facts``, see [function definition](https://github.com/emjun/tisane/blob/ed845debe44e5f1bf22b7ecabc1989c4df89a2f1/tisane/helpers.py#L15). This functionality is now found in the Family instances themselves, see ``family.py`` [here](tisane/family.py). Each family has a ``simulate_data`` function that needs to be updated so that the appropriate parameters are passed. It might also make sense to make these ``simulate_data`` functions class functions rather that instance functions. 
 
 ## Development notes
+### Files 
+`gui.py`: Main file for controlling GUI
+`example_inputs/`: Example JSON files for candidate statistical models 
+`example.py`: Script to run GUI with data, edit to change the JSON file from `example_inputs` used to populate the GUI
+`generate_examples.py`: Script for creating the JSON files in example_inputs, calls functions in `tisane/main.py` to generate Python dictionary that is cast and output as JSON. 
+
 ### Example Plotly Dash apps
 - Example gallery: https://dash-gallery.plotly.host/Portal/
 - Code for example gallery, including the ones below: https://github.com/plotly/dash-sample-apps/tree/main/apps 

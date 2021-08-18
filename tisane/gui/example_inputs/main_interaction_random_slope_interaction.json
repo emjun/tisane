@@ -3,36 +3,45 @@
         "query": {
             "DV": "Dependent variable",
             "IVs": [
-                "Measure 0",
-                "Measure 1"
+                "Measure A",
+                "Measure B"
             ]
         },
         "generated main effects": [
-            "Measure 0",
-            "Measure 1"
+            "Measure A",
+            "Measure B"
         ],
-        "generated interaction effects": [],
-        "generated random effects": {},
+        "generated interaction effects": [
+            "Measure A*Measure B"
+        ],
+        "generated random effects": {
+            "Unit": {
+                "random slope": {
+                    "iv": "Measure A*Measure B",
+                    "groups": "Unit"
+                }
+            }
+        },
         "generated family, link functions": {
-            "TweedieFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
             "InverseGaussianFamily": [
-                "IdentityLink",
+                "LogLink",
                 "PowerLink",
-                "LogLink"
+                "IdentityLink"
             ],
             "PoissonFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
                 "LogLink",
                 "IdentityLink",
                 "PowerLink"
             ],
-            "GammaFamily": [
+            "TweedieFamily": [
+                "IdentityLink",
                 "PowerLink",
-                "LogLink",
-                "IdentityLink"
+                "LogLink"
             ],
             "GaussianFamily": [
                 "PowerLink",

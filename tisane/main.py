@@ -78,16 +78,19 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     # Group3: {random intercept: {groups: G}, random slope: {iv: I, groups: G}, correlated=True}
     tmp_random = dict()
     for r in random_effects_candidates: 
+        key = r.groups.name
+        if key not in tmp_random.keys(): 
+            tmp_random[key] = dict()
         if isinstance(r, RandomIntercept):
-            tmp_random[r.groups.name]["random intercept"] = {"groups": r.groups}
+            tmp_random[key]["random intercept"] = {"groups": r.groups.name}
         else: 
             assert(isinstance(r, RandomSlope))
-            tmp_random[r.groups.name]["random slope"] = {"iv": r.iv, "groups": r.groups}
+            tmp_random[key]["random slope"] = {"iv": r.iv.name, "groups": r.groups.name}
 
     # If there is a random intercept and slope involving the same grouping variable, add correlation value
-    for key, value in tmp_random: 
+    for key, value in tmp_random.items(): 
         if len(value) == 2: 
-            tmp_random["correlated"] = True
+            tmp_random[key]["correlated"] = True
     
     data["input"][random_key] = tmp_random
     
