@@ -1,5 +1,5 @@
 from os import link
-from tisane.variable import AbstractVariable
+from tisane.variable import AbstractVariable, Measure, Unit
 from tisane.family import AbstractFamily, AbstractLink
 from tisane.random_effects import RandomEffect
 from tisane.graph import Graph
@@ -103,6 +103,18 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
         f_classname = type(f).__name__
         tmp_family_link[f_classname] = [type(l).__name__ for l in l_options]
     data["input"][family_link_key] = tmp_family_link
+
+    # Create Measure, Unit pairs: used for random effects
+    measure_unit_key = "measures to units"
+    data["input"][measure_unit_key] = dict()
+    gr = query.graph
+    for var in gr.get_variables(): 
+        if isinstance(var, Measure): 
+            unit = gr.get_identifier_for_variable(var)
+            assert(isinstance(unit, Unit))
+            data["input"][measure_unit_key][var.name] = unit.name
+
+    # TODO: START HERE: generate new jsons, let Audrey know!
 
     return data
 

@@ -9,9 +9,9 @@
             ]
         },
         "generated main effects": [
-            "Measure 0",
             "Measure 2",
-            "Measure 1"
+            "Measure 1",
+            "Measure 0"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
@@ -19,36 +19,43 @@
         "generated random effects": {},
         "generated family, link functions": {
             "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "GammaFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
             "PoissonFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "GaussianFamily": [
-                "CLogLogLink",
-                "PowerLink",
                 "IdentityLink",
-                "OPowerLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
                 "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink"
+                "IdentityLink",
+                "PowerLink"
             ],
             "InverseGaussianFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
+            ],
+            "GaussianFamily": [
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink"
             ]
+        },
+        "measures to units": {
+            "Dependent variable": "Unit",
+            "Measure 0": "Unit",
+            "Measure 1": "Unit",
+            "Measure 2": "Unit",
+            "Measure 2*Measure 1": "Unit"
         }
     }
 }

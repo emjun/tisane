@@ -1,3 +1,4 @@
+from tisane.variable import Measure
 import tisane as ts
 from tisane.main import collect_model_candidates
 from tisane.graph_inference import infer_interaction_effects, infer_random_effects
@@ -34,17 +35,24 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
-        self.assertEqual(len(input_keys), 5)
+        self.assertEqual(len(input_keys), 6)
         self.assertIn("query", input_keys)
         self.assertIn("generated main effects", input_keys)
         self.assertIn("generated interaction effects", input_keys)
         self.assertIn("generated random effects", input_keys)
         self.assertIn("generated family, link functions", input_keys)
+        self.assertIn("measures to units", input_keys)
         self.assertIsInstance(input["query"], dict)
         self.assertIsInstance(input["generated main effects"], list)
         self.assertIsInstance(input["generated interaction effects"], list)
         self.assertIsInstance(input["generated random effects"], dict)
         self.assertIsInstance(input["generated family, link functions"], dict)
+        self.assertIsInstance(input["measures to units"], dict)
+        gr = design.graph
+        variables = gr.get_variables()
+        measures = [v for v in variables if isinstance(v, Measure)]
+        self.assertEqual(len(input["measures to units"].keys()), len(measures))
+        
 
     def test_main_interaction(self): 
         u0 = ts.Unit("Unit")
@@ -81,18 +89,24 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
-        self.assertEqual(len(input_keys), 5)
+        self.assertEqual(len(input_keys), 6)
         self.assertIn("query", input_keys)
         self.assertIn("generated main effects", input_keys)
         self.assertIn("generated interaction effects", input_keys)
         self.assertIn("generated random effects", input_keys)
         self.assertIn("generated family, link functions", input_keys)
+        self.assertIn("measures to units", input_keys)
         self.assertIsInstance(input["query"], dict)
         self.assertIsInstance(input["generated main effects"], list)
         self.assertIsInstance(input["generated interaction effects"], list)
         self.assertEqual(len(input["generated interaction effects"]), 1)
         self.assertIsInstance(input["generated random effects"], dict)
         self.assertIsInstance(input["generated family, link functions"], dict)
+        self.assertIsInstance(input["measures to units"], dict)
+        gr = design.graph
+        variables = gr.get_variables()
+        measures = [v for v in variables if isinstance(v, Measure)]
+        self.assertEqual(len(input["measures to units"].keys()), len(measures))
 
     def test_main_interaction_random_intercept(self): 
         u0 = ts.Unit("Unit")
@@ -133,12 +147,13 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
-        self.assertEqual(len(input_keys), 5)
+        self.assertEqual(len(input_keys), 6)
         self.assertIn("query", input_keys)
         self.assertIn("generated main effects", input_keys)
         self.assertIn("generated interaction effects", input_keys)
         self.assertIn("generated random effects", input_keys)
         self.assertIn("generated family, link functions", input_keys)
+        self.assertIn("measures to units", input_keys)
         self.assertIsInstance(input["query"], dict)
         self.assertIsInstance(input["generated main effects"], list)
         self.assertIsInstance(input["generated interaction effects"], list)
@@ -146,6 +161,11 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertIsInstance(input["generated random effects"], dict)
         self.assertEqual(len(input["generated random effects"]), 2)
         self.assertIsInstance(input["generated family, link functions"], dict)
+        self.assertIsInstance(input["measures to units"], dict)
+        gr = design.graph
+        variables = gr.get_variables()
+        measures = [v for v in variables if isinstance(v, Measure)]
+        self.assertEqual(len(input["measures to units"].keys()), len(measures))
         
     def test_main_interaction_random_slope_from_interaction_one_variable(self): 
         u = ts.Unit("Unit")
@@ -181,12 +201,13 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
-        self.assertEqual(len(input_keys), 5)
+        self.assertEqual(len(input_keys), 6)
         self.assertIn("query", input_keys)
         self.assertIn("generated main effects", input_keys)
         self.assertIn("generated interaction effects", input_keys)
         self.assertIn("generated random effects", input_keys)
         self.assertIn("generated family, link functions", input_keys)
+        self.assertIn("measures to units", input_keys)
         self.assertIsInstance(input["query"], dict)
         self.assertIsInstance(input["generated main effects"], list)
         self.assertIsInstance(input["generated interaction effects"], list)
@@ -199,6 +220,11 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertEqual(u.name, input["generated random effects"][u.name]["random slope"]["groups"])
         self.assertEqual(a.name, input["generated random effects"][u.name]["random slope"]["iv"])
         self.assertIsInstance(input["generated family, link functions"], dict)
+        self.assertIsInstance(input["measures to units"], dict)
+        gr = design.graph
+        variables = gr.get_variables()
+        measures = [v for v in variables if isinstance(v, Measure)]
+        self.assertEqual(len(input["measures to units"].keys()), len(measures))
 
     def test_main_interaction_random_slope_from_interaction_two_variables(self): 
         u = ts.Unit("Unit")
@@ -236,12 +262,13 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
-        self.assertEqual(len(input_keys), 5)
+        self.assertEqual(len(input_keys), 6)
         self.assertIn("query", input_keys)
         self.assertIn("generated main effects", input_keys)
         self.assertIn("generated interaction effects", input_keys)
         self.assertIn("generated random effects", input_keys)
         self.assertIn("generated family, link functions", input_keys)
+        self.assertIn("measures to units", input_keys)
         self.assertIsInstance(input["query"], dict)
         self.assertIsInstance(input["generated main effects"], list)
         self.assertIsInstance(input["generated interaction effects"], list)
@@ -255,6 +282,11 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         ixn = interaction_effects.pop()
         self.assertEqual(ixn.name, input["generated random effects"][u.name]["random slope"]["iv"])
         self.assertIsInstance(input["generated family, link functions"], dict)
+        self.assertIsInstance(input["measures to units"], dict)
+        gr = design.graph
+        variables = gr.get_variables()
+        measures = [v for v in variables if isinstance(v, Measure)]
+        self.assertEqual(len(input["measures to units"].keys()), len(measures))
 
     def test_main_interaction_random_intercept_slope_correlated(self): 
         subject = ts.Unit("Subject", cardinality=12)
@@ -286,12 +318,13 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
-        self.assertEqual(len(input_keys), 5)
+        self.assertEqual(len(input_keys), 6)
         self.assertIn("query", input_keys)
         self.assertIn("generated main effects", input_keys)
         self.assertIn("generated interaction effects", input_keys)
         self.assertIn("generated random effects", input_keys)
         self.assertIn("generated family, link functions", input_keys)
+        self.assertIn("measures to units", input_keys)
         self.assertIsInstance(input["query"], dict)
         self.assertIsInstance(input["generated main effects"], list)
         self.assertIsInstance(input["generated interaction effects"], list)
@@ -307,8 +340,8 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertEqual(len(input["generated random effects"][word.name].keys()), 1)
         self.assertIn("random intercept", input["generated random effects"][word.name].keys())
         self.assertIsInstance(input["generated family, link functions"], dict)
-
-
-
-# TIME GROUP EXAMPLE
-    
+        self.assertIsInstance(input["measures to units"], dict)
+        gr = design.graph
+        variables = gr.get_variables()
+        measures = [v for v in variables if isinstance(v, Measure)]
+        self.assertEqual(len(input["measures to units"].keys()), len(measures))

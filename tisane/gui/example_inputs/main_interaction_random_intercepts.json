@@ -10,8 +10,8 @@
             ]
         },
         "generated main effects": [
-            "Measure 1",
             "Measure 0",
+            "Measure 1",
             "Measure 2",
             "Time"
         ],
@@ -19,22 +19,22 @@
             "Measure 2*Measure 1"
         ],
         "generated random effects": {
-            "Unit": {
-                "random intercept": {
-                    "groups": "Unit"
-                }
-            },
             "Time": {
                 "random intercept": {
                     "groups": "Time"
+                }
+            },
+            "Unit": {
+                "random intercept": {
+                    "groups": "Unit"
                 }
             }
         },
         "generated family, link functions": {
             "TweedieFamily": [
-                "LogLink",
                 "IdentityLink",
-                "PowerLink"
+                "PowerLink",
+                "LogLink"
             ],
             "GaussianFamily": [
                 "PowerLink",
@@ -48,6 +48,11 @@
                 "CLogLogLink"
             ],
             "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
                 "LogLink",
                 "IdentityLink",
                 "PowerLink"
@@ -56,12 +61,14 @@
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
-            ],
-            "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
             ]
+        },
+        "measures to units": {
+            "Dependent variable": "Unit",
+            "Measure 0": "Unit",
+            "Measure 1": "Unit",
+            "Measure 2": "Unit",
+            "Measure 2*Measure 1": "Unit"
         }
     }
 }

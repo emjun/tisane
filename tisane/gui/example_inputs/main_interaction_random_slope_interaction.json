@@ -23,37 +23,43 @@
             }
         },
         "generated family, link functions": {
+            "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "GaussianFamily": [
+                "OPowerLink",
+                "CLogLogLink",
+                "LogLogLink",
+                "NegativeBinomialLink",
+                "PowerLink",
+                "LogLink",
+                "ProbitLink",
+                "LogitLink",
+                "IdentityLink"
+            ],
             "InverseGaussianFamily": [
                 "LogLink",
                 "PowerLink",
                 "IdentityLink"
             ],
-            "PoissonFamily": [
-                "PowerLink",
-                "IdentityLink",
-                "LogLink"
-            ],
-            "GammaFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
             "TweedieFamily": [
-                "IdentityLink",
                 "PowerLink",
-                "LogLink"
-            ],
-            "GaussianFamily": [
-                "PowerLink",
-                "IdentityLink",
-                "OPowerLink",
                 "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink",
-                "CLogLogLink"
+                "IdentityLink"
             ]
+        },
+        "measures to units": {
+            "Dependent variable": "Unit",
+            "Measure A": "Unit",
+            "Measure B": "Unit",
+            "Measure A*Measure B": "Unit"
         }
     }
 }

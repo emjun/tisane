@@ -44,6 +44,80 @@ From UIST 2021 submission: https://github.com/emjun/tisane/blob/main/tisane/smt/
 `example.py`: Script to run GUI with data, edit to change the JSON file from `example_inputs` used to populate the GUI
 `generate_examples.py`: Script for creating the JSON files in example_inputs, calls functions in `tisane/main.py` to generate Python dictionary that is cast and output as JSON. 
 
+### Functions
+The main function for generating JSON from Tisane programs is `collect_model_candidates` in `tisane/main.py`. The output of this function is a JSON object that can be written out to a local file by calling `write_to_json` in `tisane/main.py`. The JSON object/file has the following general structure:
+```
+# Example taken from gui/example_inputs/main_interaction_random_intercept_slope_correlated.json
+{
+    "input": {
+        "query": {
+            "DV": "Time",
+            "IVs": [
+                "Word type"
+            ]
+        },
+        "generated main effects": [
+            "Word type"
+        ],
+        "generated interaction effects": [],
+        "generated random effects": {
+            "Word": {
+                "random intercept": {
+                    "groups": "Word"
+                }
+            },
+            "Subject": {
+                "random intercept": {
+                    "groups": "Subject"
+                },
+                "random slope": {
+                    "iv": "Word type",
+                    "groups": "Subject"
+                },
+                "correlated": true
+            }
+        },
+        "generated family, link functions": {
+            "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "GaussianFamily": [
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink"
+            ],
+            "TweedieFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "GammaFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ]
+        },
+        "measures to units": {
+            "Time": "Subject",
+            "Word type": "Subject"
+        }
+    }
+}
+```
+
 ### Example Plotly Dash apps
 - Example gallery: https://dash-gallery.plotly.host/Portal/
 - Code for example gallery, including the ones below: https://github.com/plotly/dash-sample-apps/tree/main/apps 

@@ -17,17 +17,38 @@
                 }
             },
             "Subject": {
-                "random slope": {
-                    "iv": "Word type",
+                "random intercept": {
                     "groups": "Subject"
                 },
-                "random intercept": {
+                "random slope": {
+                    "iv": "Word type",
                     "groups": "Subject"
                 },
                 "correlated": true
             }
         },
         "generated family, link functions": {
+            "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "GaussianFamily": [
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink"
+            ],
             "TweedieFamily": [
                 "LogLink",
                 "IdentityLink",
@@ -37,28 +58,11 @@
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
-            ],
-            "InverseGaussianFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "PoissonFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
-            "GaussianFamily": [
-                "CLogLogLink",
-                "PowerLink",
-                "IdentityLink",
-                "OPowerLink",
-                "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink"
             ]
+        },
+        "measures to units": {
+            "Time": "Subject",
+            "Word type": "Subject"
         }
     }
 }
