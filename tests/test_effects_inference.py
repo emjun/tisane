@@ -350,7 +350,39 @@ class EffectsInferenceTest(unittest.TestCase):
                 self.assertIsInstance(re, RandomIntercept)
                 if re.groups != subject:
                     self.assertIs(re.groups, word)
-        # TODO: How to ask if slope and intercept are correlated?
+
+    # Barr 2013 time * group interaction example: 
+    # "For example, consider a design with two independent groups of subjects,
+    # where there are observations at multiple time points for each subject.
+    # When testing the time-by-group interaction, the model should include a
+    # random slope for the continuous variable of time..."
+    def test_random_effects_for_two_way_time_group_interaction(self):
+        subject = ts.Unit("Unit")
+        time = ts.SetUp("Time")
+        condition = subject.nominal("Condition", cardinality=2, number_of_instances=1) # "two independent groups of subjects"
+        dv = subject.numeric("Dependent variable", number_of_instances=time) # within-subject
+
+        time.associates_with(dv)
+        condition.causes(dv)
+        time.moderates(moderator=[condition], on=dv)
+
+        design = ts.Design(dv=dv, ivs=[time, condition])
+        gr = design.graph
+
+        main_effects = design.ivs
+        interaction_effects = infer_interaction_effects(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        #     gr=gr, query=design, main_effects
+            
+        #     interactions=list(interaction_effects)
+        # )
+        self.assertEqual(len(random_effects), 1)
+        rs = random_effects.pop()
+        self.assertIsInstance(rs, RandomSlope)
+        self.assertEqual(rs.iv.name, time.name)
+        self.assertIs(rs.groups, subject)
 
     # def test_composed_measures_no_repeats(self):
     #     subject = ts.Unit("Subject")

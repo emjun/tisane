@@ -13,6 +13,7 @@ from tisane.variable import (
     Moderates,
     Nests,
     NumberValue,
+    SetUp,
     Unit,
     Nominal,
 )
@@ -376,7 +377,11 @@ def construct_random_effects_for_nests(
 
         else:
             if v_unit is not None:
-                assert v_unit.name in units_to_consider
+                if v_unit.name not in units_to_consider: 
+                    assert(v_unit, v)
+                    assert(isinstance(v, SetUp))
+                else: 
+                    assert v_unit.name in units_to_consider
 
     # Add any nesting units whose measures are not included in the list of variables
     for u in units_to_consider:
@@ -566,7 +571,7 @@ def interaction_is_all_within(
     return within_subset_names == ixn_var_names
 
 def construct_random_effects_for_interactions(
-    gr: Graph, interactions: Set[AbstractVariable]
+    gr: Graph, query: Design, interactions: Set[AbstractVariable]
 ) -> Set[RandomEffect]:
     random_effects = set()
     if interactions is None: 
@@ -575,7 +580,6 @@ def construct_random_effects_for_interactions(
         within_subset = find_largest_subset_of_variables_that_vary_within_unit(
             gr=gr, interaction_effect=ixn
         )
-
         # Are all the variables in ixn within-subjects?
         if interaction_is_all_within(interaction=ixn, within_subset=within_subset):
             ixn_unit = gr.get_identifier_for_variable(variable=ixn)
@@ -590,13 +594,25 @@ def construct_random_effects_for_interactions(
             within_subset_variable_unit = get_identifier_for_subset_interaction(
                 gr=gr, interaction_effect=within_subset_variable
             )
-            if not isinstance(within_subset_variable_unit, Unit):
-                import pdb
-
-                pdb.set_trace()
             assert isinstance(within_subset_variable_unit, Unit)
             rs = RandomSlope(within_subset_variable, within_subset_variable_unit)
             random_effects.add(rs)
+        elif len(within_subset) == 0: 
+            ixn_names = ixn.name.split("*")
+            ixn_variables = [gr.get_variable(name) for name in ixn_names]
+            
+            dv = query.dv
+            dv_unit = gr.get_identifier_for_variable(dv)
+
+            assert(gr.has_edge(start=dv_unit, end=dv, edge_type="has"))
+            (n0, n1, edge_data) = gr.get_edge(start=dv_unit, end=dv, edge_type="has")
+            edge_obj = edge_data["edge_obj"]
+            
+            if edge_obj.according_to is not None: 
+                for v in ixn_variables: 
+                    if edge_obj.according_to== v: 
+                        rs = RandomSlope(iv=v, groups=dv_unit)
+                        random_effects.add(rs)
 
     return random_effects
 
@@ -626,7 +642,7 @@ def infer_random_effects(
     random_candidates = random_candidates.union(composed_effects)
 
     interaction_random_effects = construct_random_effects_for_interactions(
-        gr=gr, interactions=interaction_effects
+        gr=gr, query=query, interactions=interaction_effects
     )
     random_candidates = random_candidates.union(interaction_random_effects)
 
