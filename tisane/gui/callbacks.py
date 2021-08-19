@@ -1,14 +1,20 @@
 from dash.dependencies import Output, Input, State, ALL, MATCH
 import dash
 from dash.exceptions import PreventUpdate
+import dash_html_components as html
+from tisane.gui.gui_components import GUIComponents
+from family_link_function_callbacks import createFamilyLinkFunctionCallbacks
 
-def createCallbacks(app):
+def createCallbacks(app, comp: GUIComponents=None):
     cont_to_interaction_effects_input = Input("continue-to-interaction-effects", "n_clicks")
     createMainEffectsProgressBarCallbacks(app)
     createProgressBarCallbacks(app, "tab-2", "interaction-effects-progress", "continue-to-interaction-effects", "continue-to-random-effects")
     createProgressBarCallbacks(app, "tab-3", "random-effects-progress", "continue-to-random-effects", "continue-to-family-link-functions")
     createTabsCallbacks(app)
+    createMainEffectsChecklistCallbacks(app)
     createFamilyLinkFunctionsProgressCallbacks(app)
+    createInteractionEffectsChecklistCallbacks(app, comp)
+    createFamilyLinkFunctionCallbacks(app, comp)
     pass
 
 def getTriggeredFromContext(ctx):
@@ -52,6 +58,37 @@ def createTabsCallbacks(app):
     )(continueCallback)
 
 mytabs = ["tab-1", "tab-2", "tab-3", "tab-4"]
+
+def createMainEffectsChecklistCallbacks(app):
+    @app.callback(
+        Output("added-main-effects", "children"),
+        Input("main-effects-checklist", "value")
+    )
+    def addVariables(options,):
+        # print(options)
+        if not options:
+            raise PreventUpdate
+        newChildren = [
+            html.Li(o) for o in options
+        ]
+        print("New children: {}".format(newChildren))
+        return newChildren
+    pass
+
+def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
+    if comp and comp.hasInteractionEffects():
+        def addVariables(options,):
+            if not options:
+                raise PreventUpdate
+            newChildren = [
+                html.Li(o) for o in options
+            ]
+            print("New children: {}".format(newChildren))
+            return newChildren
+        app.callback(
+            Output("added-interaction-effects", "children"),
+            Input("interaction-effects-checklist", "value")
+        )(addVariables)
 
 def createFamilyLinkFunctionsProgressCallbacks(app):
     def animatedCallback(nclicks, active_tab):

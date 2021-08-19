@@ -135,7 +135,7 @@ class TisaneGUI():
 
         ### Start and run app on local server
         self.app = app
-        createCallbacks(app)
+        createCallbacks(app, self.components)
         # open_browser()
         app.run_server(debug=True, threaded=True, port=port)
 
@@ -200,25 +200,27 @@ class TisaneGUI():
         #     className="mt-3",
         # )
 
-        tab3_content = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.P("Random", className="card-text"),
-                    dbc.Button("Contintue", color="success", id="continue-to-family-link-functions"),
-                ]
-            ),
-            className="mt-3",
-        )
+        tab3_content = self.components.getRandomEffectsCard()
+        # dbc.Card(
+        #     dbc.CardBody(
+        #         [
+        #             html.P("Random", className="card-text"),
+        #             dbc.Button("Contintue", color="success", id="continue-to-family-link-functions"),
+        #         ]
+        #     ),
+        #     className="mt-3",
+        # )
 
-        tab4_content = dbc.Card(
-            dbc.CardBody(
-                [
-                    html.P("Family, Link", className="card-text"),
-                    dbc.Button("Generate Code", color="success", id="generate-code"),
-                ]
-            ),
-            className="mt-3",
-        )
+        tab4_content = self.components.getFamilyLinkFunctionsCard()
+        # dbc.Card(
+        #     dbc.CardBody(
+        #         [
+        #             html.P("Family, Link", className="card-text"),
+        #             dbc.Button("Generate Code", color="success", id="generate-code"),
+        #         ]
+        #     ),
+        #     className="mt-3",
+        # )
 
 
         tabs = dbc.Tabs(
@@ -252,7 +254,10 @@ class TisaneGUI():
                     # TODO: Add List of variable
                     # s
                     html.H5("Variables added:"),
-                    html.P("", id="added-variables-paragraph")
+                    html.Div([
+                        html.H6("Main effects added:"),
+                        html.Ul(id="added-main-effects"),
+                    ] + self.components.getInteractionEffectsAddedSection() + self.components.getRandomEffectsAddedSection(), id="added-variables-paragraph")
                     # TODO: Add list of variables as analyst selects them in the tabs
                 ]
             ),
