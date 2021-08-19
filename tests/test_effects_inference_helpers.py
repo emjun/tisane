@@ -1308,7 +1308,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         a.moderates(moderator=[b], on=dv)  # AB --> get B
         a.moderates(moderator=[c], on=dv)  # AC --> get C
         b.moderates(moderator=[c], on=dv)  # BC --> get BC
-        a.moderates(moderator=[b, c], on=dv)  # BC --> get BC
+        a.moderates(moderator=[b, c], on=dv)  # ABC --> get BC
 
         design = ts.Design(dv=dv, ivs=[a, b])
         gr = design.graph

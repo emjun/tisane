@@ -80,17 +80,23 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     for r in random_effects_candidates: 
         key = r.groups.name
         if key not in tmp_random.keys(): 
-            tmp_random[key] = dict()
+            tmp_random[key] = list()
         if isinstance(r, RandomIntercept):
-            tmp_random[key]["random intercept"] = {"groups": r.groups.name}
+            ri_dict = dict()
+            ri_dict["random intercept"] = {"groups": r.groups.name}
+            tmp_random[key].append(ri_dict)
         else: 
             assert(isinstance(r, RandomSlope))
-            tmp_random[key]["random slope"] = {"iv": r.iv.name, "groups": r.groups.name}
+            rs_dict = dict()
+            rs_dict["random slope"] = {"iv": r.iv.name, "groups": r.groups.name}
+            tmp_random[key].append(rs_dict)
 
     # If there is a random intercept and slope involving the same grouping variable, add correlation value
     for key, value in tmp_random.items(): 
         if len(value) == 2: 
-            tmp_random[key]["correlated"] = True
+            correlated_dict = dict()
+            correlated_dict["correlated"] = True
+            tmp_random[key].append(correlated_dict)
     
     data["input"][random_key] = tmp_random
     
@@ -113,8 +119,6 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
             unit = gr.get_identifier_for_variable(var)
             assert(isinstance(unit, Unit))
             data["input"][measure_unit_key][var.name] = unit.name
-
-    # TODO: START HERE: generate new jsons, let Audrey know!
 
     return data
 

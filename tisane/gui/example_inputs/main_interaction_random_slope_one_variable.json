@@ -15,14 +15,37 @@
             "Measure A*Measure B"
         ],
         "generated random effects": {
-            "Unit": {
-                "random slope": {
-                    "iv": "Measure A",
-                    "groups": "Unit"
+            "Unit": [
+                {
+                    "random slope": {
+                        "iv": "Measure A",
+                        "groups": "Unit"
+                    }
                 }
-            }
+            ]
         },
         "generated family, link functions": {
+            "GaussianFamily": [
+                "ProbitLink",
+                "LogLogLink",
+                "OPowerLink",
+                "LogLink",
+                "IdentityLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "PowerLink",
+                "CLogLogLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "GammaFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
             "InverseGaussianFamily": [
                 "LogLink",
                 "IdentityLink",
@@ -32,27 +55,6 @@
                 "IdentityLink",
                 "LogLink",
                 "PowerLink"
-            ],
-            "GaussianFamily": [
-                "NegativeBinomialLink",
-                "PowerLink",
-                "LogLink",
-                "CLogLogLink",
-                "LogLogLink",
-                "ProbitLink",
-                "LogitLink",
-                "OPowerLink",
-                "IdentityLink"
-            ],
-            "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "PoissonFamily": [
-                "LogLink",
-                "PowerLink",
-                "IdentityLink"
             ]
         },
         "measures to units": {

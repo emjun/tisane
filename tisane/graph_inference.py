@@ -481,6 +481,7 @@ def create_variable_from_set_of_variables(
 ) -> AbstractVariable:
     # Create new interaction variable
     names = [v.name for v in variables]
+    names.sort() # Alphabetize the names to avoid multiple interaction effects with inversed order of variable names
     name = "*".join(names)
 
     cardinality = 1
@@ -558,17 +559,11 @@ def interaction_is_all_within(
     interaction: AbstractVariable, within_subset: Set[AbstractVariable]
 ) -> bool:
     within_subset_names = [w.name for w in within_subset]
+    within_subset_names.sort() # interactions with variables in different orders are still the same effect
     ixn_var_names = interaction.name.split("*")
-    if len(ixn_var_names) == len(within_subset_names):
-        assert len(within_subset) > 0
-        for v_name in ixn_var_names:
-            if v_name not in within_subset_names:
-                return False
-    else:
-        return False
-
-    return True
-
+    ixn_var_names.sort() # interactions with variables in different orders are still the same effect
+    
+    return within_subset_names == ixn_var_names
 
 def construct_random_effects_for_interactions(
     gr: Graph, interactions: Set[AbstractVariable]

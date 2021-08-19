@@ -61,33 +61,31 @@ The main function for generating JSON from Tisane programs is `collect_model_can
         ],
         "generated interaction effects": [],
         "generated random effects": {
-            "Word": {
-                "random intercept": {
-                    "groups": "Word"
+            "Subject": [
+                {
+                    "random intercept": {
+                        "groups": "Subject"
+                    }
+                },
+                {
+                    "random slope": {
+                        "iv": "Word type",
+                        "groups": "Subject"
+                    }
+                },
+                {
+                    "correlated": true
                 }
-            },
-            "Subject": {
-                "random intercept": {
-                    "groups": "Subject"
-                },
-                "random slope": {
-                    "iv": "Word type",
-                    "groups": "Subject"
-                },
-                "correlated": true
-            }
+            ],
+            "Word": [
+                {
+                    "random intercept": {
+                        "groups": "Word"
+                    }
+                }
+            ]
         },
         "generated family, link functions": {
-            "PoissonFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
-            "InverseGaussianFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
             "GaussianFamily": [
                 "LogitLink",
                 "LogLogLink",
@@ -99,15 +97,25 @@ The main function for generating JSON from Tisane programs is `collect_model_can
                 "LogLink",
                 "NegativeBinomialLink"
             ],
-            "TweedieFamily": [
+            "InverseGaussianFamily": [
                 "LogLink",
                 "IdentityLink",
                 "PowerLink"
             ],
-            "GammaFamily": [
+            "PoissonFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "GammaFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
             ]
         },
         "measures to units": {
