@@ -1,7 +1,9 @@
+from tisane.random_effects import RandomIntercept, RandomSlope
+from unittest import main
 from tisane.variable import Measure
 import tisane as ts
-from tisane.main import collect_model_candidates
-from tisane.graph_inference import infer_interaction_effects, infer_random_effects
+from tisane.main import collect_model_candidates, collect_model_candidates_with_explanations
+from tisane.graph_inference import infer_interaction_effects, infer_random_effects, infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 
 import unittest 
@@ -443,3 +445,96 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertTrue(has_b_rs)
         self.assertTrue(has_c_rs)
         self.assertTrue(has_bc_rs)
+
+    def test_collect_main_candidates_and_explanations(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        # m0 is the common (causal) ancestor
+        m0.causes(m1)
+        m0.causes(m2)
+
+        m1.causes(dv)
+        m2.causes(dv)
+
+        design = ts.Design(dv=dv, ivs=[m1, m2])
+        gr = design.graph
+
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
+        self.assertIsInstance(main_effects, set)
+        self.assertIsInstance(main_explanations, dict)
+
+    def test_collect_infer_candidates_and_explanations(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        m2 = u0.numeric("Measure 2")
+        dv = u0.numeric("Dependent variable")
+
+        m0.causes(dv)
+        m1.causes(dv)
+        m2.moderates(moderator=m1, on=dv)
+
+        design = ts.Design(dv=dv, ivs=[m0, m1])  # omit m2
+        gr = design.graph
+
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr, design, main_effects)
+        self.assertIsInstance(interaction_effects, set)
+        self.assertIsInstance(interaction_explanations, dict)
+
+    def test_collect_random_candidates_and_explanations(self):
+        u = ts.Unit("Unit")
+        a = u.nominal("Measure A", cardinality=2)  # A is between-subjects
+        b = u.nominal(
+            "Measure B", cardinality=2, number_of_instances=2
+        )  # B is within-subjects
+        c = u.nominal(
+            "Measure C", cardinality=2, number_of_instances=2
+        )  # B is within-subjects
+        dv = u.numeric("Dependent variable")
+
+        a.causes(dv)
+        b.causes(dv)
+        b.associates_with(c)
+        c.causes(dv)
+        a.moderates(moderator=[b], on=dv)  # AB --> get B
+        a.moderates(moderator=[c], on=dv)  # AC --> get C
+        b.moderates(moderator=[c], on=dv)  # BC --> get BC
+        a.moderates(moderator=[b, c], on=dv)  # ABC --> get BC
+
+        design = ts.Design(dv=dv, ivs=[a, b])
+        gr = design.graph
+
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        self.assertIsInstance(random_effects, set)
+        self.assertIsInstance(random_explanations, dict)
+        self.assertEqual(len(random_effects), len(random_explanations))
+        for k,v in random_explanations.items(): 
+            # Is this a random slope? 
+            if len(k) == 3: 
+                groups, iv, obj = k
+                self.assertIs(obj.__name__, RandomSlope.__name__)
+            else: 
+                # This is a random intercept
+                assert(len(k)==2)
+                groups, obj = k
+                self.assertIsInstance(obj.__name__, RandomIntercept.__name__)
+
+        for re in random_effects: 
+            if isinstance(re, RandomIntercept):
+                name_key = (re.groups.name, re.__class__)
+            else:
+                assert isinstance(re, RandomSlope)
+                name_key = (re.groups.name, re.iv.name, re.__class__)
+            self.assertIn(name_key, random_explanations.keys())
+
+                
+
+    # TODO: Check that the explanations are correct
+    # TODO: Add tests from effects infrence helpers that put all these together

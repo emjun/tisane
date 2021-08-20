@@ -10,8 +10,8 @@
         },
         "generated main effects": [
             "Measure 1",
-            "Measure 0",
-            "Measure 2"
+            "Measure 2",
+            "Measure 0"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
@@ -29,25 +29,25 @@
                 "ProbitLink",
                 "CLogLogLink"
             ],
-            "PoissonFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
-            "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
             "InverseGaussianFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
-            "GammaFamily": [
+            "PoissonFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
             ]
         },
         "measures to units": {
@@ -57,5 +57,19 @@
             "Measure 2": "Unit",
             "Measure 2*Measure 1": "Unit"
         }
+    },
+    "explanations": {
+        "Measure 0": [
+            "Explanation for query"
+        ],
+        "Measure 1": [
+            "Explanation for query"
+        ],
+        "Measure 2": [
+            "Explanation for query"
+        ],
+        "Measure 2*Measure 1": [
+            "Explanation for interaction effects"
+        ]
     }
 }

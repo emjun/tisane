@@ -40,11 +40,6 @@ from tisane.variable import (
 from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
-from tisane.graph_inference import (
-    infer_main_effects,
-    infer_interaction_effects,
-    infer_random_effects,
-)
 from itertools import chain, combinations
 from typing import Dict, List, Set, Any, Tuple
 import typing  # for Union

@@ -8,19 +8,23 @@
             ]
         },
         "generated main effects": [
-            "Measure A",
+            "Measure C",
             "Measure B",
-            "Measure C"
+            "Measure A"
         ],
         "generated interaction effects": [
+            "Measure A*Measure B",
             "Measure B*Measure C",
             "Measure A*Measure C",
-            "Measure A*Measure B",
             "Measure A*Measure B*Measure C"
         ],
         "generated random effects": {
             "Unit": {
                 "random slope": [
+                    {
+                        "iv": "Measure B*Measure C",
+                        "groups": "Unit"
+                    },
                     {
                         "iv": "Measure C",
                         "groups": "Unit"
@@ -28,29 +32,25 @@
                     {
                         "iv": "Measure B",
                         "groups": "Unit"
-                    },
-                    {
-                        "iv": "Measure B*Measure C",
-                        "groups": "Unit"
                     }
                 ]
             }
         },
         "generated family, link functions": {
-            "InverseGaussianFamily": [
+            "TweedieFamily": [
                 "IdentityLink",
                 "PowerLink",
                 "LogLink"
             ],
             "GaussianFamily": [
-                "PowerLink",
-                "NegativeBinomialLink",
-                "LogLogLink",
-                "IdentityLink",
                 "CLogLogLink",
-                "LogLink",
+                "PowerLink",
+                "IdentityLink",
                 "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
                 "LogitLink",
+                "LogLogLink",
                 "ProbitLink"
             ],
             "PoissonFamily": [
@@ -59,14 +59,14 @@
                 "LogLink"
             ],
             "GammaFamily": [
-                "IdentityLink",
                 "LogLink",
+                "IdentityLink",
                 "PowerLink"
             ],
-            "TweedieFamily": [
-                "IdentityLink",
+            "InverseGaussianFamily": [
                 "PowerLink",
-                "LogLink"
+                "LogLink",
+                "IdentityLink"
             ]
         },
         "measures to units": {
@@ -79,5 +79,38 @@
             "Measure B*Measure C": "Unit",
             "Measure A*Measure B*Measure C": "Unit"
         }
+    },
+    "explanations": {
+        "Measure A": [
+            "Explanation for query"
+        ],
+        "Measure B": [
+            "Explanation for query"
+        ],
+        "Measure C": [
+            "Explanation for intermediaries"
+        ],
+        "Measure A*Measure B": [
+            "Explanation for interaction effects"
+        ],
+        "Measure A*Measure C": [
+            "Explanation for interaction effects"
+        ],
+        "Measure B*Measure C": [
+            "Explanation for interaction effects"
+        ],
+        "Measure A*Measure B*Measure C": [
+            "Explanation for interaction effects"
+        ],
+        "Unit, Measure B*Measure C, RandomSlope": [
+            "Explanation about within-subjects variables for interaction effects",
+            "Explanation about within-subjects variables for interaction effects"
+        ],
+        "Unit, Measure C, RandomSlope": [
+            "Explanation about within-subjects variables for interaction effects"
+        ],
+        "Unit, Measure B, RandomSlope": [
+            "Explanation about within-subjects variables for interaction effects"
+        ]
     }
 }

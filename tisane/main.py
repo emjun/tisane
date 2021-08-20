@@ -3,7 +3,7 @@ from tisane.variable import AbstractVariable, Measure, Unit
 from tisane.family import AbstractFamily, AbstractLink
 from tisane.random_effects import RandomEffect
 from tisane.graph import Graph
-from tisane.graph_inference import infer_main_effects, infer_interaction_effects, infer_random_effects
+from tisane.graph_inference import infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
@@ -150,29 +150,34 @@ def infer_statistical_model_from_design(design: Design):
 
 
     ### Step 2: Candidate statistical model inference/generation
-    main_effects_candidates = infer_main_effects(gr=gr, query=design)
-    # Assume all the main effects will be selected
-    main_effects_candidates = list(main_effects_candidates)
-
-    interaction_effects_candidates = infer_interaction_effects(gr=gr, query=design, main_effects=main_effects_candidates)
-    interaction_effects_candidates = list(interaction_effects_candidates)
-
-    random_effects_candidates = infer_random_effects(gr=gr, query=design, main_effects=main_effects_candidates, interaction_effects=interaction_effects_candidates)
-
+    (main_effects_candidates, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
+    (interaction_effects_candidates, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
+    (random_effects_candidates, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
-        # TODO: store the family-links somewhere!
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
         assert(f not in family_link_paired.keys())
         family_link_paired[f] = l
 
+    # Combine explanations 
+    explanations = dict()
+    explanations.update(main_explanations)
+    explanations.update(interaction_explanations)
+    explanations.update(random_explanations)
+
+    # Get combined dict
+    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+
+    # Add explanations 
+    combined_dict["explanations"] = explanations
 
     # Write out to JSON in order to pass data to Tisane GUI for disambiguation
     input_file = "input.json"
     data = collect_model_candidates(main_effects_candidates, interaction_effects_candidates, random_effects_candidates, family_link_paired, input_file)
+
     write_to_json(data, "input_file.json")
     # Note: Because the input to the GUI is a JSON file, everything is stringified. This means that we need to match up the variable names with the actual variable objects in the next step.
 
