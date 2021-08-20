@@ -3,19 +3,29 @@ import dash
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents
-from family_link_function_callbacks import createFamilyLinkFunctionCallbacks
-
+from tisane.gui.family_link_function_callbacks import createFamilyLinkFunctionCallbacks
+from tisane.gui.random_effects_callbacks import createRandomEffectsCallbacks
 def createCallbacks(app, comp: GUIComponents=None):
     cont_to_interaction_effects_input = Input("continue-to-interaction-effects", "n_clicks")
     createMainEffectsProgressBarCallbacks(app)
     createProgressBarCallbacks(app, "tab-2", "interaction-effects-progress", "continue-to-interaction-effects", "continue-to-random-effects")
     createProgressBarCallbacks(app, "tab-3", "random-effects-progress", "continue-to-random-effects", "continue-to-family-link-functions")
     createTabsCallbacks(app)
-    createMainEffectsChecklistCallbacks(app)
+    createMainEffectsChecklistCallbacks(app, comp)
     createFamilyLinkFunctionsProgressCallbacks(app)
     createInteractionEffectsChecklistCallbacks(app, comp)
     createFamilyLinkFunctionCallbacks(app, comp)
+    createRandomEffectsCallbacks(app, comp)
+    # createTestDivCallbacks(app)
     pass
+
+def createTestDivCallbacks(app):
+    @app.callback(
+        Output("test-div-output", "children"),
+        Input("test-div", "children")
+    )
+    def testDivCallback(children):
+        return str(children)
 
 def getTriggeredFromContext(ctx):
     if not ctx.triggered:
@@ -59,15 +69,36 @@ def createTabsCallbacks(app):
 
 mytabs = ["tab-1", "tab-2", "tab-3", "tab-4"]
 
-def createMainEffectsChecklistCallbacks(app):
+def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
+    mainEffectCompIds = comp.getMainEffectCheckboxIds()
+    inputs = [Input(id, "checked") for id in mainEffectCompIds]
+    states = [State(id, "id") for id in mainEffectCompIds]
     @app.callback(
         Output("added-main-effects", "children"),
-        Input("main-effects-checklist", "value")
+        inputs,
+        states
     )
-    def addVariables(options,):
-        # print(options)
-        if not options:
+    def addVariables(*args):
+        if not comp:
+            print("Cannot update added-main-effects")
             raise PreventUpdate
+
+        # print(options)
+        if not args:
+            raise PreventUpdate
+        assert len(args) % 2 == 0, "Weird length of args for added-main-effects callback"
+        half = int(len(args) / 2)
+        inputs = args[:half]
+        states = args[half:]
+        options = []
+        for i in range(len(inputs)):
+            id = states[i]
+            checked = inputs[i]
+            if checked and comp.hasMainEffectForComponentId(id):
+                mainEffect = comp.getMainEffectFromComponentId(id)
+                options.append(mainEffect)
+                pass
+            pass
         newChildren = [
             html.Li(o) for o in options
         ]
@@ -77,9 +108,28 @@ def createMainEffectsChecklistCallbacks(app):
 
 def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     if comp and comp.hasInteractionEffects():
-        def addVariables(options,):
-            if not options:
+        interactionEffectCompIds = comp.getInteractionEffectCheckboxIds()
+        inputs = [Input(id, "checked") for id in interactionEffectCompIds]
+        states = [State(id, "id") for id in interactionEffectCompIds]
+        def addVariables(*args):
+            if not comp:
+                print("Cannot update added-interaction-effects")
                 raise PreventUpdate
+            if not args:
+                raise PreventUpdate
+            assert len(args) % 2 == 0, "Weird length of args for added-interaction-effects callback"
+            half = int(len(args) / 2)
+            inputs = args[:half]
+            states = args[half:]
+            options = []
+            for i in range(len(inputs)):
+                id = states[i]
+                checked = inputs[i]
+                if checked and comp.hasInteractionEffectForComponentId(id):
+                    interactionEffect = comp.getInteractionEffectFromComponentId(id)
+                    options.append(interactionEffect)
+                    pass
+                pass
             newChildren = [
                 html.Li(o) for o in options
             ]
@@ -87,7 +137,8 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
             return newChildren
         app.callback(
             Output("added-interaction-effects", "children"),
-            Input("interaction-effects-checklist", "value")
+            inputs,
+            states
         )(addVariables)
 
 def createFamilyLinkFunctionsProgressCallbacks(app):

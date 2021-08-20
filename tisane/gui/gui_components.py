@@ -16,7 +16,7 @@ def cardP(text):
     return html.H5(text, className="card-text")
 def checklist(labelList, id):
     return dcc.Checklist(
-        options=[{"label": g, "value": g} for g in labelList],
+        options=[{"label": "{}".format(g), "value": g} for g in labelList],
         labelStyle={'display': 'block'},
         id=id
     )
@@ -38,6 +38,14 @@ def separateByUpperCamelCase(mystr):
 
 class GUIComponents():
     def __init__(self, input_json: str):
+        self.numGeneratedComponentIds = 0
+        self.generatedComponentIdToRandomEffect = {}
+        self.generatedComponentIdToMainEffect = {}
+        self.generatedComponentIdToInteractionEffect = {}
+        self.variables = {
+            "main effects": {},
+            "interaction effects": {}
+        }
         if os.path.exists(input_json):
             with open(input_json, "r") as f:
                 self.data = json.loads(f.read())
@@ -46,7 +54,98 @@ class GUIComponents():
         else:
             log.error("Cannot find input json file {}".format(input_json))
             exit(1)
+            pass
+        for me in self.getGeneratedMainEffects():
+            self.variables["main effects"][me] = {
+                "info-id": self.getNewComponentId()
+            }
+            pass
+        for ie in self.getGeneratedInteractionEffects():
+            self.variables["interaction effects"][ie] = {
+                "info-id": self.getNewComponentId()
+            }
+            pass
         pass
+
+    def hasEffectForComponentId(self, componentId, effectDict):
+        return componentId in effectDict
+
+    def hasMainEffectForComponentId(self, componentId):
+        return self.hasEffectForComponentId(componentId, self.generatedComponentIdToMainEffect)
+
+    def hasInteractionEffectForComponentId(self, componentId):
+        return self.hasEffectForComponentId(componentId, self.generatedComponentIdToInteractionEffect)
+
+    def getRandomEffectCheckboxIds(self):
+        return list(self.generatedComponentIdToRandomEffect.keys())
+
+    def getMainEffectCheckboxIds(self):
+        return list(self.generatedComponentIdToMainEffect.keys())
+
+    def getInteractionEffectCheckboxIds(self):
+        return list(self.generatedComponentIdToInteractionEffect.keys())
+
+    def hasRandomEffectForComponentId(self, componentId):
+        return componentId in self.generatedComponentIdToRandomEffect
+
+    def getEffectFromComponentId(self, componentId, effectDict):
+        assert componentId in effectDict, "Component id {} does not exist in {}".format(componentId, effectDict)
+        return effectDict[componentId]
+
+    def getMainEffectFromComponentId(self, componentId):
+        return self.getEffectFromComponentId(componentId, self.generatedComponentIdToMainEffect)
+
+    def getInteractionEffectFromComponentId(self, componentId):
+        return self.getEffectFromComponentId(componentId, self.generatedComponentIdToInteractionEffect)
+
+    def getRandomEffectFromComponentId(self, componentId):
+        assert componentId in self.generatedComponentIdToRandomEffect, "Component id {} does not exist in {}".format(componentId, self.generatedComponentIdToRandomEffect)
+        return self.generatedComponentIdToRandomEffect[componentId]
+
+    def getNewComponentId(self):
+        self.numGeneratedComponentIds += 1
+        return "gui-components-unique-id-{}".format(self.numGeneratedComponentIds)
+
+    def hasComponentIdForEffect(self, effect: str, effectsDict):
+        assert effect in effectsDict, "Group {} not found in effects: {}".format(effect, effectsDict)
+        return "component-id" in effectsDict[effect]
+
+    def hasComponentIdForMainEffect(self, mainEffect: str):
+        return self.hasComponentIdForEffect(mainEffect, self.variables["main effects"])
+
+    def hasComponentIdForInteractionEffect(self, interactionEffect: str):
+        return self.hasComponentIdForEffect(interactionEffect, self.variables["interaciton effects"])
+
+    def setComponentIdForEffect(self, effect, effectsDict, componentIdToEffect):
+        assert effect in effectsDict, "{} not found in effects dict {}".format(effect, effectsDict)
+        if not self.hasComponentIdForEffect(effect, effectsDict):
+            newId = self.getNewComponentId()
+            componentIdToEffect[newId] = effect
+            effectsDict[effect]["component-id"] = newId
+            return newId
+        return effectsDict[effect]["component-id"]
+
+    def setComponentIdForMainEffect(self, mainEffect):
+        return self.setComponentIdForEffect(mainEffect, self.variables["main effects"], self.generatedComponentIdToMainEffect)
+
+    def setComponentIdForInteractionEffect(self, interactionEffect):
+        return self.setComponentIdForEffect(interactionEffect, self.variables["interaction effects"], self.generatedComponentIdToInteractionEffect)
+
+    def hasComponentIdForRandomEffect(self, randomEffectGroup: str):
+        randomEffects = self.getGeneratedRandomEffects()
+        assert randomEffectGroup in self.getGeneratedRandomEffects(), "Group {} not found in generated random effects: {}".format(randomEffectGroup, randomEffects)
+        return "component-id" in randomEffects[randomEffectGroup]
+
+    def setComponentIdForRandomEffect(self, randomEffectGroup: str):
+        randomEffects = self.getGeneratedRandomEffects()
+        assert randomEffectGroup in randomEffects, "Group {} not found in generated random effects: {}".format(randomEffectGroup, randomEffects)
+        if not self.hasComponentIdForRandomEffect(randomEffectGroup):
+            newId = self.getNewComponentId()
+            self.generatedComponentIdToRandomEffect[newId] = randomEffectGroup
+            randomEffects[randomEffectGroup]["component-id"] = newId
+            return newId
+        return randomEffects[randomEffectGroup]["component-id"]
+
 
     def getQuery(self):
         return self.data["input"]["query"]
@@ -94,8 +193,37 @@ class GUIComponents():
             dbc.CardBody(
                 [
                     cardP("Generated Main Effects"),
-                    checklist(self.getGeneratedMainEffects(), "main-effects-checklist"),
-                    dbc.Button("Continue", color="success", id="continue-to-interaction-effects", n_clicks=0)
+                    # checklist(self.getGeneratedMainEffects(), "main-effects-checklist"),
+                    self.layoutFancyChecklist({me: html.Span([me + " ", html.I(className="bi bi-info-circle", id=self.variables["main effects"][me]["info-id"])]) for me in self.getGeneratedMainEffects()}, self.setComponentIdForMainEffect),
+                    html.P(""),
+                    dbc.Button("Continue", color="success", id="continue-to-interaction-effects", n_clicks=0),
+                    # html.Div( [dbc.FormGroup(
+                    #     [
+                    #         dbc.Checkbox(
+                    #             id="standalone-checkbox", className="form-check-input"
+                    #         ),
+                    #         dbc.Label(
+                    #             "This is a checkbox",
+                    #             html_for="standalone-checkbox",
+                    #             className="form-check-label",
+                    #         ),
+                    #     ],
+                    #     check=True,
+                    # ),
+                    # dbc.FormGroup(
+                    #     [
+                    #         dbc.Checkbox(
+                    #             id="standalone-checkbox-1", className="form-check-input"
+                    #         ),
+                    #         dbc.Label(
+                    #             "This is a checkbox",
+                    #             html_for="standalone-checkbox-1",
+                    #             className="form-check-label",
+                    #         ),
+                    #     ],
+                    #     check=True,
+                    # ),],
+                    #          id="test-div"),
                 ]
             ),
             className="mt-3"
@@ -119,26 +247,50 @@ class GUIComponents():
             dbc.CardBody(
                 [
                     cardP("Interactions"),
-                    checklist(self.getGeneratedInteractionEffects(), "interaction-effects-checklist"),
+                    # checklist(self.getGeneratedInteractionEffects(), "interaction-effects-checklist"),
+                    self.layoutFancyChecklist({me: html.Span([me + " ", html.I(className="bi bi-info-circle", id=self.variables["interaction effects"][me]["info-id"])]) for me in self.getGeneratedInteractionEffects()}, self.setComponentIdForInteractionEffect),
+                    html.P(""),
                     continueButton
                 ]
             ),
             className="mt-3"
         )
 
+    def layoutFancyChecklist(self, labelDict, componentIdSetter):
+        options = []
+        for name, label in labelDict.items():
+            options.append(dbc.FormGroup(
+                [
+                    dbc.Checkbox(id=componentIdSetter(name),
+                                 className="form-check-input"),
+                    dbc.Label(label,
+                              html_for=componentIdSetter(name),
+                              className="form-check-label"),
+                ],
+                check=True,
+            ))
+            pass
+        return html.Div(options)
     def layoutGeneratedRandomEffects(self):
         def layoutRandomEffect(group, randomEffectDict):
             ri = "random intercept"
             rs = "random slope"
             cor = "correlated"
-            randomInterceptPortion = [html.P(dbc.Badge("Random Intercept", color="danger", className="mr-1"))] if ri in randomEffectDict else []
-            randomSlopePortion = [html.P(html.Span([html.Span(randomEffectDict[rs]["iv"]), dbc.Badge("Random Slope", color="info", className="mr-1")]))] if rs in randomEffectDict else []
-            corPortion = [html.P(dbc.Checklist(options=[{"label": "correlated", "value":"correlated"}], value=["correlated"]))] if cor in randomEffectDict else []
-            return html.Div([html.P(group)] + randomInterceptPortion + randomSlopePortion + corPortion)
+
+
+
+            def wrapper(elt):
+                return dbc.Row(dbc.Col(elt))
+            randomInterceptPortion = [dbc.Badge("Random Intercept", color="danger", className="mr-1")] if ri in randomEffectDict else []
+            randomSlopePortion = [html.Span([html.Span(randomEffectDict[rs]["iv"]), dbc.Badge("Random Slope", color="info", className="mr-1")])] if rs in randomEffectDict else []
+            corPortion = [dbc.Checklist(options=[{"label": "correlated", "value":"correlated"}], value=["correlated"])] if cor in randomEffectDict else []
+            contents = randomInterceptPortion + randomSlopePortion + corPortion
+            contents = [wrapper(c) for c in contents]
+            return html.Div([wrapper(group)] + contents)
         randomEffects = self.getGeneratedRandomEffects()
         options = [dbc.FormGroup([
-            dbc.Checkbox(id=f"{group}-checkbox", className="form-check-input"),
-            dbc.Label(layoutRandomEffect(group, randomEffectDict), html_for=f"{group}-checkbox", className="form-check-label")
+            dbc.Checkbox(id=self.setComponentIdForRandomEffect(group), className="form-check-input"),
+            dbc.Label(layoutRandomEffect(group, randomEffectDict), html_for=self.setComponentIdForRandomEffect(group), className="form-check-label")
         ], check=True
         ) for group, randomEffectDict in randomEffects.items()]
         return html.Div(options)
@@ -158,6 +310,7 @@ class GUIComponents():
                 [
                     cardP("Random Effects"),
                     self.layoutGeneratedRandomEffects(),
+                    html.P(""),
                     continueButton
                 ]
             ),
@@ -301,8 +454,8 @@ class GUIComponents():
                 family_link_title,
                 dbc.Row(
                     [
-                        dbc.Col(family_link_chart, md=8),
-                        dbc.Col(family_link_controls, md=4),
+                        dbc.Col(family_link_chart, md=7),
+                        dbc.Col(family_link_controls, md=5),
                     ],
                     align="center",
                 ),

@@ -16,7 +16,7 @@ import socket  # For finding next available socket
 from tisane.gui.gui_components import GUIComponents
 from tisane.gui.callbacks import createCallbacks
 
-external_stylesheets = [dbc.themes.BOOTSTRAP]
+external_stylesheets = [dbc.themes.BOOTSTRAP, { "rel":"stylesheet", "href": "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"}]
 
 # Find socket info
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -247,18 +247,16 @@ class TisaneGUI():
         overview = dbc.Card(
             dbc.CardBody(
                 [
-                    html.H5("Variables expressed in query:"),
+                    html.H5("Variables expressed in query: "),
                     html.P("DV: {}".format(query["DV"])),
                     html.P("IVs:"),
                     html.Ul(children=[html.Li(iv) for iv in query["IVs"]]),
-                    # TODO: Add List of variable
-                    # s
                     html.H5("Variables added:"),
                     html.Div([
                         html.H6("Main effects added:"),
                         html.Ul(id="added-main-effects"),
-                    ] + self.components.getInteractionEffectsAddedSection() + self.components.getRandomEffectsAddedSection(), id="added-variables-paragraph")
-                    # TODO: Add list of variables as analyst selects them in the tabs
+                    ] + self.components.getInteractionEffectsAddedSection() + self.components.getRandomEffectsAddedSection(), id="added-variables-paragraph"),
+                    # html.Div(id="test-div-output")
                 ]
             ),
             color="light"
