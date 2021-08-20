@@ -1,13 +1,17 @@
 import tisane as ts
 import pandas as pd
+import os
 
-df = pd.read_csv("./examples/data/dietox.csv")
+os.chdir(os.path.dirname(__file__))
+os.chdir("..")
+
+df = pd.read_csv("./Animal_Science/pigs.csv")
 
 ## Initialize variables with data
 # Bind measures to units at the time of declaration
-week = ts.Setup("Time", data=df["time"], cardinality=12)
-pig = ts.Unit("Pig", data=df["pig id"])
-litter = ts.Unit("Litter", data=df["litter"])
+week = ts.SetUp("Time", cardinality=12)
+pig = ts.Unit("Pig", cardinality=82) # 82 pigs
+litter = ts.Unit("Litter", cardinality=22) # 22 litters
 # Each pig has 1 instance of an ordinal Evit measure
 vitamin_e = pig.ordinal(
     "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
@@ -20,22 +24,14 @@ weight = pig.numeric("Weight", number_of_instances=week)
 # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
 feed = pig.numeric("Feed consumption", number_of_instances=week)
 
-## With cardinality info, don't pass data
-# pig = ts.Unit("Pig", cardinality=82)
-# litter = ts.Unit("Litter", cardinality=22)
-# week = ts.Control("Week", cardinality=12)
-
 ## Conceptual relationships
-time.causes(weight)
+week.causes(weight)
 
 ## Data measurement relationships
 # Pigs are nested within litters
 pig.nests_within(litter)
-# Pigs are nested within litters with at most 25 pigs per litter
-# pig.nests_within(litter, number_of_instances=ts.at_most(25))
-
 
 ## Specify and execute query
-design = ts.Design(dv=weight, ivs=[time]).assign_data(df)
+design = ts.Design(dv=weight, ivs=[week]).assign_data(df)
 
 ts.infer_statistical_model_from_design(design=design)

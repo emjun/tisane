@@ -17,54 +17,75 @@
                 }
             },
             "Subject": {
-                "random intercept": {
-                    "groups": "Subject"
-                },
                 "random slope": [
                     {
                         "iv": "Word type",
                         "groups": "Subject"
                     }
                 ],
+                "random intercept": {
+                    "groups": "Subject"
+                },
                 "correlated": true
             }
         },
         "generated family, link functions": {
-            "GaussianFamily": [
-                "LogLink",
-                "NegativeBinomialLink",
-                "ProbitLink",
-                "LogLogLink",
-                "OPowerLink",
-                "IdentityLink",
-                "PowerLink",
-                "LogitLink",
-                "CLogLogLink"
-            ],
-            "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "InverseGaussianFamily": [
-                "LogLink",
-                "PowerLink",
-                "IdentityLink"
-            ],
             "PoissonFamily": [
+                "LogLink",
                 "IdentityLink",
-                "PowerLink",
-                "LogLink"
+                "PowerLink"
             ],
             "TweedieFamily": [
-                "PowerLink",
+                "LogLink",
                 "IdentityLink",
+                "PowerLink"
+            ],
+            "GammaFamily": [
+                "IdentityLink",
+                "PowerLink",
                 "LogLink"
+            ],
+            "GaussianFamily": [
+                "LogLink",
+                "LogLogLink",
+                "IdentityLink",
+                "CLogLogLink",
+                "ProbitLink",
+                "LogitLink",
+                "OPowerLink",
+                "PowerLink",
+                "NegativeBinomialLink"
+            ],
+            "InverseGaussianFamily": [
+                "IdentityLink",
+                "LogLink",
+                "PowerLink"
             ]
         },
         "measures to units": {
             "Time": "Subject",
             "Word type": "Subject"
         }
+    },
+    "explanations": {
+        "Word type": [
+            "Explanation for query"
+        ],
+        "Word,RandomIntercept": [
+            "Explanation for repeated measures. Explain why pooling across variables.",
+            "Explanation for hierarchical data",
+            "Explanation for non-nesting",
+            "Explanation about within-subjects variables for interaction effects"
+        ],
+        "Subject,RandomIntercept": [
+            "Explanation for repeated measures. Explain why pooling across variables.",
+            "Explanation for hierarchical data",
+            "Explanation for non-nesting",
+            "Explanation about within-subjects variables for interaction effects"
+        ],
+        "Subject, Word type, RandomSlope": [
+            "Explanation for non-nesting",
+            "Explanation about within-subjects variables for interaction effects"
+        ]
     }
 }

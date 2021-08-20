@@ -10,57 +10,57 @@
             ]
         },
         "generated main effects": [
-            "Measure 1",
+            "Time",
             "Measure 0",
-            "Measure 2",
-            "Time"
+            "Measure 1",
+            "Measure 2"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
         ],
         "generated random effects": {
-            "Unit": {
-                "random intercept": {
-                    "groups": "Unit"
-                }
-            },
             "Time": {
                 "random intercept": {
                     "groups": "Time"
                 }
+            },
+            "Unit": {
+                "random intercept": {
+                    "groups": "Unit"
+                }
             }
         },
         "generated family, link functions": {
-            "InverseGaussianFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "GaussianFamily": [
-                "CLogLogLink",
+            "PoissonFamily": [
                 "PowerLink",
                 "IdentityLink",
+                "LogLink"
+            ],
+            "InverseGaussianFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "GaussianFamily": [
+                "LogitLink",
                 "OPowerLink",
+                "LogLogLink",
                 "LogLink",
                 "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink"
-            ],
-            "TweedieFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
+                "ProbitLink",
+                "IdentityLink",
+                "CLogLogLink",
+                "PowerLink"
             ],
             "GammaFamily": [
                 "IdentityLink",
                 "PowerLink",
                 "LogLink"
             ],
-            "PoissonFamily": [
-                "LogLink",
+            "TweedieFamily": [
                 "IdentityLink",
-                "PowerLink"
+                "PowerLink",
+                "LogLink"
             ]
         },
         "measures to units": {
@@ -70,5 +70,34 @@
             "Measure 2": "Unit",
             "Measure 2*Measure 1": "Unit"
         }
+    },
+    "explanations": {
+        "Measure 0": [
+            "Explanation for query"
+        ],
+        "Measure 1": [
+            "Explanation for query"
+        ],
+        "Measure 2": [
+            "Explanation for query"
+        ],
+        "Time": [
+            "Explanation for query"
+        ],
+        "Measure 2*Measure 1": [
+            "Explanation for interaction effects"
+        ],
+        "Time,RandomIntercept": [
+            "Explanation for repeated measures. Explain why pooling across variables.",
+            "Explanation for hierarchical data",
+            "Explanation for non-nesting",
+            "Explanation about within-subjects variables for interaction effects"
+        ],
+        "Unit,RandomIntercept": [
+            "Explanation for repeated measures. Explain why pooling across variables.",
+            "Explanation for hierarchical data",
+            "Explanation for non-nesting",
+            "Explanation about within-subjects variables for interaction effects"
+        ]
     }
 }

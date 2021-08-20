@@ -167,6 +167,8 @@ class Unit(AbstractVariable):
         elif isinstance(number_of_instances, AbstractVariable):
             repet = Exactly(number_of_instances.get_cardinality())
             according_to = number_of_instances
+
+            # TODO: Add implied relationship of associates with for measures that have number_of_instances as AbstractVariable
         elif isinstance(number_of_instances, AtMost):
             repet = number_of_instances
 
@@ -176,6 +178,8 @@ class Unit(AbstractVariable):
         )
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
+
+        # Add relationships between @number_of_instances (if AbstractVariable) variables and DV? 
 
     # def repeats(self, measure: "Measure", according_to: "Measure"):
     #     repeats_relat = Repeats(unit=self, measure=measure, according_to=according_to)

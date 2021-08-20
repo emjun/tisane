@@ -8,8 +8,8 @@
             ]
         },
         "generated main effects": [
-            "Measure A",
-            "Measure B"
+            "Measure B",
+            "Measure A"
         ],
         "generated interaction effects": [
             "Measure A*Measure B"
@@ -30,28 +30,28 @@
                 "LogLink",
                 "IdentityLink"
             ],
-            "PoissonFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
-            "GaussianFamily": [
-                "OPowerLink",
-                "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink",
-                "CLogLogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
             "GammaFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
+            "GaussianFamily": [
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink"
+            ],
             "TweedieFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "PoissonFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
@@ -63,5 +63,19 @@
             "Measure B": "Unit",
             "Measure A*Measure B": "Unit"
         }
+    },
+    "explanations": {
+        "Measure A": [
+            "Explanation for query"
+        ],
+        "Measure B": [
+            "Explanation for query"
+        ],
+        "Measure A*Measure B": [
+            "Explanation for interaction effects"
+        ],
+        "Unit, Measure A, RandomSlope": [
+            "Explanation about within-subjects variables for interaction effects"
+        ]
     }
 }

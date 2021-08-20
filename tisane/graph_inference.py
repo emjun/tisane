@@ -26,6 +26,28 @@ import typing  # for Union
 import networkx as nx
 
 ##### HELPER #####
+# TODO: May need to use helper function in additional to global explanation template to provide "personalized" explanations for each variable.
+explanations = {
+    "main effects": {
+        # "query": {
+        #     "causes": "The variable is included as an independent variable in the query. The variable also directly causes the dependent variable.",
+        #     "associates with": "The variable is included as an independent variable in the query. The variable is also directly associated with the dependent variable.",
+        # },
+        "query": "Explanation for query",
+        "common ancestors": "Explanation for common ancestors",
+        "causal ancestors": "Explanation for causal ancestors",
+        "intermediaries": "Explanation for intermediaries",
+        "parents cause dv": "Variable parents cause the dv",
+
+    },
+    "interaction effects": "Explanation for interaction effects",
+    "random effects": {
+        "repeated measures": "Explanation for repeated measures. Explain why pooling across variables.",
+        "hierarchical data": "Explanation for hierarchical data",
+        "non-nesting": "Explanation for non-nesting",
+        "interaction": "Explanation about within-subjects variables for interaction effects"
+    }
+}
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
@@ -72,6 +94,8 @@ def find_common_ancestors(variables: List[AbstractVariable], gr: Graph) -> Set[s
     # Add them to a map (key is variable, count is value)
     for v in variables:
         # node = causal_sub.get_node(variable=v)
+        # if v.name == "Time": 
+        #     import pdb; pdb.set_trace()
         predecessors = tc.predecessors(v.name)
 
         # Add each predecessor to the dictionary
@@ -189,14 +213,26 @@ def find_all_parents_that_causes_or_associates_another(
 
 # Infer candidate main effects for @param query given the relationships contained in @param gr
 # The resulting set of candidate main effects include the ivs included in the query
-def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
+# @returns a tuple: (set of candidates, dictionary with the main effects and the reasons they are considered candidates)
+def infer_main_effects_with_explanations(gr: Graph, query: Design) -> Set[AbstractVariable]:
+    global explanations 
+    main_explanations = explanations["main effects"]
     main_candidates = set()
+    main_candidates_explanations = dict()
 
     ivs = query.ivs
     # Add IVs already included in query
     for v in ivs:
         main_candidates.add(v)
     assert len(main_candidates) == len(ivs)
+    # Add explanations
+    for v in ivs: 
+        # Is the variable a new main effect candidate? 
+        if v.name not in main_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            main_candidates_explanations[v.name] = list()
+        # add explanation 
+        main_candidates_explanations[v.name].append(main_explanations["query"])
     dv = query.dv
     all_variables_in_graph = gr.get_variables()
 
@@ -204,15 +240,32 @@ def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
     common_ancestors_variables = cast_to_variables(
         names=common_ancestors_names, variables=all_variables_in_graph
     )
+    # Add to set of effects
     main_candidates = main_candidates.union(common_ancestors_variables)
-    # import pdb; pdb.set_trace()
+    # Add explanations
+    for v in common_ancestors_names: 
+        # Is the variable a new main effect candidate? 
+        if v not in main_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            main_candidates_explanations[v] = list()
+        # add explanation 
+        main_candidates_explanations[v].append(main_explanations["common ancestors"])
 
     causal_ancestors = find_all_causal_ancestors(variables=ivs, gr=gr)
     causal_ancestors_variables = cast_to_variables(
         names=causal_ancestors, variables=all_variables_in_graph
     )
+    # Add to set of effects
     main_candidates = main_candidates.union(causal_ancestors_variables)
-    # import pdb; pdb.set_trace()
+    # Add explanations
+    for v in causal_ancestors:
+        # Is the variable a new main effect candidate? 
+        if v not in main_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            main_candidates_explanations[v] = list()
+        # add explanation 
+        main_candidates_explanations[v].append(main_explanations["causal ancestors"])
+    
 
     # TODO: "intermediaries" might not be the best variable name
     intermediaries = find_all_associates_that_causes_or_associates_another(
@@ -221,8 +274,17 @@ def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
     intermediaries_variables = cast_to_variables(
         names=intermediaries, variables=all_variables_in_graph
     )
+    # Add to set of effects
     main_candidates = main_candidates.union(intermediaries_variables)
-    # import pdb; pdb.set_trace()
+    # Add explanations
+    for v in intermediaries: 
+        # Is the variable a new main effect candidate? 
+        if v not in main_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            main_candidates_explanations[v] = list()
+        # add explanation 
+        main_candidates_explanations[v].append(main_explanations["intermediaries"])
+
 
     parents_cause_dv = find_all_parents_that_causes_or_associates_another(
         sources=ivs, sink=dv, gr=gr
@@ -230,10 +292,19 @@ def infer_main_effects(gr: Graph, query: Design) -> Set[AbstractVariable]:
     parents_cause_dv_variables = cast_to_variables(
         names=parents_cause_dv, variables=all_variables_in_graph
     )
+    # Add to set of effects
     main_candidates = main_candidates.union(parents_cause_dv_variables)
-    # import pdb; pdb.set_trace()
+    # Add explanations
+    for v in parents_cause_dv:
+        # Is the variable a new main effect candidate? 
+        if v not in main_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            main_candidates_explanations[v] = list()
+        # add explanation 
+        main_candidates_explanations[v].append(main_explanations["parents cause dv"])
 
-    return main_candidates
+
+    return (main_candidates, main_candidates_explanations)
 
 
 # @param on is outcome/dependent variable of interest
@@ -282,10 +353,15 @@ def find_interactions_for_main_effects(variables: List[AbstractVariable]):
 
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_interaction_effects(
+# @returns a tuple: (set of candidates, dictionary with the interaction effects and the reasons they are considered candidates)
+def infer_interaction_effects_with_explanations(
     gr: Graph, query: Design, main_effects: List[AbstractVariable]
 ) -> Set[AbstractVariable]:
+    global explanations
+    interaction_explanation = explanations["interaction effects"] # There is only one explanation for interaction effects
+
     interaction_candidates = set()
+    interaction_candidates_explanations = dict()
 
     ivs = query.ivs
     dv = query.dv
@@ -298,8 +374,18 @@ def infer_interaction_effects(
     interactions_variables = cast_to_variables(
         names=interactions, variables=gr.get_variables()
     )
+    # Add to set of effects
     interaction_candidates = interaction_candidates.union(interactions_variables)
-    return interaction_candidates
+    # Add explanations
+    for v in interactions:
+        # Is the variable a new interaction effect candidate? 
+        if v not in interaction_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            interaction_candidates_explanations[v] = list()
+        # add explanation 
+        interaction_candidates_explanations[v].append(interaction_explanation)
+
+    return (interaction_candidates, interaction_candidates_explanations)
 
 
 def construct_random_effects_for_repeated_measures(
@@ -378,7 +464,7 @@ def construct_random_effects_for_nests(
         else:
             if v_unit is not None:
                 if v_unit.name not in units_to_consider: 
-                    assert(v_unit, v)
+                    assert(v_unit == v)
                     assert(isinstance(v, SetUp))
                 else: 
                     assert v_unit.name in units_to_consider
@@ -607,7 +693,7 @@ def construct_random_effects_for_interactions(
             assert(gr.has_edge(start=dv_unit, end=dv, edge_type="has"))
             (n0, n1, edge_data) = gr.get_edge(start=dv_unit, end=dv, edge_type="has")
             edge_obj = edge_data["edge_obj"]
-            
+
             if edge_obj.according_to is not None: 
                 for v in ixn_variables: 
                     if edge_obj.according_to== v: 
@@ -618,33 +704,93 @@ def construct_random_effects_for_interactions(
 
 
 # Infer candidate interaction effects for @param query given the relationships contained in @param gr
-def infer_random_effects(
+# @returns a tuple: (set of candidates, dictionary with the main effects and the reasons they are considered candidates)
+def infer_random_effects_with_explanations(
     gr: Graph,
     query: Design,
     main_effects: List[AbstractVariable],
     interaction_effects: Set[AbstractVariable] = None,
 ):
+    global explanations
+    random_explanations = explanations["random effects"]
+
     random_candidates = set()
+    random_candidates_explanations = dict()
 
     repeats_effects = construct_random_effects_for_repeated_measures(gr=gr, query=query)
     # repeats_names = filter_random_effects_involving_variables(main_effects, random_names=repeats_names)
+    # Add to set of effects
     random_candidates = random_candidates.union(repeats_effects)
+    # Add explanations
+    for rc in random_candidates:
+        # Is the variable a new random effect candidate? 
+        if isinstance(rc, RandomIntercept):
+            name_key = f"{rc.groups.name},{type(rc).__name__}"
+        else:
+            assert isinstance(rc, RandomSlope)
+            name_key = f"{rc.groups.name}, {rc.iv.name}, {type(rc).__name__}"
+        if name_key not in random_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            random_candidates_explanations[name_key] = list()
+        # add explanation 
+        random_candidates_explanations[name_key].append(random_explanations["repeated measures"])
+
 
     nests_effects = construct_random_effects_for_nests(
         gr=gr, dv=query.dv, variables=main_effects
     )
     # nests_variables = cast_to_variables(names=nests_names, variables=main_effects)
     random_candidates = random_candidates.union(nests_effects)
+    # Add explanations
+    for rc in random_candidates:
+        # Is the variable a new random effect candidate? 
+        if isinstance(rc, RandomIntercept):
+            name_key = f"{rc.groups.name},{type(rc).__name__}"
+        else:
+            assert isinstance(rc, RandomSlope)
+            name_key = f"{rc.groups.name}, {rc.iv.name}, {type(rc).__name__}"
+        if name_key not in random_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            random_candidates_explanations[name_key] = list()
+        # add explanation 
+        random_candidates_explanations[name_key].append(random_explanations["hierarchical data"])
 
     composed_effects = construct_random_effects_for_composed_measures(
         gr=gr, variables=main_effects
     )
     random_candidates = random_candidates.union(composed_effects)
+    # Add explanations
+    for rc in random_candidates:
+        # Is the variable a new random effect candidate? 
+        if isinstance(rc, RandomIntercept):
+            name_key = f"{rc.groups.name},{type(rc).__name__}"
+        else:
+            assert isinstance(rc, RandomSlope)
+            name_key = f"{rc.groups.name}, {rc.iv.name}, {type(rc).__name__}"
+        if name_key not in random_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            random_candidates_explanations[name_key] = list()
+        # add explanation 
+        random_candidates_explanations[name_key].append(random_explanations["non-nesting"])
 
     interaction_random_effects = construct_random_effects_for_interactions(
         gr=gr, query=query, interactions=interaction_effects
     )
     random_candidates = random_candidates.union(interaction_random_effects)
+    # Add explanations
+    for rc in random_candidates:
+        # Is the variable a new random effect candidate? 
+        if isinstance(rc, RandomIntercept):
+            name_key = f"{rc.groups.name},{type(rc).__name__}"
+        else:
+            assert isinstance(rc, RandomSlope)
+            name_key = f"{rc.groups.name}, {rc.iv.name}, {type(rc).__name__}"
+        if name_key not in random_candidates_explanations.keys(): 
+            # declare the list of explanations/reasons for this variable
+            random_candidates_explanations[name_key] = list()
+        # add explanation 
+        random_candidates_explanations[name_key].append(random_explanations["interaction"])
 
     random_candidates = filter_random_candidates(random_candidates)
-    return random_candidates
+    
+    return (random_candidates, random_candidates_explanations)

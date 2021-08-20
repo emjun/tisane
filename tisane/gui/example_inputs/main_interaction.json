@@ -9,8 +9,8 @@
             ]
         },
         "generated main effects": [
-            "Measure 0",
             "Measure 1",
+            "Measure 0",
             "Measure 2"
         ],
         "generated interaction effects": [
@@ -20,34 +20,34 @@
         "generated family, link functions": {
             "PoissonFamily": [
                 "PowerLink",
-                "IdentityLink",
-                "LogLink"
+                "LogLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
             ],
             "GaussianFamily": [
+                "LogLogLink",
+                "ProbitLink",
                 "CLogLogLink",
                 "PowerLink",
                 "IdentityLink",
-                "LogLink",
                 "OPowerLink",
-                "LogLogLink",
-                "LogitLink",
+                "LogLink",
                 "NegativeBinomialLink",
-                "ProbitLink"
+                "LogitLink"
             ],
-            "InverseGaussianFamily": [
+            "GammaFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
                 "IdentityLink",
                 "PowerLink",
                 "LogLink"
-            ],
-            "GammaFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "TweedieFamily": [
-                "LogLink",
-                "PowerLink",
-                "IdentityLink"
             ]
         },
         "measures to units": {
@@ -57,5 +57,19 @@
             "Measure 2": "Unit",
             "Measure 2*Measure 1": "Unit"
         }
+    },
+    "explanations": {
+        "Measure 0": [
+            "Explanation for query"
+        ],
+        "Measure 1": [
+            "Explanation for query"
+        ],
+        "Measure 2": [
+            "Explanation for query"
+        ],
+        "Measure 2*Measure 1": [
+            "Explanation for interaction effects"
+        ]
     }
 }
