@@ -25,36 +25,36 @@
             }
         },
         "generated family, link functions": {
-            "InverseGaussianFamily": [
-                "PowerLink",
+            "TweedieFamily": [
                 "LogLink",
+                "PowerLink",
                 "IdentityLink"
             ],
-            "GammaFamily": [
-                "PowerLink",
+            "PoissonFamily": [
                 "LogLink",
+                "PowerLink",
                 "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
             ],
             "GaussianFamily": [
                 "CLogLogLink",
                 "PowerLink",
-                "IdentityLink",
                 "OPowerLink",
-                "LogLink",
                 "NegativeBinomialLink",
-                "LogitLink",
                 "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
                 "ProbitLink"
             ],
-            "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "PoissonFamily": [
+            "GammaFamily": [
                 "PowerLink",
-                "LogLink",
-                "IdentityLink"
+                "IdentityLink",
+                "LogLink"
             ]
         },
         "measures to units": {
@@ -62,20 +62,20 @@
             "Measure A": "Unit",
             "Measure B": "Unit",
             "Measure A*Measure B": "Unit"
+        },
+        "explanations": {
+            "Measure A": [
+                "Explanation for query"
+            ],
+            "Measure B": [
+                "Explanation for query"
+            ],
+            "Measure A*Measure B": [
+                "Explanation for interaction effects"
+            ],
+            "Unit, Measure A, RandomSlope": [
+                "Explanation about within-subjects variables for interaction effects"
+            ]
         }
-    },
-    "explanations": {
-        "Measure A": [
-            "Explanation for query"
-        ],
-        "Measure B": [
-            "Explanation for query"
-        ],
-        "Measure A*Measure B": [
-            "Explanation for interaction effects"
-        ],
-        "Unit, Measure A, RandomSlope": [
-            "Explanation about within-subjects variables for interaction effects"
-        ]
     }
 }

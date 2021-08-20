@@ -2,6 +2,8 @@ import os
 import pandas as pd
 from typing import Union
 
+from pandas.core.frame import DataFrame
+
 
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
@@ -22,7 +24,10 @@ class Dataset(object):
 
         # TODO: post-processing? E.g., break up into DataVectors?
         self.dataset = df
-
+    
+    def get_data(self) -> pd.DataFrame: 
+        return self.dataset
+        
     def get_column(self, name: str):
         cols = self.dataset.columns
         if name in cols:

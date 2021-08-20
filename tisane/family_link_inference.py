@@ -80,7 +80,7 @@ def infer_family_functions(query: Design) -> Set[AbstractFamily]:
     return family_candidates
 
 
-def infer_link_functions(query: Design, family: AbstractFamily):
+def infer_link_functions(query: Design, family: AbstractFamily) -> Set[AbstractLink]:
     link_candidates = set()
 
     # TODO: Identify which of these is actually implemented in Statsmodels

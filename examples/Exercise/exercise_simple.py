@@ -13,6 +13,7 @@ of vigorous physical exercise in which they have engaged."
 # Load data
 dir = os.path.dirname(__file__)
 df = pd.read_csv(os.path.join(dir, "exercise_simple.csv"))
+
 # df = pd.read_csv("./exercise_simple.csv")
 
 # Declare observed variables
