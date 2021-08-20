@@ -96,6 +96,8 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
             checked = inputs[i]
             if checked and comp.hasMainEffectForComponentId(id):
                 mainEffect = comp.getMainEffectFromComponentId(id)
+                if mainEffect not in comp.output["main effects"]:
+                    comp.output["main effects"].append(mainEffect)
                 options.append(mainEffect)
                 pass
             pass
@@ -127,6 +129,8 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                 checked = inputs[i]
                 if checked and comp.hasInteractionEffectForComponentId(id):
                     interactionEffect = comp.getInteractionEffectFromComponentId(id)
+                    if interactionEffect not in comp.output["interaction effects"]:
+                        comp.output["interaction effects"].append(interactionEffect)
                     options.append(interactionEffect)
                     pass
                 pass

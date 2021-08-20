@@ -256,7 +256,13 @@ class TisaneGUI():
                     html.Div([
                         html.H6("Main effects added:"),
                         html.Ul(id="added-main-effects"),
-                    ] + self.components.getInteractionEffectsAddedSection() + self.components.getRandomEffectsAddedSection(), id="added-variables-paragraph"),
+                    ] + self.components.getInteractionEffectsAddedSection(), id="added-variables-paragraph"),
+                ] +
+                    self.components.getRandomEffectsAddedSection() +
+                [
+                    html.H5("Family: Gaussian", id="overview-family"),
+                    html.H5("Link: Identity", id="overview-link")
+
                     # html.Div(id="test-div-output")
                 ]
             ),

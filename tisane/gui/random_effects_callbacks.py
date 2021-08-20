@@ -6,6 +6,7 @@ from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 
 def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
     # createRandomEffectsAddedCallbacks(app, comp)
+    createRandomEffectsCorrelationCallbacks(app, comp)
     pass
 
 def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
@@ -38,3 +39,35 @@ def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
             return [html.Li(str(c)) for c in checked]
         print("Could not add random effects")
         raise PreventUpdate
+
+def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
+    if comp:
+        checkboxIds = comp.getRandomSlopeCheckboxIds()
+        if checkboxIds:
+            inputs = [Input(id, "checked") for id in checkboxIds]
+            states = [State(id, "id") for id in checkboxIds]
+            outputs = [Output(id + "-span", "children") for id in checkboxIds]
+            @app.callback(
+                outputs,
+                inputs,
+                states
+            )
+            def changeCorrelation(*args):
+                assert len(args) % 2 == 0, "Weird number of arguments: {}".format(len(args))
+
+                if not comp:
+                    print("Cannot update correlations")
+                    raise PreventUpdate
+
+                if args:
+                    half = int(len(args) / 2)
+                    inputs = args[:half]
+                    states = args[half:]
+                    # dict of id to checked
+                    idToChecked = {states[i]: inputs[i] for i in range(half)}
+                    idToCorrelated = {}
+                    for id, checked in idToChecked.items():
+                        idToCorrelated[id] = " (correlated)" if checked else " (not correlated)"
+                        comp.markCheckedForCorrelatedId(id, checked)
+                    return tuple([idToCorrelated[id] for id in checkboxIds])
+                raise PreventUpdate
