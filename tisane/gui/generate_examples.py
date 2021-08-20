@@ -41,7 +41,7 @@ def main_effects_only(path="./gui/example_inputs/", filename="main_only.json"):
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
@@ -81,7 +81,7 @@ def main_interaction(path="./gui/example_inputs/", filename="main_interaction.js
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
@@ -123,7 +123,7 @@ def main_interaction_random_intercepts(path="./gui/example_inputs/", filename="m
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
@@ -164,7 +164,7 @@ def main_interaction_random_slope_one_variable(path="./gui/example_inputs/", fil
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
@@ -208,7 +208,7 @@ def main_interaction_random_slope_interaction(path="./gui/example_inputs/", file
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
@@ -247,7 +247,7 @@ def main_interaction_random_intercept_slope_correlated(path="./gui/example_input
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
@@ -296,7 +296,7 @@ def main_interaction_multiple_random_slopes(path="./gui/example_inputs/", filena
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)

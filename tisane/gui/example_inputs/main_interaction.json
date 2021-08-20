@@ -9,45 +9,45 @@
             ]
         },
         "generated main effects": [
+            "Measure 2",
             "Measure 1",
-            "Measure 0",
-            "Measure 2"
+            "Measure 0"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
         ],
         "generated random effects": {},
         "generated family, link functions": {
-            "PoissonFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "InverseGaussianFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
             "GaussianFamily": [
                 "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
                 "ProbitLink",
                 "CLogLogLink",
                 "PowerLink",
-                "IdentityLink",
                 "OPowerLink",
+                "NegativeBinomialLink"
+            ],
+            "TweedieFamily": [
                 "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink"
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "IdentityLink",
+                "LogLink",
+                "PowerLink"
             ],
             "GammaFamily": [
                 "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "TweedieFamily": [
                 "IdentityLink",
-                "PowerLink",
                 "LogLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
             ]
         },
         "measures to units": {
@@ -56,20 +56,20 @@
             "Measure 1": "Unit",
             "Measure 2": "Unit",
             "Measure 2*Measure 1": "Unit"
+        },
+        "explanations": {
+            "Measure 0": [
+                "Explanation for query"
+            ],
+            "Measure 1": [
+                "Explanation for query"
+            ],
+            "Measure 2": [
+                "Explanation for query"
+            ],
+            "Measure 2*Measure 1": [
+                "Explanation for interaction effects"
+            ]
         }
-    },
-    "explanations": {
-        "Measure 0": [
-            "Explanation for query"
-        ],
-        "Measure 1": [
-            "Explanation for query"
-        ],
-        "Measure 2": [
-            "Explanation for query"
-        ],
-        "Measure 2*Measure 1": [
-            "Explanation for interaction effects"
-        ]
     }
 }

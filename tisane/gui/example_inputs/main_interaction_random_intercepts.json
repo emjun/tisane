@@ -10,57 +10,57 @@
             ]
         },
         "generated main effects": [
-            "Time",
+            "Measure 2",
             "Measure 0",
             "Measure 1",
-            "Measure 2"
+            "Time"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
         ],
         "generated random effects": {
-            "Time": {
-                "random intercept": {
-                    "groups": "Time"
-                }
-            },
             "Unit": {
                 "random intercept": {
                     "groups": "Unit"
                 }
+            },
+            "Time": {
+                "random intercept": {
+                    "groups": "Time"
+                }
             }
         },
         "generated family, link functions": {
-            "PoissonFamily": [
+            "GammaFamily": [
                 "PowerLink",
                 "IdentityLink",
                 "LogLink"
             ],
-            "InverseGaussianFamily": [
+            "TweedieFamily": [
                 "PowerLink",
                 "IdentityLink",
                 "LogLink"
             ],
             "GaussianFamily": [
-                "LogitLink",
+                "PowerLink",
                 "OPowerLink",
-                "LogLogLink",
-                "LogLink",
                 "NegativeBinomialLink",
+                "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
                 "ProbitLink",
+                "CLogLogLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
                 "IdentityLink",
-                "CLogLogLink",
+                "LogLink",
                 "PowerLink"
-            ],
-            "GammaFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
-            "TweedieFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
             ]
         },
         "measures to units": {
@@ -69,35 +69,35 @@
             "Measure 1": "Unit",
             "Measure 2": "Unit",
             "Measure 2*Measure 1": "Unit"
+        },
+        "explanations": {
+            "Measure 0": [
+                "Explanation for query"
+            ],
+            "Measure 1": [
+                "Explanation for query"
+            ],
+            "Measure 2": [
+                "Explanation for query"
+            ],
+            "Time": [
+                "Explanation for query"
+            ],
+            "Measure 2*Measure 1": [
+                "Explanation for interaction effects"
+            ],
+            "Unit,RandomIntercept": [
+                "Explanation for repeated measures. Explain why pooling across variables.",
+                "Explanation for hierarchical data",
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ],
+            "Time,RandomIntercept": [
+                "Explanation for repeated measures. Explain why pooling across variables.",
+                "Explanation for hierarchical data",
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ]
         }
-    },
-    "explanations": {
-        "Measure 0": [
-            "Explanation for query"
-        ],
-        "Measure 1": [
-            "Explanation for query"
-        ],
-        "Measure 2": [
-            "Explanation for query"
-        ],
-        "Time": [
-            "Explanation for query"
-        ],
-        "Measure 2*Measure 1": [
-            "Explanation for interaction effects"
-        ],
-        "Time,RandomIntercept": [
-            "Explanation for repeated measures. Explain why pooling across variables.",
-            "Explanation for hierarchical data",
-            "Explanation for non-nesting",
-            "Explanation about within-subjects variables for interaction effects"
-        ],
-        "Unit,RandomIntercept": [
-            "Explanation for repeated measures. Explain why pooling across variables.",
-            "Explanation for hierarchical data",
-            "Explanation for non-nesting",
-            "Explanation about within-subjects variables for interaction effects"
-        ]
     }
 }

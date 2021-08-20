@@ -11,81 +11,81 @@
         ],
         "generated interaction effects": [],
         "generated random effects": {
-            "Word": {
-                "random intercept": {
-                    "groups": "Word"
-                }
-            },
             "Subject": {
+                "random intercept": {
+                    "groups": "Subject"
+                },
                 "random slope": [
                     {
                         "iv": "Word type",
                         "groups": "Subject"
                     }
                 ],
-                "random intercept": {
-                    "groups": "Subject"
-                },
                 "correlated": true
+            },
+            "Word": {
+                "random intercept": {
+                    "groups": "Word"
+                }
             }
         },
         "generated family, link functions": {
-            "PoissonFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "GammaFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
             "GaussianFamily": [
-                "LogLink",
-                "LogLogLink",
                 "IdentityLink",
-                "CLogLogLink",
-                "ProbitLink",
+                "LogLink",
                 "LogitLink",
-                "OPowerLink",
+                "ProbitLink",
+                "CLogLogLink",
                 "PowerLink",
-                "NegativeBinomialLink"
+                "OPowerLink",
+                "NegativeBinomialLink",
+                "LogLogLink"
             ],
             "InverseGaussianFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
                 "IdentityLink",
                 "LogLink",
                 "PowerLink"
+            ],
+            "PoissonFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
             ]
         },
         "measures to units": {
             "Time": "Subject",
             "Word type": "Subject"
+        },
+        "explanations": {
+            "Word type": [
+                "Explanation for query"
+            ],
+            "Subject,RandomIntercept": [
+                "Explanation for repeated measures. Explain why pooling across variables.",
+                "Explanation for hierarchical data",
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ],
+            "Word,RandomIntercept": [
+                "Explanation for repeated measures. Explain why pooling across variables.",
+                "Explanation for hierarchical data",
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ],
+            "Subject, Word type, RandomSlope": [
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ]
         }
-    },
-    "explanations": {
-        "Word type": [
-            "Explanation for query"
-        ],
-        "Word,RandomIntercept": [
-            "Explanation for repeated measures. Explain why pooling across variables.",
-            "Explanation for hierarchical data",
-            "Explanation for non-nesting",
-            "Explanation about within-subjects variables for interaction effects"
-        ],
-        "Subject,RandomIntercept": [
-            "Explanation for repeated measures. Explain why pooling across variables.",
-            "Explanation for hierarchical data",
-            "Explanation for non-nesting",
-            "Explanation about within-subjects variables for interaction effects"
-        ],
-        "Subject, Word type, RandomSlope": [
-            "Explanation for non-nesting",
-            "Explanation about within-subjects variables for interaction effects"
-        ]
     }
 }

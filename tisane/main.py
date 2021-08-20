@@ -174,7 +174,10 @@ def infer_statistical_model_from_design(design: Design):
     combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired)
 
     # Add explanations 
-    combined_dict["explanations"] = explanations
+    combined_dict["input"]["explanations"] = explanations
+
+    # Add data
+    combined_dict["input"]["data"] = design.get_data().to_dict('list')
 
     # Write out to JSON in order to pass data to Tisane GUI for disambiguation
     input_file = "input.json"
@@ -183,7 +186,7 @@ def infer_statistical_model_from_design(design: Design):
     # stringified. This means that we need to match up the variable names with
     # the actual variable objects in the next step.
     # write_to_json returns the Path of the input.json file
-    path = write_to_json(combined_dict, "./", "input_file.json")
+    path = write_to_json(combined_dict, "./", input_file)
     
 
     ### Step 3: Disambiguation loop (GUI)
