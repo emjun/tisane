@@ -46,6 +46,88 @@ From UIST 2021 submission: https://github.com/emjun/tisane/blob/main/tisane/smt/
 - `gui_components.py`: stores code for layout of several components and provides an interface to the JSON input file
 - `callbacks.py`: all of the callbacks for the app are created here
 
+### Functions
+The main function for generating JSON from Tisane programs is `collect_model_candidates` in `tisane/main.py`. The output of this function is a JSON object that can be written out to a local file by calling `write_to_json` in `tisane/main.py`. The JSON object/file has the following general structure:
+```
+# Example taken from gui/example_inputs/main_interaction_random_intercept_slope_correlated.json
+{
+    "input": {
+        "query": {
+            "DV": "Time",
+            "IVs": [
+                "Word type"
+            ]
+        },
+        "generated main effects": [
+            "Word type"
+        ],
+        "generated interaction effects": [],
+        "generated random effects": {
+            "Subject": [
+                {
+                    "random intercept": {
+                        "groups": "Subject"
+                    }
+                },
+                {
+                    "random slope": {
+                        "iv": "Word type",
+                        "groups": "Subject"
+                    }
+                },
+                {
+                    "correlated": true
+                }
+            ],
+            "Word": [
+                {
+                    "random intercept": {
+                        "groups": "Word"
+                    }
+                }
+            ]
+        },
+        "generated family, link functions": {
+            "GaussianFamily": [
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "PoissonFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "GammaFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ]
+        },
+        "measures to units": {
+            "Time": "Subject",
+            "Word type": "Subject"
+        }
+    }
+}
+```
+
 ### Example Plotly Dash apps
 - Example gallery: https://dash-gallery.plotly.host/Portal/
 - Code for example gallery, including the ones below: https://github.com/plotly/dash-sample-apps/tree/main/apps

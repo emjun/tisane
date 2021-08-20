@@ -19,16 +19,20 @@
             "Measure 2*Measure 1"
         ],
         "generated random effects": {
-            "Unit": {
-                "random intercept": {
-                    "groups": "Unit"
+            "Unit": [
+                {
+                    "random intercept": {
+                        "groups": "Unit"
+                    }
                 }
-            },
-            "Time": {
-                "random intercept": {
-                    "groups": "Time"
+            ],
+            "Time": [
+                {
+                    "random intercept": {
+                        "groups": "Time"
+                    }
                 }
-            }
+            ]
         },
         "generated family, link functions": {
             "TweedieFamily": [
@@ -62,6 +66,13 @@
                 "LogLink",
                 "IdentityLink"
             ]
+        },
+        "measures to units": {
+            "Dependent variable": "Unit",
+            "Measure 0": "Unit",
+            "Measure 1": "Unit",
+            "Measure 2": "Unit",
+            "Measure 2*Measure 1": "Unit"
         }
     }
 }

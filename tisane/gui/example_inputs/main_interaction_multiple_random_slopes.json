@@ -9,49 +9,65 @@
         },
         "generated main effects": [
             "Measure A",
-            "Measure B"
+            "Measure B",
+            "Measure C"
         ],
         "generated interaction effects": [
+            "Measure A*Measure B*Measure C",
+            "Measure A*Measure C",
+            "Measure B*Measure C",
             "Measure A*Measure B"
         ],
         "generated random effects": {
             "Unit": [
                 {
                     "random slope": {
-                        "iv": "Measure A",
+                        "iv": "Measure B*Measure C",
+                        "groups": "Unit"
+                    }
+                },
+                {
+                    "random slope": {
+                        "iv": "Measure B",
+                        "groups": "Unit"
+                    }
+                },
+                {
+                    "random slope": {
+                        "iv": "Measure C",
                         "groups": "Unit"
                     }
                 }
             ]
         },
         "generated family, link functions": {
+            "GammaFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
             "GaussianFamily": [
                 "ProbitLink",
-                "LogLogLink",
-                "OPowerLink",
                 "LogLink",
-                "IdentityLink",
                 "NegativeBinomialLink",
                 "LogitLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLogLink",
                 "PowerLink",
                 "CLogLogLink"
             ],
-            "PoissonFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "GammaFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
             "InverseGaussianFamily": [
-                "LogLink",
+                "PowerLink",
                 "IdentityLink",
-                "PowerLink"
+                "LogLink"
             ],
             "TweedieFamily": [
+                "IdentityLink",
+                "LogLink",
+                "PowerLink"
+            ],
+            "PoissonFamily": [
                 "IdentityLink",
                 "LogLink",
                 "PowerLink"
@@ -61,7 +77,11 @@
             "Dependent variable": "Unit",
             "Measure A": "Unit",
             "Measure B": "Unit",
-            "Measure A*Measure B": "Unit"
+            "Measure C": "Unit",
+            "Measure A*Measure B": "Unit",
+            "Measure A*Measure C": "Unit",
+            "Measure B*Measure C": "Unit",
+            "Measure A*Measure B*Measure C": "Unit"
         }
     }
 }

@@ -11,54 +11,66 @@
         ],
         "generated interaction effects": [],
         "generated random effects": {
-            "Word": {
-                "random intercept": {
-                    "groups": "Word"
+            "Subject": [
+                {
+                    "random intercept": {
+                        "groups": "Subject"
+                    }
+                },
+                {
+                    "random slope": {
+                        "iv": "Word type",
+                        "groups": "Subject"
+                    }
+                },
+                {
+                    "correlated": true
                 }
-            },
-            "Subject": {
-                "random slope": {
-                    "iv": "Word type",
-                    "groups": "Subject"
-                },
-                "random intercept": {
-                    "groups": "Subject"
-                },
-                "correlated": true
-            }
+            ],
+            "Word": [
+                {
+                    "random intercept": {
+                        "groups": "Word"
+                    }
+                }
+            ]
         },
         "generated family, link functions": {
-            "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "InverseGaussianFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "PoissonFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
             "GaussianFamily": [
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
                 "CLogLogLink",
                 "PowerLink",
                 "IdentityLink",
                 "OPowerLink",
                 "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink"
+                "NegativeBinomialLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "PoissonFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "GammaFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
             ]
+        },
+        "measures to units": {
+            "Time": "Subject",
+            "Word type": "Subject"
         }
     }
 }

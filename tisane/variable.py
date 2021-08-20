@@ -437,19 +437,13 @@ class Has:
         variable: AbstractVariable,
         measure: AbstractVariable,
         repetitions: "NumberValue",
+        according_to: AbstractVariable=None,
         **kwargs,
     ):
         self.variable = variable
         self.measure = measure
         self.repetitions = repetitions
-
-        # This allows us to keep track of the "time reference" variable for repeated measures
-        if "according_to" in kwargs.keys():
-            if kwargs["according_to"] is not None:
-                assert isinstance(kwargs["according_to"], AbstractVariable)
-                self.according_to = kwargs["according_to"]
-        else:
-            self.according_to = None
+        self.according_to = according_to
 
 
 """

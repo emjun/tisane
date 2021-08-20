@@ -15,45 +15,53 @@
             "Measure A*Measure B"
         ],
         "generated random effects": {
-            "Unit": {
-                "random slope": {
-                    "iv": "Measure A*Measure B",
-                    "groups": "Unit"
+            "Unit": [
+                {
+                    "random slope": {
+                        "iv": "Measure A*Measure B",
+                        "groups": "Unit"
+                    }
                 }
-            }
+            ]
         },
         "generated family, link functions": {
-            "InverseGaussianFamily": [
-                "LogLink",
-                "PowerLink",
-                "IdentityLink"
-            ],
-            "PoissonFamily": [
+            "GammaFamily": [
                 "PowerLink",
                 "IdentityLink",
                 "LogLink"
             ],
-            "GammaFamily": [
+            "InverseGaussianFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "PoissonFamily": [
                 "LogLink",
                 "IdentityLink",
+                "PowerLink"
+            ],
+            "GaussianFamily": [
+                "OPowerLink",
+                "NegativeBinomialLink",
+                "LogLogLink",
+                "CLogLogLink",
+                "LogitLink",
+                "IdentityLink",
+                "LogLink",
+                "ProbitLink",
                 "PowerLink"
             ],
             "TweedieFamily": [
                 "IdentityLink",
                 "PowerLink",
                 "LogLink"
-            ],
-            "GaussianFamily": [
-                "PowerLink",
-                "IdentityLink",
-                "OPowerLink",
-                "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink",
-                "CLogLogLink"
             ]
+        },
+        "measures to units": {
+            "Dependent variable": "Unit",
+            "Measure A": "Unit",
+            "Measure B": "Unit",
+            "Measure A*Measure B": "Unit"
         }
     }
 }

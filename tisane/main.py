@@ -1,5 +1,5 @@
 from os import link
-from tisane.variable import AbstractVariable
+from tisane.variable import AbstractVariable, Measure, Unit
 from tisane.family import AbstractFamily, AbstractLink
 from tisane.random_effects import RandomEffect
 from tisane.graph import Graph
@@ -80,17 +80,23 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     for r in random_effects_candidates: 
         key = r.groups.name
         if key not in tmp_random.keys(): 
-            tmp_random[key] = dict()
+            tmp_random[key] = list()
         if isinstance(r, RandomIntercept):
-            tmp_random[key]["random intercept"] = {"groups": r.groups.name}
+            ri_dict = dict()
+            ri_dict["random intercept"] = {"groups": r.groups.name}
+            tmp_random[key].append(ri_dict)
         else: 
             assert(isinstance(r, RandomSlope))
-            tmp_random[key]["random slope"] = {"iv": r.iv.name, "groups": r.groups.name}
+            rs_dict = dict()
+            rs_dict["random slope"] = {"iv": r.iv.name, "groups": r.groups.name}
+            tmp_random[key].append(rs_dict)
 
     # If there is a random intercept and slope involving the same grouping variable, add correlation value
     for key, value in tmp_random.items(): 
         if len(value) == 2: 
-            tmp_random[key]["correlated"] = True
+            correlated_dict = dict()
+            correlated_dict["correlated"] = True
+            tmp_random[key].append(correlated_dict)
     
     data["input"][random_key] = tmp_random
     
@@ -103,6 +109,16 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
         f_classname = type(f).__name__
         tmp_family_link[f_classname] = [type(l).__name__ for l in l_options]
     data["input"][family_link_key] = tmp_family_link
+
+    # Create Measure, Unit pairs: used for random effects
+    measure_unit_key = "measures to units"
+    data["input"][measure_unit_key] = dict()
+    gr = query.graph
+    for var in gr.get_variables(): 
+        if isinstance(var, Measure): 
+            unit = gr.get_identifier_for_variable(var)
+            assert(isinstance(unit, Unit))
+            data["input"][measure_unit_key][var.name] = unit.name
 
     return data
 

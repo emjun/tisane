@@ -213,6 +213,45 @@ def main_interaction_random_intercept_slope_correlated(path="./gui/example_input
     # Output combined dict to @param path 
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
    
+def main_interaction_multiple_random_slopes(path="./gui/example_inputs/", filename="main_interaction_multiple_random_slopes.json"):  
+    u = ts.Unit("Unit")
+    a = u.nominal("Measure A", cardinality=2)  # A is between-subjects
+    b = u.nominal(
+        "Measure B", cardinality=2, number_of_instances=2
+    )  # B is within-subjects
+    c = u.nominal(
+        "Measure C", cardinality=2, number_of_instances=2
+    )  # B is within-subjects
+    dv = u.numeric("Dependent variable")
+
+    a.causes(dv)
+    b.causes(dv)
+    c.causes(dv)
+    a.moderates(moderator=[b], on=dv)  # AB --> get B
+    a.moderates(moderator=[c], on=dv)  # AC --> get C
+    b.moderates(moderator=[c], on=dv)  # BC --> get BC
+    a.moderates(moderator=[b, c], on=dv)  # BC --> get BC
+
+    design = ts.Design(dv=dv, ivs=[a, b])
+    gr = design.graph
+
+    main_effects = [a, b, c]
+    interaction_effects = infer_interaction_effects(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    random_effects = infer_random_effects(gr=gr,query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    family_candidates = infer_family_functions(query=design)
+    link_candidates = set()
+    family_link_paired = dict()
+    for f in family_candidates: 
+        l = infer_link_functions(query=design, family=f)
+        # Add Family: Link options 
+        assert(f not in family_link_paired.keys())
+        family_link_paired[f] = l
+    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    
+    # Output combined dict to @param path 
+    write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
 main_effects_only()
 main_interaction()
@@ -220,3 +259,4 @@ main_interaction_random_intercepts()
 main_interaction_random_slope_one_variable()
 main_interaction_random_slope_interaction()
 main_interaction_random_intercept_slope_correlated()
+main_interaction_multiple_random_slopes()

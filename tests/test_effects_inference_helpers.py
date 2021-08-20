@@ -1108,7 +1108,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=interaction_effects
+            gr=gr, query=design, interactions=interaction_effects
         )
         self.assertEqual(len(random_effects), 1)
         rs = random_effects.pop()
@@ -1134,7 +1134,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=list(interaction_effects)
+            gr=gr, query=design, interactions=interaction_effects
         )
         self.assertEqual(len(random_effects), 0)  # Should get no random effects!
 
@@ -1160,7 +1160,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=list(interaction_effects)
+            gr=gr, query=design, interactions=list(interaction_effects)
         )
         # Should get AB combo!
         # self.assertEqual(len(random_effects), 1)
@@ -1170,12 +1170,16 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self.assertEqual(rs.iv.name, ixn.name)  # Should get A
         self.assertIs(rs.groups, u)
 
-    # Barr 2013 time * group interaction example
+    # Barr 2013 time * group interaction example: 
+    # "For example, consider a design with two independent groups of subjects,
+    # where there are observations at multiple time points for each subject.
+    # When testing the time-by-group interaction, the model should include a
+    # random slope for the continuous variable of time..."
     def test_random_effects_for_two_way_time_group_interaction(self):
-        u = ts.Unit("Unit")
+        subject = ts.Unit("Unit")
         time = ts.SetUp("Time")
-        group = u.numeric("Group", number_of_instances=2)  # TODO: A is within-subjects
-        dv = u.numeric("Dependent variable", number_of_instances=time)
+        group = subject.nominal("Group", cardinality=2, number_of_instances=1) # "two independent groups of subjects"
+        dv = subject.numeric("Dependent variable", number_of_instances=time) # within-subject
 
         time.associates_with(dv)
         group.causes(dv)
@@ -1189,9 +1193,9 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=list(interaction_effects)
+            gr=gr, query=design, interactions=list(interaction_effects)
         )
-        # TODO:
+        self.assertEqual(len(random_effects), 1)
 
     # Barr 2013 B, C, and BC example
     def test_random_effects_for_three_way_interaction_one_between_two_within(self):
@@ -1218,7 +1222,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=interaction_effects
+            gr=gr, query=design, interactions=interaction_effects
         )
         # Should get BC!
         self.assertEqual(len(random_effects), 1)
@@ -1251,7 +1255,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=interaction_effects
+            gr=gr, query=design, interactions=interaction_effects
         )
         # Should get C!
         self.assertEqual(len(random_effects), 1)
@@ -1283,7 +1287,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=interaction_effects
+            gr=gr, query=design, interactions=interaction_effects
         )
         # Should get none!
         self.assertEqual(len(random_effects), 0)
@@ -1308,7 +1312,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         a.moderates(moderator=[b], on=dv)  # AB --> get B
         a.moderates(moderator=[c], on=dv)  # AC --> get C
         b.moderates(moderator=[c], on=dv)  # BC --> get BC
-        a.moderates(moderator=[b, c], on=dv)  # BC --> get BC
+        a.moderates(moderator=[b, c], on=dv)  # ABC --> get BC
 
         design = ts.Design(dv=dv, ivs=[a, b])
         gr = design.graph
@@ -1318,7 +1322,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
-            gr=gr, interactions=interaction_effects
+            gr=gr, query=design, interactions=interaction_effects
         )
         self.assertEqual(len(random_effects), 4)
 
