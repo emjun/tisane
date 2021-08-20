@@ -25,33 +25,33 @@
             }
         },
         "generated family, link functions": {
-            "TweedieFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
             "InverseGaussianFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "PoissonFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
-            "GaussianFamily": [
-                "ProbitLink",
-                "CLogLogLink",
-                "PowerLink",
+            "PoissonFamily": [
                 "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "GaussianFamily": [
                 "OPowerLink",
                 "LogLink",
                 "NegativeBinomialLink",
                 "LogitLink",
-                "LogLogLink"
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "IdentityLink",
+                "PowerLink"
             ],
             "GammaFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"

@@ -12,6 +12,8 @@ import plotly.graph_objects as go
 log = logging.getLogger("")
 log.setLevel(logging.ERROR)
 
+from tisane.gui.gui_helpers import simulate_data_dist
+
 def cardP(text):
     return html.H5(text, className="card-text")
 def checklist(labelList, id):
@@ -42,10 +44,20 @@ class GUIComponents():
         self.generatedComponentIdToRandomEffect = {}
         self.generatedComponentIdToMainEffect = {}
         self.generatedComponentIdToInteractionEffect = {}
+        self.simulatedData = {}
+        self.defaultLinkForFamily = {
+            "GaussianFamily": "IdentityLink",
+            "BinomialFamily": "LogitLink",
+            "PoissonFamily": "LogLink",
+            "TweedieFamily": "LogLink",
+            "GammaFamily": "InverseLink" 
+        }
         self.variables = {
             "main effects": {},
             "interaction effects": {}
         }
+        self.randomSlopes = {}
+        self.generatedCorrelatedIdToRandomSlope = {}
         if os.path.exists(input_json):
             with open(input_json, "r") as f:
                 self.data = json.loads(f.read())
@@ -64,6 +76,21 @@ class GUIComponents():
             self.variables["interaction effects"][ie] = {
                 "info-id": self.getNewComponentId()
             }
+            pass
+        randomEffects = self.getGeneratedRandomEffects()
+        for unit, re in randomEffects.items():
+            if "random slope" in re and "random intercept" in re:
+                if unit not in self.randomSlopes:
+                    self.randomSlopes[unit] = {}
+                    pass
+                for rs in re["random slope"]:
+                    newId = self.getNewComponentId()
+                    self.randomSlopes[unit][rs["iv"]] = {
+                        "correlated-id": newId
+                    }
+                    self.generatedCorrelatedIdToRandomSlope[newId] = rs
+                    pass
+                pass
             pass
         pass
 
@@ -101,6 +128,21 @@ class GUIComponents():
     def getRandomEffectFromComponentId(self, componentId):
         assert componentId in self.generatedComponentIdToRandomEffect, "Component id {} does not exist in {}".format(componentId, self.generatedComponentIdToRandomEffect)
         return self.generatedComponentIdToRandomEffect[componentId]
+
+    def getRandomSlopeFromComponentId(self, componentId):
+        assert componentId in self.generatedCorrelatedIdToRandomSlope, "Component id {} does not exist in {}".format(componentId, self.generatedCorrelatedIdToRandomSlope)
+        return self.generatedCorrelatedIdToRandomSlope[componentId]
+    def hasRandomSlopeForComponentId(self, componentId):
+        return componentId in self.generatedCorrelatedIdToRandomSlope
+
+    def hasCorrelatedIdForRandomSlope(self, group, iv):
+        return group in self.randomSlopes and iv in self.randomSlopes[group] and "correlated-id" in self.randomSlopes[group][iv]
+    def getCorrelatedIdForRandomSlope(self, group, iv):
+        assert self.hasCorrelatedIdForRandomSlope(group, iv)
+        return self.randomSlopes[group][iv]["correlated-id"]
+
+    def getRandomSlopeCheckboxIds(self):
+        return list(self.generatedCorrelatedIdToRandomSlope.keys())
 
     def getNewComponentId(self):
         self.numGeneratedComponentIds += 1
@@ -193,37 +235,9 @@ class GUIComponents():
             dbc.CardBody(
                 [
                     cardP("Generated Main Effects"),
-                    # checklist(self.getGeneratedMainEffects(), "main-effects-checklist"),
                     self.layoutFancyChecklist({me: html.Span([me + " ", html.I(className="bi bi-info-circle", id=self.variables["main effects"][me]["info-id"])]) for me in self.getGeneratedMainEffects()}, self.setComponentIdForMainEffect),
                     html.P(""),
                     dbc.Button("Continue", color="success", id="continue-to-interaction-effects", n_clicks=0),
-                    # html.Div( [dbc.FormGroup(
-                    #     [
-                    #         dbc.Checkbox(
-                    #             id="standalone-checkbox", className="form-check-input"
-                    #         ),
-                    #         dbc.Label(
-                    #             "This is a checkbox",
-                    #             html_for="standalone-checkbox",
-                    #             className="form-check-label",
-                    #         ),
-                    #     ],
-                    #     check=True,
-                    # ),
-                    # dbc.FormGroup(
-                    #     [
-                    #         dbc.Checkbox(
-                    #             id="standalone-checkbox-1", className="form-check-input"
-                    #         ),
-                    #         dbc.Label(
-                    #             "This is a checkbox",
-                    #             html_for="standalone-checkbox-1",
-                    #             className="form-check-label",
-                    #         ),
-                    #     ],
-                    #     check=True,
-                    # ),],
-                    #          id="test-div"),
                 ]
             ),
             className="mt-3"
@@ -247,7 +261,6 @@ class GUIComponents():
             dbc.CardBody(
                 [
                     cardP("Interactions"),
-                    # checklist(self.getGeneratedInteractionEffects(), "interaction-effects-checklist"),
                     self.layoutFancyChecklist({me: html.Span([me + " ", html.I(className="bi bi-info-circle", id=self.variables["interaction effects"][me]["info-id"])]) for me in self.getGeneratedInteractionEffects()}, self.setComponentIdForInteractionEffect),
                     html.P(""),
                     continueButton
@@ -280,19 +293,24 @@ class GUIComponents():
 
 
             def wrapper(elt):
-                return dbc.Row(dbc.Col(elt))
+                return html.Li(elt)
             randomInterceptPortion = [dbc.Badge("Random Intercept", color="danger", className="mr-1")] if ri in randomEffectDict else []
-            randomSlopePortion = [html.Span([html.Span(randomEffectDict[rs]["iv"]), dbc.Badge("Random Slope", color="info", className="mr-1")])] if rs in randomEffectDict else []
-            corPortion = [dbc.Checklist(options=[{"label": "correlated", "value":"correlated"}], value=["correlated"])] if cor in randomEffectDict else []
-            contents = randomInterceptPortion + randomSlopePortion + corPortion
+            randomSlopePortion = []
+            if rs in randomEffectDict:
+                for randomSlope in randomEffectDict[rs]:
+                    iv = randomSlope["iv"]
+                    checker = []
+                    if cor in randomEffectDict:
+                        print("Adding checkbox")
+                        checker = [html.Ul(html.Li(dbc.Checklist(options=[{"label": "correlated", "value": "correlated"}], value=["correlated"], id=self.getCorrelatedIdForRandomSlope(group, iv))))]
+                        pass
+                    randomSlopePortion.append([html.Span(iv), dbc.Badge("Random Slope", color="info", className="mr-1")
+                    ] + checker)
+            contents = randomInterceptPortion + randomSlopePortion #+ corPortion
             contents = [wrapper(c) for c in contents]
-            return html.Div([wrapper(group)] + contents)
+            return html.Div([html.H6(group), html.Ul(contents)])
         randomEffects = self.getGeneratedRandomEffects()
-        options = [dbc.FormGroup([
-            dbc.Checkbox(id=self.setComponentIdForRandomEffect(group), className="form-check-input"),
-            dbc.Label(layoutRandomEffect(group, randomEffectDict), html_for=self.setComponentIdForRandomEffect(group), className="form-check-label")
-        ], check=True
-        ) for group, randomEffectDict in randomEffects.items()]
+        options = [layoutRandomEffect(group, randomEffectDict) for group, randomEffectDict in randomEffects.items()]
         return html.Div(options)
 
     def getRandomEffectsCard(self):
@@ -337,8 +355,6 @@ class GUIComponents():
 
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
-            # if label == "InverseGaussian":
-            #     label = "Inverse Gaussian"  # add a space
 
             family_options.append({"label": label, "value": f})
             pass
@@ -352,7 +368,7 @@ class GUIComponents():
                             # id={'type': 'family_link_options', 'index': 'family_options'},
                             id="family-options",
                             options=family_options,
-                            value=None,
+                            value="GaussianFamily",
                         ),
                     ]
                 ),
@@ -363,7 +379,7 @@ class GUIComponents():
                             # id={'type': 'family_link_options', 'index': 'link_options'},
                             id="link-options",
                             options=[],
-                            value=None,
+                            value="IdentityLink",
                         ),
                     ]
                 ),
@@ -373,6 +389,46 @@ class GUIComponents():
         )
 
         return controls
+
+    def createFigure(self, family):
+        key = f"{family}_data"
+        if key in self.simulatedData:
+            family_data = self.simulatedData[key]
+        else:
+            # Do we need to generate data?
+            family_data = simulate_data_dist(
+                    family)
+            # Store data for family in __str_to_z3__ cache
+        # We already have the data generated in our "cache"
+
+        # if link is not None:
+        #     assert(isinstance(link, str))
+        #     link_fact = __str_to_z3__[link]
+        #     # Transform the data
+        #     transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
+
+        # Generate figure
+        fig = go.Figure()
+        # fig.add_trace(
+        #     go.Histogram(
+        #         x=curr_data,
+        #         name=f"{self.design.dv.name}",
+        #     )
+        # )
+        fig.add_trace(
+            go.Histogram(
+                x=family_data, name=f"Simulated {family} distribution.",
+                showlegend=True,
+            )
+        )
+        fig.update_layout(barmode="overlay")
+        fig.update_traces(opacity=0.75)
+        fig.update_layout(
+            legend=dict(
+                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
+            )
+        )
+        return fig
 
     def draw_dist(self, hist_data, label):
         # Make sure that there is data to draw
@@ -411,6 +467,7 @@ class GUIComponents():
 
         return fig_elt
 
+
     def draw_data_dist(self):
         (hist_data, labels) = self.get_data_dist()
 
@@ -437,8 +494,11 @@ class GUIComponents():
             ]
         )
 
+        fig = self.createFigure("GaussianFamily")
+
+
         # Get form groups for family link div
-        family_link_chart = html.Div("Chart goes here") #self.draw_data_dist()
+        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig) #self.draw_data_dist()
         family_link_controls = self.make_family_link_options()
 
         # Create main effects switch

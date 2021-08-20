@@ -6,7 +6,7 @@ from typing import Any, List
 import typing  # for typing.Unit
 
 """
-Abstract super class for all family functions. 
+Abstract super class for all family functions.
 """
 
 

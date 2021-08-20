@@ -13,10 +13,10 @@
             "Measure C"
         ],
         "generated interaction effects": [
-            "Measure B*Measure C",
-            "Measure A*Measure C",
             "Measure A*Measure B",
-            "Measure A*Measure B*Measure C"
+            "Measure A*Measure C",
+            "Measure A*Measure B*Measure C",
+            "Measure B*Measure C"
         ],
         "generated random effects": {
             "Unit": {
@@ -37,36 +37,36 @@
             }
         },
         "generated family, link functions": {
-            "InverseGaussianFamily": [
-                "IdentityLink",
+            "TweedieFamily": [
                 "PowerLink",
-                "LogLink"
-            ],
-            "GaussianFamily": [
-                "PowerLink",
-                "NegativeBinomialLink",
-                "LogLogLink",
-                "IdentityLink",
-                "CLogLogLink",
                 "LogLink",
-                "OPowerLink",
-                "LogitLink",
-                "ProbitLink"
+                "IdentityLink"
             ],
             "PoissonFamily": [
-                "IdentityLink",
                 "PowerLink",
-                "LogLink"
+                "LogLink",
+                "IdentityLink"
             ],
             "GammaFamily": [
                 "IdentityLink",
-                "LogLink",
-                "PowerLink"
-            ],
-            "TweedieFamily": [
-                "IdentityLink",
                 "PowerLink",
                 "LogLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "GaussianFamily": [
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink"
             ]
         },
         "measures to units": {

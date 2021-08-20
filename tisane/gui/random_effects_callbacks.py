@@ -5,7 +5,7 @@ import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 
 def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
-    createRandomEffectsAddedCallbacks(app, comp)
+    # createRandomEffectsAddedCallbacks(app, comp)
     pass
 
 def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):

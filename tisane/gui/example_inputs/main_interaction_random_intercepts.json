@@ -11,56 +11,56 @@
         },
         "generated main effects": [
             "Measure 1",
-            "Time",
             "Measure 0",
-            "Measure 2"
+            "Measure 2",
+            "Time"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
         ],
         "generated random effects": {
-            "Time": {
-                "random intercept": {
-                    "groups": "Time"
-                }
-            },
             "Unit": {
                 "random intercept": {
                     "groups": "Unit"
                 }
+            },
+            "Time": {
+                "random intercept": {
+                    "groups": "Time"
+                }
             }
         },
         "generated family, link functions": {
-            "PoissonFamily": [
-                "PowerLink",
-                "IdentityLink",
-                "LogLink"
-            ],
-            "TweedieFamily": [
-                "LogLink",
-                "PowerLink",
-                "IdentityLink"
-            ],
             "InverseGaussianFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
-            ],
-            "GammaFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
             "GaussianFamily": [
-                "NegativeBinomialLink",
-                "LogLink",
-                "ProbitLink",
-                "IdentityLink",
-                "LogLogLink",
+                "CLogLogLink",
                 "PowerLink",
-                "LogitLink",
+                "IdentityLink",
                 "OPowerLink",
-                "CLogLogLink"
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "GammaFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
             ]
         },
         "measures to units": {

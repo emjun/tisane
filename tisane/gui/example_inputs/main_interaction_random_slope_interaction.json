@@ -25,36 +25,36 @@
             }
         },
         "generated family, link functions": {
-            "GaussianFamily": [
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink",
-                "CLogLogLink",
+            "PoissonFamily": [
                 "PowerLink",
                 "IdentityLink",
-                "OPowerLink",
                 "LogLink"
             ],
             "InverseGaussianFamily": [
-                "PowerLink",
+                "IdentityLink",
                 "LogLink",
-                "IdentityLink"
+                "PowerLink"
             ],
-            "PoissonFamily": [
+            "GaussianFamily": [
+                "LogLink",
+                "OPowerLink",
+                "LogitLink",
+                "IdentityLink",
+                "ProbitLink",
+                "PowerLink",
+                "LogLogLink",
+                "CLogLogLink",
+                "NegativeBinomialLink"
+            ],
+            "TweedieFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
             ],
             "GammaFamily": [
-                "IdentityLink",
                 "PowerLink",
-                "LogLink"
-            ],
-            "TweedieFamily": [
-                "LogLink",
                 "IdentityLink",
-                "PowerLink"
+                "LogLink"
             ]
         },
         "measures to units": {
