@@ -112,6 +112,7 @@ class TisaneGUI():
             ),
                     width=12)
         ]
+
         # Add all components to main app's layout
         app.layout = dbc.Container(
             [
@@ -129,7 +130,7 @@ class TisaneGUI():
                 # dbc.Row([dbc.Col(card) for card in cards]),
                 # html.Br(),
                 # dbc.Row([dbc.Col(graph) for graph in graphs]),
-            ],
+            ] + self.components.createEffectPopovers(),
             fluid=False,
         )
 

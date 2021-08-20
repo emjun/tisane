@@ -32,13 +32,13 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
         if value and isinstance(value, str):
             print(familyLinks)
             if value in familyLinks:
-                assert "Identity"
+                defaultLink = comp.getDefaultLinkForFamily(value)
                 return [
                     {
-                        "label": " ".join(separateByUpperCamelCase(str(l))),
+                        "label": " ".join(separateByUpperCamelCase(str(l))) + ("*" if defaultLink == l else ""),
                         "value": str(l)
                     } for l in familyLinks[value]
-                ], "IdentityLink"
+                ], defaultLink
             pass
         print("Cannot update for some reason")
         raise PreventUpdate

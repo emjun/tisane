@@ -38,6 +38,9 @@ def separateByUpperCamelCase(mystr):
             words.append(mystr[start:i + 1])
     return words
 
+def getInfoBubble(id: str):
+    return html.I(className="bi bi-info-circle", id=id)
+
 class GUIComponents():
     def __init__(self, input_json: str):
         self.numGeneratedComponentIds = 0
@@ -50,7 +53,9 @@ class GUIComponents():
             "BinomialFamily": "LogitLink",
             "PoissonFamily": "LogLink",
             "TweedieFamily": "LogLink",
-            "GammaFamily": "InverseLink" 
+            "GammaFamily": "InverseLink",
+            "NegativeBinomialFamily": "LogLink",
+            "InverseGaussianFamily": "InverseSquaredLink"
         }
         self.variables = {
             "main effects": {},
@@ -93,6 +98,14 @@ class GUIComponents():
                 pass
             pass
         pass
+
+    def getExplanations(self):
+        return self.data["explanations"]
+
+    def getDefaultLinkForFamily(self, family):
+        if family in self.defaultLinkForFamily:
+            return self.defaultLinkForFamily[family]
+        return None
 
     def hasEffectForComponentId(self, componentId, effectDict):
         return componentId in effectDict
@@ -235,7 +248,7 @@ class GUIComponents():
             dbc.CardBody(
                 [
                     cardP("Generated Main Effects"),
-                    self.layoutFancyChecklist({me: html.Span([me + " ", html.I(className="bi bi-info-circle", id=self.variables["main effects"][me]["info-id"])]) for me in self.getGeneratedMainEffects()}, self.setComponentIdForMainEffect),
+                    self.layoutFancyChecklist({me: html.Span([me + " ", getInfoBubble(self.variables["main effects"][me]["info-id"])]) for me in self.getGeneratedMainEffects()}, self.setComponentIdForMainEffect),
                     html.P(""),
                     dbc.Button("Continue", color="success", id="continue-to-interaction-effects", n_clicks=0),
                 ]
@@ -374,7 +387,7 @@ class GUIComponents():
                 ),
                 dbc.FormGroup(
                     [
-                        dbc.Label("Link function"),
+                        dbc.Label(["Link function ", getInfoBubble("link-function-label-info")]),
                         dcc.Dropdown(
                             # id={'type': 'family_link_options', 'index': 'link_options'},
                             id="link-options",
@@ -383,6 +396,15 @@ class GUIComponents():
                         ),
                     ]
                 ),
+                dbc.Popover(
+                    [
+                        dbc.PopoverHeader("More on Link Functions"),
+                        dbc.PopoverBody("* indicates the default/canonical link for the family"),
+
+                    ],
+                    target="link-function-label-info",
+                    trigger="hover",
+                    ),
             ],
             body=True,
             id={"type": "family_link_options", "index": "family_link_options"},
@@ -527,3 +549,39 @@ class GUIComponents():
 
         ##### Return div
         return family_and_link_div
+
+    def createEffectPopovers(self):
+        mainEffects = self.getGeneratedMainEffects()
+        interactionEffects = self.getGeneratedInteractionEffects()
+        # randomEffects = self.getGeneratedRandomEffects()
+        explanations = self.getExplanations()
+        popovers = []
+        for me in mainEffects:
+            if me in explanations and me in self.variables["main effects"] and "info-id" in self.variables["main effects"][me]:
+                popovers.append(
+                    dbc.Popover(
+                        [
+                            dbc.PopoverHeader("Main Effect: {}".format(me)),
+                            dbc.PopoverBody(explanations[me])
+                        ],
+                        target=self.variables["main effects"][me]["info-id"],
+                        trigger="hover"
+                    )
+                )
+                pass
+            pass
+        for ie in interactionEffects:
+            if ie in explanations and ie in self.variables["interaction effects"] and "info-id" in self.variables["interaction effects"][ie]:
+                popovers.append(
+                    dbc.Popover(
+                        [
+                            dbc.PopoverHeader("Interaction Effect: {}".format(ie)),
+                            dbc.PopoverBody(explanations[ie])
+                        ],
+                        target=self.variables["interaction effects"][ie]["info-id"],
+                        trigger="hover"
+                    )
+                )
+                pass
+            pass
+        return popovers
