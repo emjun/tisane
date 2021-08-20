@@ -3,7 +3,6 @@ import pandas as pd
 import os
 
 dir = os.path.dirname(__file__)
-
 df = pd.read_csv(os.path.join(dir, "pigs.csv"))
 
 ## Initialize variables with data

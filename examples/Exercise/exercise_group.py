@@ -2,6 +2,7 @@ import tisane as ts
 
 import pandas as pd
 import numpy as np
+import os
 
 """
 Example from Cohen, Cohen, West, Aiken 2003. 
@@ -20,8 +21,9 @@ lost.
 """
 
 # Load data
-
-df = pd.read_csv("./exercise_groups.csv")
+dir = os.path.dirname(__file__)
+df = pd.read_csv(os.path.join(dir, "exercise_group.csv"))
+# df = pd.read_csv("./exercise_groups.csv")
 
 # Observed variables
 adult = ts.Unit("member", cardinality=386)  # 386 adults
@@ -36,15 +38,15 @@ treatment_approach = group.nominal(
 )  # 2 approaches to weight loss ("Control" and "Treatment")
 
 # Conceptual relationships between the observed variables
-motivation_level.cause(pounds_lost)
+motivation_level.causes(pounds_lost)
 treatment_approach.causes(pounds_lost)
 
 # Data measurement relationships
 # Declare nesting relationship
-adult.nests_with(group)  # Members are part of groups
+adult.nests_within(group)  # Members are part of groups
 
 # Query Tisane to infer a statistical model and generate a script
-design = ts.Design(dv=pounds_lost, ivs=[treatment, motivation]).assign_data(
+design = ts.Design(dv=pounds_lost, ivs=[treatment_approach, motivation_level]).assign_data(
     df
 )  # Load data
 ts.infer_statistical_model_from_design(design=design)

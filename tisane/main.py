@@ -182,6 +182,7 @@ def infer_statistical_model_from_design(design: Design):
     # Note: Because the input to the GUI is a JSON file, everything is
     # stringified. This means that we need to match up the variable names with
     # the actual variable objects in the next step.
+    # write_to_json returns the Path of the input.json file
     path = write_to_json(combined_dict, "./", "input_file.json")
     
 
