@@ -2,10 +2,8 @@ import tisane as ts
 import pandas as pd
 import os
 
-os.chdir(os.path.dirname(__file__))
-os.chdir("..")
-
-df = pd.read_csv("./Animal_Science/pigs.csv")
+dir = os.path.dirname(__file__)
+df = pd.read_csv(os.path.join(dir, "pigs.csv"))
 
 ## Initialize variables with data
 # Bind measures to units at the time of declaration
