@@ -50,7 +50,7 @@ def check_design_dv(design: Design):
 # @returns a Python dict with all the effect options, can be used to output straight JSON or to write a file
 # @param output_path is the file path to write out the data
 def collect_model_candidates(query: Design, main_effects_candidates: Set[AbstractVariable], interaction_effects_candidates: Set[AbstractVariable], random_effects_candidates: Set[RandomEffect], family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]]):
-    # Create dictionary 
+    # Create dictionary
     data = dict()
     data["input"] = dict()
 
@@ -59,7 +59,7 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     data["input"][query_key] = dict()
     data["input"][query_key] = {"DV": query.dv.name, "IVs": [v.name for v in query.ivs]}
 
-    # Create main effects dict 
+    # Create main effects dict
     main_key = "generated main effects"
     data["input"][main_key] = list()
     data["input"][main_key] = [v.name for v in main_effects_candidates]
@@ -77,35 +77,39 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     # Group2: {random slope: {groups: G, iv: I}}
     # Group3: {random intercept: {groups: G}, random slope: {iv: I, groups: G}, correlated=True}
     tmp_random = dict()
-    for r in random_effects_candidates: 
+    for r in random_effects_candidates:
         key = r.groups.name
-        if key not in tmp_random.keys(): 
-            tmp_random[key] = list()
+        if key not in tmp_random.keys():
+            tmp_random[key] = dict()
         if isinstance(r, RandomIntercept):
-            ri_dict = dict()
-            ri_dict["random intercept"] = {"groups": r.groups.name}
-            tmp_random[key].append(ri_dict)
-        else: 
+            # ri_dict = dict()
+            # ri_dict["random intercept"] = {"groups": r.groups.name}
+            tmp_random[key]["random intercept"] = {"groups": r.groups.name}
+        else:
             assert(isinstance(r, RandomSlope))
-            rs_dict = dict()
-            rs_dict["random slope"] = {"iv": r.iv.name, "groups": r.groups.name}
-            tmp_random[key].append(rs_dict)
+            if "random slope" not in tmp_random[key]:
+                tmp_random[key]["random slope"] = []
+            # rs_dict = dict()
+            rs_dict = {"iv": r.iv.name, "groups": r.groups.name}
+            tmp_random[key]["random slope"].append(rs_dict)
 
     # If there is a random intercept and slope involving the same grouping variable, add correlation value
-    for key, value in tmp_random.items(): 
-        if len(value) == 2: 
-            correlated_dict = dict()
-            correlated_dict["correlated"] = True
-            tmp_random[key].append(correlated_dict)
-    
+    for key, value in tmp_random.items():
+        if "random intercept" in value and "random slope" in value:
+            tmp_random[key]["correlated"] = True
+        # if len(value) == 2:
+        #     correlated_dict = dict()
+        #     correlated_dict["correlated"] = True
+        #     tmp_random[key].append(correlated_dict)
+
     data["input"][random_key] = tmp_random
-    
+
     # Create family, link paired dict
     family_link_key = "generated family, link functions"
     data["input"][family_link_key] = dict()
     # {"Family 1": ["Link 1", "Link 2"]}, {"Family 2": ["Link 1", "Link 2"]}
     tmp_family_link = dict()
-    for f, l_options in family_link_paired_candidates.items(): 
+    for f, l_options in family_link_paired_candidates.items():
         f_classname = type(f).__name__
         tmp_family_link[f_classname] = [type(l).__name__ for l in l_options]
     data["input"][family_link_key] = tmp_family_link
@@ -114,8 +118,8 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     measure_unit_key = "measures to units"
     data["input"][measure_unit_key] = dict()
     gr = query.graph
-    for var in gr.get_variables(): 
-        if isinstance(var, Measure): 
+    for var in gr.get_variables():
+        if isinstance(var, Measure):
             unit = gr.get_identifier_for_variable(var)
             assert(isinstance(unit, Unit))
             data["input"][measure_unit_key][var.name] = unit.name
@@ -123,7 +127,7 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     return data
 
 # Write data to JSON file specified in @param output_path
-def write_to_json(data: Dict, output_path: str, output_filename: str): 
+def write_to_json(data: Dict, output_path: str, output_filename: str):
     assert(output_filename.endswith(".json"))
     path = Path(output_path, output_filename)
     # Output dictionary to JSON
@@ -147,21 +151,21 @@ def infer_statistical_model_from_design(design: Design):
 
     ### Step 2: Candidate statistical model inference/generation
     main_effects_candidates = infer_main_effects(gr=gr, query=design)
-    # Assume all the main effects will be selected 
+    # Assume all the main effects will be selected
     main_effects_candidates = list(main_effects_candidates)
-    
+
     interaction_effects_candidates = infer_interaction_effects(gr=gr, query=design, main_effects=main_effects_candidates)
-    interaction_effects_candidates = list(interaction_effects_candidates) 
+    interaction_effects_candidates = list(interaction_effects_candidates)
 
     random_effects_candidates = infer_random_effects(gr=gr, query=design, main_effects=main_effects_candidates, interaction_effects=interaction_effects_candidates)
 
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
-    for f in family_candidates: 
+    for f in family_candidates:
         # TODO: store the family-links somewhere!
         l = infer_link_functions(query=design, family=f)
-        # Add Family: Link options 
+        # Add Family: Link options
         assert(f not in family_link_paired.keys())
         family_link_paired[f] = l
 
@@ -170,19 +174,19 @@ def infer_statistical_model_from_design(design: Design):
     input_file = "input.json"
     data = collect_model_candidates(main_effects_candidates, interaction_effects_candidates, random_effects_candidates, family_link_paired, input_file)
     write_to_json(data, "input_file.json")
-    # Note: Because the input to the GUI is a JSON file, everything is stringified. This means that we need to match up the variable names with the actual variable objects in the next step. 
+    # Note: Because the input to the GUI is a JSON file, everything is stringified. This means that we need to match up the variable names with the actual variable objects in the next step.
 
     ### Step 3: Disambiguation loop (GUI)
     gui = TisaneGUI()
     gui.start_app(input=input_file)
-    # Output a JSON file 
+    # Output a JSON file
     output_file = "model_spec.json"
 
     # Read JSON file
     sm = None
     f = open(output_file, "r")
 
-    ### Step 4: Code generation 
+    ### Step 4: Code generation
     # Construct StatisticalModel from JSON spec
     model_json = f.read()
     sm = construct_statistical_model(file=model_json, query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired).assign_data(

@@ -13,64 +13,60 @@
             "Measure C"
         ],
         "generated interaction effects": [
-            "Measure A*Measure B*Measure C",
-            "Measure A*Measure C",
             "Measure B*Measure C",
-            "Measure A*Measure B"
+            "Measure A*Measure C",
+            "Measure A*Measure B",
+            "Measure A*Measure B*Measure C"
         ],
         "generated random effects": {
-            "Unit": [
-                {
-                    "random slope": {
+            "Unit": {
+                "random slope": [
+                    {
+                        "iv": "Measure C",
+                        "groups": "Unit"
+                    },
+                    {
+                        "iv": "Measure B",
+                        "groups": "Unit"
+                    },
+                    {
                         "iv": "Measure B*Measure C",
                         "groups": "Unit"
                     }
-                },
-                {
-                    "random slope": {
-                        "iv": "Measure B",
-                        "groups": "Unit"
-                    }
-                },
-                {
-                    "random slope": {
-                        "iv": "Measure C",
-                        "groups": "Unit"
-                    }
-                }
-            ]
+                ]
+            }
         },
         "generated family, link functions": {
-            "GammaFamily": [
-                "PowerLink",
+            "InverseGaussianFamily": [
                 "IdentityLink",
+                "PowerLink",
                 "LogLink"
             ],
             "GaussianFamily": [
-                "ProbitLink",
-                "LogLink",
+                "PowerLink",
                 "NegativeBinomialLink",
-                "LogitLink",
-                "IdentityLink",
-                "OPowerLink",
                 "LogLogLink",
-                "PowerLink",
-                "CLogLogLink"
-            ],
-            "InverseGaussianFamily": [
-                "PowerLink",
                 "IdentityLink",
-                "LogLink"
-            ],
-            "TweedieFamily": [
-                "IdentityLink",
+                "CLogLogLink",
                 "LogLink",
-                "PowerLink"
+                "OPowerLink",
+                "LogitLink",
+                "ProbitLink"
             ],
             "PoissonFamily": [
                 "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "GammaFamily": [
+                "IdentityLink",
                 "LogLink",
                 "PowerLink"
+            ],
+            "TweedieFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
             ]
         },
         "measures to units": {

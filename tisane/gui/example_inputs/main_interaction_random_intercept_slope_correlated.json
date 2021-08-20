@@ -11,43 +11,31 @@
         ],
         "generated interaction effects": [],
         "generated random effects": {
-            "Subject": [
-                {
-                    "random intercept": {
-                        "groups": "Subject"
-                    }
-                },
-                {
-                    "random slope": {
+            "Subject": {
+                "random slope": [
+                    {
                         "iv": "Word type",
                         "groups": "Subject"
                     }
+                ],
+                "random intercept": {
+                    "groups": "Subject"
                 },
-                {
-                    "correlated": true
+                "correlated": true
+            },
+            "Word": {
+                "random intercept": {
+                    "groups": "Word"
                 }
-            ],
-            "Word": [
-                {
-                    "random intercept": {
-                        "groups": "Word"
-                    }
-                }
-            ]
+            }
         },
         "generated family, link functions": {
-            "GaussianFamily": [
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink",
-                "CLogLogLink",
-                "PowerLink",
+            "TweedieFamily": [
                 "IdentityLink",
-                "OPowerLink",
-                "LogLink",
-                "NegativeBinomialLink"
+                "PowerLink",
+                "LogLink"
             ],
-            "InverseGaussianFamily": [
+            "GammaFamily": [
                 "LogLink",
                 "IdentityLink",
                 "PowerLink"
@@ -57,15 +45,21 @@
                 "LogLink",
                 "IdentityLink"
             ],
-            "TweedieFamily": [
+            "GaussianFamily": [
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink"
+            ],
+            "InverseGaussianFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"
-            ],
-            "GammaFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "LogLink"
             ]
         },
         "measures to units": {

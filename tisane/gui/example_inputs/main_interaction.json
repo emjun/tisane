@@ -9,32 +9,16 @@
             ]
         },
         "generated main effects": [
+            "Measure 1",
             "Measure 0",
-            "Measure 2",
-            "Measure 1"
+            "Measure 2"
         ],
         "generated interaction effects": [
             "Measure 2*Measure 1"
         ],
         "generated random effects": {},
         "generated family, link functions": {
-            "TweedieFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "PoissonFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
             "GaussianFamily": [
-                "CLogLogLink",
                 "PowerLink",
                 "IdentityLink",
                 "OPowerLink",
@@ -42,9 +26,25 @@
                 "NegativeBinomialLink",
                 "LogitLink",
                 "LogLogLink",
-                "ProbitLink"
+                "ProbitLink",
+                "CLogLogLink"
+            ],
+            "PoissonFamily": [
+                "IdentityLink",
+                "PowerLink",
+                "LogLink"
+            ],
+            "TweedieFamily": [
+                "LogLink",
+                "IdentityLink",
+                "PowerLink"
             ],
             "InverseGaussianFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "GammaFamily": [
                 "PowerLink",
                 "LogLink",
                 "IdentityLink"

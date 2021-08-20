@@ -14,10 +14,26 @@
         "generated interaction effects": [],
         "generated random effects": {},
         "generated family, link functions": {
-            "TweedieFamily": [
+            "GammaFamily": [
+                "LogLink",
                 "IdentityLink",
+                "PowerLink"
+            ],
+            "GaussianFamily": [
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "IdentityLink",
+                "PowerLink"
+            ],
+            "TweedieFamily": [
                 "PowerLink",
-                "LogLink"
+                "LogLink",
+                "IdentityLink"
             ],
             "InverseGaussianFamily": [
                 "IdentityLink",
@@ -28,22 +44,6 @@
                 "LogLink",
                 "IdentityLink",
                 "PowerLink"
-            ],
-            "GammaFamily": [
-                "PowerLink",
-                "LogLink",
-                "IdentityLink"
-            ],
-            "GaussianFamily": [
-                "PowerLink",
-                "IdentityLink",
-                "OPowerLink",
-                "LogLink",
-                "NegativeBinomialLink",
-                "LogitLink",
-                "LogLogLink",
-                "ProbitLink",
-                "CLogLogLink"
             ]
         },
         "measures to units": {

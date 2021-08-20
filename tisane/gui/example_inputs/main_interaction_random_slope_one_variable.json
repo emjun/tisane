@@ -15,46 +15,46 @@
             "Measure A*Measure B"
         ],
         "generated random effects": {
-            "Unit": [
-                {
-                    "random slope": {
+            "Unit": {
+                "random slope": [
+                    {
                         "iv": "Measure A",
                         "groups": "Unit"
                     }
-                }
-            ]
+                ]
+            }
         },
         "generated family, link functions": {
-            "GaussianFamily": [
-                "ProbitLink",
-                "LogLogLink",
-                "OPowerLink",
-                "LogLink",
+            "TweedieFamily": [
                 "IdentityLink",
-                "NegativeBinomialLink",
-                "LogitLink",
                 "PowerLink",
-                "CLogLogLink"
-            ],
-            "PoissonFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
-            ],
-            "GammaFamily": [
-                "LogLink",
-                "IdentityLink",
-                "PowerLink"
+                "LogLink"
             ],
             "InverseGaussianFamily": [
                 "LogLink",
                 "IdentityLink",
                 "PowerLink"
             ],
-            "TweedieFamily": [
-                "IdentityLink",
+            "PoissonFamily": [
+                "PowerLink",
                 "LogLink",
-                "PowerLink"
+                "IdentityLink"
+            ],
+            "GaussianFamily": [
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "OPowerLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "LogitLink",
+                "LogLogLink"
+            ],
+            "GammaFamily": [
+                "PowerLink",
+                "LogLink",
+                "IdentityLink"
             ]
         },
         "measures to units": {
