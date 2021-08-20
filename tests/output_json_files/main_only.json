@@ -1,0 +1,7 @@
+{
+    "main effects": ["Measure 0", "Measure 1"],
+    "interaction effects": [],
+    "random effects": [],
+    "family": "GaussianFamily",
+    "link function": "IdentityLink"
+  }

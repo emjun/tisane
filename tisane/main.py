@@ -137,8 +137,79 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
     return path
 
 # @param file is the path to the JSON file from which to construct the statistical model
-def construct_statistical_model(file: str, query: Design, main_effects_candidates: Set[AbstractVariable], interaction_effects_candidates: Set[AbstractVariable], random_effects_candidates: Set[RandomEffect], family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]]):
-    pass
+def construct_statistical_model(filename: typing.Union[Path], query: Design, main_effects_candidates: Set[AbstractVariable], interaction_effects_candidates: Set[AbstractVariable], random_effects_candidates: Set[RandomEffect], family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]]):
+    assert(filename.endswith(".json"))
+    dir = os.getcwd()
+    path = Path(dir, filename)
+
+    gr = query.graph
+
+    # Read in JSON file as a dict
+    file_data = None
+    with open(path, 'r') as f:
+        file_data = f.read()
+    model_dict = json.loads(file_data) # file_data is a string
+
+
+    # Iterate through the dict    
+    main_effects = set()
+    for v_name in model_dict["main effects"]:
+        # Get variable object with v_name
+        var = gr.get_variable(v_name)
+        assert(var is not None)
+        assert(var in main_effects_candidates)
+        main_effects.add(var)
+    
+    interaction_effects = set()
+    for v_name in model_dict["interaction effects"]:
+        # Get variable object with v_name
+        var = gr.get_variable(v_name)
+        assert(var is not None)
+        assert(var in interaction_effects_candidates)
+        main_effects.add(var)
+
+    random_effects = set()
+    random_slopes = [rs for rs in random_effects_candidates if isinstance(rs, RandomSlope)]
+    random_intercepts = [ri for ri in random_effects_candidates if isinstance(ri, RandomIntercept)]
+    for rc_key in model_dict["random effects"]:
+        # Get RandomEffect object 
+        # Is this a random slope? 
+        if len(rc_key) == 3: 
+            groups, iv, rc_class = rc_key
+            assert(rc_class == "RandomSlope")
+            for rs in random_slopes: 
+                if rs.groups.name == groups and rs.iv.name == iv:
+                    random_effects.add(rs)
+        else: 
+            # This is a random intercept
+            assert(len(rc_key) == 2)
+            groups, rc_class = rc_key
+            assert(rc_class == "RandomIntercept")
+
+            for ri in random_intercepts: 
+                if ri.groups.name == groups:
+                    random_effects.add(ri)
+    
+    # Verify that all the random effects candidates were found
+    assert(len(random_effects) == len(model_dict["random effects"]))
+
+    family_function = None
+    link_function = None
+    for family, links in family_link_paired_candidates.items(): 
+        if family.__name__ ==  model_dict["family"]:
+            family_function = family
+
+            for l in links: 
+                if l.name == model_dict["link function"]:
+                    link_function = l
+    # The family and link functions chosen were appropriate/valid options
+    assert(family_function is not None)
+    assert(link_function is not None)
+
+    # Construct Statistical Model
+    sm = StatisticalModel(main_effects, interaction_effects, random_effects, family_function, link_function)
+
+    return sm 
 
 # @returns statistical model that reflects the study design
 def infer_statistical_model_from_design(design: Design):
@@ -177,7 +248,8 @@ def infer_statistical_model_from_design(design: Design):
     combined_dict["input"]["explanations"] = explanations
 
     # Add data
-    combined_dict["input"]["data"] = design.get_data().to_dict('list')
+    data = design.get_data()
+    combined_dict["input"]["data"] = data.to_dict('list')
 
     # Write out to JSON in order to pass data to Tisane GUI for disambiguation
     input_file = "input.json"
@@ -193,7 +265,7 @@ def infer_statistical_model_from_design(design: Design):
     gui = TisaneGUI()
     gui.start_app(input=path)
     # Output a JSON file
-    output_file = "model_spec.json"
+    output_file = "model_spec.json" # or whatever path/file that the GUI outputs
 
     # Read JSON file
     sm = None
@@ -202,9 +274,7 @@ def infer_statistical_model_from_design(design: Design):
     ### Step 4: Code generation
     # Construct StatisticalModel from JSON spec
     model_json = f.read()
-    sm = construct_statistical_model(file=model_json, query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired).assign_data(
-        design.dataset.dataset
-    )
+    sm = construct_statistical_model(file=model_json, query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired).assign_data(data)
     # Generate code from SM
     script = generate_code(sm)
 
