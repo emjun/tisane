@@ -122,7 +122,7 @@ class GUIComponents():
         pass
 
     def getExplanations(self):
-        return self.data["explanations"]
+        return self.data["input"]["explanations"]
 
     def getDefaultLinkForFamily(self, family):
         if family in self.defaultLinkForFamily:

@@ -1,7 +1,7 @@
 from os import link
 from tisane.variable import AbstractVariable, Measure, Unit
 from tisane.family import AbstractFamily, AbstractLink
-from tisane.random_effects import RandomEffect
+from tisane.random_effects import RandomEffect, CorrelatedRandomSlopeAndIntercept, UncorrelatedRandomSlopeAndIntercept
 from tisane.graph import Graph
 from tisane.graph_inference import infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
@@ -166,41 +166,88 @@ def construct_statistical_model(filename: typing.Union[Path], query: Design, mai
         var = gr.get_variable(v_name)
         assert(var is not None)
         assert(var in interaction_effects_candidates)
-        main_effects.add(var)
+        interaction_effects.add(var)
 
     random_effects = set()
     random_slopes = [rs for rs in random_effects_candidates if isinstance(rs, RandomSlope)]
     random_intercepts = [ri for ri in random_effects_candidates if isinstance(ri, RandomIntercept)]
-    for rc_key in model_dict["random effects"]:
-        # Get RandomEffect object 
-        # Is this a random slope? 
-        if len(rc_key) == 3: 
-            groups, iv, rc_class = rc_key
-            assert(rc_class == "RandomSlope")
-            for rs in random_slopes: 
-                if rs.groups.name == groups and rs.iv.name == iv:
-                    random_effects.add(rs)
-        else: 
-            # This is a random intercept
-            assert(len(rc_key) == 2)
-            groups, rc_class = rc_key
-            assert(rc_class == "RandomIntercept")
+    for rc_groups in model_dict["random effects"]:
+        rc_group_dict = model_dict["random effects"][rc_groups]
 
-            for ri in random_intercepts: 
-                if ri.groups.name == groups:
-                    random_effects.add(ri)
-    
-    # Verify that all the random effects candidates were found
-    assert(len(random_effects) == len(model_dict["random effects"]))
+        for key, values in rc_group_dict.items(): 
+            if key == "correlated": 
+                assert(isinstance(values, dict))
+                assert("random intercept" in values.keys())
+                assert("random slope" in values.keys())
+                rs_dict = values["random slope"]
+                ri_dict = values["random intercept"]
+
+                groups_name = rs_dict["groups"]
+                iv_name = rs_dict["iv"]
+                
+                rs_obj = None
+                ri_obj = None
+                for rs in random_slopes: 
+                    if rs.groups.name == groups_name and rs.iv.name == iv_name:
+                        rs_obj = rs
+                for ri in random_intercepts: 
+                    if ri.groups.name == groups_name: 
+                        ri_obj = ri        
+
+                # Create correlated RS and RI
+                corr = CorrelatedRandomSlopeAndIntercept(random_slope=rs_obj, random_intercept=ri_obj)
+                # Add correlated RS and RI to random effects
+                random_effects.add(corr)
+            elif key == "uncorrelated": 
+                assert(isinstance(values, dict))
+                assert("random intercept" in values.keys())
+                assert("random slope" in values.keys())
+                rs_dict = values["random slope"]
+                ri_dict = values["random intercept"]
+
+                groups_name = rs_dict["groups"]
+                iv_name = rs_dict["iv"]
+                
+                rs_obj = None
+                ri_obj = None
+                for rs in random_slopes: 
+                    if rs.groups.name == groups_name and rs.iv.name == iv_name:
+                        rs_obj = rs
+                for ri in random_intercepts: 
+                    if ri.groups.name == groups_name: 
+                        ri_obj = ri        
+
+                # Create uncorrelated RS and RI
+                corr = UncorrelatedRandomSlopeAndIntercept(random_slope=rs_obj, random_intercept=ri_obj)
+                # Add uncorrelated RS and RI to random effects
+                random_effects.add(corr)
+            elif key == "random intercept": 
+                ri_obj = None
+                groups_name = values["groups"]
+                for ri in random_intercepts: 
+                    if ri.groups.name == groups_name: 
+                        ri_obj = ri        
+                random_effects.add(ri_obj)
+            else: 
+                rs_obj = None
+                assert(key == "random slope")
+                groups_name = values["groups"]
+                iv_name = values["iv"]
+                for rs in random_slopes: 
+                    if rs.groups.name == groups_name and rs.iv.name == iv_name:
+                        rs_obj = rs
+                random_effects.add(rs_obj)
+
+    # TODO: Verify that all the random effects candidates were found
 
     family_function = None
     link_function = None
     for family, links in family_link_paired_candidates.items(): 
-        if family.__name__ ==  model_dict["family"]:
+        if type(family).__name__ ==  model_dict["family"]:
             family_function = family
 
             for l in links: 
-                if l.name == model_dict["link function"]:
+                if type(l).__name__ == model_dict["link"]:
                     link_function = l
     # The family and link functions chosen were appropriate/valid options
     assert(family_function is not None)

@@ -1,7 +1,7 @@
 {
     "dependent variable": "Dependent variable",
     "family": "GaussianFamily",
-    "interaction effects": [],
+    "interaction effects": ["Measure 0*Measure 1"],
     "link": "IdentityLink",
     "main effects": ["Measure 0", "Measure 1"],
     "random effects": {}
