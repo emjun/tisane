@@ -15,12 +15,14 @@ class StatisticalModel():
     link_function: AbstractLink
     data: Dataset
 
-    def __init__(self, main_effects: Set[AbstractVariable], interaction_effects: Set[AbstractVariable], random_effects: Set[AbstractVariable], family_function: AbstractFamily, link_function: AbstractLink):
+    def __init__(self, dependent_variable: AbstractVariable, main_effects: Set[AbstractVariable], interaction_effects: Set[AbstractVariable], random_effects: Set[AbstractVariable], family_function: AbstractFamily, link_function: AbstractLink):
+        self.dependent_variable = dependent_variable
         self.main_effects = main_effects
         self.interaction_effects = interaction_effects
         self.random_effects = random_effects
         self.family_function = family_function
         self.link_function = link_function
+        self.data = None # Default is that there is no data until assigned
 
     def get_independent_variables(self):
         ivs = set()
@@ -38,5 +40,3 @@ class StatisticalModel():
         self.dataset = Dataset(source)
 
         return self
-
-    

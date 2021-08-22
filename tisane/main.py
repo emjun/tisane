@@ -150,6 +150,8 @@ def construct_statistical_model(filename: typing.Union[Path], query: Design, mai
         file_data = f.read()
     model_dict = json.loads(file_data) # file_data is a string
 
+    # Specify dependent variable
+    dependent_variable = query.dv
 
     # Iterate through the dict    
     main_effects = set()
@@ -254,7 +256,7 @@ def construct_statistical_model(filename: typing.Union[Path], query: Design, mai
     assert(link_function is not None)
 
     # Construct Statistical Model
-    sm = StatisticalModel(main_effects, interaction_effects, random_effects, family_function, link_function)
+    sm = StatisticalModel(dependent_variable, main_effects, interaction_effects, random_effects, family_function, link_function)
 
     return sm 
 
@@ -322,6 +324,8 @@ def infer_statistical_model_from_design(design: Design):
     # Construct StatisticalModel from JSON spec
     model_json = f.read()
     sm = construct_statistical_model(file=model_json, query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired).assign_data(data)
+    # Assign statistical model data from @parm design
+    sm.assign_data(design.dataset)
     # Generate code from SM
     script = generate_code(sm)
 

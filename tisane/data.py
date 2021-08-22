@@ -11,6 +11,7 @@ def absolute_path(p: str) -> str:
 
 class Dataset(object):
     dataset: pd.DataFrame
+    data_path: os.path
 
     # Takes input in either a CSV or a Pandas DataFrame
     def __init__(self, source: Union[str, pd.DataFrame]):
@@ -18,9 +19,11 @@ class Dataset(object):
         # Read in data
         if isinstance(source, str):
             abs_path = absolute_path(p=source)
+            self.data_path = abs_path # store
             df = pd.read_csv(abs_path)
         elif isinstance(source, pd.DataFrame):
             df = source
+            self.data_path = None
 
         # TODO: post-processing? E.g., break up into DataVectors?
         self.dataset = df

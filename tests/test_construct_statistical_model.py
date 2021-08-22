@@ -50,6 +50,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         output_path = os.path.join(dir, output_filename)
         sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
         self.assertIsNotNone(sm)
+        self.assertEqual(design.dv, sm.dependent_variable)
         self.assertEqual(main_effects, sm.main_effects)
         self.assertEqual(interaction_effects, sm.interaction_effects)
         self.assertEqual(random_effects, sm.random_effects)
@@ -77,6 +78,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         output_path = os.path.join(dir, output_filename)
         sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
         self.assertIsNotNone(sm)
+        self.assertEqual(design.dv, sm.dependent_variable)
         self.assertEqual(main_effects, sm.main_effects)
         self.assertEqual(interaction_effects, sm.interaction_effects)
         self.assertEqual(random_effects, sm.random_effects)
@@ -106,6 +108,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         output_path = os.path.join(dir, output_filename)
         sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
         self.assertIsNotNone(sm)
+        self.assertEqual(design.dv, sm.dependent_variable)
         self.assertEqual(main_effects, sm.main_effects)
         self.assertEqual(interaction_effects, sm.interaction_effects)
         for re in sm.random_effects: 

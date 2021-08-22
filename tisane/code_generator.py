@@ -1,3 +1,4 @@
+from tisane.data import Dataset
 from tisane.variable import AbstractVariable
 from tisane.statistical_model import StatisticalModel
 from tisane.random_effects import (
@@ -15,11 +16,134 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
 
+### GLOBALs
+preamble = """
+# Tisane inferred the following statistical model based on this query:  {}
+
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
+"""
+
+load_data_from_csv_template = """
+df = pd.read_csv({path})
+"""
+
+load_data_from_dataframe_template = """
+# Dataframe is stored in local file: data.csv
+# You may want to replace the data path with an existing data file you already have.
+# You may also set df equal to the dataframe you are already working with. 
+df = pd.read_csv(data.csv)
+"""
+
+load_data_no_data_source = """
+# There was no data assigned to the Design. Add data below. 
+path = '' # Specify path to data if loading from a csv
+df = pd.read_csv(path)
+# If loading from a pandas Dataframe, alias dataframe with variable df
+# df = <your pandas Dataframe>
+"""
+
+model_template = """
+model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}({link_obj})).fit()
+print(model)
+"""
+
+statsmodels_code_templates = {
+    "preamable": preamble, 
+    "load_data_from_csv_template": load_data_from_csv_template,
+    "load_data_from_dataframe_template": load_data_from_dataframe_template,
+    "load_data_no_data_source": load_data_no_data_source,
+    "model_template": model_template
+}
+
+### HELPERS
+def absolute_path(p: str) -> str:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
+
+# Write data out to path
+# Return path
+def write_out_dataframe(data: Dataset) -> os.path: 
+    path = absolute_path("data.csv")
+    data.dataset.to_csv(path)
+
+    return path
+
+# @param target describes the backend for which to generate code
 def generate_code(
-    statistical_model: StatisticalModel, library: str = "STATSMODELS", **kwargs
+    statistical_model: StatisticalModel, target: str = "STATSMODELS", **kwargs
 ):
-    if library.upper() == "STATSMODELS":
+    if target.upper() == "STATSMODELS":
         return generate_statsmodels_code(statistical_model=statistical_model, **kwargs)
+
+def generate_statsmodels_code(statistical_model: StatisticalModel):
+    global statsmodels_code_templates
+
+    data_code = None
+    data = statistical_model.data
+    if statistical_model.data is None: 
+        data_code = statsmodels_code_templates["load_data_no_data_source"]
+    elif data.data_path is not None: 
+        data_code = statsmodels_code_templates["load_data_from_csv_template"]
+        data_code = data_code.format(path=str(data_path))
+    else: 
+        assert(data.data_path is None)
+        data_path = write_out_dataframe(statistical_model.data)
+        data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
+
+    formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
+    family_code = generate_statsmodels_family(statistical_model=statistical_model)
+    link_code = generate_statsmodels_link(statistical_model=statistical_model)
+    model_code = statsmodels_code_templates["model_template"].format(formula=formula_code, family_name=family_code, link_obj=link_code)
+    
+    assert(data_code is not None)
+    # Return string to write out to script
+    return (
+        preamble
+        + "\n"
+        + data_code 
+        + "\n"
+        + model_code
+    )
+
+def generate_statsmodels_formula(statistical_model: StatisticalModel):
+    dv_code = "{dv} ~ "
+    dv_code = dv_code.format(dv=statistical_model.dependent_variable.name)
+
+    main_code = str()
+    for var in statistical_model.main_effects:
+        if len(main_code)==0:
+            main_code = f"{var.name}"
+        else:
+            main_code += f" + {var.name}"
+
+    interaction_code = str()
+    for var in statistical_model.interaction_effects:
+        if len(interaction_code)==0:
+            interaction_code = f"{var.name}"
+        else:
+            interaction_code += f" + {var.name}"
+
+    random_code = str()
+    for rc in statistical_model.random_effects: 
+        if isinstance(rc, RandomSlope):
+            pass 
+        else: 
+            assert(isinstance(rc, RandomIntercept))
+            pass
+
+        if random_code is None: 
+            pass
+        else: 
+            pass
+
+    return "\'" + dv_code + main_code + interaction_code + random_code + "\'"
+
+def generate_statsmodels_family(statistical_model: StatisticalModel):
+    return ""
+
+def generate_statsmodels_link(statistical_model=StatisticalModel):
+    return ""
 
 
 def generate_statsmodels_glm_code(statistical_model: StatisticalModel, **kwargs) -> str:
@@ -265,7 +389,7 @@ def generate_statsmodels_model_code(statistical_model: StatisticalModel, **kwarg
     has_fixed = len(statistical_model.fixed_ivs) > 0
     has_interactions = len(statistical_model.interactions) > 0
     has_random = len(statistical_model.random_ivs) > 0
-    has_data = statistical_model.dataset is not None  # May not have data
+    has_data = statistical_model.data is not None  # May not have data
 
     # Does the statistical model have random effects (slope or intercept) that we should take into consideration?
     if has_random:
@@ -278,8 +402,9 @@ def generate_statsmodels_model_code(statistical_model: StatisticalModel, **kwarg
 def generate_dataframe_code(statistical_model: StatisticalModel):
     code_snippet = str()
 
+
     # Generate no code if there is no data
-    if statistical_model.dataset.dataset is None:
+    if statistical_model.data.dataset is None:
         return code_snippet
 
     data_code = list()
@@ -289,13 +414,13 @@ def generate_dataframe_code(statistical_model: StatisticalModel):
     # Add DV data
     y_name = statistical_model.dv.name
     # Get DV data
-    y = statistical_model.dataset.get_column(y_name)
+    y = statistical_model.data.get_column(y_name)
     data_code.append(f'"{y_name}" : ' + f"{y.to_list()}")
     # Add IVs data
     xs_names_code = None
     for f in statistical_model.fixed_ivs:
         # Get IV data
-        data = statistical_model.dataset.get_column(f.name)
+        data = statistical_model.data.get_column(f.name)
         data_code.append(f'"{f.name}" : ' + f"{data.to_list()}")
         vars_in_data.append(f)
     for ixn in statistical_model.interactions:
@@ -303,47 +428,47 @@ def generate_dataframe_code(statistical_model: StatisticalModel):
         data = None
         for i in ixn:
             if data is None:
-                data = statistical_model.dataset.get_column(i.name)
+                data = statistical_model.data.get_column(i.name)
             data_code.append(f'"{i.name}" : ' + f"{data.to_list()}")
             vars_in_data.append(i)
     for re in statistical_model.random_ivs:
         if isinstance(re, RandomIntercept):
             group = re.groups
             if str('"' + group.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(group.name)
+                data = statistical_model.data.get_column(group.name)
                 data_code.append(f'"{group.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(group)
         elif isinstance(re, RandomSlope):
             group = re.groups
             if str('"' + group.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(group.name)
+                data = statistical_model.data.get_column(group.name)
                 data_code.append(f'"{group.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(group)
             iv = re.iv
             if str('"' + iv.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(iv.name)
+                data = statistical_model.data.get_column(iv.name)
                 data_code.append(f'"{iv.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(iv)
         elif isinstance(re, CorrelatedRandomSlopeAndIntercept):
             group = re.groups
             if str('"' + group.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(group.name)
+                data = statistical_model.data.get_column(group.name)
                 data_code.append(f'"{group.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(group)
             iv = re.iv
             if str('"' + iv.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(iv.name)
+                data = statistical_model.data.get_column(iv.name)
                 data_code.append(f'"{iv.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(iv)
         elif isinstance(re, UncorrelatedRandomSlopeAndIntercept):
             group = re.groups
             if str('"' + group.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(group.name)
+                data = statistical_model.data.get_column(group.name)
                 data_code.append(f'"{group.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(group)
             iv = re.iv
             if str('"' + iv.name + '"') not in data_code:
-                data = statistical_model.dataset.get_column(iv.name)
+                data = statistical_model.data.get_column(iv.name)
                 data_code.append(f'"{iv.name}" : ' + f"{data.to_list()}")
                 vars_in_data.append(iv)
 
@@ -360,47 +485,47 @@ def generate_dataframe_code(statistical_model: StatisticalModel):
 
 
 # If file_path is passed as kwargs, it should be as an absolute path
-def generate_statsmodels_code(statistical_model: StatisticalModel, **kwargs):
-    code_snippet = ""
+# def generate_statsmodels_code(statistical_model: StatisticalModel, **kwargs):
+#     code_snippet = ""
 
-    ##### Add import statements
-    code_snippet += "import pandas as pd\nimport statsmodels.api as sm\nimport statsmodels.formula.api as smf\n"
-    code_snippet += "\n"  # Extra line
+#     ##### Add import statements
+#     code_snippet += "import pandas as pd\nimport statsmodels.api as sm\nimport statsmodels.formula.api as smf\n"
+#     code_snippet += "\n"  # Extra line
 
-    # TODO: Walk Python AST to find and use existing variables (e.g., for data)
-    ##### Create dataframe with data for statistical model
-    # code_snippet += y_data_code + '\n'
-    # code_snippet += xs_data_code + '\n'
-    # code_snippet += '\n' # Add extra space
+#     # TODO: Walk Python AST to find and use existing variables (e.g., for data)
+#     ##### Create dataframe with data for statistical model
+#     # code_snippet += y_data_code + '\n'
+#     # code_snippet += xs_data_code + '\n'
+#     # code_snippet += '\n' # Add extra space
 
-    dataframe_code = generate_dataframe_code(statistical_model=statistical_model)
-    ##### Add dataframe
-    code_snippet += dataframe_code
-    code_snippet += "\n"  # Add extra space
+#     dataframe_code = generate_dataframe_code(statistical_model=statistical_model)
+#     ##### Add dataframe
+#     code_snippet += dataframe_code
+#     code_snippet += "\n"  # Add extra space
 
-    ##### Figure out statistical model to construc
-    model_code = generate_statsmodels_model_code(statistical_model, **kwargs)
-    ##### Add code snippet for statistical model
-    code_snippet += "# Specify model that Tisane inferred\n"
-    code_snippet += model_code
-    code_snippet += "\n"
-    code_snippet += "\n"  # Extra space
+#     ##### Figure out statistical model to construc
+#     model_code = generate_statsmodels_model_code(statistical_model, **kwargs)
+#     ##### Add code snippet for statistical model
+#     code_snippet += "# Specify model that Tisane inferred\n"
+#     code_snippet += model_code
+#     code_snippet += "\n"
+#     code_snippet += "\n"  # Extra space
 
-    ##### Add code for fitting model and generating results
-    # Add comment
-    code_snippet += "# Fit/run model, see output\n"
-    results_code = "results = model.fit()\n"
-    results_code += "print(results.summary())"
+#     ##### Add code for fitting model and generating results
+#     # Add comment
+#     code_snippet += "# Fit/run model, see output\n"
+#     results_code = "results = model.fit()\n"
+#     results_code += "print(results.summary())"
 
-    code_snippet += results_code + "\n"
+#     code_snippet += results_code + "\n"
 
-    ##### Write out code snippet to file
-    fname = "model.py"
-    fpath = os.path.join(os.getcwd(), fname)
-    if "file_path" in kwargs:
-        fpath = kwargs["file_path"]
+#     ##### Write out code snippet to file
+#     fname = "model.py"
+#     fpath = os.path.join(os.getcwd(), fname)
+#     if "file_path" in kwargs:
+#         fpath = kwargs["file_path"]
 
-    with open(fpath, "w") as f:
-        f.write(code_snippet)
+#     with open(fpath, "w") as f:
+#         f.write(code_snippet)
 
-    return fpath
+#     return fpath
