@@ -69,6 +69,9 @@ class GUIComponents():
             "main effects": {},
             "interaction effects": {}
         }
+        self.rowIdsByUnit = {}
+        self.unitsByAddedRandomVariableId = {}
+        self.unitsByRowId = {}
         self.randomSlopes = {}
         self.generatedCorrelatedIdToRandomSlope = {}
         if os.path.exists(input_json):
@@ -120,6 +123,36 @@ class GUIComponents():
                 pass
             pass
         pass
+
+    def getMeasuresToUnits(self):
+        return self.data["input"]["measures to units"]
+
+    def hasUnitForMeasure(self, measure):
+        return measure in self.getMeasuresToUnits()
+
+    def getUnitFromMeasure(self, measure):
+        measuresToUnits = self.getMeasuresToUnits()
+        assert measure in measuresToUnits, "Measure {} not in measuresToUnits {}".format(measure, measuresToUnits)
+        return measuresToUnits[measure]
+
+    def getUnitFromRowId(self, rowId):
+        assert rowId in self.unitsByRowId
+        return self.unitsByRowId[rowId]
+
+    def getUnitFromRowOrAddedRandomVariableId(self, id):
+        assert id in self.unitsByRowId or id in self.unitsByAddedRandomVariableId, "Id {} in neither {} nor {}".format(id, self.unitsByRowId, self.unitsByAddedRandomVariableId)
+        if id in self.unitsByRowId:
+            return self.getUnitFromRowId(id)
+        return self.getUnitFromAddedRandomVariableId(id)
+
+    def getUnitFromAddedRandomVariableId(self, addedRandomVariableId):
+        return self.unitsByAddedRandomVariableId[addedRandomVariableId]
+
+    def getAddedRandomVariableIds(self):
+        return sorted(list(self.unitsByAddedRandomVariableId.keys()))
+
+    def getRandomEffectsRowIds(self):
+        return sorted(list(self.unitsByRowId.keys()))
 
     def getExplanations(self):
         return self.data["input"]["explanations"]
@@ -280,11 +313,15 @@ class GUIComponents():
             randomEffects = self.getGeneratedRandomEffects()
             info = []
             for group, randomEffect in randomEffects.items():
-                info.append(html.H6(group + (" (with random intercept)" if "random intercept" in randomEffect else "")))
+                titleId = self.getNewComponentId()
+                info.append(html.H6(group + (" (with random intercept)" if "random intercept" in randomEffect else ""), id=titleId))
+                self.unitsByAddedRandomVariableId[titleId] = group
                 if "random slope" in randomEffect:
                     randomSlopes = []
                     for rs in randomEffect["random slope"]:
                         iv = rs["iv"]
+                        listItemId = self.getNewComponentId()
+                        self.unitsByAddedRandomVariableId[listItemId] = group
                         randomSlopes.append(
                             html.Li([
                                 iv
@@ -292,7 +329,8 @@ class GUIComponents():
                                 [
                                     html.Span(" (correlated)", id=self.getCorrelatedIdForRandomSlope(group, iv) + "-span")
                                 ] if "correlated" in randomEffect else []
-                            )
+                            ),
+                            id=listItemId
                         ))
                         pass
                     if randomEffect["random slope"]:
@@ -423,10 +461,17 @@ class GUIComponents():
 
             if hasRandomIntercept and "random intercept" in groupDict:
                 row.append(html.Td("Yes", rowSpan=rowsToSpan))
+
             elif hasRandomIntercept:
                 row.append(html.Td(rowSpan=rowsToSpan, className="bg-light"))
-                if not hasRandomSlope:
-                    tableRows.append(html.Tr(row))
+                pass
+            if not hasRandomSlope:
+                newId = self.getNewComponentId()
+                if group not in self.rowIdsByUnit:
+                    self.rowIdsByUnit[group] = []
+                tableRows.append(html.Tr(row, id=newId))
+                self.rowIdsByUnit[group].append(newId)
+                self.unitsByRowId[newId] = group
                 pass
 
             if hasRandomSlope and "random slope" in groupDict:
@@ -447,10 +492,19 @@ class GUIComponents():
                         pass
                     elif hasCorrelation:
                         row.append(html.Td(className="bg-light"))
-                    tableRows.append(html.Tr(row))
+                        pass
+                    if group not in self.rowIdsByUnit:
+                        self.rowIdsByUnit[group] = []
+                        pass
+                    newId = self.getNewComponentId()
+                    tableRows.append(html.Tr(row, id=newId))
+                    self.rowIdsByUnit[group].append(newId)
+                    self.unitsByRowId[newId] = group
+
                     if len(randomSlopes) >= 2:
                         for r in randomSlopes[1:]:
                             iv = r["iv"]
+                            rowId = self.getNewComponentId()
                             tableRows.append(
                                 html.Tr(
                                     [
@@ -468,9 +522,12 @@ class GUIComponents():
                                             ),
                                             style={"text-align": "center"}
                                         )
-                                    ] if hasCorrelation and thisGroupHasCorrelation else ([html.Td(className="bg-light")] if hasCorrelation else [])
+                                    ] if hasCorrelation and thisGroupHasCorrelation else ([html.Td(className="bg-light")] if hasCorrelation else []),
+                                    id=rowId
                                 )
                             )
+                            self.rowIdsByUnit[group].append(rowId)
+                            self.unitsByRowId[rowId] = group
                             pass
                         pass
                     pass
@@ -479,7 +536,13 @@ class GUIComponents():
                 row.append(html.Td(rowSpan=rowsToSpan, className="bg-light"))
                 if hasCorrelation:
                     row.append(html.Td(className="bg-light"))
-                tableRows.append(html.Tr(row))
+                    pass
+                newId = self.getNewComponentId()
+                if group not in self.rowIdsByUnit:
+                    self.rowIdsByUnit[group] = []
+                tableRows.append(html.Tr(row, id=newId))
+                self.rowIdsByUnit[group].append(newId)
+                self.unitsByRowId[newId] = group
             pass
         return dbc.Table(tableHeader + [html.Tbody(tableRows)])
 

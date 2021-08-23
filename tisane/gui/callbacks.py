@@ -5,6 +5,7 @@ import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents
 from tisane.gui.family_link_function_callbacks import createFamilyLinkFunctionCallbacks
 from tisane.gui.random_effects_callbacks import createRandomEffectsCallbacks
+import json
 def createCallbacks(app, comp: GUIComponents=None):
     cont_to_interaction_effects_input = Input("continue-to-interaction-effects", "n_clicks")
     createMainEffectsProgressBarCallbacks(app)
@@ -75,6 +76,7 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     states = [State(id, "id") for id in mainEffectCompIds]
     @app.callback(
         Output("added-main-effects", "children"),
+        Output("added-main-effects-store", "data"),
         inputs,
         states
     )
@@ -100,12 +102,16 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                     comp.output["main effects"].append(mainEffect)
                 options.append(mainEffect)
                 pass
+            elif not checked and comp.hasMainEffectForComponentId(id):
+                mainEffect = comp.getMainEffectFromComponentId(id)
+                if mainEffect in comp.output["main effects"]:
+                    comp.output["main effects"].remove(mainEffect)
             pass
         newChildren = [
             html.Li(o) for o in options
         ]
         print("New children: {}".format(newChildren))
-        return newChildren
+        return newChildren, json.dumps(comp.output)
     pass
 
 def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
@@ -132,6 +138,11 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                     if interactionEffect not in comp.output["interaction effects"]:
                         comp.output["interaction effects"].append(interactionEffect)
                     options.append(interactionEffect)
+                    pass
+                elif not checked and comp.hasInteractionEffectForComponentId(id):
+                    interactionEffect = comp.getInteractionEffectFromComponentId(id)
+                    if interactionEffect in comp.output["interaction effects"]:
+                        comp.output["interaction effects"].remove(interactionEffect)
                     pass
                 pass
             newChildren = [
