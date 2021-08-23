@@ -1,4 +1,4 @@
-from tisane import graph
+from tisane.graph import Graph
 import tisane as ts
 from tisane.variable import Causes, Has, Moderates, Nests, Associates
 from tisane.smt.synthesizer import Synthesizer
@@ -12,7 +12,7 @@ class GraphTest(unittest.TestCase):
         v2 = ts.Unit("V2")
         v3 = ts.Unit("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         gr._add_variable(v1)
         gr._add_variable(v2)
         gr._add_variable(v3)
@@ -66,7 +66,7 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         causes_obj_1 = Causes(v1, v2)
         causes_obj_2 = Causes(v2, v3)
         gr.causes(v1, v2, causes_obj_1)
@@ -84,7 +84,7 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         causes_obj = Causes(v1, v2)
         gr.causes(v1, v2, causes_obj)
         associates_obj = Associates(v2, v3)
@@ -104,7 +104,7 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         has_obj = v1.relationships[0]
         self.assertIsInstance(has_obj, Has)
         gr.has(v1, v2, has_obj, 1)

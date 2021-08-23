@@ -2,8 +2,8 @@ from tisane.random_effects import RandomIntercept, RandomSlope
 from unittest import main
 from tisane.variable import Measure
 import tisane as ts
-from tisane.main import collect_model_candidates, collect_model_candidates_with_explanations
-from tisane.graph_inference import infer_interaction_effects, infer_random_effects, infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
+from tisane.main import collect_model_candidates, collect_model_candidates
+from tisane.graph_inference import infer_interaction_effects_with_explanations, infer_random_effects_with_explanations, infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 
 import unittest 
@@ -75,7 +75,7 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         main_effects.add(m1)
         main_effects.add(m2)
 
-        interaction_effects = infer_interaction_effects(gr, design, main_effects)
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr, design, main_effects)
         random_effects = set()
         family_candidates = infer_family_functions(query=design)
         link_candidates = set()
@@ -131,8 +131,8 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         main_effects.add(m1)
         main_effects.add(m2)
 
-        interaction_effects = infer_interaction_effects(gr, design, main_effects)
-        random_effects = infer_random_effects(
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr, design, main_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         family_candidates = infer_family_functions(query=design)
@@ -185,10 +185,10 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        interaction_effects = infer_interaction_effects(
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
-        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
         family_candidates = infer_family_functions(query=design)
         link_candidates = set()
         family_link_paired = dict()
@@ -218,11 +218,12 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertEqual(len(input["generated random effects"]), 1)
         self.assertIn(u.name, input["generated random effects"].keys())
         self.assertEqual(len(input["generated random effects"][u.name]), 1)
-        rs_dict = input["generated random effects"][u.name][0]
+        rs_dict = input["generated random effects"][u.name]
         self.assertIsInstance(rs_dict, dict)
         self.assertIn("random slope", rs_dict.keys())
-        self.assertEqual(u.name, rs_dict["random slope"]["groups"])
-        self.assertEqual(a.name, rs_dict["random slope"]["iv"])
+        random_slope = rs_dict["random slope"][0]
+        self.assertEqual(u.name, random_slope["groups"])
+        self.assertEqual(a.name, random_slope["iv"])
         self.assertIsInstance(input["generated family, link functions"], dict)
         self.assertIsInstance(input["measures to units"], dict)
         gr = design.graph
@@ -248,10 +249,10 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        interaction_effects = infer_interaction_effects(
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
-        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
         family_candidates = infer_family_functions(query=design)
         link_candidates = set()
         family_link_paired = dict()
@@ -281,12 +282,15 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertEqual(len(input["generated random effects"]), 1)
         self.assertIn(u.name, input["generated random effects"].keys())
         self.assertEqual(len(input["generated random effects"][u.name]), 1)
-        rs_dict = input["generated random effects"][u.name][0]
+        self.assertIsInstance(input["generated random effects"][u.name], dict)
+        rs_dict = input["generated random effects"][u.name]
         self.assertIsInstance(rs_dict, dict)
         self.assertIn("random slope", rs_dict.keys())
-        self.assertEqual(u.name, rs_dict["random slope"]["groups"])
+        random_slope = rs_dict["random slope"][0]
+        self.assertIsInstance(random_slope, dict)
+        self.assertEqual(u.name, random_slope["groups"])
         ixn = interaction_effects.pop()
-        self.assertEqual(ixn.name, rs_dict["random slope"]["iv"])
+        self.assertEqual(ixn.name, random_slope["iv"])
         self.assertIsInstance(input["generated family, link functions"], dict)
         self.assertIsInstance(input["measures to units"], dict)
         gr = design.graph
@@ -307,8 +311,8 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        interaction_effects = infer_interaction_effects(gr, design, main_effects)
-        random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr, design, main_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
         self.assertEqual(len(random_effects), 3) # Collapsed into 2 according to groups
         family_candidates = infer_family_functions(query=design)
         link_candidates = set()
@@ -339,34 +343,38 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertEqual(len(input["generated random effects"]), 2)
         self.assertIn(subject.name, input["generated random effects"].keys())
         self.assertIn(word.name, input["generated random effects"].keys())
-        re_list = input["generated random effects"][subject.name]
-        self.assertEqual(len(re_list), 3)
+        re_dict = input["generated random effects"][subject.name]
+        self.assertEqual(len(re_dict), 3)
         has_subject_rs = False 
         has_subject_ri = False 
         has_correlated = False
-        for re_dict in re_list: 
-            if "random slope" in re_dict.keys(): 
-                rs_dict = re_dict["random slope"]
-                self.assertEqual(rs_dict["groups"], subject.name)
-                self.assertEqual(rs_dict["iv"], condition.name) 
+        for k,v in re_dict.items(): 
+            if k=="random slope": 
+                rs_list = v
+                self.assertIsInstance(rs_list, list)
+                self.assertEqual(len(rs_list), 1)
+                rs = rs_list[0]
+                self.assertIsInstance(rs, dict)
+                self.assertEqual(rs["groups"], subject.name)
+                self.assertEqual(rs["iv"], condition.name) 
                 has_subject_rs = True
-            elif "random intercept" in re_dict.keys(): 
-                ri = re_dict["random intercept"]
+            elif k=="random intercept": 
+                ri = v
+                self.assertIsInstance(ri, dict)
                 self.assertEqual(ri["groups"], subject.name)
                 has_subject_ri = True
-            elif "correlated" in re_dict.keys(): 
-                self.assertTrue(re_dict["correlated"])
+            elif k=="correlated":  
+                self.assertTrue(v)
                 has_correlated = True
         self.assertTrue(has_subject_rs)
         self.assertTrue(has_subject_ri)
         self.assertTrue(has_correlated)
         self.assertEqual(len(input["generated random effects"][word.name]), 1)
         has_word_ri = False
-        re_list = input["generated random effects"][word.name]
-        self.assertEqual(len(re_list), 1)
-        ri_dict = re_list[0]
-        self.assertIn("random intercept", ri_dict)
-        self.assertEqual(ri_dict["random intercept"]["groups"], word.name)
+        re_dict = input["generated random effects"][word.name]
+        self.assertEqual(len(re_dict), 1)
+        ri_dict = re_dict["random intercept"]
+        self.assertEqual(ri_dict["groups"], word.name)
         self.assertIsInstance(input["generated family, link functions"], dict)
         self.assertIsInstance(input["measures to units"], dict)
         gr = design.graph
@@ -397,10 +405,10 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [a, b, c]
-        interaction_effects = infer_interaction_effects(
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
-        random_effects = infer_random_effects(gr=gr,query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,query=design, main_effects=main_effects, interaction_effects=interaction_effects)
         self.assertEqual(len(random_effects), 3)
         family_candidates = infer_family_functions(query=design)
         link_candidates = set()
@@ -429,18 +437,18 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertIsInstance(input["generated random effects"], dict)
         self.assertEqual(len(input["generated random effects"]), 1)
         self.assertIn(u.name, input["generated random effects"].keys())
-        self.assertEqual(len(input["generated random effects"][u.name]), 3)        
+        random_slopes = input["generated random effects"][u.name]["random slope"]
+        self.assertEqual(len(random_slopes), 3)        
         has_b_rs = False
         has_c_rs = False
         has_bc_rs = False
-        for re in input["generated random effects"][u.name]: 
-            self.assertIn("random slope", re.keys())
-            if b.name == re["random slope"]["iv"]: 
+        for re in random_slopes: 
+            if b.name == re["iv"]: 
                 has_b_rs = True
-            elif c.name == re["random slope"]["iv"]: 
+            elif c.name == re["iv"]: 
                 has_c_rs = True
-            elif b.name in re["random slope"]["iv"] and c.name in re["random slope"]["iv"]: 
-                self.assertEqual(re["random slope"]["iv"], f"{b.name}*{c.name}")
+            elif b.name in re["iv"] and c.name in re["iv"]: 
+                self.assertEqual(re["iv"], f"{b.name}*{c.name}")
                 has_bc_rs = True
         self.assertTrue(has_b_rs)
         self.assertTrue(has_c_rs)
@@ -516,22 +524,23 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         self.assertIsInstance(random_explanations, dict)
         self.assertEqual(len(random_effects), len(random_explanations))
         for k,v in random_explanations.items(): 
+            k_elements = k.split(", ")
             # Is this a random slope? 
-            if len(k) == 3: 
-                groups, iv, obj = k
-                self.assertIs(obj.__name__, RandomSlope.__name__)
+            if len(k_elements) == 3: 
+                groups, iv, random_class_name = k_elements
+                self.assertEqual(random_class_name, RandomSlope.__name__)
             else: 
                 # This is a random intercept
-                assert(len(k)==2)
-                groups, obj = k
-                self.assertIsInstance(obj.__name__, RandomIntercept.__name__)
+                assert(len(k_elements)==2)
+                groups, random_class_name = k_elements
+                self.assertEqual(random_class_name, RandomIntercept.__name__)
 
         for re in random_effects: 
             if isinstance(re, RandomIntercept):
-                name_key = (re.groups.name, re.__class__)
+                name_key = f"{re.groups.name}, {type(re).__name__}"
             else:
                 assert isinstance(re, RandomSlope)
-                name_key = (re.groups.name, re.iv.name, re.__class__)
+                name_key = f"{re.groups.name}, {re.iv.name}, {type(re).__name__}"
             self.assertIn(name_key, random_explanations.keys())
 
                 

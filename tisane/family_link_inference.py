@@ -69,7 +69,8 @@ def infer_family_functions(query: Design) -> Set[AbstractFamily]:
         # Treats ordinal data as discrete
         family_candidates.add(BinomialFamily(dv))
         family_candidates.add(NegativeBinomialFamily(dv))
-        family_candidates.add(MultinomialFamily(dv))
+        # Not implemented in statsmodels or pymer4
+        # family_candidates.add(MultinomialFamily(dv))
     else:
         assert isinstance(dv, Nominal)
 
@@ -78,7 +79,8 @@ def infer_family_functions(query: Design) -> Set[AbstractFamily]:
         else:
             assert dv.get_cardinality() > 2
             family_candidates.add(NegativeBinomialFamily(dv))
-            family_candidates.add(MultinomialFamily(dv))
+            # Not implemented in statsmodels or pymer4
+            # family_candidates.add(MultinomialFamily(dv))
 
     return family_candidates
 
@@ -145,6 +147,7 @@ def infer_link_functions(query: Design, family: AbstractFamily) -> Set[AbstractL
         link_candidates.add(PowerLink(dv))
         link_candidates.add(NegativeBinomialLink(dv))
     else:
+        # Not implemented in statsmodels or pymer4
         assert isinstance(family, MultinomialFamily)
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
