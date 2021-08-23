@@ -132,7 +132,7 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
     path = Path(output_path, output_filename)
     # Output dictionary to JSON
     with open(path, 'w+', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
+        json.dump(data, f, ensure_ascii=False, indent=4, sort_keys=True)
 
     return path
 
@@ -233,12 +233,25 @@ def construct_statistical_model(filename: typing.Union[Path], query: Design, mai
             else: 
                 rs_obj = None
                 assert(key == "random slope")
-                groups_name = values["groups"]
-                iv_name = values["iv"]
-                for rs in random_slopes: 
-                    if rs.groups.name == groups_name and rs.iv.name == iv_name:
-                        rs_obj = rs
-                random_effects.add(rs_obj)
+                if isinstance(values, dict): 
+                    raise NotImplemented
+                    groups_name = values["groups"]
+                    # iv_name = values["iv"]
+                    # for rs in random_slopes: 
+                    #     if rs.groups.name == groups_name and rs.iv.name == iv_name:
+                    #         rs_obj = rs
+                    # random_effects.add(rs_obj)
+                else: 
+                    assert(isinstance(values, list))
+                    groups_name = values[0]["groups"]
+
+                    for v in values: 
+                        assert(v["groups"] == groups_name)    
+                        iv_name = v["iv"]
+                        for rs in random_slopes: 
+                            if rs.groups.name == groups_name and rs.iv.name == iv_name:
+                                rs_obj = rs
+                        random_effects.add(rs_obj)
 
     # TODO: Verify that all the random effects candidates were found
 
@@ -298,7 +311,11 @@ def infer_statistical_model_from_design(design: Design):
 
     # Add data
     data = design.get_data()
-    combined_dict["input"]["data"] = data.to_dict('list')
+    if data is not None: 
+        combined_dict["input"]["data"] = data.to_dict('list')
+    else: # There is no data 
+        combined_dict["input"]["data"] = dict()
+    
 
     # Write out to JSON in order to pass data to Tisane GUI for disambiguation
     input_file = "input.json"

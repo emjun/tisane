@@ -87,7 +87,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         link = sm.link_function
         self.assertIn(link, family_link_paired[family])
 
-    def test_construct_main_random_slope(self):
+    def test_construct_main_correlated_random_slope_intercept(self):
         subject = ts.Unit("Subject", cardinality=12)
         word = ts.Unit("Word", cardinality=4)
         condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)

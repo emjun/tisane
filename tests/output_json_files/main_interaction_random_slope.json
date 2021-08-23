@@ -1,0 +1,22 @@
+{
+    "dependent variable": "Dependent_variable",
+    "family": "GaussianFamily",
+    "interaction effects": [
+        "Time*Condition"
+    ],
+    "link": "IdentityLink",
+    "main effects": [
+        "Time",
+        "Condition"
+    ],
+    "random effects": {
+        "Unit": {
+            "random slope": [
+                {
+                    "groups": "Unit",
+                    "iv": "Time"
+                }
+            ]
+        }
+    }
+}

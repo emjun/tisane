@@ -40,3 +40,6 @@ class StatisticalModel():
         self.dataset = Dataset(source)
 
         return self
+
+    def has_random_effects(self): 
+        return len(self.random_effects) > 0
