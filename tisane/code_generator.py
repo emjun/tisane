@@ -1,3 +1,4 @@
+from tisane.family import SquarerootLink
 from tisane.data import Dataset
 from tisane.variable import AbstractVariable
 from tisane.statistical_model import StatisticalModel
@@ -57,6 +58,35 @@ statsmodels_code_templates = {
     "model_template": model_template
 }
 
+# Reference from: https://www.statsmodels.org/stable/glm.html#families
+statsmodels_family_name_to_functions = {
+    "GaussianFamily": "Gaussian",
+    "InverseGaussianFamily": "InverseGaussian",
+    "GammaFamily": "Gamma",
+    "TweedieFamily": "Tweedie",
+    "PoissonFamily": "Poisson",
+    "BinomialFamily": "Binomial", 
+    "NegativeBinomialFamily": "NegativeBinomial",
+}
+
+statsmodels_link_name_to_functions = {
+    "IdentityLink": "identity()",
+    "InverseLink": "inverse_power()",
+    "InverseSquaredLink": "inverse_squared()",
+    "LogLink": "log()",
+    "LogitLink": "logit()",
+    "ProbitLink": "probit()",
+    "CauchyLink": "cauchy()",
+    "CLogLogLink": "cloglog()",
+    "PowerLink": "Power()",
+    "SquarerootLink": "Power(power=.5)",
+    # Not currently implemented in statsmodels
+    # "OPowerLink": "", 
+    "NegativeBinomialLink": "NegativeBinomial()",
+    # Not currently implemented in statsmodels
+    # "LogLogLink": "",
+}
+
 ### HELPERS
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
@@ -79,23 +109,26 @@ def generate_code(
 def generate_statsmodels_code(statistical_model: StatisticalModel):
     global statsmodels_code_templates
 
+    ### Generate data code 
     data_code = None
     data = statistical_model.data
     if statistical_model.data is None: 
         data_code = statsmodels_code_templates["load_data_no_data_source"]
     elif data.data_path is not None: 
         data_code = statsmodels_code_templates["load_data_from_csv_template"]
-        data_code = data_code.format(path=str(data_path))
+        data_code = data_code.format(path=str(data.data_path))
     else: 
         assert(data.data_path is None)
         data_path = write_out_dataframe(statistical_model.data)
         data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
 
+    ### Generate model code
     formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
     family_code = generate_statsmodels_family(statistical_model=statistical_model)
     link_code = generate_statsmodels_link(statistical_model=statistical_model)
     model_code = statsmodels_code_templates["model_template"].format(formula=formula_code, family_name=family_code, link_obj=link_code)
     
+    ### Put everything together
     assert(data_code is not None)
     # Return string to write out to script
     return (
@@ -106,23 +139,37 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
         + model_code
     )
 
+def generate_statsmodels_model(statistical_model: StatisticalModel): 
+    global statsmodels_code_templates
+    
+    formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
+    family_code = generate_statsmodels_family(statistical_model=statistical_model)
+    link_code = generate_statsmodels_link(statistical_model=statistical_model)
+    model_code = statsmodels_code_templates["model_template"].format(formula=formula_code, family_name=family_code, link_obj=link_code)
+
+    return model_code
+
 def generate_statsmodels_formula(statistical_model: StatisticalModel):
     dv_code = "{dv} ~ "
     dv_code = dv_code.format(dv=statistical_model.dependent_variable.name)
 
     main_code = str()
-    for var in statistical_model.main_effects:
+    sm_main_effects_names = [var.name for var in statistical_model.main_effects]
+    sm_main_effects_names.sort() # Alphabetize
+    for var_name in sm_main_effects_names:
         if len(main_code)==0:
-            main_code = f"{var.name}"
+            main_code = f"{var_name}"
         else:
-            main_code += f" + {var.name}"
+            main_code += f" + {var_name}"
 
     interaction_code = str()
-    for var in statistical_model.interaction_effects:
+    sm_interaction_effects_names = [var.name for var in statistical_model.interaction_effects]
+    sm_interaction_effects_names.sort() # Alphabetize
+    for var_name in sm_interaction_effects_names:
         if len(interaction_code)==0:
-            interaction_code = f"{var.name}"
+            interaction_code = f"{var_name}"
         else:
-            interaction_code += f" + {var.name}"
+            interaction_code += f" + {var_name}"
 
     random_code = str()
     for rc in statistical_model.random_effects: 
@@ -136,15 +183,34 @@ def generate_statsmodels_formula(statistical_model: StatisticalModel):
             pass
         else: 
             pass
+    
+    # Do we have both main effects and interaction effects?
+    post_main_connector = ""
+    if len(main_code) > 0: 
+        if len(interaction_code) > 0 or len(random_code) > 0: 
+            post_main_connector = " + "
+    
+    post_interaction_connector = ""
+    if len(interaction_code) > 0: 
+        if len(random_code) > 0: 
+            post_interaction_connector = " + "
 
-    return "\'" + dv_code + main_code + interaction_code + random_code + "\'"
+    return "\'" + dv_code + main_code + post_main_connector + interaction_code + post_interaction_connector + random_code + "\'"
 
-def generate_statsmodels_family(statistical_model: StatisticalModel):
-    return ""
+# @returns string of family function in statsmodels corresponding to @param statistical_model's family function (of AbstractFamily type)
+def generate_statsmodels_family(statistical_model: StatisticalModel) -> str:
+    global statsmodels_family_name_to_functions
+    sm_family = statistical_model.family_function
+    sm_family_name = type(sm_family).__name__
+    
+    return statsmodels_family_name_to_functions[sm_family_name]
 
 def generate_statsmodels_link(statistical_model=StatisticalModel):
-    return ""
-
+    global statsmodels_link_name_to_functions
+    sm_link = statistical_model.link_function
+    sm_link_name = type(sm_link).__name__
+    
+    return statsmodels_link_name_to_functions[sm_link_name]
 
 def generate_statsmodels_glm_code(statistical_model: StatisticalModel, **kwargs) -> str:
     has_random = len(statistical_model.random_ivs) > 0

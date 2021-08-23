@@ -70,6 +70,14 @@ class LogLink(AbstractLink):
         # return np.log(data)
         pass
 
+class LogCLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
+        super().set_variable(variable)
+
+    def transform_data(self, data):
+        # return np.log(data)
+        pass
+
 
 class LogitLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
@@ -91,6 +99,14 @@ class ProbitLink(AbstractLink):
         pass
 
 
+class CauchyLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
+        super().set_variable(variable)
+
+    def transform_data(self, data):
+        # wrapper around python statsmodels?
+        pass
+
 class CLogLogLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
@@ -110,6 +126,14 @@ class PowerLink(AbstractLink):
         # return pd.DataFrame(data=transformed_data)
         pass
 
+class SquarerootLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
+        super().set_variable(variable)
+
+    def transform_data(self, data):
+        # wrapper around python statsmodels?
+        # return sm.Power(power=.5) ??
+        pass
 
 class OPowerLink(AbstractLink):  # TODO: Is this implemented in statsmodels?
     def __init__(self, variable: AbstractVariable):

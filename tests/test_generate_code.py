@@ -70,72 +70,72 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         # TODO
         self.assertEqual(script, script_path)
 
-    # def test_construct_main_interaction(self): 
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure 0")
-    #     m1 = u0.numeric("Measure 1")
-    #     dv = u0.numeric("Dependent variable")
+    def test_construct_main_interaction(self): 
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure 0")
+        m1 = u0.numeric("Measure 1")
+        dv = u0.numeric("Dependent variable")
 
-    #     m0.moderates(moderator=m1, on=dv)
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
-    #     gr = design.graph
+        m0.moderates(moderator=m1, on=dv)
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
 
-    #     (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    #     (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    #     random_effects = set()
-    #     family_link_paired = get_family_link_paired_candidates(design=design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
+        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
+        random_effects = set()
+        family_link_paired = get_family_link_paired_candidates(design=design)
 
-    #     output_filename = "main_interaction.json"
-    #     output_path = os.path.join(dir, output_filename)
-    #     sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
-    #     self.assertIsNotNone(sm)
-    #     self.assertEqual(main_effects, sm.main_effects)
-    #     self.assertEqual(interaction_effects, sm.interaction_effects)
-    #     self.assertEqual(random_effects, sm.random_effects)
-    #     family = sm.family_function
-    #     self.assertIn(family, family_link_paired.keys())
-    #     link = sm.link_function
-    #     self.assertIn(link, family_link_paired[family])
+        output_filename = "main_interaction.json"
+        output_path = os.path.join(dir, output_filename)
+        sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+        self.assertIsNotNone(sm)
+        self.assertEqual(main_effects, sm.main_effects)
+        self.assertEqual(interaction_effects, sm.interaction_effects)
+        self.assertEqual(random_effects, sm.random_effects)
+        family = sm.family_function
+        self.assertIn(family, family_link_paired.keys())
+        link = sm.link_function
+        self.assertIn(link, family_link_paired[family])
 
-    # def test_construct_main_random_slope(self):
-    #     subject = ts.Unit("Subject", cardinality=12)
-    #     word = ts.Unit("Word", cardinality=4)
-    #     condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
-    #     reaction_time = subject.numeric("Time", number_of_instances=word)
-    #     condition.has(word, number_of_instances=2)
+    def test_construct_main_random_slope(self):
+        subject = ts.Unit("Subject", cardinality=12)
+        word = ts.Unit("Word", cardinality=4)
+        condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+        reaction_time = subject.numeric("Time", number_of_instances=word)
+        condition.has(word, number_of_instances=2)
     
-    #     condition.causes(reaction_time)
+        condition.causes(reaction_time)
 
-    #     design = ts.Design(dv=reaction_time, ivs=[condition])
-    #     gr = design.graph
+        design = ts.Design(dv=reaction_time, ivs=[condition])
+        gr = design.graph
         
-    #     main_effects = set(design.ivs)
-    #     interaction_effects = set()
-    #     (random_effects, random_explanations) =infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
-    #     family_link_paired = get_family_link_paired_candidates(design=design)
+        main_effects = set(design.ivs)
+        interaction_effects = set()
+        (random_effects, random_explanations) =infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        family_link_paired = get_family_link_paired_candidates(design=design)
 
-    #     output_filename = "main_random_effects.json"
-    #     output_path = os.path.join(dir, output_filename)
-    #     sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
-    #     self.assertIsNotNone(sm)
-    #     self.assertEqual(main_effects, sm.main_effects)
-    #     self.assertEqual(interaction_effects, sm.interaction_effects)
-    #     for re in sm.random_effects: 
-    #         if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
-    #             rs = re.random_slope
-    #             ri = re.random_intercept 
-    #             self.assertIn(rs, random_effects)
-    #             self.assertIn(ri, random_effects)
-    #         elif isinstance(re, UncorrelatedRandomSlopeAndIntercept): 
-    #             rs = re.random_slope
-    #             ri = re.random_intercept 
-    #             self.assertIn(rs, random_effects)
-    #             self.assertIn(ri, random_effects)
-    #         elif isinstance(re, RandomSlope): 
-    #             self.assertIn(re, random_effects)
-    #         elif isinstance(re, RandomIntercept): 
-    #             self.assertIn(re, random_effects)
-    #     family = sm.family_function
-    #     self.assertIn(family, family_link_paired.keys())
-    #     link = sm.link_function
-    #     self.assertIn(link, family_link_paired[family])
+        output_filename = "main_random_effects.json"
+        output_path = os.path.join(dir, output_filename)
+        sm = construct_statistical_model(output_path, query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+        self.assertIsNotNone(sm)
+        self.assertEqual(main_effects, sm.main_effects)
+        self.assertEqual(interaction_effects, sm.interaction_effects)
+        for re in sm.random_effects: 
+            if isinstance(re, CorrelatedRandomSlopeAndIntercept): 
+                rs = re.random_slope
+                ri = re.random_intercept 
+                self.assertIn(rs, random_effects)
+                self.assertIn(ri, random_effects)
+            elif isinstance(re, UncorrelatedRandomSlopeAndIntercept): 
+                rs = re.random_slope
+                ri = re.random_intercept 
+                self.assertIn(rs, random_effects)
+                self.assertIn(ri, random_effects)
+            elif isinstance(re, RandomSlope): 
+                self.assertIn(re, random_effects)
+            elif isinstance(re, RandomIntercept): 
+                self.assertIn(re, random_effects)
+        family = sm.family_function
+        self.assertIn(family, family_link_paired.keys())
+        link = sm.link_function
+        self.assertIn(link, family_link_paired[family])

@@ -405,12 +405,30 @@ class DataForTests:
         ProbitLink,
         CLogLogLink,
         PowerLink,
-        OPowerLink,
+        # Not currently implemented in statsmodels
+        # OPowerLink,
         NegativeBinomialLink,
-        LogLogLink,
+        # Not currently implemented in statsmodels
+        # LogLogLink,
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        InverseLink,
     ]
-    inverse_gaussian_links = [IdentityLink, LogLink, PowerLink]
-    gamma_links = [IdentityLink, LogLink, PowerLink]
+    inverse_gaussian_links = [
+        IdentityLink, 
+        LogLink, 
+        PowerLink,
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        InverseLink,
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        InverseSquaredLink
+    ]
+    gamma_links = [
+        IdentityLink, 
+        LogLink, 
+        PowerLink,
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        InverseLink
+    ]
     tweedie_links = [IdentityLink, LogLink, PowerLink]
     poisson_links = [IdentityLink, LogLink, PowerLink]
     binomial_links = [
@@ -420,8 +438,10 @@ class DataForTests:
         ProbitLink,
         CLogLogLink,
         PowerLink,
-        OPowerLink,
-        LogLogLink,
+        # Not currently implemented in statsmodels
+        # OPowerLink,
+        # Not currently implemented in statsmodels
+        # LogLogLink,
     ]
     negative_binomial_links = [IdentityLink, LogLink, PowerLink, NegativeBinomialLink]
     multinomial_links = [IdentityLink, LogLink, LogitLink, ProbitLink]
