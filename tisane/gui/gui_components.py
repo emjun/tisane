@@ -8,6 +8,9 @@ import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import plotly.express as px
 import plotly.graph_objects as go
+import pandas as pd
+import scipy.stats as stats
+import numpy as np
 
 log = logging.getLogger("")
 log.setLevel(logging.ERROR)
@@ -50,6 +53,15 @@ def getInfoBubble(id: str):
 
 class GUIComponents:
     def __init__(self, input_json: str):
+        dir = os.path.dirname(os.path.abspath(__file__))
+        defaultExplanationsPath = os.path.join(dir, "default_explanations.json")
+        if os.path.exists(defaultExplanationsPath):
+            with open(defaultExplanationsPath, "r") as f:
+                self.defaultExplanations = json.loads(f.read())
+                pass
+            pass
+        else:
+            self.defaultExplanations = {}
         self.numGeneratedComponentIds = 0
         self.generatedComponentIdToRandomEffect = {}
         self.generatedComponentIdToMainEffect = {}
@@ -72,12 +84,15 @@ class GUIComponents:
             "family": "GaussianFamily",
             "link": "IdentityLink",
         }
+        self.highestActiveTab = -1
+
         self.variables = {"main effects": {}, "interaction effects": {}}
         self.rowIdsByUnit = {}
         self.unitsByAddedRandomVariableId = {}
         self.unitsByRowId = {}
         self.randomSlopes = {}
         self.generatedCorrelatedIdToRandomSlope = {}
+        print(input_json)
         if os.path.exists(input_json):
             with open(input_json, "r") as f:
                 self.data = json.loads(f.read())
@@ -87,8 +102,13 @@ class GUIComponents:
             log.error("Cannot find input json file {}".format(input_json))
             exit(1)
             pass
+        # print(self.data)
+
         query = self.getQuery()
         self.output["dependent variable"] = query["DV"]
+        self.dv = query["DV"]
+        if self.hasData():
+            self.dataDf = pd.DataFrame(self.getData())
         for me in self.getGeneratedMainEffects():
             self.variables["main effects"][me] = {"info-id": self.getNewComponentId()}
             pass
@@ -143,6 +163,27 @@ class GUIComponents:
         print(self.randomSlopes)
         pass
 
+    def hasDefaultExplanations(self):
+        return self.defaultExplanations
+
+    def hasDefaultExplanation(self, key):
+        return key in self.defaultExplanations
+
+    def getDefaultExplanation(self, key):
+        return self.defaultExplanations[key]
+
+    def getNoInteractionEffectsExplanation(self):
+        key = "no-interaction-effects"
+        if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
+            return self.getDefaultExplanation(key)
+        return None
+
+    def getNoRandomEffectsExplanation(self):
+        key = "no-random-effects"
+        if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
+            return self.getDefaultExplanation(key)
+        return None
+
     def getMeasuresToUnits(self):
         return self.data["input"]["measures to units"]
 
@@ -181,6 +222,15 @@ class GUIComponents:
 
     def getExplanations(self):
         return self.data["input"]["explanations"]
+
+    def hasExplanations(self):
+        return "input" in self.data and "explanations" in self.data["input"]
+
+    def getData(self):
+        return self.data["input"]["data"]
+
+    def hasData(self):
+        return "input" in self.data and "data" in self.data["input"] and self.data["input"]["data"]
 
     def getDefaultLinkForFamily(self, family):
         if family in self.defaultLinkForFamily:
@@ -495,13 +545,14 @@ class GUIComponents:
         continueButton = dbc.Button(
             "Continue", color="success", id="continue-to-random-effects", n_clicks=0
         )
+        assert self.hasDefaultExplanation("no-interaction-effects"), "Could not find interaction effect explanation in defaults: {}".format(self.defaultExplanations)
         if not interactions:
             # interactions is empty
             return dbc.Card(
                 dbc.CardBody(
                     [
                         cardP(html.I("No interaction effects")),
-                        html.P("Placeholder text for where an explanation would go"),
+                        html.P(self.getNoInteractionEffectsExplanation() or "Placeholder text for where an explanation would go"),
                         continueButton,
                     ]
                 ),
@@ -783,6 +834,7 @@ class GUIComponents:
         return dbc.Table(tableHeader + [html.Tbody(tableRows)])
 
     def getRandomEffectsCard(self):
+        assert self.hasDefaultExplanation("no-random-effects"), "Could not find default explanation for no random effects: {}".format(self.defaultExplanations)
         randomeffects = self.getGeneratedRandomEffects()
         continueButton = dbc.Button(
             "Continue",
@@ -795,7 +847,7 @@ class GUIComponents:
                 dbc.CardBody(
                     [
                         cardP(html.I("No random effects")),
-                        html.P("Placeholder text for where an explanation would go"),
+                        html.P(self.getNoRandomEffectsExplanation() or "Placeholder text for where an explanation would go"),
                         continueButton,
                     ]
                 )
@@ -813,19 +865,19 @@ class GUIComponents:
             className="mt-3",
         )
 
-    def get_data_dist(self):
-        hist_data = None
-        labels = None
+    # def get_data_dist(self):
+    #     hist_data = None
+    #     labels = None
+    #
+    #     dv = self.getDependentVariable()
+    #
+    #     data = self.design.get_data(variable=dv)
+    #
+    #     if data is not None:
+    #         hist_data = data
+    #         labels = dv.name
 
-        dv = self.getDependentVariable()
-
-        data = self.design.get_data(variable=dv)
-
-        if data is not None:
-            hist_data = data
-            labels = dv.name
-
-        return (hist_data, labels)
+    #     return (hist_data, labels)
 
     def make_family_link_options(self):
         global __str_to_z3__
@@ -895,11 +947,23 @@ class GUIComponents:
 
     def createFigure(self, family):
         key = f"{family}_data"
+
+
+
         if key in self.simulatedData:
             family_data = self.simulatedData[key]
         else:
             # Do we need to generate data?
-            family_data = simulate_data_dist(family)
+            if self.hasData():
+                # dvData = np.log(self.dataDf[self.dv])
+                dvData = self.dataDf[self.dv]
+                family_data = simulate_data_dist(family, dataMean=dvData.mean(), dataStdDev=dvData.std(), dataSize=dvData.count())
+                pass
+            else:
+                family_data = simulate_data_dist(family)
+                pass
+            self.simulatedData[key] = family_data
+            pass
             # Store data for family in __str_to_z3__ cache
         # We already have the data generated in our "cache"
 
@@ -911,12 +975,13 @@ class GUIComponents:
 
         # Generate figure
         fig = go.Figure()
-        # fig.add_trace(
-        #     go.Histogram(
-        #         x=curr_data,
-        #         name=f"{self.design.dv.name}",
-        #     )
-        # )
+        if self.hasData():
+            fig.add_trace(
+                go.Histogram(
+                    x=self.dataDf[self.dv],
+                    name=f"{self.dv}",
+                )
+            )
         fig.add_trace(
             go.Histogram(
                 x=family_data,
@@ -982,17 +1047,7 @@ class GUIComponents:
                     """
             ### Data distributions: Family and Link functions.
             #### Which distribution best matches your data?
-            """
-                )
-                # html.H3('Family and Link: Data distributions'),
-                # dbc.Alert(
-                #     "TODO: Explanation of family and link functions", className="mb-0",
-                #     id='family_link_alert',
-                #     dismissable=True,
-                #     fade=True,
-                #     is_open=True
-                # )
-            ]
+            """)]
         )
 
         fig = self.createFigure("GaussianFamily")
@@ -1003,11 +1058,68 @@ class GUIComponents:
         )  # self.draw_data_dist()
         family_link_controls = self.make_family_link_options()
 
-        # Create main effects switch
-        # family_link_switch = self.create_switch(
-        #     switch_id="family_link_switch", form_group_id="family_link_group"
-        # )
+        normalityTestPortion = [
+            html.H4([html.I("No Normality Tests "), getInfoBubble("no-normality-tests-info")]),
+            dbc.Popover(
+                [
+                    dbc.PopoverHeader(
+                        "Why?"
+                    ),
+                    dbc.PopoverBody(
+                        "No data included to run the normality tests."
+                    )
+                ],
+                target="no-normality-tests-info",
+                trigger="hover"
+            )
+        ]
+        if self.hasData():
+            dvData = self.dataDf[self.dv]
+            shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
+            normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
+            normalityTestPortion = [
+                html.H4("Normality Tests"),
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            dbc.Table([
+                                html.Thead(
+                                    [
+                                        html.Tr(
+                                            [
+                                                html.Th(html.A("Shapiro-Wilk Test", href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html"), colSpan=2),
+                                                html.Th(html.A("D'Agostino and Pearson's Test", href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html"), colSpan=2)
+                                            ]
+                                        ),
+                                        html.Tr(
+                                            [
+                                                html.Th("Test Statistic"),
+                                                html.Th("P-Value"),
+                                                html.Th("Test Statistic"),
+                                                html.Th("P-Value")
+                                            ]
+                                        )
+                                    ]
 
+                                ),
+                                html.Tbody(
+                                    [
+                                        html.Tr(
+                                            [
+                                                html.Td("{:.5e}".format(shapiroStat)),
+                                                html.Td("{:.5e}".format(shapiroPvalue)),
+                                                html.Td("{:.5e}".format(normaltestStat)),
+                                                html.Td("{:.5e}".format(normaltestPvalue)),
+
+                                            ]
+                                        )
+                                    ]
+                                )
+                            ])
+                        )
+                    ]
+                )
+            ]
         ##### Combine all elements
         # Create div
         family_and_link_div = dbc.Card(
@@ -1021,13 +1133,7 @@ class GUIComponents:
                     ],
                     align="center",
                 ),
-                dbc.Row(
-                    [
-                        dbc.Col(html.Div("Placeholder for normality tests"), md=12)
-                    ],
-                    align="center"
-                ),
-                # family_link_switch,
+            ] + normalityTestPortion + [
                 dbc.Button("Generate Code", color="success", id="generate-code"),
                 html.Div(id="generated-code-div")
             ]),

@@ -12,13 +12,14 @@ def createCallbacks(app, comp: GUIComponents = None):
     cont_to_interaction_effects_input = Input(
         "continue-to-interaction-effects", "n_clicks"
     )
-    createMainEffectsProgressBarCallbacks(app)
+    createMainEffectsProgressBarCallbacks(app, comp)
     createProgressBarCallbacks(
         app,
         "tab-2",
         "interaction-effects-progress",
         "continue-to-interaction-effects",
         "continue-to-random-effects",
+        comp,
     )
     createProgressBarCallbacks(
         app,
@@ -26,10 +27,11 @@ def createCallbacks(app, comp: GUIComponents = None):
         "random-effects-progress",
         "continue-to-random-effects",
         "continue-to-family-link-functions",
+        comp,
     )
     createTabsCallbacks(app)
     createMainEffectsChecklistCallbacks(app, comp)
-    createFamilyLinkFunctionsProgressCallbacks(app)
+    createFamilyLinkFunctionsProgressCallbacks(app, comp)
     createInteractionEffectsChecklistCallbacks(app, comp)
     createFamilyLinkFunctionCallbacks(app, comp)
     createRandomEffectsCallbacks(app, comp)
@@ -183,7 +185,7 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
         )
 
 
-def createFamilyLinkFunctionsProgressCallbacks(app):
+def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
@@ -191,7 +193,8 @@ def createFamilyLinkFunctionsProgressCallbacks(app):
         print(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
-            return active_tab == "tab-4", active_tab == "tab-4"
+            mybool = active_tab == "tab-4" or (comp and comp.highestActiveTab >= mytabs.index("tab-4") and mytabs.index(active_tab) < mytabs.index("tab-4"))
+            return mybool, mybool
         if triggered == "continue-to-family-link-functions":
             return True, True
         return False, False
@@ -206,6 +209,8 @@ def createFamilyLinkFunctionsProgressCallbacks(app):
     def colorCallback(nclicksto, nclicksfrom, active_tab):
         ctx = dash.callback_context
         triggered = getTriggeredFromContext(ctx)
+        if comp.highestActiveTab < mytabs.index(active_tab):
+            comp.highestActiveTab = mytabs.index(active_tab)
         print(
             "{}, {}: {}, {}".format(
                 "tab-4", "family-link-functions-progress", triggered, active_tab
@@ -214,7 +219,7 @@ def createFamilyLinkFunctionsProgressCallbacks(app):
         if triggered:
             if triggered == "generate-code" or mytabs.index(active_tab) > mytabs.index(
                 "tab-4"
-            ):
+            ) or (comp and comp.highestActiveTab >= mytabs.index("tab-4")):
                 return "success"
             if triggered == "continue-to-family-link-functions" or mytabs.index(
                 active_tab
@@ -231,16 +236,18 @@ def createFamilyLinkFunctionsProgressCallbacks(app):
 
 
 def createProgressBarCallbacks(
-    app, triggered_tab, progressid, continuefrom_id, continueto_id
+    app, triggered_tab, progressid, continuefrom_id, continueto_id, comp: GUIComponents
 ):
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
+        index = mytabs.index(active_tab)
         if not ctx.triggered:
             return True, True
         print(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
-            return active_tab == triggered_tab, active_tab == triggered_tab
+            myBool = active_tab == triggered_tab or (comp and comp.highestActiveTab >= mytabs.index(triggered_tab) and mytabs.index(active_tab) < mytabs.index(triggered_tab))
+            return myBool, myBool
         return False, False
 
     app.callback(
@@ -253,11 +260,14 @@ def createProgressBarCallbacks(
     def colorCallback(nclicksto, nclicksfrom, active_tab):
         ctx = dash.callback_context
         triggered = getTriggeredFromContext(ctx)
+        tabIndex = mytabs.index(active_tab)
+        if comp and comp.highestActiveTab < tabIndex:
+            comp.highestActiveTab = tabIndex
         print("{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab))
         if triggered:
             if triggered == continueto_id or mytabs.index(active_tab) > mytabs.index(
                 triggered_tab
-            ):
+            ) or (comp and comp.highestActiveTab >= 0 and comp.highestActiveTab >= mytabs.index(triggered_tab) ):
                 return "success"
             if triggered == continuefrom_id or mytabs.index(
                 triggered_tab
@@ -273,7 +283,7 @@ def createProgressBarCallbacks(
     )(colorCallback)
 
 
-def createMainEffectsProgressBarCallbacks(app):
+def createMainEffectsProgressBarCallbacks(app, comp: GUIComponents = None):
     def animatedCallback(nclicks_main, nclicks_interaction, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
@@ -293,6 +303,8 @@ def createMainEffectsProgressBarCallbacks(app):
     )(animatedCallback)
 
     def colorCallback(nclicks_main, active_tab):
+        if comp and comp.highestActiveTab < mytabs.index(active_tab):
+            comp.highestActiveTab = mytabs.index(active_tab)
         ctx = dash.callback_context
         triggered = getTriggeredFromContext(ctx)
         if triggered:

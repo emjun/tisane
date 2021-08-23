@@ -6,17 +6,17 @@ from scipy import stats
 import pandas as pd
 
 
-def simulate_data_dist(family: str):
-    size = 1000
+def simulate_data_dist(family: str, dataMean: float = None, dataStdDev: float = None, dataSize: int = None):
+    size = dataSize or 1000
 
     if "GaussianFamily" == family:
-        mean = 0
-        std = 1
+        mean = dataMean or 0
+        std = dataStdDev or 1
 
         return np.random.default_rng().normal(loc=mean, scale=std, size=size)
     elif "InverseGaussianFamily" == family:
-        mean = 1
-        std = 1
+        mean = dataMean or 1
+        std = dataStdDev or 1
 
         return np.random.default_rng().wald(mean=mean, scale=std, size=size)
     elif "PoissonFamily" in str(family):
@@ -28,7 +28,7 @@ def simulate_data_dist(family: str):
 
         return np.random.default_rng().gamma(shape=shape, scale=scale, size=size)
     elif "TweedieFamily" in str(family):
-        mean = 1.0
+        mean = dataMean or 1.0
         p = 1.5  # Can be changed to update to other familiar distributions: https://en.wikipedia.org/wiki/Tweedie_distribution
         phi = 20  # this can be reset
         n = size
