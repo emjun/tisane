@@ -610,64 +610,6 @@ class GUIComponents:
             pass
         return html.Div(options)
 
-    def layoutGeneratedRandomEffects(self):
-        def layoutRandomEffect(group, randomEffectDict):
-            ri = "random intercept"
-            rs = "random slope"
-            cor = "correlated"
-
-            def wrapper(elt):
-                return html.Li(elt)
-
-            randomInterceptPortion = (
-                [dbc.Badge("Random Intercept", color="danger", className="mr-1")]
-                if ri in randomEffectDict
-                else []
-            )
-            randomSlopePortion = []
-            if rs in randomEffectDict:
-                for randomSlope in randomEffectDict[rs]:
-                    iv = randomSlope["iv"]
-                    checker = []
-                    if cor in randomEffectDict:
-                        print("Adding checkbox")
-                        checker = [
-                            html.Ul(
-                                html.Li(
-                                    dbc.Checklist(
-                                        options=[
-                                            {
-                                                "label": "correlated",
-                                                "value": "correlated",
-                                            }
-                                        ],
-                                        value=["correlated"],
-                                        id=self.getCorrelatedIdForRandomSlope(
-                                            group, iv
-                                        ),
-                                    )
-                                )
-                            )
-                        ]
-                        pass
-                    randomSlopePortion.append(
-                        [
-                            html.Span(iv),
-                            dbc.Badge("Random Slope", color="info", className="mr-1"),
-                        ]
-                        + checker
-                    )
-            contents = randomInterceptPortion + randomSlopePortion  # + corPortion
-            contents = [wrapper(c) for c in contents]
-            return html.Div([html.H6(group), html.Ul(contents)])
-
-        randomEffects = self.getGeneratedRandomEffects()
-        options = [
-            layoutRandomEffect(group, randomEffectDict)
-            for group, randomEffectDict in randomEffects.items()
-        ]
-        return html.Div(options)
-
     def layoutRandomEffectsTable(self):
         randomEffects = self.getGeneratedRandomEffects()
         hasRandomSlope = any(
@@ -772,7 +714,26 @@ class GUIComponents:
                         for r in randomSlopes[1:]:
                             iv = r["iv"]
                             rowId = self.getNewComponentId()
-                            print("Adding row for iv {}".format(iv))
+                            # print("Adding row for iv {}".format(iv))
+                            correlationCheckbox = ([
+                                html.Td(
+                                    dbc.FormGroup(
+                                        [
+                                            dbc.Checkbox(
+                                                id=self.getCorrelatedIdForRandomSlope(
+                                                    group, iv
+                                                ),
+                                                checked=True,
+                                            )
+                                        ]
+                                    ),
+                                    style={"text-align": "center"},
+                                )
+                            ] if hasCorrelation and thisGroupHasCorrelation else (
+                                [html.Td(className="bg-light")]
+                                if hasCorrelation
+                                else []
+                            ))
                             tableRows.append(
                                 html.Tr(
                                     [
@@ -787,29 +748,7 @@ class GUIComponents:
                                             ]
                                         )
                                     ]
-                                    + (
-                                        [
-                                            html.Td(
-                                                dbc.FormGroup(
-                                                    [
-                                                        dbc.Checkbox(
-                                                            id=self.getCorrelatedIdForRandomSlope(
-                                                                group, iv
-                                                            ),
-                                                            checked=True,
-                                                        )
-                                                    ]
-                                                ),
-                                                style={"text-align": "center"},
-                                            )
-                                        ]
-                                        if hasCorrelation and thisGroupHasCorrelation
-                                        else (
-                                            [html.Td(className="bg-light")]
-                                            if hasCorrelation
-                                            else []
-                                        )
-                                    ),
+                                    + correlationCheckbox,
                                     id=rowId,
                                 )
                             )
@@ -856,28 +795,12 @@ class GUIComponents:
             dbc.CardBody(
                 [
                     cardP("Random Effects"),
-                    # self.layoutGeneratedRandomEffects(),
-                    # html.P(""),
                     self.layoutRandomEffectsTable(),
                     continueButton,
                 ]
             ),
             className="mt-3",
         )
-
-    # def get_data_dist(self):
-    #     hist_data = None
-    #     labels = None
-    #
-    #     dv = self.getDependentVariable()
-    #
-    #     data = self.design.get_data(variable=dv)
-    #
-    #     if data is not None:
-    #         hist_data = data
-    #         labels = dv.name
-
-    #     return (hist_data, labels)
 
     def make_family_link_options(self):
         family_options = list()
@@ -898,7 +821,6 @@ class GUIComponents:
                     [
                         dbc.Label(["Family ", getInfoBubble("family-label-info")]),
                         dcc.Dropdown(
-                            # id={'type': 'family_link_options', 'index': 'family_options'},
                             id="family-options",
                             options=family_options,
                             value="GaussianFamily",
@@ -914,7 +836,6 @@ class GUIComponents:
                             ]
                         ),
                         dcc.Dropdown(
-                            # id={'type': 'family_link_options', 'index': 'link_options'},
                             id="link-options",
                             options=[],
                             value="IdentityLink",
@@ -965,15 +886,6 @@ class GUIComponents:
                 pass
             self.simulatedData[key] = family_data
             pass
-            # Store data for family in __str_to_z3__ cache
-        # We already have the data generated in our "cache"
-
-        # if link is not None:
-        #     assert(isinstance(link, str))
-        #     link_fact = __str_to_z3__[link]
-        #     # Transform the data
-        #     transformed_data = transform_data_from_fact(data=family_data, link_fact=link_fact)
-
         # Generate figure
         fig = go.Figure()
         if self.hasData():
@@ -996,48 +908,6 @@ class GUIComponents:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
         )
         return fig
-
-    def draw_dist(self, hist_data, label):
-        # Make sure that there is data to draw
-        # Hist_data is not None and labels is not None
-        if hist_data is not None and label is not None:
-            data = pd.DataFrame(hist_data, columns=[label])
-
-            fig = px.histogram(data, x=label)
-            fig.update_layout(
-                legend=dict(
-                    orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-                )
-            )
-
-            fig_elt = dcc.Graph(id="data_dist", figure=fig)
-        else:
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x=[-1, 3, 5, 10, 12],
-                    y=[10, 8, 5, 4, 0],
-                    mode="markers+text",
-                    # name="Markers and Text",
-                    text=[
-                        "",
-                        "No data supplied!",
-                        "Imagine how your data will look when you collect it...",
-                        "...by looking at possible distributions  -->. :]",
-                        "",
-                    ],
-                    textposition="bottom center",
-                )
-            )
-
-            fig_elt = dcc.Graph(id="data_dist", figure=fig)
-
-        return fig_elt
-
-    def draw_data_dist(self):
-        (hist_data, labels) = self.get_data_dist()
-
-        return self.draw_dist(hist_data, labels)
 
     def createNormalityTestSection(self):
         normalityTestPortion = [
@@ -1132,7 +1002,7 @@ class GUIComponents:
         # Get form groups for family link div
         family_link_chart = dcc.Graph(
             id="family-link-chart", figure=fig
-        )  # self.draw_data_dist()
+        )
         family_link_controls = self.make_family_link_options()
 
         normalityTestPortion = self.createNormalityTestSection()
