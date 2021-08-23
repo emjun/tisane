@@ -5,19 +5,19 @@ import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import json
 
+
 def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
     # createRandomEffectsAddedCallbacks(app, comp)
     createRandomEffectsCorrelationCallbacks(app, comp)
     createRandomEffectsVisibleCallbacks(app, comp)
     pass
 
+
 def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
     inputs = [Input(id, "checked") for id in comp.getRandomEffectCheckboxIds()]
     states = [State(id, "id") for id in comp.getRandomEffectCheckboxIds()]
-    @app.callback(
-        Output("added-random-effects", "children"),
-        inputs, states
-    )
+
+    @app.callback(Output("added-random-effects", "children"), inputs, states)
     def addRandomEffects(*args):
         assert len(args) % 2 == 0, "Length of args is weird: {}".format(args)
         if not comp:
@@ -42,6 +42,7 @@ def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
         print("Could not add random effects")
         raise PreventUpdate
 
+
 def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
     if comp:
         checkboxIds = comp.getRandomSlopeCheckboxIds()
@@ -49,13 +50,12 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
             inputs = [Input(id, "checked") for id in checkboxIds]
             states = [State(id, "id") for id in checkboxIds]
             outputs = [Output(id + "-span", "children") for id in checkboxIds]
-            @app.callback(
-                outputs,
-                inputs,
-                states
-            )
+
+            @app.callback(outputs, inputs, states)
             def changeCorrelation(*args):
-                assert len(args) % 2 == 0, "Weird number of arguments: {}".format(len(args))
+                assert len(args) % 2 == 0, "Weird number of arguments: {}".format(
+                    len(args)
+                )
 
                 if not comp:
                     print("Cannot update correlations")
@@ -69,7 +69,9 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
                     idToChecked = {states[i]: inputs[i] for i in range(half)}
                     idToCorrelated = {}
                     for id, checked in idToChecked.items():
-                        idToCorrelated[id] = " (correlated)" if checked else " (not correlated)"
+                        idToCorrelated[id] = (
+                            " (correlated)" if checked else " (not correlated)"
+                        )
                         comp.markCheckedForCorrelatedId(id, checked)
                     return tuple([idToCorrelated[id] for id in checkboxIds])
                 raise PreventUpdate
@@ -82,17 +84,27 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
         allIds = rowIds + addedRandomVariableIds
         if allIds:
             rowOutputs = [Output(id, "hidden") for id in allIds]
-            @app.callback(
-                rowOutputs,
-                Input("added-main-effects-store", "data")
-            )
+
+            @app.callback(rowOutputs, Input("added-main-effects-store", "data"))
             def changeVisibility(outputFromMainEffectsString):
                 outputFromMainEffects = json.loads(outputFromMainEffectsString)
-                if "main effects" in outputFromMainEffects and "dependent variable" in outputFromMainEffects:
+                if (
+                    "main effects" in outputFromMainEffects
+                    and "dependent variable" in outputFromMainEffects
+                ):
                     dv = outputFromMainEffects["dependent variable"]
                     visibleMainEffects = outputFromMainEffects["main effects"]
                     allVisible = [dv] + visibleMainEffects
-                    allVisibleUnits = set([comp.getUnitFromMeasure(vis) if comp.hasUnitForMeasure(vis) else vis for vis in allVisible])
+                    allVisibleUnits = set(
+                        [
+                            comp.getUnitFromMeasure(vis)
+                            if comp.hasUnitForMeasure(vis)
+                            else vis
+                            for vis in allVisible
+                        ]
+                    )
 
-                    units = [comp.getUnitFromRowOrAddedRandomVariableId(id) for id in allIds]
+                    units = [
+                        comp.getUnitFromRowOrAddedRandomVariableId(id) for id in allIds
+                    ]
                     return tuple([u not in allVisibleUnits for u in units])

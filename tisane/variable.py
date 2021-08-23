@@ -179,7 +179,7 @@ class Unit(AbstractVariable):
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
 
-        # Add relationships between @number_of_instances (if AbstractVariable) variables and DV? 
+        # Add relationships between @number_of_instances (if AbstractVariable) variables and DV?
 
     # def repeats(self, measure: "Measure", according_to: "Measure"):
     #     repeats_relat = Repeats(unit=self, measure=measure, according_to=according_to)
@@ -441,7 +441,7 @@ class Has:
         variable: AbstractVariable,
         measure: AbstractVariable,
         repetitions: "NumberValue",
-        according_to: AbstractVariable=None,
+        according_to: AbstractVariable = None,
         **kwargs,
     ):
         self.variable = variable

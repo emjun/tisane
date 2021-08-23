@@ -402,7 +402,7 @@ class DataForTests:
     nominal_binary_families_types = [BinomialFamily]
     nominal_nary_families_types = [
         # Not implemented in statsmodels or pymer4
-        # MultinomialFamily, 
+        # MultinomialFamily,
         NegativeBinomialFamily
     ]
 
@@ -422,20 +422,20 @@ class DataForTests:
         InverseLink,
     ]
     inverse_gaussian_links = [
-        IdentityLink, 
-        LogLink, 
+        IdentityLink,
+        LogLink,
         PowerLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
         InverseLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        InverseSquaredLink
+        InverseSquaredLink,
     ]
     gamma_links = [
-        IdentityLink, 
-        LogLink, 
+        IdentityLink,
+        LogLink,
         PowerLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        InverseLink
+        InverseLink,
     ]
     tweedie_links = [IdentityLink, LogLink, PowerLink]
     poisson_links = [IdentityLink, LogLink, SquarerootLink]

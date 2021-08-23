@@ -909,7 +909,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         ixn = interaction_effects.pop()
@@ -939,7 +942,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         ixn = interaction_effects.pop()
@@ -972,7 +978,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         ixn = interaction_effects.pop()
@@ -999,7 +1008,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         self.assertEqual(len(interaction_effects), 1)
@@ -1029,7 +1041,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         ixn = interaction_effects.pop()
@@ -1104,7 +1119,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1130,7 +1148,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1156,7 +1177,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1170,7 +1194,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self.assertEqual(rs.iv.name, ixn.name)  # Should get A
         self.assertIs(rs.groups, u)
 
-    # Barr 2013 time * group interaction example: 
+    # Barr 2013 time * group interaction example:
     # "For example, consider a design with two independent groups of subjects,
     # where there are observations at multiple time points for each subject.
     # When testing the time-by-group interaction, the model should include a
@@ -1178,8 +1202,12 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
     def test_random_effects_for_two_way_time_group_interaction(self):
         subject = ts.Unit("Unit")
         time = ts.SetUp("Time")
-        group = subject.nominal("Group", cardinality=2, number_of_instances=1) # "two independent groups of subjects"
-        dv = subject.numeric("Dependent variable", number_of_instances=time) # within-subject
+        group = subject.nominal(
+            "Group", cardinality=2, number_of_instances=1
+        )  # "two independent groups of subjects"
+        dv = subject.numeric(
+            "Dependent variable", number_of_instances=time
+        )  # within-subject
 
         time.associates_with(dv)
         group.causes(dv)
@@ -1189,7 +1217,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1218,7 +1249,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1251,7 +1285,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [a, b, c]
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1283,7 +1320,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(
@@ -1318,7 +1358,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [a, b, c]
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         random_effects = construct_random_effects_for_interactions(

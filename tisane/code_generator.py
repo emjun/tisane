@@ -65,15 +65,15 @@ pymer4_code_templates = {
     "load_data_from_csv_template": load_data_from_csv_template,
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
-    "model_template": pymer4_model_template
+    "model_template": pymer4_model_template,
 }
 
 statsmodels_code_templates = {
-    "preamable": statsmodels_preamble, 
+    "preamable": statsmodels_preamble,
     "load_data_from_csv_template": load_data_from_csv_template,
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
-    "model_template": statsmodels_model_template
+    "model_template": statsmodels_model_template,
 }
 
 # Reference from: https://www.statsmodels.org/stable/glm.html#families
@@ -83,7 +83,7 @@ statsmodels_family_name_to_functions = {
     "GammaFamily": "Gamma",
     "TweedieFamily": "Tweedie",
     "PoissonFamily": "Poisson",
-    "BinomialFamily": "Binomial", 
+    "BinomialFamily": "Binomial",
     "NegativeBinomialFamily": "NegativeBinomial",
 }
 
@@ -99,7 +99,7 @@ statsmodels_link_name_to_functions = {
     "PowerLink": "Power()",
     "SquarerootLink": "Power(power=.5)",
     # Not currently implemented in statsmodels
-    # "OPowerLink": "", 
+    # "OPowerLink": "",
     "NegativeBinomialLink": "NegativeBinomial()",
     # Not currently implemented in statsmodels
     # "LogLogLink": "",
@@ -109,13 +109,15 @@ statsmodels_link_name_to_functions = {
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
 
+
 # Write data out to path
 # Return path
-def write_out_dataframe(data: Dataset) -> os.path: 
+def write_out_dataframe(data: Dataset) -> os.path:
     path = absolute_path("data.csv")
     data.dataset.to_csv(path)
 
     return path
+
 
 # @param target describes the backend for which to generate code
 def generate_code(
@@ -124,20 +126,23 @@ def generate_code(
     if target.upper() == "PYTHON":
         return generate_python_code(statistical_model=statistical_model, **kwargs)
 
+
 def generate_python_code(statistical_model: StatisticalModel):
     global pymer4_code_templates
 
-    if statistical_model.has_random_effects(): 
+    if statistical_model.has_random_effects():
         return generate_pymer4_code(statistical_model=statistical_model)
-    else: 
-        assert(not statistical_model.has_random_effects())
+    else:
+        assert not statistical_model.has_random_effects()
         return generate_statsmodels_code(statistical_model=statistical_model)
 
-def generate_pymer4_code(statistical_model: StatisticalModel): 
+
+def generate_pymer4_code(statistical_model: StatisticalModel):
     # UPDATE EXISTING TESTS
     raise NotImplementedError
 
-def generate_pymer4_model(statistical_model: StatisticalModel): 
+
+def generate_pymer4_model(statistical_model: StatisticalModel):
     raise NotImplementedError
 
     global pymer4_code_templates
@@ -145,9 +150,12 @@ def generate_pymer4_model(statistical_model: StatisticalModel):
     formula_code = generate_pymer4_formula(statistical_model=statistical_model)
     family_code = generate_pymer4_family(statistical_model=statistical_model)
     link_code = generate_pymer4_link(statistical_model=statistical_model)
-    model_code = pymer4_code_templates["model_template"].format(formula=formula_code, family_name=family_code, link_obj=link_code)
+    model_code = pymer4_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code, link_obj=link_code
+    )
 
     return model_code
+
 
 def generate_pymer4_formula(statistical_model: StatisticalModel):
     global pymer4_code_templates
@@ -157,25 +165,27 @@ def generate_pymer4_formula(statistical_model: StatisticalModel):
 
     main_code = str()
     sm_main_effects_names = [var.name for var in statistical_model.main_effects]
-    sm_main_effects_names.sort() # Alphabetize
+    sm_main_effects_names.sort()  # Alphabetize
     for var_name in sm_main_effects_names:
-        if len(main_code)==0:
+        if len(main_code) == 0:
             main_code = f"{var_name}"
         else:
             main_code += f" + {var_name}"
 
     interaction_code = str()
-    sm_interaction_effects_names = [var.name for var in statistical_model.interaction_effects]
-    sm_interaction_effects_names.sort() # Alphabetize
+    sm_interaction_effects_names = [
+        var.name for var in statistical_model.interaction_effects
+    ]
+    sm_interaction_effects_names.sort()  # Alphabetize
     for var_name in sm_interaction_effects_names:
-        if len(interaction_code)==0:
+        if len(interaction_code) == 0:
             interaction_code = f"{var_name}"
         else:
             interaction_code += f" + {var_name}"
 
     # https://bbolker.github.io/mixedmodels-misc/glmmFAQ.html#model-specification
     random_code = str()
-    for rc in statistical_model.random_effects: 
+    for rc in statistical_model.random_effects:
         if isinstance(rc, RandomSlope):
             groups = rc.groups
             iv = rc.iv
@@ -183,53 +193,62 @@ def generate_pymer4_formula(statistical_model: StatisticalModel):
         elif isinstance(rc, RandomIntercept):
             groups = rc.groups
             rc_code = f"(1|{groups.name})"
-        elif isinstance(rc, CorrelatedRandomSlopeAndIntercept): 
+        elif isinstance(rc, CorrelatedRandomSlopeAndIntercept):
             groups = rc.random_slope.groups
-            assert(groups == rc.random_intercept.groups)
+            assert groups == rc.random_intercept.groups
             iv = rc.random_slope.iv
             rc_code = f"(1+{iv.name}|{groups.name})"
-        else: 
-            assert(isinstance(rc, UncorrelatedRandomSlopeAndIntercept))
+        else:
+            assert isinstance(rc, UncorrelatedRandomSlopeAndIntercept)
             groups = rc.random_slope.groups
-            assert(groups == rc.random_intercept.groups)
+            assert groups == rc.random_intercept.groups
             iv = rc.random_slope.iv
             rc_code = f"(1|{groups.name}) + (0+{iv.name}|{groups.name})"
 
-        if len(random_code)==0: 
-            random_code = rc_code 
-        else: 
+        if len(random_code) == 0:
+            random_code = rc_code
+        else:
             random_code += " + " + rc_code
-    
+
     # Do we have both main effects and interaction effects?
     post_main_connector = ""
-    if len(main_code) > 0: 
-        if len(interaction_code) > 0 or len(random_code) > 0: 
+    if len(main_code) > 0:
+        if len(interaction_code) > 0 or len(random_code) > 0:
             post_main_connector = " + "
-    
+
     post_interaction_connector = ""
-    if len(interaction_code) > 0: 
-        if len(random_code) > 0: 
+    if len(interaction_code) > 0:
+        if len(random_code) > 0:
             post_interaction_connector = " + "
 
-    return "\'" + dv_code + main_code + post_main_connector + interaction_code + post_interaction_connector + random_code + "\'"
+    return (
+        "'"
+        + dv_code
+        + main_code
+        + post_main_connector
+        + interaction_code
+        + post_interaction_connector
+        + random_code
+        + "'"
+    )
 
 
-def generate_statsmodels_code(statistical_model: StatisticalModel): 
+def generate_statsmodels_code(statistical_model: StatisticalModel):
     global statsmodels_code_templates
 
     ### Specify preamble
     preamble = statsmodels_code_templates["preamble"]
 
-    ### Generate data code 
+    ### Generate data code
     data_code = None
     data = statistical_model.data
-    if statistical_model.data is None: 
+    if statistical_model.data is None:
         data_code = statsmodels_code_templates["load_data_no_data_source"]
-    elif data.data_path is not None: 
+    elif data.data_path is not None:
         data_code = statsmodels_code_templates["load_data_from_csv_template"]
         data_code = data_code.format(path=str(data.data_path))
-    else: 
-        assert(data.data_path is None)
+    else:
+        assert data.data_path is None
         data_path = write_out_dataframe(statistical_model.data)
         data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
 
@@ -237,28 +256,28 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
     formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
     family_code = generate_statsmodels_family(statistical_model=statistical_model)
     link_code = generate_statsmodels_link(statistical_model=statistical_model)
-    model_code = statsmodels_code_templates["model_template"].format(formula=formula_code, family_name=family_code, link_obj=link_code)
-    
-    ### Put everything together
-    assert(data_code is not None)
-    # Return string to write out to script
-    return (
-        preamble
-        + "\n"
-        + data_code 
-        + "\n"
-        + model_code
+    model_code = statsmodels_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code, link_obj=link_code
     )
 
-def generate_statsmodels_model(statistical_model: StatisticalModel): 
+    ### Put everything together
+    assert data_code is not None
+    # Return string to write out to script
+    return preamble + "\n" + data_code + "\n" + model_code
+
+
+def generate_statsmodels_model(statistical_model: StatisticalModel):
     global statsmodels_code_templates
 
     formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
     family_code = generate_statsmodels_family(statistical_model=statistical_model)
     link_code = generate_statsmodels_link(statistical_model=statistical_model)
-    model_code = statsmodels_code_templates["model_template"].format(formula=formula_code, family_name=family_code, link_obj=link_code)
+    model_code = statsmodels_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code, link_obj=link_code
+    )
 
     return model_code
+
 
 def generate_statsmodels_formula(statistical_model: StatisticalModel):
     dv_code = "{dv} ~ "
@@ -266,45 +285,49 @@ def generate_statsmodels_formula(statistical_model: StatisticalModel):
 
     main_code = str()
     sm_main_effects_names = [var.name for var in statistical_model.main_effects]
-    sm_main_effects_names.sort() # Alphabetize
+    sm_main_effects_names.sort()  # Alphabetize
     for var_name in sm_main_effects_names:
-        if len(main_code)==0:
+        if len(main_code) == 0:
             main_code = f"{var_name}"
         else:
             main_code += f" + {var_name}"
 
     interaction_code = str()
-    sm_interaction_effects_names = [var.name for var in statistical_model.interaction_effects]
-    sm_interaction_effects_names.sort() # Alphabetize
+    sm_interaction_effects_names = [
+        var.name for var in statistical_model.interaction_effects
+    ]
+    sm_interaction_effects_names.sort()  # Alphabetize
     for var_name in sm_interaction_effects_names:
-        if len(interaction_code)==0:
+        if len(interaction_code) == 0:
             interaction_code = f"{var_name}"
         else:
             interaction_code += f" + {var_name}"
-    
+
     # Do we have both main effects and interaction effects?
     post_main_connector = ""
-    if len(main_code) > 0: 
+    if len(main_code) > 0:
         if len(interaction_code) > 0:
             post_main_connector = " + "
-    
 
-    return "\'" + dv_code + main_code + post_main_connector + interaction_code + "\'"
+    return "'" + dv_code + main_code + post_main_connector + interaction_code + "'"
+
 
 # @returns string of family function in statsmodels corresponding to @param statistical_model's family function (of AbstractFamily type)
 def generate_statsmodels_family(statistical_model: StatisticalModel) -> str:
     global statsmodels_family_name_to_functions
     sm_family = statistical_model.family_function
     sm_family_name = type(sm_family).__name__
-    
+
     return statsmodels_family_name_to_functions[sm_family_name]
+
 
 def generate_statsmodels_link(statistical_model=StatisticalModel):
     global statsmodels_link_name_to_functions
     sm_link = statistical_model.link_function
     sm_link_name = type(sm_link).__name__
-    
+
     return statsmodels_link_name_to_functions[sm_link_name]
+
 
 def generate_statsmodels_glm_code(statistical_model: StatisticalModel, **kwargs) -> str:
     has_random = len(statistical_model.random_ivs) > 0

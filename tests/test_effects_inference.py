@@ -40,7 +40,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -59,7 +61,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -79,7 +83,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -100,7 +106,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -122,7 +130,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 3)
         self.assertIn(m0, main_effects)
@@ -145,7 +155,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 3)
         self.assertIn(m0, main_effects)
@@ -166,7 +178,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -186,7 +200,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -206,7 +222,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -228,7 +246,10 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [m0, m1]
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr, design, main_effects)
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(gr, design, main_effects)
         self.assertEqual(len(interaction_effects), 0)
 
         self.assertEqual(len(m2.relationships), 2)
@@ -254,7 +275,10 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [m0, m1, m2]
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr, design, main_effects)
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(gr, design, main_effects)
         self.assertEqual(len(interaction_effects), 1)
         var = interaction_effects.pop()
 
@@ -351,7 +375,7 @@ class EffectsInferenceTest(unittest.TestCase):
                 if re.groups != subject:
                     self.assertIs(re.groups, word)
 
-    # Barr 2013 time * group interaction example: 
+    # Barr 2013 time * group interaction example:
     # "For example, consider a design with two independent groups of subjects,
     # where there are observations at multiple time points for each subject.
     # When testing the time-by-group interaction, the model should include a
@@ -359,8 +383,12 @@ class EffectsInferenceTest(unittest.TestCase):
     def test_random_effects_for_two_way_time_group_interaction(self):
         subject = ts.Unit("Unit")
         time = ts.SetUp("Time")
-        condition = subject.nominal("Condition", cardinality=2, number_of_instances=1) # "two independent groups of subjects"
-        dv = subject.numeric("Dependent variable", number_of_instances=time) # within-subject
+        condition = subject.nominal(
+            "Condition", cardinality=2, number_of_instances=1
+        )  # "two independent groups of subjects"
+        dv = subject.numeric(
+            "Dependent variable", number_of_instances=time
+        )  # within-subject
 
         time.associates_with(dv)
         condition.causes(dv)
@@ -370,12 +398,20 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
-        (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(
+            gr=gr,
+            query=design,
+            main_effects=main_effects,
+            interaction_effects=interaction_effects,
+        )
         #     gr=gr, query=design, main_effects
-            
+
         #     interactions=list(interaction_effects)
         # )
         self.assertEqual(len(random_effects), 1)

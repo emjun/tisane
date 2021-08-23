@@ -1,9 +1,17 @@
 from os import link
 from tisane.variable import AbstractVariable, Measure, Unit
 from tisane.family import AbstractFamily, AbstractLink
-from tisane.random_effects import RandomEffect, CorrelatedRandomSlopeAndIntercept, UncorrelatedRandomSlopeAndIntercept
+from tisane.random_effects import (
+    RandomEffect,
+    CorrelatedRandomSlopeAndIntercept,
+    UncorrelatedRandomSlopeAndIntercept,
+)
 from tisane.graph import Graph
-from tisane.graph_inference import infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
+from tisane.graph_inference import (
+    infer_main_effects_with_explanations,
+    infer_interaction_effects_with_explanations,
+    infer_random_effects_with_explanations,
+)
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
@@ -47,9 +55,16 @@ def check_design_dv(design: Design):
                 f"The dependent variable {dv.name} causes the independent variable {i.name}."
             )
 
+
 # @returns a Python dict with all the effect options, can be used to output straight JSON or to write a file
 # @param output_path is the file path to write out the data
-def collect_model_candidates(query: Design, main_effects_candidates: Set[AbstractVariable], interaction_effects_candidates: Set[AbstractVariable], random_effects_candidates: Set[RandomEffect], family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]]):
+def collect_model_candidates(
+    query: Design,
+    main_effects_candidates: Set[AbstractVariable],
+    interaction_effects_candidates: Set[AbstractVariable],
+    random_effects_candidates: Set[RandomEffect],
+    family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]],
+):
     # Create dictionary
     data = dict()
     data["input"] = dict()
@@ -86,7 +101,7 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
             # ri_dict["random intercept"] = {"groups": r.groups.name}
             tmp_random[key]["random intercept"] = {"groups": r.groups.name}
         else:
-            assert(isinstance(r, RandomSlope))
+            assert isinstance(r, RandomSlope)
             if "random slope" not in tmp_random[key]:
                 tmp_random[key]["random slope"] = []
             # rs_dict = dict()
@@ -121,24 +136,33 @@ def collect_model_candidates(query: Design, main_effects_candidates: Set[Abstrac
     for var in gr.get_variables():
         if isinstance(var, Measure):
             unit = gr.get_identifier_for_variable(var)
-            assert(isinstance(unit, Unit))
+            assert isinstance(unit, Unit)
             data["input"][measure_unit_key][var.name] = unit.name
 
     return data
 
+
 # Write data to JSON file specified in @param output_path
 def write_to_json(data: Dict, output_path: str, output_filename: str):
-    assert(output_filename.endswith(".json"))
+    assert output_filename.endswith(".json")
     path = Path(output_path, output_filename)
     # Output dictionary to JSON
-    with open(path, 'w+', encoding='utf-8') as f:
+    with open(path, "w+", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4, sort_keys=True)
 
     return path
 
+
 # @param file is the path to the JSON file from which to construct the statistical model
-def construct_statistical_model(filename: typing.Union[Path], query: Design, main_effects_candidates: Set[AbstractVariable], interaction_effects_candidates: Set[AbstractVariable], random_effects_candidates: Set[RandomEffect], family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]]):
-    assert(filename.endswith(".json"))
+def construct_statistical_model(
+    filename: typing.Union[Path],
+    query: Design,
+    main_effects_candidates: Set[AbstractVariable],
+    interaction_effects_candidates: Set[AbstractVariable],
+    random_effects_candidates: Set[RandomEffect],
+    family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]],
+):
+    assert filename.endswith(".json")
     dir = os.getcwd()
     path = Path(dir, filename)
 
@@ -146,109 +170,117 @@ def construct_statistical_model(filename: typing.Union[Path], query: Design, mai
 
     # Read in JSON file as a dict
     file_data = None
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         file_data = f.read()
-    model_dict = json.loads(file_data) # file_data is a string
+    model_dict = json.loads(file_data)  # file_data is a string
 
     # Specify dependent variable
     dependent_variable = query.dv
 
-    # Iterate through the dict    
+    # Iterate through the dict
     main_effects = set()
     for v_name in model_dict["main effects"]:
         # Get variable object with v_name
         var = gr.get_variable(v_name)
-        assert(var is not None)
-        assert(var in main_effects_candidates)
+        assert var is not None
+        assert var in main_effects_candidates
         main_effects.add(var)
-    
+
     interaction_effects = set()
     for v_name in model_dict["interaction effects"]:
         # Get variable object with v_name
         var = gr.get_variable(v_name)
-        assert(var is not None)
-        assert(var in interaction_effects_candidates)
+        assert var is not None
+        assert var in interaction_effects_candidates
         interaction_effects.add(var)
 
     random_effects = set()
-    random_slopes = [rs for rs in random_effects_candidates if isinstance(rs, RandomSlope)]
-    random_intercepts = [ri for ri in random_effects_candidates if isinstance(ri, RandomIntercept)]
+    random_slopes = [
+        rs for rs in random_effects_candidates if isinstance(rs, RandomSlope)
+    ]
+    random_intercepts = [
+        ri for ri in random_effects_candidates if isinstance(ri, RandomIntercept)
+    ]
     for rc_groups in model_dict["random effects"]:
         rc_group_dict = model_dict["random effects"][rc_groups]
 
-        for key, values in rc_group_dict.items(): 
-            if key == "correlated": 
-                assert(isinstance(values, dict))
-                assert("random intercept" in values.keys())
-                assert("random slope" in values.keys())
+        for key, values in rc_group_dict.items():
+            if key == "correlated":
+                assert isinstance(values, dict)
+                assert "random intercept" in values.keys()
+                assert "random slope" in values.keys()
                 rs_dict = values["random slope"]
                 ri_dict = values["random intercept"]
 
                 groups_name = rs_dict["groups"]
                 iv_name = rs_dict["iv"]
-                
+
                 rs_obj = None
                 ri_obj = None
-                for rs in random_slopes: 
+                for rs in random_slopes:
                     if rs.groups.name == groups_name and rs.iv.name == iv_name:
                         rs_obj = rs
-                for ri in random_intercepts: 
-                    if ri.groups.name == groups_name: 
-                        ri_obj = ri        
+                for ri in random_intercepts:
+                    if ri.groups.name == groups_name:
+                        ri_obj = ri
 
                 # Create correlated RS and RI
-                corr = CorrelatedRandomSlopeAndIntercept(random_slope=rs_obj, random_intercept=ri_obj)
+                corr = CorrelatedRandomSlopeAndIntercept(
+                    random_slope=rs_obj, random_intercept=ri_obj
+                )
                 # Add correlated RS and RI to random effects
                 random_effects.add(corr)
-            elif key == "uncorrelated": 
-                assert(isinstance(values, dict))
-                assert("random intercept" in values.keys())
-                assert("random slope" in values.keys())
+            elif key == "uncorrelated":
+                assert isinstance(values, dict)
+                assert "random intercept" in values.keys()
+                assert "random slope" in values.keys()
                 rs_dict = values["random slope"]
                 ri_dict = values["random intercept"]
 
                 groups_name = rs_dict["groups"]
                 iv_name = rs_dict["iv"]
-                
+
                 rs_obj = None
                 ri_obj = None
-                for rs in random_slopes: 
+                for rs in random_slopes:
                     if rs.groups.name == groups_name and rs.iv.name == iv_name:
                         rs_obj = rs
-                for ri in random_intercepts: 
-                    if ri.groups.name == groups_name: 
-                        ri_obj = ri        
+                for ri in random_intercepts:
+                    if ri.groups.name == groups_name:
+                        ri_obj = ri
 
                 # Create uncorrelated RS and RI
-                corr = UncorrelatedRandomSlopeAndIntercept(random_slope=rs_obj, random_intercept=ri_obj)
+                corr = UncorrelatedRandomSlopeAndIntercept(
+                    random_slope=rs_obj, random_intercept=ri_obj
+                )
                 # Add uncorrelated RS and RI to random effects
                 random_effects.add(corr)
-            elif key == "random intercept": 
+            elif key == "random intercept":
                 ri_obj = None
                 groups_name = values["groups"]
-                for ri in random_intercepts: 
-                    if ri.groups.name == groups_name: 
-                        ri_obj = ri        
+                for ri in random_intercepts:
+                    if ri.groups.name == groups_name:
+                        ri_obj = ri
                 random_effects.add(ri_obj)
-            else: 
+            else:
                 rs_obj = None
-                assert(key == "random slope")
-                if isinstance(values, dict): 
+                assert key == "random slope"
+                if isinstance(values, dict):
                     raise NotImplemented
                     groups_name = values["groups"]
                     # iv_name = values["iv"]
-                    # for rs in random_slopes: 
+                    # for rs in random_slopes:
                     #     if rs.groups.name == groups_name and rs.iv.name == iv_name:
                     #         rs_obj = rs
                     # random_effects.add(rs_obj)
-                else: 
-                    assert(isinstance(values, list))
+                else:
+                    assert isinstance(values, list)
                     groups_name = values[0]["groups"]
 
-                    for v in values: 
-                        assert(v["groups"] == groups_name)    
+                    for v in values:
+                        assert v["groups"] == groups_name
                         iv_name = v["iv"]
-                        for rs in random_slopes: 
+                        for rs in random_slopes:
                             if rs.groups.name == groups_name and rs.iv.name == iv_name:
                                 rs_obj = rs
                         random_effects.add(rs_obj)
@@ -257,21 +289,29 @@ def construct_statistical_model(filename: typing.Union[Path], query: Design, mai
 
     family_function = None
     link_function = None
-    for family, links in family_link_paired_candidates.items(): 
-        if type(family).__name__ ==  model_dict["family"]:
+    for family, links in family_link_paired_candidates.items():
+        if type(family).__name__ == model_dict["family"]:
             family_function = family
 
-            for l in links: 
+            for l in links:
                 if type(l).__name__ == model_dict["link"]:
                     link_function = l
     # The family and link functions chosen were appropriate/valid options
-    assert(family_function is not None)
-    assert(link_function is not None)
+    assert family_function is not None
+    assert link_function is not None
 
     # Construct Statistical Model
-    sm = StatisticalModel(dependent_variable, main_effects, interaction_effects, random_effects, family_function, link_function)
+    sm = StatisticalModel(
+        dependent_variable,
+        main_effects,
+        interaction_effects,
+        random_effects,
+        family_function,
+        link_function,
+    )
 
-    return sm 
+    return sm
+
 
 # @returns statistical model that reflects the study design
 def infer_statistical_model_from_design(design: Design):
@@ -283,39 +323,58 @@ def infer_statistical_model_from_design(design: Design):
     # Check that the DV does not cause one or more IVs
     check_design_dv(design)
 
-
     ### Step 2: Candidate statistical model inference/generation
-    (main_effects_candidates, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects_candidates, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects_candidates)
-    (random_effects_candidates, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects_candidates, interaction_effects=interaction_effects_candidates)
+    (main_effects_candidates, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects_candidates,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects_candidates
+    )
+    (
+        random_effects_candidates,
+        random_explanations,
+    ) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects_candidates,
+        interaction_effects=interaction_effects_candidates,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
     # Get combined dict
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects_candidates,
+        interaction_effects_candidates=interaction_effects_candidates,
+        random_effects_candidates=random_effects_candidates,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Add data
     data = design.get_data()
-    if data is not None: 
-        combined_dict["input"]["data"] = data.to_dict('list')
-    else: # There is no data 
+    if data is not None:
+        combined_dict["input"]["data"] = data.to_dict("list")
+    else:  # There is no data
         combined_dict["input"]["data"] = dict()
-    
 
     # Write out to JSON in order to pass data to Tisane GUI for disambiguation
     input_file = "input.json"
@@ -325,13 +384,12 @@ def infer_statistical_model_from_design(design: Design):
     # the actual variable objects in the next step.
     # write_to_json returns the Path of the input.json file
     path = write_to_json(combined_dict, "./", input_file)
-    
 
     ### Step 3: Disambiguation loop (GUI)
     gui = TisaneGUI()
     gui.start_app(input=path)
     # Output a JSON file
-    output_file = "model_spec.json" # or whatever path/file that the GUI outputs
+    output_file = "model_spec.json"  # or whatever path/file that the GUI outputs
 
     # Read JSON file
     sm = None
@@ -340,7 +398,14 @@ def infer_statistical_model_from_design(design: Design):
     ### Step 4: Code generation
     # Construct StatisticalModel from JSON spec
     model_json = f.read()
-    sm = construct_statistical_model(file=model_json, query=design, main_effects_candidates=main_effects_candidates, interaction_effects_candidates=interaction_effects_candidates, random_effects_candidates=random_effects_candidates, family_link_paired_candidates=family_link_paired).assign_data(data)
+    sm = construct_statistical_model(
+        file=model_json,
+        query=design,
+        main_effects_candidates=main_effects_candidates,
+        interaction_effects_candidates=interaction_effects_candidates,
+        random_effects_candidates=random_effects_candidates,
+        family_link_paired_candidates=family_link_paired,
+    ).assign_data(data)
     # Assign statistical model data from @parm design
     sm.assign_data(design.dataset)
     # Generate code from SM

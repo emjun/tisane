@@ -8,8 +8,8 @@ df = pd.read_csv(os.path.join(dir, "pigs.csv"))
 ## Initialize variables with data
 # Bind measures to units at the time of declaration
 week = ts.SetUp("Time", cardinality=12)
-pig = ts.Unit("Pig", cardinality=82) # 82 pigs
-litter = ts.Unit("Litter", cardinality=22) # 22 litters
+pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
+litter = ts.Unit("Litter", cardinality=22)  # 22 litters
 # Each pig has 1 instance of an ordinal Evit measure
 vitamin_e = pig.ordinal(
     "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1

@@ -125,7 +125,7 @@ def infer_link_functions(query: Design, family: AbstractFamily) -> Set[AbstractL
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        # Sqrt is implemented as Power(power=.5) 
+        # Sqrt is implemented as Power(power=.5)
         link_candidates.add(SquarerootLink(dv))
     elif isinstance(family, BinomialFamily):
         link_candidates.add(IdentityLink(dv))

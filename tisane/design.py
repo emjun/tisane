@@ -84,10 +84,10 @@ class Design(object):
 
         return self
 
-    def get_data(self) -> pd.DataFrame: 
-        if self.dataset is not None: 
+    def get_data(self) -> pd.DataFrame:
+        if self.dataset is not None:
             return self.dataset.get_data()
-        # else 
+        # else
         return None
 
     def _add_variable_to_graph(self, variable: AbstractVariable):
