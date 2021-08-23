@@ -12,16 +12,17 @@ import pandas as pd
 from tisane.gui.gui_helpers import simulate_data_dist
 import json
 
+
 def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
     createLinkFunctionCallbacks(app, comp)
     createChartCallbacks(app, comp)
     createGenerateCodeCallback(app, comp)
     pass
 
+
 def createGenerateCodeCallback(app, comp: GUIComponents = None):
     @app.callback(
-        Output("generated-code-div", "children"),
-        Input("generate-code", "n_clicks")
+        Output("generated-code-div", "children"), Input("generate-code", "n_clicks")
     )
     def generateCodeCallback(nclicks):
         if comp:
@@ -37,7 +38,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
         Output("link-options", "options"),
         Output("link-options", "value"),
         Output("overview-family", "children"),
-        Input("family-options", "value")
+        Input("family-options", "value"),
     )
     def updateLinkOptions(value):
         if not comp:
@@ -51,20 +52,23 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
             if value in familyLinks:
                 defaultLink = comp.getDefaultLinkForFamily(value)
                 familyName = " ".join(separateByUpperCamelCase(value)[:-1])
-                return [
-                    {
-                        "label": " ".join(separateByUpperCamelCase(str(l))) + ("*" if defaultLink == l else ""),
-                        "value": str(l)
-                    } for l in familyLinks[value]
-                ], defaultLink, "Family: {}".format(familyName)
+                return (
+                    [
+                        {
+                            "label": " ".join(separateByUpperCamelCase(str(l)))
+                            + ("*" if defaultLink == l else ""),
+                            "value": str(l),
+                        }
+                        for l in familyLinks[value]
+                    ],
+                    defaultLink,
+                    "Family: {}".format(familyName),
+                )
             pass
         print("Cannot update for some reason")
         raise PreventUpdate
 
-    @app.callback(
-        Output("overview-link", "children"),
-        Input("link-options", "value")
-    )
+    @app.callback(Output("overview-link", "children"), Input("link-options", "value"))
     def updateLinkOverview(value):
         if comp:
             comp.output["link"] = value
@@ -75,8 +79,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
 
 def createChartCallbacks(app, comp: GUIComponents = None):
     @app.callback(
-        Output("family-link-chart", "figure"),
-        Input("family-options", "value")
+        Output("family-link-chart", "figure"), Input("family-options", "value")
     )
     def update_chart_family(family):
         if family is not None and comp:
@@ -86,6 +89,7 @@ def createChartCallbacks(app, comp: GUIComponents = None):
 
         else:
             raise PreventUpdate
+
 
 def transform_data_from_fact(data: np.ndarray, link_fact: str):
     if "IdentityLink" == link_fact:

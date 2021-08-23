@@ -6,9 +6,10 @@ import unittest
 
 class CheckTest(unittest.TestCase):
     def test_iv_causes_dv(self):
-        dv = ts.Numeric("DV")
-        v1 = ts.Nominal("V1")
-        v2 = ts.Nominal("V2")
+        u = ts.Unit("Unit")
+        dv = u.numeric("DV")
+        v1 = u.nominal("V1")
+        v2 = u.nominal("V2")
 
         # Conceptual relationships
         v1.causes(dv)
@@ -24,9 +25,10 @@ class CheckTest(unittest.TestCase):
         self.assertTrue(error)
 
     def test_dv_causes_iv(self):
-        dv = ts.Numeric("DV")
-        v1 = ts.Nominal("V1")
-        v2 = ts.Nominal("V2")
+        u = ts.Unit("Unit")
+        dv = u.numeric("DV")
+        v1 = u.nominal("V1")
+        v2 = u.nominal("V2")
 
         # Conceptual relationships
         v1.causes(dv)

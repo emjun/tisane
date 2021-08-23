@@ -29,7 +29,7 @@ class CorrelatedRandomSlopeAndIntercept:
     #     self.random_slope = RandomSlope(iv=iv, groups=groups)
     #     self.random_intercept = RandomIntercept(groups=groups)
 
-    def __init__(self, random_slope: RandomSlope, random_intercept: RandomIntercept): 
+    def __init__(self, random_slope: RandomSlope, random_intercept: RandomIntercept):
         self.random_slope = random_slope
         self.random_intercept = random_intercept
 
@@ -44,7 +44,7 @@ class UncorrelatedRandomSlopeAndIntercept:
     #     self.random_slope = RandomSlope(iv=iv, groups=groups)
     #     self.random_intercept = RandomIntercept(groups=groups)
 
-    def __init__(self, random_slope: RandomSlope, random_intercept: RandomIntercept): 
+    def __init__(self, random_slope: RandomSlope, random_intercept: RandomIntercept):
         self.random_slope = random_slope
         self.random_intercept = random_intercept
 

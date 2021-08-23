@@ -5,6 +5,7 @@ from scipy.special import logit
 from scipy import stats
 import pandas as pd
 
+
 def simulate_data_dist(family: str):
     size = 1000
 
@@ -43,7 +44,7 @@ def simulate_data_dist(family: str):
 
         return np.random.default_rng().negative_binomial(n=n, p=p, size=size)
     elif "MultinomialFamily" in str(family):
-        cardinality = 3 # should be > 2
+        cardinality = 3  # should be > 2
         n = size  # number of trials/experiments, > 0
         pvals = 1.0 / cardinality  # probability of each case
 

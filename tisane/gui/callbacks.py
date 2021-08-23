@@ -6,11 +6,27 @@ from tisane.gui.gui_components import GUIComponents
 from tisane.gui.family_link_function_callbacks import createFamilyLinkFunctionCallbacks
 from tisane.gui.random_effects_callbacks import createRandomEffectsCallbacks
 import json
-def createCallbacks(app, comp: GUIComponents=None):
-    cont_to_interaction_effects_input = Input("continue-to-interaction-effects", "n_clicks")
+
+
+def createCallbacks(app, comp: GUIComponents = None):
+    cont_to_interaction_effects_input = Input(
+        "continue-to-interaction-effects", "n_clicks"
+    )
     createMainEffectsProgressBarCallbacks(app)
-    createProgressBarCallbacks(app, "tab-2", "interaction-effects-progress", "continue-to-interaction-effects", "continue-to-random-effects")
-    createProgressBarCallbacks(app, "tab-3", "random-effects-progress", "continue-to-random-effects", "continue-to-family-link-functions")
+    createProgressBarCallbacks(
+        app,
+        "tab-2",
+        "interaction-effects-progress",
+        "continue-to-interaction-effects",
+        "continue-to-random-effects",
+    )
+    createProgressBarCallbacks(
+        app,
+        "tab-3",
+        "random-effects-progress",
+        "continue-to-random-effects",
+        "continue-to-family-link-functions",
+    )
     createTabsCallbacks(app)
     createMainEffectsChecklistCallbacks(app, comp)
     createFamilyLinkFunctionsProgressCallbacks(app)
@@ -20,33 +36,37 @@ def createCallbacks(app, comp: GUIComponents=None):
     # createTestDivCallbacks(app)
     pass
 
+
 def createTestDivCallbacks(app):
-    @app.callback(
-        Output("test-div-output", "children"),
-        Input("test-div", "children")
-    )
+    @app.callback(Output("test-div-output", "children"), Input("test-div", "children"))
     def testDivCallback(children):
         return str(children)
+
 
 def getTriggeredFromContext(ctx):
     if not ctx.triggered:
         return False
-    return ctx.triggered[0]['prop_id'].split('.')[0]
+    return ctx.triggered[0]["prop_id"].split(".")[0]
 
-def createTransitionCallback(app, tabA, tabB, tabA_id, progressA, progressB, continue_button_id):
+
+def createTransitionCallback(
+    app, tabA, tabB, tabA_id, progressA, progressB, continue_button_id
+):
     def goToInteractionEffects(n_clicks):
         # print(n_clicks)
         if n_clicks:
             return True, True, "primary"
         return False, False, "secondary"
+
     app.callback(
         Output(progressB, "animated"),
         Output(progressB, "striped"),
         Output(progressB, "color"),
-        [Input(continue_button_id, "n_clicks")])(goToInteractionEffects)
-
+        [Input(continue_button_id, "n_clicks")],
+    )(goToInteractionEffects)
 
     pass
+
 
 def createTabsCallbacks(app):
     def continueCallback(fromMain, fromInteraction, fromRandom):
@@ -61,24 +81,28 @@ def createTabsCallbacks(app):
             elif triggered == "continue-to-family-link-functions":
                 return "tab-4"
         raise PreventUpdate
+
     app.callback(
         Output("tabs", "active_tab"),
         Input("continue-to-interaction-effects", "n_clicks"),
         Input("continue-to-random-effects", "n_clicks"),
-        Input("continue-to-family-link-functions", "n_clicks")
+        Input("continue-to-family-link-functions", "n_clicks"),
     )(continueCallback)
 
+
 mytabs = ["tab-1", "tab-2", "tab-3", "tab-4"]
+
 
 def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     mainEffectCompIds = comp.getMainEffectCheckboxIds()
     inputs = [Input(id, "checked") for id in mainEffectCompIds]
     states = [State(id, "id") for id in mainEffectCompIds]
+
     @app.callback(
         Output("added-main-effects", "children"),
         Output("added-main-effects-store", "data"),
         inputs,
-        states
+        states,
     )
     def addVariables(*args):
         if not comp:
@@ -88,7 +112,9 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
         # print(options)
         if not args:
             raise PreventUpdate
-        assert len(args) % 2 == 0, "Weird length of args for added-main-effects callback"
+        assert (
+            len(args) % 2 == 0
+        ), "Weird length of args for added-main-effects callback"
         half = int(len(args) / 2)
         inputs = args[:half]
         states = args[half:]
@@ -107,25 +133,28 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                 if mainEffect in comp.output["main effects"]:
                     comp.output["main effects"].remove(mainEffect)
             pass
-        newChildren = [
-            html.Li(o) for o in options
-        ]
+        newChildren = [html.Li(o) for o in options]
         print("New children: {}".format(newChildren))
         return newChildren, json.dumps(comp.output)
+
     pass
+
 
 def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     if comp and comp.hasInteractionEffects():
         interactionEffectCompIds = comp.getInteractionEffectCheckboxIds()
         inputs = [Input(id, "checked") for id in interactionEffectCompIds]
         states = [State(id, "id") for id in interactionEffectCompIds]
+
         def addVariables(*args):
             if not comp:
                 print("Cannot update added-interaction-effects")
                 raise PreventUpdate
             if not args:
                 raise PreventUpdate
-            assert len(args) % 2 == 0, "Weird length of args for added-interaction-effects callback"
+            assert (
+                len(args) % 2 == 0
+            ), "Weird length of args for added-interaction-effects callback"
             half = int(len(args) / 2)
             inputs = args[:half]
             states = args[half:]
@@ -145,16 +174,14 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                         comp.output["interaction effects"].remove(interactionEffect)
                     pass
                 pass
-            newChildren = [
-                html.Li(o) for o in options
-            ]
+            newChildren = [html.Li(o) for o in options]
             print("New children: {}".format(newChildren))
             return newChildren
-        app.callback(
-            Output("added-interaction-effects", "children"),
-            inputs,
-            states
-        )(addVariables)
+
+        app.callback(Output("added-interaction-effects", "children"), inputs, states)(
+            addVariables
+        )
+
 
 def createFamilyLinkFunctionsProgressCallbacks(app):
     def animatedCallback(nclicks, active_tab):
@@ -168,6 +195,7 @@ def createFamilyLinkFunctionsProgressCallbacks(app):
         if triggered == "continue-to-family-link-functions":
             return True, True
         return False, False
+
     app.callback(
         Output("family-link-functions-progress", "animated"),
         Output("family-link-functions-progress", "striped"),
@@ -178,22 +206,33 @@ def createFamilyLinkFunctionsProgressCallbacks(app):
     def colorCallback(nclicksto, nclicksfrom, active_tab):
         ctx = dash.callback_context
         triggered = getTriggeredFromContext(ctx)
-        print("{}, {}: {}, {}".format("tab-4", "family-link-functions-progress", triggered, active_tab))
+        print(
+            "{}, {}: {}, {}".format(
+                "tab-4", "family-link-functions-progress", triggered, active_tab
+            )
+        )
         if triggered:
-            if triggered == "generate-code" or mytabs.index(active_tab) > mytabs.index("tab-4"):
+            if triggered == "generate-code" or mytabs.index(active_tab) > mytabs.index(
+                "tab-4"
+            ):
                 return "success"
-            if triggered == "continue-to-family-link-functions" or mytabs.index(active_tab) == mytabs.index("tab-4"):
+            if triggered == "continue-to-family-link-functions" or mytabs.index(
+                active_tab
+            ) == mytabs.index("tab-4"):
                 return "primary"
         raise PreventUpdate
+
     app.callback(
         Output("family-link-functions-progress", "color"),
         Input("generate-code", "n_clicks"),
         Input("continue-to-family-link-functions", "n_clicks"),
-        Input("tabs", "active_tab")
+        Input("tabs", "active_tab"),
     )(colorCallback)
 
 
-def createProgressBarCallbacks(app, triggered_tab, progressid, continuefrom_id, continueto_id):
+def createProgressBarCallbacks(
+    app, triggered_tab, progressid, continuefrom_id, continueto_id
+):
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
@@ -203,6 +242,7 @@ def createProgressBarCallbacks(app, triggered_tab, progressid, continuefrom_id, 
         if triggered == "tabs":
             return active_tab == triggered_tab, active_tab == triggered_tab
         return False, False
+
     app.callback(
         Output(progressid, "animated"),
         Output(progressid, "striped"),
@@ -215,17 +255,23 @@ def createProgressBarCallbacks(app, triggered_tab, progressid, continuefrom_id, 
         triggered = getTriggeredFromContext(ctx)
         print("{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab))
         if triggered:
-            if triggered == continueto_id or mytabs.index(active_tab) > mytabs.index(triggered_tab):
+            if triggered == continueto_id or mytabs.index(active_tab) > mytabs.index(
+                triggered_tab
+            ):
                 return "success"
-            if triggered == continuefrom_id or mytabs.index(triggered_tab) == mytabs.index(active_tab):
+            if triggered == continuefrom_id or mytabs.index(
+                triggered_tab
+            ) == mytabs.index(active_tab):
                 return "primary"
         raise PreventUpdate
+
     app.callback(
         Output(progressid, "color"),
         Input(continueto_id, "n_clicks"),
         Input(continuefrom_id, "n_clicks"),
-        Input("tabs", "active_tab")
+        Input("tabs", "active_tab"),
     )(colorCallback)
+
 
 def createMainEffectsProgressBarCallbacks(app):
     def animatedCallback(nclicks_main, nclicks_interaction, active_tab):
@@ -237,6 +283,7 @@ def createMainEffectsProgressBarCallbacks(app):
         if triggered == "tabs":
             return active_tab == "tab-1", active_tab == "tab-1"
         return False, False
+
     app.callback(
         Output("main-effects-progress", "animated"),
         Output("main-effects-progress", "striped"),
@@ -252,10 +299,11 @@ def createMainEffectsProgressBarCallbacks(app):
             if triggered == "continue-to-interaction-effects" or active_tab != "tab-1":
                 return "success"
         raise PreventUpdate
+
     app.callback(
         Output("main-effects-progress", "color"),
         Input("continue-to-interaction-effects", "n_clicks"),
-        Input("tabs", "active_tab")
+        Input("tabs", "active_tab"),
     )(colorCallback)
 
 
@@ -266,9 +314,10 @@ def createButtonCallback(app):
             return ""
         else:
             print(ctx.triggered)
-            clicked_button = ctx.triggered[0]['prop_id'].split('.')[0]
+            clicked_button = ctx.triggered[0]["prop_id"].split(".")[0]
 
         return "{}, {}".format(nclicks_main, nclicks_interaction)
+
     app.callback(
         Output("added-variables-paragraph", "children"),
         Input("continue-to-interaction-effects", "n_clicks"),
@@ -281,6 +330,7 @@ def goToInteractionEffects(n_clicks):
     if n_clicks:
         return "tab-2", True, False, False, "success", True, True, "primary"
     return "tab-1", False, True, True, "primary", False, False, "secondary"
+
 
 def disableMainEffectsTab(n_clicks):
     return True if n_clicks else False

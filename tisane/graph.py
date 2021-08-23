@@ -505,7 +505,6 @@ class Graph(object):
         # Store Moderates obj even though edge is an Associates edge
         self.associates(lhs=var, rhs=on, associates_obj=moderates_obj)
 
-
         # Inherit unit has relationships from moderators
         for m in moderator:
             identifier = self.get_identifier_for_variable(m)

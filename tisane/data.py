@@ -19,7 +19,7 @@ class Dataset(object):
         # Read in data
         if isinstance(source, str):
             abs_path = absolute_path(p=source)
-            self.data_path = abs_path # store
+            self.data_path = abs_path  # store
             df = pd.read_csv(abs_path)
         elif isinstance(source, pd.DataFrame):
             df = source
@@ -27,10 +27,10 @@ class Dataset(object):
 
         # TODO: post-processing? E.g., break up into DataVectors?
         self.dataset = df
-    
-    def get_data(self) -> pd.DataFrame: 
+
+    def get_data(self) -> pd.DataFrame:
         return self.dataset
-        
+
     def get_column(self, name: str):
         cols = self.dataset.columns
         if name in cols:

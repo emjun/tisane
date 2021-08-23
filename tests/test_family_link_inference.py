@@ -4,8 +4,10 @@ NOTE: The tests are only to test, not to make any statements about how these var
 """
 
 from os import link
+from tisane import data
 from tisane.family import (
     BinomialFamily,
+    CauchyLink,
     GammaFamily,
     GaussianFamily,
     IdentityLink,
@@ -22,6 +24,7 @@ from tisane.family import (
     ProbitLink,
     CLogLogLink,
     PowerLink,
+    SquarerootLink,
     OPowerLink,
     NegativeBinomialLink,
     LogLogLink,
@@ -116,7 +119,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, IdentityLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 9)
+        self.assertEqual(len(link_candidates), len(DataForTests.gaussian_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.gaussian_links)
@@ -133,7 +136,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, InverseSquaredLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.inverse_gaussian_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.inverse_gaussian_links)
@@ -150,7 +153,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, InverseLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.gamma_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.gamma_links)
@@ -167,7 +170,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.tweedie_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.tweedie_links)
@@ -184,7 +187,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.poisson_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.poisson_links)
@@ -201,7 +204,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, IdentityLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 9)
+        self.assertEqual(len(link_candidates), len(DataForTests.gaussian_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.gaussian_links)
@@ -218,7 +221,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, InverseSquaredLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.inverse_gaussian_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.inverse_gaussian_links)
@@ -235,7 +238,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, InverseLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.gamma_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.gamma_links)
@@ -286,7 +289,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogitLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 8)
+        self.assertEqual(len(link_candidates), len(DataForTests.binomial_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.binomial_links)
@@ -337,7 +340,7 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogitLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 8)
+        self.assertEqual(len(link_candidates), len(DataForTests.binomial_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.binomial_links)
@@ -393,10 +396,15 @@ class DataForTests:
         PoissonFamily,
         BinomialFamily,
         NegativeBinomialFamily,
-        MultinomialFamily,
+        # Not implemented in statsmodels or pymer4
+        # MultinomialFamily,
     ]
     nominal_binary_families_types = [BinomialFamily]
-    nominal_nary_families_types = [MultinomialFamily, NegativeBinomialFamily]
+    nominal_nary_families_types = [
+        # Not implemented in statsmodels or pymer4
+        # MultinomialFamily,
+        NegativeBinomialFamily
+    ]
 
     gaussian_links = [
         IdentityLink,
@@ -414,28 +422,29 @@ class DataForTests:
         InverseLink,
     ]
     inverse_gaussian_links = [
-        IdentityLink, 
-        LogLink, 
+        IdentityLink,
+        LogLink,
         PowerLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
         InverseLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        InverseSquaredLink
+        InverseSquaredLink,
     ]
     gamma_links = [
-        IdentityLink, 
-        LogLink, 
+        IdentityLink,
+        LogLink,
         PowerLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        InverseLink
+        InverseLink,
     ]
     tweedie_links = [IdentityLink, LogLink, PowerLink]
-    poisson_links = [IdentityLink, LogLink, PowerLink]
+    poisson_links = [IdentityLink, LogLink, SquarerootLink]
     binomial_links = [
         IdentityLink,
         LogLink,
         LogitLink,
         ProbitLink,
+        CauchyLink,
         CLogLogLink,
         PowerLink,
         # Not currently implemented in statsmodels

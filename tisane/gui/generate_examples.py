@@ -6,9 +6,14 @@ These examples are first tested in `test_candidate_json_generation.py` before be
 from os import write
 import tisane as ts
 from tisane.main import collect_model_candidates, write_to_json
-from tisane.graph_inference import infer_main_effects_with_explanations, infer_interaction_effects_with_explanations, infer_random_effects_with_explanations
+from tisane.graph_inference import (
+    infer_main_effects_with_explanations,
+    infer_interaction_effects_with_explanations,
+    infer_random_effects_with_explanations,
+)
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 import os
+
 
 def main_effects_only(path="./gui/example_inputs/", filename="main_only.json"):
     u0 = ts.Unit("Unit")
@@ -19,32 +24,51 @@ def main_effects_only(path="./gui/example_inputs/", filename="main_only.json"):
     design = ts.Design(dv=dv, ivs=[m0, m1])
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
     # Get combined dict
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
+
 
 def main_interaction(path="./gui/example_inputs/", filename="main_interaction.json"):
     u0 = ts.Unit("Unit")
@@ -60,33 +84,54 @@ def main_interaction(path="./gui/example_inputs/", filename="main_interaction.js
     design = ts.Design(dv=dv, ivs=[m0, m1, m2])
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
-def main_interaction_random_intercepts(path="./gui/example_inputs/", filename="main_interaction_random_intercepts.json"):
+
+def main_interaction_random_intercepts(
+    path="./gui/example_inputs/", filename="main_interaction_random_intercepts.json"
+):
     u0 = ts.Unit("Unit")
     s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5])
     m0 = u0.numeric("Measure 0")
@@ -102,33 +147,55 @@ def main_interaction_random_intercepts(path="./gui/example_inputs/", filename="m
     design = ts.Design(dv=dv, ivs=[m0, m1, m2, s0])  # main effect of Time
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
-def main_interaction_random_slope_one_variable(path="./gui/example_inputs/", filename="main_interaction_random_slope_one_variable.json"):
+
+def main_interaction_random_slope_one_variable(
+    path="./gui/example_inputs/",
+    filename="main_interaction_random_slope_one_variable.json",
+):
     u = ts.Unit("Unit")
     a = u.nominal(
         "Measure A", cardinality=2, number_of_instances=2
@@ -143,34 +210,55 @@ def main_interaction_random_slope_one_variable(path="./gui/example_inputs/", fil
     design = ts.Design(dv=dv, ivs=[a, b])
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
 
-def main_interaction_random_slope_interaction(path="./gui/example_inputs/", filename="main_interaction_random_slope_interaction.json"):
+def main_interaction_random_slope_interaction(
+    path="./gui/example_inputs/",
+    filename="main_interaction_random_slope_interaction.json",
+):
     u = ts.Unit("Unit")
     a = u.nominal(
         "Measure A", cardinality=2, number_of_instances=2
@@ -187,34 +275,55 @@ def main_interaction_random_slope_interaction(path="./gui/example_inputs/", file
     design = ts.Design(dv=dv, ivs=[a, b])
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
 
-def main_interaction_random_intercept_slope_correlated(path="./gui/example_inputs/", filename="main_interaction_random_intercept_slope_correlated.json"):
+def main_interaction_random_intercept_slope_correlated(
+    path="./gui/example_inputs/",
+    filename="main_interaction_random_intercept_slope_correlated.json",
+):
     subject = ts.Unit("Subject", cardinality=12)
     word = ts.Unit("Word", cardinality=4)
     condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
@@ -226,33 +335,55 @@ def main_interaction_random_intercept_slope_correlated(path="./gui/example_input
     design = ts.Design(dv=reaction_time, ivs=[condition])
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
 
-def main_interaction_multiple_random_slopes(path="./gui/example_inputs/", filename="main_interaction_multiple_random_slopes.json"):
+
+def main_interaction_multiple_random_slopes(
+    path="./gui/example_inputs/",
+    filename="main_interaction_multiple_random_slopes.json",
+):
     u = ts.Unit("Unit")
     a = u.nominal("Measure A", cardinality=2)  # A is between-subjects
     b = u.nominal(
@@ -275,31 +406,50 @@ def main_interaction_multiple_random_slopes(path="./gui/example_inputs/", filena
     design = ts.Design(dv=dv, ivs=[a, b])
     gr = design.graph
 
-    (main_effects, main_explanations) = infer_main_effects_with_explanations(gr=gr, query=design)
-    (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-    (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr,  query=design, main_effects=main_effects, interaction_effects=interaction_effects)
+    (main_effects, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects
+    )
+    (random_effects, random_explanations) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects,
+        interaction_effects=interaction_effects,
+    )
     family_candidates = infer_family_functions(query=design)
     link_candidates = set()
     family_link_paired = dict()
     for f in family_candidates:
         l = infer_link_functions(query=design, family=f)
         # Add Family: Link options
-        assert(f not in family_link_paired.keys())
+        assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    # Combine explanations 
+    # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
     explanations.update(interaction_explanations)
     explanations.update(random_explanations)
 
-    combined_dict = collect_model_candidates(query=design, main_effects_candidates=main_effects, interaction_effects_candidates=interaction_effects, random_effects_candidates=random_effects, family_link_paired_candidates=family_link_paired)
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects,
+        interaction_effects_candidates=interaction_effects,
+        random_effects_candidates=random_effects,
+        family_link_paired_candidates=family_link_paired,
+    )
 
-    # Add explanations 
+    # Add explanations
     combined_dict["input"]["explanations"] = explanations
 
     # Output combined dict to @param path
     write_to_json(data=combined_dict, output_path=path, output_filename=filename)
+
 
 os.chdir(os.path.dirname(__file__))
 os.chdir("..")

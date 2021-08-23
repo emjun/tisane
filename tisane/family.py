@@ -25,6 +25,7 @@ class AbstractFamily(ABC):
     # def generate_code(self):
     #     pass
 
+
 class AbstractLink(ABC):
     variable: AbstractVariable
 
@@ -70,6 +71,7 @@ class LogLink(AbstractLink):
         # return np.log(data)
         pass
 
+
 class LogCLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
@@ -107,6 +109,7 @@ class CauchyLink(AbstractLink):
         # wrapper around python statsmodels?
         pass
 
+
 class CLogLogLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
@@ -126,6 +129,7 @@ class PowerLink(AbstractLink):
         # return pd.DataFrame(data=transformed_data)
         pass
 
+
 class SquarerootLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
@@ -134,6 +138,7 @@ class SquarerootLink(AbstractLink):
         # wrapper around python statsmodels?
         # return sm.Power(power=.5) ??
         pass
+
 
 class OPowerLink(AbstractLink):  # TODO: Is this implemented in statsmodels?
     def __init__(self, variable: AbstractVariable):

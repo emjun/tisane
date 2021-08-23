@@ -46,7 +46,9 @@ treatment_approach.causes(pounds_lost)
 adult.nests_within(group)  # Members are part of groups
 
 # Query Tisane to infer a statistical model and generate a script
-design = ts.Design(dv=pounds_lost, ivs=[treatment_approach, motivation_level]).assign_data(
+design = ts.Design(
+    dv=pounds_lost, ivs=[treatment_approach, motivation_level]
+).assign_data(
     df
 )  # Load data
 ts.infer_statistical_model_from_design(design=design)
