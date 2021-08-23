@@ -123,7 +123,9 @@ class TisaneGUI():
                 dbc.Row([
                     dbc.Col(overview, width=4),
                     dbc.Col(model_tabs, width=8),
-                ])
+                ]),
+                dcc.Store(id="added-main-effects-store"),
+                dcc.Store(id="added-interaction-effects-store")
 
                 # Header("Dash Heart Disease Prediction with AIX360", app),
                 # html.Hr(),

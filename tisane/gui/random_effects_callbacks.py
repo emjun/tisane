@@ -3,10 +3,12 @@ import dash
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
+import json
 
 def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
     # createRandomEffectsAddedCallbacks(app, comp)
     createRandomEffectsCorrelationCallbacks(app, comp)
+    createRandomEffectsVisibleCallbacks(app, comp)
     pass
 
 def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
@@ -71,3 +73,26 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
                         comp.markCheckedForCorrelatedId(id, checked)
                     return tuple([idToCorrelated[id] for id in checkboxIds])
                 raise PreventUpdate
+
+
+def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
+    if comp:
+        rowIds = comp.getRandomEffectsRowIds()
+        addedRandomVariableIds = comp.getAddedRandomVariableIds()
+        allIds = rowIds + addedRandomVariableIds
+        if allIds:
+            rowOutputs = [Output(id, "hidden") for id in allIds]
+            @app.callback(
+                rowOutputs,
+                Input("added-main-effects-store", "data")
+            )
+            def changeVisibility(outputFromMainEffectsString):
+                outputFromMainEffects = json.loads(outputFromMainEffectsString)
+                if "main effects" in outputFromMainEffects and "dependent variable" in outputFromMainEffects:
+                    dv = outputFromMainEffects["dependent variable"]
+                    visibleMainEffects = outputFromMainEffects["main effects"]
+                    allVisible = [dv] + visibleMainEffects
+                    allVisibleUnits = set([comp.getUnitFromMeasure(vis) if comp.hasUnitForMeasure(vis) else vis for vis in allVisible])
+
+                    units = [comp.getUnitFromRowOrAddedRandomVariableId(id) for id in allIds]
+                    return tuple([u not in allVisibleUnits for u in units])
