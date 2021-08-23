@@ -797,6 +797,12 @@ class GUIComponents():
                     ],
                     align="center",
                 ),
+                dbc.Row(
+                    [
+                        dbc.Col(html.Div("Placeholder for normality tests"), md=12)
+                    ],
+                    align="center"
+                ),
                 # family_link_switch,
                 dbc.Button("Generate Code", color="success", id="generate-code"),
                 html.Div(id="generated-code-div")
