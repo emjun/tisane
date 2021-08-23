@@ -20,4 +20,4 @@ class ExampleData:
     main_interaction_multiple_random_slopes=createPath("main_interaction_multiple_random_slopes.json")
     # TODO: Add more input sources and json files here
 
-start_gui(ExampleData.main_interaction_random_intercept_slope_correlated)
+start_gui(ExampleData.main_interaction_multiple_random_slopes)

@@ -107,21 +107,40 @@ class GUIComponents():
                     for slope in self.output["random effects"][unit]["random slope"]:
                         slope["correlated"] = True
         self.generatedCorrelatedIdToGroupIv = {}
+        self.randomIntercepts = {}
         for unit, re in randomEffects.items():
+            if "random intercept" in re:
+                infoId = self.getNewComponentId()
+                self.randomIntercepts[unit] = {
+                    "info-id": infoId
+                }
+                pass
             if "random slope" in re and "random intercept" in re:
                 if unit not in self.randomSlopes:
                     self.randomSlopes[unit] = {}
                     pass
                 for rs in re["random slope"]:
                     newId = self.getNewComponentId()
+                    infoId = self.getNewComponentId()
                     self.randomSlopes[unit][rs["iv"]] = {
-                        "correlated-id": newId
+                        "correlated-id": newId,
+                        "info-id": infoId,
                     }
                     self.generatedCorrelatedIdToRandomSlope[newId] = rs
                     self.generatedCorrelatedIdToGroupIv[newId] = (unit, rs["iv"])
                     pass
                 pass
+            elif "random slope" in re:
+                if unit not in self.randomSlopes:
+                    self.randomSlopes[unit] = {}
+                    pass
+                for rs in re["random slope"]:
+                    infoId = self.getNewComponentId()
+                    self.randomSlopes[unit][rs["iv"]] = {
+                        "info-id": infoId
+                    }
             pass
+        print(self.randomSlopes)
         pass
 
     def getMeasuresToUnits(self):
@@ -377,6 +396,7 @@ class GUIComponents():
                 dbc.CardBody(
                     [
                         cardP(html.I("No interaction effects")),
+                        html.P("Placeholder text for where an explanation would go"),
                         continueButton
                     ]
                 ),
@@ -460,7 +480,7 @@ class GUIComponents():
             thisGroupHasCorrelation = "correlated" in groupDict
 
             if hasRandomIntercept and "random intercept" in groupDict:
-                row.append(html.Td("Yes", rowSpan=rowsToSpan))
+                row.append(html.Td(["Yes ", getInfoBubble(self.randomIntercepts[group]["info-id"])], rowSpan=rowsToSpan))
 
             elif hasRandomIntercept:
                 row.append(html.Td(rowSpan=rowsToSpan, className="bg-light"))
@@ -478,7 +498,8 @@ class GUIComponents():
                 randomSlopes = groupDict["random slope"]
                 if len(randomSlopes) >= 1:
                     iv = randomSlopes[0]["iv"]
-                    row.append(html.Td("IV: {}".format(randomSlopes[0]["iv"])))
+                    assert group in self.randomSlopes, "Random slopes does not contain {}:\n{}".format(group, self.randomSlopes)
+                    row.append(html.Td(["IV: {} ".format(randomSlopes[0]["iv"]), getInfoBubble(self.randomSlopes[group][iv]["info-id"])]))
                     if thisGroupHasCorrelation:
                         row.append(html.Td(
                             dbc.FormGroup(
@@ -505,12 +526,13 @@ class GUIComponents():
                         for r in randomSlopes[1:]:
                             iv = r["iv"]
                             rowId = self.getNewComponentId()
+                            print("Adding row for iv {}".format(iv))
                             tableRows.append(
                                 html.Tr(
                                     [
-                                        html.Td("IV: {}".format(r["iv"]))
+                                        html.Td(["IV: {} ".format(r["iv"]), getInfoBubble(self.randomSlopes[group][iv]["info-id"])])
                                     ] +
-                                    [
+                                    ([
                                         html.Td(
                                             dbc.FormGroup(
                                                 [
@@ -522,7 +544,7 @@ class GUIComponents():
                                             ),
                                             style={"text-align": "center"}
                                         )
-                                    ] if hasCorrelation and thisGroupHasCorrelation else ([html.Td(className="bg-light")] if hasCorrelation else []),
+                                    ] if hasCorrelation and thisGroupHasCorrelation else ([html.Td(className="bg-light")] if hasCorrelation else [])),
                                     id=rowId
                                 )
                             )
@@ -557,6 +579,7 @@ class GUIComponents():
             return dbc.Card(
                 dbc.CardBody([
                     cardP(html.I("No random effects")),
+                    html.P("Placeholder text for where an explanation would go"),
                     continueButton
                 ])
             )
@@ -601,7 +624,7 @@ class GUIComponents():
             [
                 dbc.FormGroup(
                     [
-                        dbc.Label("Family"),
+                        dbc.Label(["Family ", getInfoBubble("family-label-info")]),
                         dcc.Dropdown(
                             # id={'type': 'family_link_options', 'index': 'family_options'},
                             id="family-options",
@@ -630,6 +653,14 @@ class GUIComponents():
                     target="link-function-label-info",
                     trigger="hover",
                     ),
+                dbc.Popover(
+                    [
+                        dbc.PopoverHeader("More on Families of Distributions"),
+                        dbc.PopoverBody("Some text"),
+                    ],
+                    target="family-label-info",
+                    trigger="hover",
+                )
             ],
             body=True,
             id={"type": "family_link_options", "index": "family_link_options"},
@@ -810,4 +841,33 @@ class GUIComponents():
                 )
                 pass
             pass
+        for group, data in self.randomIntercepts.items():
+            key = "{},RandomIntercept".format(group)
+            if key in explanations and "info-id" in data:
+                popovers.append(
+                    dbc.Popover(
+                        [
+                            dbc.PopoverHeader("Random Intercept: {}".format(group)),
+                            dbc.PopoverBody(html.Ul([html.Li(expl) for expl in explanations[key]]))
+                        ],
+                        target=data["info-id"],
+                        trigger="hover"
+                    )
+                )
+                pass
+            pass
+        for group, rsData in self.randomSlopes.items():
+            for iv, ivData in rsData.items():
+                key = "{}, {}, RandomSlope".format(group, iv)
+                if key in explanations and "info-id" in ivData:
+                    popovers.append(
+                        dbc.Popover(
+                            [
+                                dbc.PopoverHeader("Random Slope: {}".format(iv)),
+                                dbc.PopoverBody(html.Ul([html.Li(expl) for expl in explanations[key]]))
+                            ],
+                            target=ivData["info-id"],
+                            trigger="hover"
+                        )
+                    )
         return popovers
