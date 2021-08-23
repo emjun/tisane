@@ -880,8 +880,6 @@ class GUIComponents:
     #     return (hist_data, labels)
 
     def make_family_link_options(self):
-        global __str_to_z3__
-
         family_options = list()
         # link_options =
 
@@ -890,6 +888,9 @@ class GUIComponents:
 
             family_options.append({"label": label, "value": f})
             pass
+
+        linkExplanation = self.getDefaultExplanation("link-functions")
+        familyExplanation = self.getDefaultExplanation("distribution-families")
 
         controls = dbc.Card(
             [
@@ -922,9 +923,9 @@ class GUIComponents:
                 ),
                 dbc.Popover(
                     [
-                        dbc.PopoverHeader("More on Link Functions"),
+                        dbc.PopoverHeader(linkExplanation["header"]),
                         dbc.PopoverBody(
-                            "* indicates the default/canonical link for the family"
+                            linkExplanation["body"]
                         ),
                     ],
                     target="link-function-label-info",
@@ -932,8 +933,8 @@ class GUIComponents:
                 ),
                 dbc.Popover(
                     [
-                        dbc.PopoverHeader("More on Families of Distributions"),
-                        dbc.PopoverBody("Some text"),
+                        dbc.PopoverHeader(familyExplanation["header"]),
+                        dbc.PopoverBody(familyExplanation["body"]),
                     ],
                     target="family-label-info",
                     trigger="hover",
@@ -1038,26 +1039,7 @@ class GUIComponents:
 
         return self.draw_dist(hist_data, labels)
 
-    def getFamilyLinkFunctionsCard(self):
-        ##### Collect all elements
-        # Create family and link title
-        family_link_title = html.Div(
-            [
-                dcc.Markdown(
-                    """
-            ### Data distributions: Family and Link functions.
-            #### Which distribution best matches your data?
-            """)]
-        )
-
-        fig = self.createFigure("GaussianFamily")
-
-        # Get form groups for family link div
-        family_link_chart = dcc.Graph(
-            id="family-link-chart", figure=fig
-        )  # self.draw_data_dist()
-        family_link_controls = self.make_family_link_options()
-
+    def createNormalityTestSection(self):
         normalityTestPortion = [
             html.H4([html.I("No Normality Tests "), getInfoBubble("no-normality-tests-info")]),
             dbc.Popover(
@@ -1074,11 +1056,12 @@ class GUIComponents:
             )
         ]
         if self.hasData():
+            normalityTestExplanation = self.getDefaultExplanation("normality-tests")
             dvData = self.dataDf[self.dv]
             shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
             normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
             normalityTestPortion = [
-                html.H4("Normality Tests"),
+                html.H4(["Normality Tests ", getInfoBubble("normality-tests-info")]),
                 dbc.Row(
                     [
                         dbc.Col(
@@ -1117,9 +1100,42 @@ class GUIComponents:
                                 )
                             ])
                         )
-                    ]
+                    ])
+                ,
+                dbc.Popover(
+                    [
+                        dbc.PopoverHeader(normalityTestExplanation["header"]),
+                        dbc.PopoverBody(normalityTestExplanation["body"]
+                        )
+                    ],
+                    target="normality-tests-info",
+                    trigger="hover"
                 )
             ]
+            pass
+        return normalityTestPortion
+
+    def getFamilyLinkFunctionsCard(self):
+        ##### Collect all elements
+        # Create family and link title
+        family_link_title = html.Div(
+            [
+                dcc.Markdown(
+                    """
+            ### Data distributions: Family and Link functions.
+            #### Which distribution best matches your data?
+            """)]
+        )
+
+        fig = self.createFigure("GaussianFamily")
+
+        # Get form groups for family link div
+        family_link_chart = dcc.Graph(
+            id="family-link-chart", figure=fig
+        )  # self.draw_data_dist()
+        family_link_controls = self.make_family_link_options()
+
+        normalityTestPortion = self.createNormalityTestSection()
         ##### Combine all elements
         # Create div
         family_and_link_div = dbc.Card(
