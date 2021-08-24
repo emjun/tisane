@@ -129,13 +129,14 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
                     cellsSeeThru = False
                     for cellId in interceptCellIds:
                         group = comp.getGroupFromRandomInterceptId(cellId)
-                        cellStyleResult.append(opaqueStyle if group in allVisibleUnits else seeThruStyle)
-                        comp.markUnavailableRandomEffect(group=group, unavailable=group not in allVisibleUnits)
-                        if group not in allVisibleUnits:
+                        cellStyleResult.append(opaqueStyle if group in allVisibleUnits or group in comp.unitsWithoutVariables else seeThruStyle)
+                        comp.markUnavailableRandomEffect(group=group, unavailable=group not in allVisibleUnits and group not in comp.unitsWithoutVariables)
+                        if group not in allVisibleUnits and group not in comp.unitsWithoutVariables:
                             cellsSeeThru = True
                             pass
                         pass
-                    groupingResult = [comp.getGroupFromRandomInterceptId(id) not in allVisibleUnits for id in groupingIds]
+                    groupingResult = [comp.getGroupFromRandomInterceptId(id) for id in groupingIds]
+                    groupingResult = [g not in allVisibleUnits and g not in comp.unitsWithoutVariables for g in groupingResult]
                     allVisibleObject = {
                         "allVisible": allVisible,
                         "seeThru": cellsSeeThru
