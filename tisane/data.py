@@ -17,19 +17,27 @@ class Dataset(object):
     def __init__(self, source: Union[str, pd.DataFrame]):
         df = None
         # Read in data
-        if isinstance(source, str):
-            abs_path = absolute_path(p=source)
-            self.data_path = abs_path  # store
-            df = pd.read_csv(abs_path)
+        # if isinstance(source, str):
+        #     abs_path = absolute_path(p=source)
+        #     self.data_path = abs_path  # store
+        #     df = pd.read_csv(abs_path)
+        if isinstance(source, str) or isinstance(source, os.PathLike):
+            self.data_path = source  # store
+            df = pd.read_csv(source)
         elif isinstance(source, pd.DataFrame):
             df = source
             self.data_path = None
+        else: 
+            import pdb; pdb.set_trace()
 
         # TODO: post-processing? E.g., break up into DataVectors?
         self.dataset = df
 
     def get_data(self) -> pd.DataFrame:
         return self.dataset
+    
+    def get_data_path(self) -> os.path: 
+        return self.data_path
 
     def get_column(self, name: str):
         cols = self.dataset.columns
@@ -45,6 +53,13 @@ class Dataset(object):
             return len(self.dataset.index)
             # else:
             return 0
+
+    def has_data(self) -> bool: 
+        return self.dataset is not None 
+        
+    def has_data_path(self) -> bool: 
+
+        return self.data_path is not None
 
 
 class DataVector(object):

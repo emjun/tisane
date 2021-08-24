@@ -8,7 +8,6 @@ authors = ["Eunice Jun <eunice.m.jun@gmail.com>"]
 python = "^3.7.11"
 pandas = "^1.1.0"
 networkx = "^2.5.1"
-z3-solver = "^4.8.10"
 statsmodels = "^0.12.2"
 more-itertools = "^8.7.0"
 pydot = "^1.4.2"
@@ -24,6 +23,7 @@ pytest-cov = "^2.11.1"
 h5 = "^0.4.1"
 h5py = "^3.3.0"
 pymer4 = "^0.7.5"
+pytest = "^6.2.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"

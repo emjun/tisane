@@ -4,7 +4,7 @@
     "interaction effects": [],
     "link": "IdentityLink",
     "main effects": [
-        "Word type"
+        "Word_type"
     ],
     "random effects": {
         "Subject": {
@@ -15,7 +15,7 @@
                 {
                     "correlated": false,
                     "groups": "Subject",
-                    "iv": "Word type"
+                    "iv": "Word_type"
                 }
             ]
         },

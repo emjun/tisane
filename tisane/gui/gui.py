@@ -149,7 +149,7 @@ class TisaneGUI:
         self.app = app
         createCallbacks(app, self.components)
         # open_browser()
-        app.run_server(debug=True, threaded=True, port=port)
+        app.run_server(debug=False, threaded=True, port=port)
 
     def progress(self):
         # TODO: Trying to make this feel like overview of installation progress on Mac

@@ -59,11 +59,11 @@ The main function for generating JSON from Tisane programs is `collect_model_can
         "query": {
             "DV": "Time",
             "IVs": [
-                "Word type"
+                "Word_type"
             ]
         },
         "generated main effects": [
-            "Word type"
+            "Word_type"
         ],
         "generated interaction effects": [],
         "generated random effects": {
@@ -75,7 +75,7 @@ The main function for generating JSON from Tisane programs is `collect_model_can
                 },
                 {
                     "random slope": {
-                        "iv": "Word type",
+                        "iv": "Word_type",
                         "groups": "Subject"
                     }
                 },
@@ -126,7 +126,7 @@ The main function for generating JSON from Tisane programs is `collect_model_can
         },
         "measures to units": {
             "Time": "Subject",
-            "Word type": "Subject"
+            "Word_type": "Subject"
         }
     }
 }
