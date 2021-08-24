@@ -12,5 +12,6 @@
   "distribution-families": {
     "header": "More on Families of Distributions",
     "body": "Some text"
-  }
+  },
+  "random-effects-not-available": "Placeholder text for where an explanation would go for why there are random effects (random intercepts, random slopes, correlated checkboxes) grayed out/disabled"
 }
