@@ -133,12 +133,22 @@ class GUIComponents:
                         slope["correlated"] = True
         self.generatedCorrelatedIdToGroupIv = {}
         self.randomIntercepts = {}
+        self.randomInterceptIdToGroup = {}
         self.randomSlopeAddedIdToGroupIv = {}
         self.randomSlopeIdToGroupIv = {}
         for unit, re in randomEffects.items():
             if "random intercept" in re:
                 infoId = self.getNewComponentId()
-                self.randomIntercepts[unit] = {"info-id": infoId}
+                cellId = self.getNewComponentId()
+                groupId = self.getNewComponentId()
+                self.randomIntercepts[unit] = {
+                    "info-id": infoId,
+                    "cell-id": cellId,
+                    "group-id": groupId,
+                }
+                self.randomInterceptIdToGroup[infoId] = unit
+                self.randomInterceptIdToGroup[cellId] = unit
+                self.randomInterceptIdToGroup[groupId] = unit
                 pass
             if "random slope" in re and "random intercept" in re:
                 if unit not in self.randomSlopes:
@@ -240,6 +250,16 @@ class GUIComponents:
             pass
 
         pass
+
+    def getRandomInterceptCellIds(self):
+        return [ri["cell-id"] for group, ri in self.randomIntercepts.items()]
+
+    def getRandomEffectAddedGroupingIds(self):
+        return [ri["group-id"] for group, ri in self.randomIntercepts.items()]
+
+    def getGroupFromRandomInterceptId(self, id):
+        assert id in self.randomInterceptIdToGroup, "Id {} not found in randomInterceptIdToGroup\n{}".format(id, json.dumps(self.randomInterceptIdToGroup, sort_keys=True, indent=2))
+        return self.randomInterceptIdToGroup[id]
 
     def getRandomSlopesVariousIds(self, key):
         ids = []
@@ -433,6 +453,26 @@ class GUIComponents:
             pass
         pass
 
+    def markUnavailableRandomEffect(self, group: str, iv: str = None, unavailable: bool = False):
+        assert group in self.output["random effects"], "Group {} not in output random effects: {}".format(group, self.output["random effects"])
+        if iv is None:
+            # iv is None, so this is a random intercept
+            assert "random intercept" in self.output["random effects"][group], "Could not find random intercept for group {} in output: {}".format(group, self.output["random effects"][group])
+            self.output["random effects"][group]["random intercept"]["unavailable"] = unavailable
+            pass
+        elif iv:
+            # iv needs to not be the empty string
+            assert "random slope" in self.output["random effects"][group], "Could not find random slopes for group {} in output: {}".format(group, self.output["random effects"][group])
+            for slope in self.output["random effects"][group]["random slope"]:
+                if slope["iv"] == iv:
+                    slope["unavailable"] = unavailable
+                    pass
+                pass
+            pass
+        pass
+
+
+
     def hasGroupAndIvForCorrelatedId(self, componentId):
         return componentId in self.generatedCorrelatedIdToGroupIv
 
@@ -608,13 +648,16 @@ class GUIComponents:
                         info.append(html.Li([
                             titleElement,
                             html.Span("Random slopes", id=self.randomEffectsUnitToRandomSlopeAddedId[group]),
-                            html.Ul(randomSlopes)]))
+                            html.Ul(randomSlopes)],
+                                            id=self.randomIntercepts[group]["group-id"]))
                         pass
                     else:
-                        info.append(html.Li([titleElement]))
+                        info.append(html.Li([titleElement],
+                                            id=self.randomIntercepts[group]["group-id"]))
                     pass
                 else:
-                    info.append(html.Li(titleElement))
+                    info.append(html.Li(titleElement,
+                                        id=self.randomIntercepts[group]["group-id"]))
 
             return [
                 html.H5("Random effects:"),
@@ -807,6 +850,7 @@ class GUIComponents:
                             getInfoBubble(self.randomIntercepts[group]["info-id"]),
                         ],
                         rowSpan=rowsToSpan,
+                        id=self.randomIntercepts[group]["cell-id"],
                     )
                 )
 

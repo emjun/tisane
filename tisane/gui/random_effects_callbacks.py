@@ -79,13 +79,24 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
 
 def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
     if comp:
-        rowIds = comp.getRandomEffectsRowIds()
-        # addedRandomVariableIds = comp.getAddedRandomVariableIds()
+        # rowIds = comp.getRandomEffectsRowIds()
+        interceptCellIds = comp.getRandomInterceptCellIds()
+        addedRandomVariableIds = comp.getAddedRandomVariableIds()
+        groupingIds = comp.getRandomEffectAddedGroupingIds()
         # allIds = rowIds + addedRandomVariableIds
-        allIds = rowIds
+        # allIds = rowIds
+        allIds = interceptCellIds + groupingIds
+        opaqueStyle = {
+            "opacity": 1.0
+        }
+        seeThruStyle = {
+            "opacity": 0.5
+        }
         if allIds:
             print("allIds: {}".format(allIds))
-            rowOutputs = [Output(id, "hidden") for id in allIds]
+            # rowOutputs = [Output(id, "hidden") for id in allIds]
+            rowOutputs = [Output(id, "style") for id in interceptCellIds]
+            rowOutputs += [Output(id, "hidden") for id in groupingIds]
             rowOutputs = rowOutputs + [Output("random-effects-check-store", "data")]
 
             @app.callback(rowOutputs, Input("added-main-effects-store", "data"), Input("added-interaction-effects-store", "data"))
@@ -109,13 +120,28 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
                         ]
                     )
 
-                    units = [
-                        comp.getUnitFromRowOrAddedRandomVariableId(id) for id in allIds
-                    ]
+                    # units = [
+                    #     comp.getUnitFromRowOrAddedRandomVariableId(id) for id in allIds
+                    # ]
+                    # rowResult = [u not in allVisibleUnits and u not in comp.unitsWithoutVariables for u in units]
+
+                    cellStyleResult = []
+                    cellsSeeThru = False
+                    for cellId in interceptCellIds:
+                        group = comp.getGroupFromRandomInterceptId(cellId)
+                        cellStyleResult.append(opaqueStyle if group in allVisibleUnits else seeThruStyle)
+                        comp.markUnavailableRandomEffect(group=group, unavailable=group not in allVisibleUnits)
+                        if group not in allVisibleUnits:
+                            cellsSeeThru = True
+                            pass
+                        pass
+                    groupingResult = [comp.getGroupFromRandomInterceptId(id) not in allVisibleUnits for id in groupingIds]
                     allVisibleObject = {
-                        "allVisible": allVisible
+                        "allVisible": allVisible,
+                        "seeThru": cellsSeeThru
                     }
-                    return tuple([u not in allVisibleUnits and u not in comp.unitsWithoutVariables for u in units] + [json.dumps(allVisibleObject)])
+                    dataResult = [json.dumps(allVisibleObject)]
+                    return tuple(cellStyleResult + groupingResult + dataResult)
                 raise PreventUpdate
 
             randomSlopeAddedIds = sorted(list(comp.randomSlopeAddedIdToUnit.keys()))
@@ -144,9 +170,11 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
                     for id in individualIds:
                         unit, iv = comp.randomSlopeAddedIdToGroupIv[id]
                         result.append(iv not in allVisible)
+
                         pass
                     for id in cellIds:
                         unit, iv = comp.randomSlopeIdToGroupIv[id]
+                        comp.markUnavailableRandomEffect(group=unit, iv=iv, unavailable=iv not in allVisible)
                         if iv not in allVisible:
                             result.append({
                                 "opacity": 0.5
@@ -164,7 +192,7 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
                         unit, iv = comp.getGroupAndIvFromCorrelatedId(id)
                         result.append(iv not in allVisible)
                         pass
-                    if True in result:
+                    if True in result or allVisibleObject["seeThru"]:
                         explanation = comp.getRandomEffectsUnavailableExplanation()
                         if explanation:
                             result.append(explanation)
