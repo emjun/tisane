@@ -56,8 +56,9 @@ print(model.fit())
 """
 
 statsmodels_model_template = """
-model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}({link_obj}))
-print(model.fit())
+model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
+res = model.fit()
+print(res.summary())
 """
 
 pymer4_code_templates = {
@@ -299,7 +300,7 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
             data_code = data_code.format(path=str(data.data_path))
         else:
             assert data.data_path is None
-            data_path = write_out_dataframe(statistical_model.data)
+            data_path = write_out_dataframe(data)
             data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
 
     ### Generate model code
