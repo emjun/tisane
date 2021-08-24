@@ -275,17 +275,26 @@ class GUIComponents:
     def getDefaultExplanation(self, key):
         return self.defaultExplanations[key]
 
-    def getNoInteractionEffectsExplanation(self):
-        key = "no-interaction-effects"
+    def getDefaultExplanationSafe(self, key):
         if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
             return self.getDefaultExplanation(key)
         return None
 
+    def getRandomEffectsUnavailableExplanation(self):
+        return self.getDefaultExplanationSafe("random-effects-not-available")
+
+    def getNoInteractionEffectsExplanation(self):
+        return self.getDefaultExplanationSafe("no-interaction-effects")
+        # key = "no-interaction-effects"
+        # if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
+        #     return self.getDefaultExplanation(key)
+        # return None
+
     def getNoRandomEffectsExplanation(self):
-        key = "no-random-effects"
-        if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
-            return self.getDefaultExplanation(key)
-        return None
+        return self.getDefaultExplanationSafe("no-random-effects")
+        # if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
+        #     return self.getDefaultExplanation(key)
+        # return None
 
     def getMeasures(self):
         return sorted(list(self.getMeasuresToUnits().keys()))
@@ -838,19 +847,6 @@ class GUIComponents:
                                 style=centeredStyle,
                             )
                         )
-                        # row.append(
-                        #     html.Td(
-                        #         dbc.FormGroup(
-                        #             dbc.Checkbox(
-                        #                 id=self.getCorrelatedIdForRandomSlope(
-                        #                     group, iv
-                        #                 ),
-                        #                 checked=True,
-                        #             )
-                        #         ),
-                        #         style={"text-align": "center"},
-                        #     )
-                        # )
                         pass
                     elif hasCorrelation:
                         row.append(html.Td(className="bg-light"))
@@ -872,16 +868,6 @@ class GUIComponents:
                                 [
                                     html.Td(
                                         self.getFancyCheckbox(id=self.getCorrelatedIdForRandomSlope(group, iv), checked=True),
-                                        # dbc.FormGroup(
-                                        #     [
-                                        #         dbc.Checkbox(
-                                        #             id=self.getCorrelatedIdForRandomSlope(
-                                        #                 group, iv
-                                        #             ),
-                                        #             checked=True,
-                                        #         )
-                                        #     ]
-                                        # ),
                                         style=centeredStyle,
                                     )
                                 ]
@@ -963,6 +949,7 @@ class GUIComponents:
                 [
                     cardP("Random Effects"),
                     self.layoutRandomEffectsTable(),
+                    html.Div(id="random-effects-not-available-explanation"),
                     continueButton,
                 ]
             ),

@@ -125,9 +125,10 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
             randomSlopeAddedOutputs = [Output(id, "hidden") for id in (randomSlopeAddedIds + individualIds) ]
             cellOutputs = [Output(id, "style") for id in cellIds]
             correlatedOutputs = [Output(id, "disabled") for id in correlatedIds]
+            notAvailable = [Output("random-effects-not-available-explanation", "children")]
             print("randomSlopeAddedIds: {}, {}".format(randomSlopeAddedIds, individualIds))
             @app.callback(
-                randomSlopeAddedOutputs + cellOutputs + correlatedOutputs,
+                randomSlopeAddedOutputs + cellOutputs + correlatedOutputs + notAvailable,
                 Input("random-effects-check-store", "data")
             )
             def changeRandomSlopeSpanVisibility(allVisibleJsonString):
@@ -162,5 +163,17 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
                     for id in correlatedIds:
                         unit, iv = comp.getGroupAndIvFromCorrelatedId(id)
                         result.append(iv not in allVisible)
+                        pass
+                    if True in result:
+                        explanation = comp.getRandomEffectsUnavailableExplanation()
+                        if explanation:
+                            result.append(explanation)
+                            pass
+                        else:
+                            result.append("")
+                            pass
+                        pass
+                    else:
+                        result.append("")
                     return tuple(result)
                 raise PreventUpdate
