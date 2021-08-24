@@ -178,9 +178,9 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                 pass
             newChildren = [html.Li(o) for o in options]
             print("New children: {}".format(newChildren))
-            return newChildren
+            return newChildren, json.dumps(comp.output)
 
-        app.callback(Output("added-interaction-effects", "children"), inputs, states)(
+        app.callback(Output("added-interaction-effects", "children"), Output("added-interaction-effects-store", "data"), inputs, states)(
             addVariables
         )
 

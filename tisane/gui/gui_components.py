@@ -89,6 +89,7 @@ class GUIComponents:
         self.variables = {"main effects": {}, "interaction effects": {}}
         self.rowIdsByUnit = {}
         self.unitsByAddedRandomVariableId = {}
+        self.measuresByAddedRandomVariableId = {}
         self.unitsByRowId = {}
         self.randomSlopes = {}
         self.generatedCorrelatedIdToRandomSlope = {}
@@ -132,6 +133,8 @@ class GUIComponents:
                         slope["correlated"] = True
         self.generatedCorrelatedIdToGroupIv = {}
         self.randomIntercepts = {}
+        self.randomSlopeAddedIdToGroupIv = {}
+        self.randomSlopeIdToGroupIv = {}
         for unit, re in randomEffects.items():
             if "random intercept" in re:
                 infoId = self.getNewComponentId()
@@ -144,12 +147,18 @@ class GUIComponents:
                 for rs in re["random slope"]:
                     newId = self.getNewComponentId()
                     infoId = self.getNewComponentId()
+                    addedId = self.getNewComponentId()
+                    cellId = self.getNewComponentId()
                     self.randomSlopes[unit][rs["iv"]] = {
                         "correlated-id": newId,
                         "info-id": infoId,
+                        "added-id": addedId,
+                        "cell-id": cellId
                     }
                     self.generatedCorrelatedIdToRandomSlope[newId] = rs
                     self.generatedCorrelatedIdToGroupIv[newId] = (unit, rs["iv"])
+                    self.randomSlopeAddedIdToGroupIv[addedId] = (unit, rs["iv"])
+                    self.randomSlopeIdToGroupIv[cellId] = (unit, rs["iv"])
                     pass
                 pass
             elif "random slope" in re:
@@ -158,10 +167,104 @@ class GUIComponents:
                     pass
                 for rs in re["random slope"]:
                     infoId = self.getNewComponentId()
-                    self.randomSlopes[unit][rs["iv"]] = {"info-id": infoId}
+                    addedId = self.getNewComponentId()
+                    cellId = self.getNewComponentId()
+                    self.randomSlopes[unit][rs["iv"]] = {
+                        "info-id": infoId,
+                        "added-id": addedId,
+                        "cell-id": cellId
+                    }
+                    self.randomSlopeAddedIdToGroupIv[addedId] = (unit, rs["iv"])
+                    self.randomSlopeIdToGroupIv[cellId] = (unit, rs["iv"])
             pass
-        print(self.randomSlopes)
+        # print(self.randomSlopes)
+        self._init_helper()
         pass
+
+    def _init_helper(self):
+        # Additional initialization code
+        self.units = set()
+        self.unitToMeasures = {}
+        for measure, unit in self.getMeasuresToUnits().items():
+            if unit not in self.units:
+                self.units.add(unit)
+                self.unitToMeasures[unit] = [measure]
+            else:
+                self.unitToMeasures[unit].append(measure)
+                pass
+            pass
+        measures = self.getMeasures()
+        if self.dv not in measures:
+            self.units.add(self.dv)
+            pass
+        for me in self.getGeneratedMainEffects():
+            if not self.hasUnitForMeasure(me):
+                # this is a unit
+                self.units.add(me)
+                pass
+            pass
+        for group in self.getGeneratedRandomEffects():
+            if group not in self.units:
+                self.units.add(group)
+                pass
+            pass
+
+        # A set containing the units that do not have measures referenced, for
+        # making sure they appear in random effects if present
+        self.unitsWithoutVariables = set()
+        for unit in self.units:
+            if unit != self.dv and unit not in self.unitToMeasures and unit not in self.getGeneratedMainEffects():
+                self.unitsWithoutVariables.add(unit)
+                pass
+            pass
+        self.randomEffectsUnitToRandomSlopeIVs = {}
+        self.randomEffectsUnitToRandomSlopeAddedId = {}
+        randomEffects = self.getGeneratedRandomEffects()
+        for group, randomEffect in randomEffects.items():
+            if "random slope" in randomEffect:
+                if randomEffect["random slope"]:
+                    self.randomEffectsUnitToRandomSlopeAddedId[group] = self.getNewComponentId()
+                for rs in randomEffect["random slope"]:
+                    if "iv" in rs:
+                        if group not in self.randomEffectsUnitToRandomSlopeIVs:
+                            self.randomEffectsUnitToRandomSlopeIVs[group] = []
+                            pass
+                        self.randomEffectsUnitToRandomSlopeIVs[group].append(rs["iv"])
+                        pass
+                    pass
+                pass
+            pass
+        self.randomSlopeAddedIdToUnit = {}
+        for key, val in self.randomEffectsUnitToRandomSlopeAddedId.items():
+            self.randomSlopeAddedIdToUnit[val] = key
+            pass
+
+        pass
+
+    def getRandomSlopesVariousIds(self, key):
+        ids = []
+        for unit, randomSlope in self.randomSlopes.items():
+            for iv, ivIds in randomSlope.items():
+                if key in ivIds:
+                    ids.append(ivIds[key])
+                    pass
+                pass
+            pass
+        return ids
+
+    def getRandomSlopesIvCellIds(self):
+        return self.getRandomSlopesVariousIds("cell-id")
+
+    def getRandomSlopesIvAddedIds(self):
+        ids = []
+        for unit, randomSlope in self.randomSlopes.items():
+            for iv, ivIds in randomSlope.items():
+                if "added-id" in ivIds:
+                    ids.append(ivIds["added-id"])
+                    pass
+                pass
+            pass
+        return ids
 
     def hasDefaultExplanations(self):
         return self.defaultExplanations
@@ -183,6 +286,9 @@ class GUIComponents:
         if self.hasDefaultExplanations() and self.hasDefaultExplanation(key):
             return self.getDefaultExplanation(key)
         return None
+
+    def getMeasures(self):
+        return sorted(list(self.getMeasuresToUnits().keys()))
 
     def getMeasuresToUnits(self):
         return self.data["input"]["measures to units"]
@@ -452,23 +558,22 @@ class GUIComponents:
             info = []
             for group, randomEffect in randomEffects.items():
                 titleId = self.getNewComponentId()
-                info.append(
-                    html.H6(
-                        group
-                        + (
-                            " (with random intercept)"
-                            if "random intercept" in randomEffect
-                            else ""
-                        ),
-                        id=titleId,
-                    )
-                )
                 self.unitsByAddedRandomVariableId[titleId] = group
+                titleElement = html.H6(
+                    group
+                    + (
+                        " (with random intercept)"
+                        if "random intercept" in randomEffect
+                        else ""
+                    ),
+                    id=titleId,
+                )
+
                 if "random slope" in randomEffect:
                     randomSlopes = []
                     for rs in randomEffect["random slope"]:
                         iv = rs["iv"]
-                        listItemId = self.getNewComponentId()
+                        listItemId = self.randomSlopes[group][iv]["added-id"] #self.getNewComponentId()
                         self.unitsByAddedRandomVariableId[listItemId] = group
                         randomSlopes.append(
                             html.Li(
@@ -491,13 +596,21 @@ class GUIComponents:
                         )
                         pass
                     if randomEffect["random slope"]:
-                        info.append(html.Span("Random slopes:"))
-                        info.append(html.Ul(randomSlopes))
+                        info.append(html.Li([
+                            titleElement,
+                            html.Span("Random slopes", id=self.randomEffectsUnitToRandomSlopeAddedId[group]),
+                            html.Ul(randomSlopes)]))
+                        pass
+                    else:
+                        info.append(html.Li([titleElement]))
+                    pass
+                else:
+                    info.append(html.Li(titleElement))
 
             return [
                 html.H5("Random effects:"),
                 html.Ul(id="added-random-effects"),
-                html.Div(info),
+                html.Ul(info),
             ]
         return [html.H6(html.I("No random effects to add"), id="added-random-effects")]
 
@@ -621,6 +734,29 @@ class GUIComponents:
             pass
         return html.Div(options)
 
+    def makeFancyCheckbox(self, checked=False, label=None, id=None):
+        if label:
+            return dbc.FormGroup(
+                [
+                    dbc.Checkbox(
+                        id=id,
+                        className="form-check-input",
+                        checked=checked,
+                    ),
+                    dbc.Label(
+                        label,
+                        html_for=id,
+                        className="form-check-label"
+                    )
+                ],
+                check=True,
+            )
+        return dbc.FormGroup(
+            dbc.Checkbox(
+                id=id,
+                checked=checked,
+            )
+        )
     def layoutRandomEffectsTable(self):
         randomEffects = self.getGeneratedRandomEffects()
         hasRandomSlope = any(
@@ -632,20 +768,19 @@ class GUIComponents:
         hasCorrelation = any(
             "correlated" in randomEffects[group] for group in randomEffects
         )
-        tableHeader = [
-            html.Thead(
-                html.Tr(
-                    [html.Th("Group")]
-                    + ([html.Th("Random Intercept")] if hasRandomIntercept else [])
-                    + ([html.Th("Random Slope")] if hasRandomSlope else [])
-                    + (
-                        [html.Th("Correlated", style={"text-align": "center"})]
-                        if hasCorrelation
-                        else []
-                    )
-                )
-            )
-        ]
+        centeredStyle = {"text-align": "center"}
+        booleans = [True, hasRandomIntercept, hasRandomSlope, hasCorrelation]
+        # These are headers that just need to be wrapped in html.Th
+        plainHeaders = ["Group", "Random Intercept", "Random Slope"]
+        headers = [html.Th(head) for head in plainHeaders]
+        # this one's a special case, so we add it separately
+        # Also, it looked weird previously when it wasn't centered
+        headers += [html.Th("Correlated", style=centeredStyle)]
+        assert len(booleans) == len(headers), "Number of booleans and headers does not match!\nNumber of booleans: {}\nNumber of headers: {}".format(len(booleans), len(headers))
+        # Use the `booleans` list to filter the headers
+        headersLayout = [headers[i] for i in range(len(headers)) if booleans[i]]
+        tableHeader = [html.Thead(html.Tr(headersLayout))]
+
         tableRows = []
         for group in sorted(list(randomEffects.keys())):
             groupDict = randomEffects[group]
@@ -692,23 +827,30 @@ class GUIComponents:
                             [
                                 "IV: {} ".format(randomSlopes[0]["iv"]),
                                 getInfoBubble(self.randomSlopes[group][iv]["info-id"]),
-                            ]
+                            ],
+                            id=self.randomSlopes[group][iv]["cell-id"]
                         )
                     )
                     if thisGroupHasCorrelation:
                         row.append(
                             html.Td(
-                                dbc.FormGroup(
-                                    dbc.Checkbox(
-                                        id=self.getCorrelatedIdForRandomSlope(
-                                            group, iv
-                                        ),
-                                        checked=True,
-                                    )
-                                ),
-                                style={"text-align": "center"},
+                                self.makeFancyCheckbox(id=self.getCorrelatedIdForRandomSlope(group, iv), checked=True),
+                                style=centeredStyle,
                             )
                         )
+                        # row.append(
+                        #     html.Td(
+                        #         dbc.FormGroup(
+                        #             dbc.Checkbox(
+                        #                 id=self.getCorrelatedIdForRandomSlope(
+                        #                     group, iv
+                        #                 ),
+                        #                 checked=True,
+                        #             )
+                        #         ),
+                        #         style={"text-align": "center"},
+                        #     )
+                        # )
                         pass
                     elif hasCorrelation:
                         row.append(html.Td(className="bg-light"))
@@ -729,17 +871,18 @@ class GUIComponents:
                             correlationCheckbox = (
                                 [
                                     html.Td(
-                                        dbc.FormGroup(
-                                            [
-                                                dbc.Checkbox(
-                                                    id=self.getCorrelatedIdForRandomSlope(
-                                                        group, iv
-                                                    ),
-                                                    checked=True,
-                                                )
-                                            ]
-                                        ),
-                                        style={"text-align": "center"},
+                                        self.getFancyCheckbox(id=self.getCorrelatedIdForRandomSlope(group, iv), checked=True),
+                                        # dbc.FormGroup(
+                                        #     [
+                                        #         dbc.Checkbox(
+                                        #             id=self.getCorrelatedIdForRandomSlope(
+                                        #                 group, iv
+                                        #             ),
+                                        #             checked=True,
+                                        #         )
+                                        #     ]
+                                        # ),
+                                        style=centeredStyle,
                                     )
                                 ]
                                 if hasCorrelation and thisGroupHasCorrelation
@@ -760,7 +903,8 @@ class GUIComponents:
                                                         "info-id"
                                                     ]
                                                 ),
-                                            ]
+                                            ],
+                                            id=self.randomSlopes[group][iv]["cell-id"]
                                         )
                                     ]
                                     + correlationCheckbox,

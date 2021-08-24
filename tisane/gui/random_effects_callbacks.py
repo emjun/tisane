@@ -80,21 +80,26 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
 def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
     if comp:
         rowIds = comp.getRandomEffectsRowIds()
-        addedRandomVariableIds = comp.getAddedRandomVariableIds()
-        allIds = rowIds + addedRandomVariableIds
+        # addedRandomVariableIds = comp.getAddedRandomVariableIds()
+        # allIds = rowIds + addedRandomVariableIds
+        allIds = rowIds
         if allIds:
+            print("allIds: {}".format(allIds))
             rowOutputs = [Output(id, "hidden") for id in allIds]
+            rowOutputs = rowOutputs + [Output("random-effects-check-store", "data")]
 
-            @app.callback(rowOutputs, Input("added-main-effects-store", "data"))
-            def changeVisibility(outputFromMainEffectsString):
-                outputFromMainEffects = json.loads(outputFromMainEffectsString)
+            @app.callback(rowOutputs, Input("added-main-effects-store", "data"), Input("added-interaction-effects-store", "data"))
+            def changeVisibility(outputFromMainEffectsString, outputFromInteractionEffectsString):
+                outputFromMainEffects = json.loads(outputFromMainEffectsString) if outputFromMainEffectsString else {"main effects": [], "dependent variable": ""}
+                outputFromInteractionEffects = json.loads(outputFromInteractionEffectsString) if outputFromInteractionEffectsString else {"interaction effects": []}
                 if (
                     "main effects" in outputFromMainEffects
-                    and "dependent variable" in outputFromMainEffects
+                    and "dependent variable" in outputFromMainEffects and "interaction effects" in outputFromInteractionEffects
                 ):
                     dv = outputFromMainEffects["dependent variable"]
                     visibleMainEffects = outputFromMainEffects["main effects"]
-                    allVisible = [dv] + visibleMainEffects
+                    visibleInteractionEffects = outputFromInteractionEffects["interaction effects"]
+                    allVisible = [dv] + visibleMainEffects + visibleInteractionEffects
                     allVisibleUnits = set(
                         [
                             comp.getUnitFromMeasure(vis)
@@ -107,4 +112,55 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
                     units = [
                         comp.getUnitFromRowOrAddedRandomVariableId(id) for id in allIds
                     ]
-                    return tuple([u not in allVisibleUnits for u in units])
+                    allVisibleObject = {
+                        "allVisible": allVisible
+                    }
+                    return tuple([u not in allVisibleUnits and u not in comp.unitsWithoutVariables for u in units] + [json.dumps(allVisibleObject)])
+                raise PreventUpdate
+
+            randomSlopeAddedIds = sorted(list(comp.randomSlopeAddedIdToUnit.keys()))
+            individualIds = comp.getRandomSlopesIvAddedIds()
+            cellIds = comp.getRandomSlopesIvCellIds()
+            correlatedIds = comp.getRandomSlopeCheckboxIds()
+            randomSlopeAddedOutputs = [Output(id, "hidden") for id in (randomSlopeAddedIds + individualIds) ]
+            cellOutputs = [Output(id, "style") for id in cellIds]
+            correlatedOutputs = [Output(id, "disabled") for id in correlatedIds]
+            print("randomSlopeAddedIds: {}, {}".format(randomSlopeAddedIds, individualIds))
+            @app.callback(
+                randomSlopeAddedOutputs + cellOutputs + correlatedOutputs,
+                Input("random-effects-check-store", "data")
+            )
+            def changeRandomSlopeSpanVisibility(allVisibleJsonString):
+                if allVisibleJsonString:
+                    allVisibleObject = json.loads(allVisibleJsonString)
+                    allVisible = allVisibleObject["allVisible"]
+
+                    result = []
+                    for id in randomSlopeAddedIds:
+                        unit = comp.randomSlopeAddedIdToUnit[id]
+                        result.append(not any(iv in allVisible for iv in comp.randomEffectsUnitToRandomSlopeIVs[unit]))
+                        pass
+                    for id in individualIds:
+                        unit, iv = comp.randomSlopeAddedIdToGroupIv[id]
+                        result.append(iv not in allVisible)
+                        pass
+                    for id in cellIds:
+                        unit, iv = comp.randomSlopeIdToGroupIv[id]
+                        if iv not in allVisible:
+                            result.append({
+                                "opacity": 0.5
+                            })
+                            pass
+                        else:
+                            result.append({
+                                "opacity": 1.0
+                            })
+                        # result.append(iv not in allVisible)
+
+                        # result.append("bg-light" if iv not in allVisible else "")
+                        pass
+                    for id in correlatedIds:
+                        unit, iv = comp.getGroupAndIvFromCorrelatedId(id)
+                        result.append(iv not in allVisible)
+                    return tuple(result)
+                raise PreventUpdate

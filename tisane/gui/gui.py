@@ -139,6 +139,7 @@ class TisaneGUI:
                 ),
                 dcc.Store(id="added-main-effects-store"),
                 dcc.Store(id="added-interaction-effects-store"),
+                dcc.Store(id="random-effects-check-store"),
             ]
             + self.components.createEffectPopovers(),
             fluid=False,
