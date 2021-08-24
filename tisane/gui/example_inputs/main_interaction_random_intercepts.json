@@ -1,22 +1,22 @@
 {
     "input": {
         "query": {
-            "DV": "Dependent variable",
+            "DV": "Dependent_variable",
             "IVs": [
-                "Measure 0",
-                "Measure 1",
-                "Measure 2",
+                "Measure_0",
+                "Measure_1",
+                "Measure_2",
                 "Time"
             ]
         },
         "generated main effects": [
-            "Measure 2",
-            "Measure 0",
-            "Measure 1",
+            "Measure_2",
+            "Measure_0",
+            "Measure_1",
             "Time"
         ],
         "generated interaction effects": [
-            "Measure 2*Measure 1"
+            "Measure 2*Measure_1"
         ],
         "generated random effects": {
             "Unit": {
@@ -64,26 +64,26 @@
             ]
         },
         "measures to units": {
-            "Dependent variable": "Unit",
-            "Measure 0": "Unit",
-            "Measure 1": "Unit",
-            "Measure 2": "Unit",
-            "Measure 2*Measure 1": "Unit"
+            "Dependent_variable": "Unit",
+            "Measure_0": "Unit",
+            "Measure_1": "Unit",
+            "Measure_2": "Unit",
+            "Measure 2*Measure_1": "Unit"
         },
         "explanations": {
-            "Measure 0": [
+            "Measure_0": [
                 "Explanation for query"
             ],
-            "Measure 1": [
+            "Measure_1": [
                 "Explanation for query"
             ],
-            "Measure 2": [
+            "Measure_2": [
                 "Explanation for query"
             ],
             "Time": [
                 "Explanation for query"
             ],
-            "Measure 2*Measure 1": [
+            "Measure 2*Measure_1": [
                 "Explanation for interaction effects"
             ],
             "Unit,RandomIntercept": [

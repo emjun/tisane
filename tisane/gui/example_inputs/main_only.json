@@ -1,15 +1,15 @@
 {
     "input": {
         "query": {
-            "DV": "Dependent variable",
+            "DV": "Dependent_variable",
             "IVs": [
-                "Measure 0",
-                "Measure 1"
+                "Measure_0",
+                "Measure_1"
             ]
         },
         "generated main effects": [
-            "Measure 0",
-            "Measure 1"
+            "Measure_0",
+            "Measure_1"
         ],
         "generated interaction effects": [],
         "generated random effects": {},
@@ -47,15 +47,15 @@
             ]
         },
         "measures to units": {
-            "Dependent variable": "Unit",
-            "Measure 0": "Unit",
-            "Measure 1": "Unit"
+            "Dependent_variable": "Unit",
+            "Measure_0": "Unit",
+            "Measure_1": "Unit"
         },
         "explanations": {
-            "Measure 0": [
+            "Measure_0": [
                 "Explanation for query"
             ],
-            "Measure 1": [
+            "Measure_1": [
                 "Explanation for query"
             ]
         }

@@ -335,7 +335,7 @@ def filter_interactions_involving_variables(
     interactions = set()
 
     for ixn in interaction_names:
-        assert isinstance(ixn, str)  # ixn should be a string like "Measure 0*Measure 1"
+        assert isinstance(ixn, str)  # ixn should be a string like "Measure_0*Measure_1"
         assert "*" in ixn
         num_vars = 0
         for v in variables:

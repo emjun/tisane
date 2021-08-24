@@ -21,10 +21,10 @@ class GraphTest(unittest.TestCase):
 
     def test_graph_construction_recursive_1(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.associates_with(dv)
@@ -42,10 +42,10 @@ class GraphTest(unittest.TestCase):
 
     def test_graph_construction_recursive_2(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.associates_with(dv)
@@ -325,7 +325,7 @@ class GraphTest(unittest.TestCase):
         c = u.nominal(
             "Measure C", cardinality=2, number_of_instances=2
         )  # B is within-subjects
-        dv = u.numeric("Dependent variable")
+        dv = u.numeric("Dependent_variable")
 
         a.moderates(moderator=[b, c], on=dv)
 

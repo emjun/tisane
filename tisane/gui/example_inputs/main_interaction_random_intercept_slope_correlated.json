@@ -3,11 +3,11 @@
         "query": {
             "DV": "Time",
             "IVs": [
-                "Word type"
+                "Word_type"
             ]
         },
         "generated main effects": [
-            "Word type"
+            "Word_type"
         ],
         "generated interaction effects": [],
         "generated random effects": {
@@ -17,7 +17,7 @@
                 },
                 "random slope": [
                     {
-                        "iv": "Word type",
+                        "iv": "Word_type",
                         "groups": "Subject"
                     }
                 ],
@@ -64,10 +64,10 @@
         },
         "measures to units": {
             "Time": "Subject",
-            "Word type": "Subject"
+            "Word_type": "Subject"
         },
         "explanations": {
-            "Word type": [
+            "Word_type": [
                 "Explanation for query"
             ],
             "Subject,RandomIntercept": [

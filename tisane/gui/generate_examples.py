@@ -17,9 +17,9 @@ import os
 
 def main_effects_only(path="./gui/example_inputs/", filename="main_only.json"):
     u0 = ts.Unit("Unit")
-    m0 = u0.numeric("Measure 0")
-    m1 = u0.numeric("Measure 1")
-    dv = u0.numeric("Dependent variable")
+    m0 = u0.numeric("Measure_0")
+    m1 = u0.numeric("Measure_1")
+    dv = u0.numeric("Dependent_variable")
 
     design = ts.Design(dv=dv, ivs=[m0, m1])
     gr = design.graph
@@ -72,10 +72,10 @@ def main_effects_only(path="./gui/example_inputs/", filename="main_only.json"):
 
 def main_interaction(path="./gui/example_inputs/", filename="main_interaction.json"):
     u0 = ts.Unit("Unit")
-    m0 = u0.numeric("Measure 0")
-    m1 = u0.numeric("Measure 1")
-    m2 = u0.numeric("Measure 2")
-    dv = u0.numeric("Dependent variable")
+    m0 = u0.numeric("Measure_0")
+    m1 = u0.numeric("Measure_1")
+    m2 = u0.numeric("Measure_2")
+    dv = u0.numeric("Dependent_variable")
 
     m0.causes(dv)
     m1.causes(dv)
@@ -134,10 +134,10 @@ def main_interaction_random_intercepts(
 ):
     u0 = ts.Unit("Unit")
     s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5])
-    m0 = u0.numeric("Measure 0")
-    m1 = u0.numeric("Measure 1")
-    m2 = u0.numeric("Measure 2")
-    dv = u0.numeric("Dependent variable", number_of_instances=s0)
+    m0 = u0.numeric("Measure_0")
+    m1 = u0.numeric("Measure_1")
+    m2 = u0.numeric("Measure_2")
+    dv = u0.numeric("Dependent_variable", number_of_instances=s0)
 
     m0.causes(dv)
     m1.causes(dv)
@@ -201,7 +201,7 @@ def main_interaction_random_slope_one_variable(
         "Measure A", cardinality=2, number_of_instances=2
     )  # A is within-subjects
     b = u.nominal("Measure B", cardinality=2)  # B is between-subjects
-    dv = u.numeric("Dependent variable")
+    dv = u.numeric("Dependent_variable")
 
     a.causes(dv)
     b.causes(dv)
@@ -266,7 +266,7 @@ def main_interaction_random_slope_interaction(
     b = u.nominal(
         "Measure B", cardinality=2, number_of_instances=2
     )  # B is within-subjects
-    dv = u.numeric("Dependent variable")
+    dv = u.numeric("Dependent_variable")
 
     a.causes(dv)
     b.causes(dv)
@@ -326,7 +326,7 @@ def main_interaction_random_intercept_slope_correlated(
 ):
     subject = ts.Unit("Subject", cardinality=12)
     word = ts.Unit("Word", cardinality=4)
-    condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+    condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
     reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
     condition.has(word, number_of_instances=2)
 
@@ -392,7 +392,7 @@ def main_interaction_multiple_random_slopes(
     c = u.nominal(
         "Measure C", cardinality=2, number_of_instances=2
     )  # B is within-subjects
-    dv = u.numeric("Dependent variable")
+    dv = u.numeric("Dependent_variable")
 
     a.causes(dv)
     b.causes(dv)

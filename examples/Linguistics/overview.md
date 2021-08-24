@@ -32,8 +32,8 @@ word = ts.Unit("Word/item")
 subject = ts.Unit("Subject")
 
 reaction_time = subject.numeric("Time", number_of_instances=word) # Each subject has 1 Time value for each word
-type = word.nominal("Word type", number_of_instances=1) # Each word has 1 Word type
-type = subject.nominal("Word type", number_of_instances=2) # Each subject sees 2 Word types
+type = word.nominal("Word_type", number_of_instances=1) # Each word has 1 Word type
+type = subject.nominal("Word_type", number_of_instances=2) # Each subject sees 2 Word types
 
 word.nests_within(subject, number_of_instances=2) 
 ```
@@ -42,7 +42,7 @@ word.nests_within(subject, number_of_instances=2)
 ```
 Condition and Subject as units (this feels more awkward and different from the other examples)
 
-condition = ts.Unit("Word type")
+condition = ts.Unit("Word_type")
 subject = ts.Unit("Subject")
 
 reaction_time = subject.numeric("Time", number_of_instances=word) # Each subject has 1 Time value for each word
@@ -55,7 +55,7 @@ condition.nests_within(subject, number_of_instances=2) # Each subject has 2 cond
 ```
 Condition and Subject as units
 
-condition = subject.nominal("Word type", number_of_instances=2) # Each subject has 2 instances of Word type
+condition = subject.nominal("Word_type", number_of_instances=2) # Each subject has 2 instances of Word type
 subject = ts.Unit("Subject")
 
 
@@ -69,7 +69,7 @@ Word and Subject as units
 word = ts.Unit("Word")
 subject = ts.Unit("Subject")
 
-condition = word.nominal("Word type", number_of_instances=1) # Each word has 1 Word type
+condition = word.nominal("Word_type", number_of_instances=1) # Each word has 1 Word type
 # Reads: Subject has a reaction time value for each instance of word
 reaction_time = subject.numeric("Time", number_of_instances=word) # Each subject has 1 Time value for each word --> repeated measures
 # Reads: Word has a reaction time value...

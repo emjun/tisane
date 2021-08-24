@@ -55,7 +55,6 @@ def get_family_link_paired_candidates(
     return family_link_paired
 
 
-# TODO: Add family for Multinomial?
 class GenerateCodeHelpersTest(unittest.TestCase):
     def test_generate_statsmodels_formula_main_only(self):
         u0 = ts.Unit("Unit")

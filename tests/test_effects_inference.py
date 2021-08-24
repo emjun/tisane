@@ -29,9 +29,9 @@ import unittest
 class EffectsInferenceTest(unittest.TestCase):
     def test_main_included_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -50,9 +50,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_included_associates(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.associates_with(dv)
         m1.associates_with(dv)
@@ -71,10 +71,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_excluded_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -94,10 +94,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_excluded_associates(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.associates_with(dv)
         m1.associates_with(dv)
@@ -117,10 +117,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_conceptual_parent_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -141,10 +141,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_shared_ancestor_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -166,9 +166,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_ivs_associated_and_causes_dv(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -188,9 +188,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_ivs_associated_and_associates_with_dv(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.associates_with(dv)
         m1.associates_with(dv)
@@ -210,9 +210,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_ivs_cause(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -232,10 +232,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_interaction_moderates_one_variable(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -261,10 +261,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_interaction_moderates_two_variables(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -294,7 +294,7 @@ class EffectsInferenceTest(unittest.TestCase):
     def test_random_repeats(self):
         u0 = ts.Unit("Unit")
         s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5])
-        dv = u0.numeric("Dependent variable", number_of_instances=s0)
+        dv = u0.numeric("Dependent_variable", number_of_instances=s0)
 
         design = ts.Design(dv=dv, ivs=[s0])  # main effect of Time
         gr = design.graph
@@ -319,9 +319,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_random_nested(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
+        m0 = u0.numeric("Measure_0")
         u1 = ts.Unit("Unit 1")
-        dv = u0.numeric("Dependent variable")
+        dv = u0.numeric("Dependent_variable")
 
         u0.nests_within(u1)
 
@@ -344,7 +344,7 @@ class EffectsInferenceTest(unittest.TestCase):
         # Each subject has a two values for condition, which is nominal.
         # Verbose: Each instance of subject has two instances of a nominal variable condition.
         # Informally: Each subjects sees two (both) conditions.
-        condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+        condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
         # Repeated measures
         # Each subject has a measure reaction time, which is numeric, for each instance of a word
         # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
@@ -387,7 +387,7 @@ class EffectsInferenceTest(unittest.TestCase):
             "Condition", cardinality=2, number_of_instances=1
         )  # "two independent groups of subjects"
         dv = subject.numeric(
-            "Dependent variable", number_of_instances=time
+            "Dependent_variable", number_of_instances=time
         )  # within-subject
 
         time.associates_with(dv)
@@ -426,7 +426,7 @@ class EffectsInferenceTest(unittest.TestCase):
     #     # Each subject has a two values for condition, which is nominal.
     #     # Verbose: Each instance of subject has two instances of a nominal variable condition.
     #     # Informally: Each subjects sees two (both) conditions.
-    #     condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+    #     condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
     #     # Repeated measures
     #     # Each subject has a measure reaction time, which is numeric, for each instance of a word
     #     # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.

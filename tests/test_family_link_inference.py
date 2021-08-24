@@ -53,8 +53,8 @@ import unittest
 class FamilyLinkInferenceTest(unittest.TestCase):
     def test_generates_families_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        dv = u0.numeric("Dependent_variable")
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -67,8 +67,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generates_families_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3, 4, 5])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3, 4, 5])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -81,8 +81,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generates_families_nominal_binary_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.nominal("Dependent variable", cardinality=2)
+        m0 = u0.numeric("Measure_0")
+        dv = u0.nominal("Dependent_variable", cardinality=2)
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -95,8 +95,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generates_families_nominal_multiple_categories_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.nominal("Dependent variable", cardinality=10)
+        m0 = u0.numeric("Measure_0")
+        dv = u0.nominal("Dependent_variable", cardinality=10)
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -109,8 +109,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Gaussian_family_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        dv = u0.numeric("Dependent_variable")
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -126,8 +126,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_InverseGaussian_family_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        dv = u0.numeric("Dependent_variable")
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -143,8 +143,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Gamma_family_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        dv = u0.numeric("Dependent_variable")
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -160,8 +160,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Tweedie_family_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        dv = u0.numeric("Dependent_variable")
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -177,8 +177,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Poisson_family_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        dv = u0.numeric("Dependent_variable")
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -194,8 +194,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Gaussian_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -211,8 +211,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_InverseGaussian_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -228,8 +228,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Gamma_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -245,8 +245,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Tweedie_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -255,15 +255,15 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 3)
+        self.assertEqual(len(link_candidates), len(DataForTests.tweedie_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.tweedie_links)
 
     def test_generate_link_for_Poisson_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -279,8 +279,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Binomial_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -296,8 +296,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_NegativeBinomial_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -306,15 +306,15 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 4)
+        self.assertEqual(len(link_candidates), len(DataForTests.negative_binomial_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.negative_binomial_links)
 
     def test_generate_link_for_Multinomial_family_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.ordinal("Dependent variable", order=[1, 2, 3])
+        m0 = u0.numeric("Measure_0")
+        dv = u0.ordinal("Dependent_variable", order=[1, 2, 3])
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -330,8 +330,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_Binomial_family_nominal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.nominal("Dependent variable", cardinality=2)
+        m0 = u0.numeric("Measure_0")
+        dv = u0.nominal("Dependent_variable", cardinality=2)
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -347,8 +347,8 @@ class FamilyLinkInferenceTest(unittest.TestCase):
 
     def test_generate_link_for_NegativeBinomial_family_nominal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.nominal("Dependent variable", cardinality=3)
+        m0 = u0.numeric("Measure_0")
+        dv = u0.nominal("Dependent_variable", cardinality=3)
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -357,15 +357,15 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), 4)
+        self.assertEqual(len(link_candidates), len(DataForTests.negative_binomial_links))
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.negative_binomial_links)
 
     def test_generate_link_for_Multinomial_family_nominal_dv(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
-        dv = u0.nominal("Dependent variable", cardinality=5)
+        m0 = u0.numeric("Measure_0")
+        dv = u0.nominal("Dependent_variable", cardinality=5)
 
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
@@ -424,33 +424,33 @@ class DataForTests:
     inverse_gaussian_links = [
         IdentityLink,
         LogLink,
-        PowerLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
         InverseLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        InverseSquaredLink,
+        InverseSquaredLink
     ]
     gamma_links = [
         IdentityLink,
         LogLink,
-        PowerLink,
+        # Not currently implemented in statsmodels
+        # PowerLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
         InverseLink,
     ]
-    tweedie_links = [IdentityLink, LogLink, PowerLink]
+    tweedie_links = [LogLink, PowerLink]
     poisson_links = [IdentityLink, LogLink, SquarerootLink]
     binomial_links = [
-        IdentityLink,
+        # Not currently implemented in statsmodels
+        # IdentityLink,
         LogLink,
         LogitLink,
         ProbitLink,
         CauchyLink,
         CLogLogLink,
-        PowerLink,
         # Not currently implemented in statsmodels
         # OPowerLink,
         # Not currently implemented in statsmodels
         # LogLogLink,
     ]
-    negative_binomial_links = [IdentityLink, LogLink, PowerLink, NegativeBinomialLink]
+    negative_binomial_links = [IdentityLink, LogLink, PowerLink, NegativeBinomialLink, CLogLogLink]
     multinomial_links = [IdentityLink, LogLink, LogitLink, ProbitLink]

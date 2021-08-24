@@ -1,7 +1,7 @@
 {
     "input": {
         "query": {
-            "DV": "Dependent variable",
+            "DV": "Dependent_variable",
             "IVs": [
                 "Measure A",
                 "Measure B"
@@ -58,7 +58,7 @@
             ]
         },
         "measures to units": {
-            "Dependent variable": "Unit",
+            "Dependent_variable": "Unit",
             "Measure A": "Unit",
             "Measure B": "Unit",
             "Measure A*Measure B": "Unit"

@@ -48,7 +48,7 @@ def get_family_link_paired_candidates(
     return family_link_paired
 
 
-class ConstructStatisticalModelTest(unittest.TestCase):
+class GenerateCodeTest(unittest.TestCase):
     def test_construct_main_only(self):
         u0 = ts.Unit("Unit")
         m0 = u0.numeric("Measure_0")

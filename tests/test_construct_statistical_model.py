@@ -155,12 +155,15 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         self.assertEqual(design.dv, sm.dependent_variable)
         self.assertEqual(main_effects, sm.main_effects)
         self.assertEqual(interaction_effects, sm.interaction_effects)
+        has_ri = False
+        has_correlated_ri_rs = False
         for re in sm.random_effects:
             if isinstance(re, CorrelatedRandomSlopeAndIntercept):
                 rs = re.random_slope
                 ri = re.random_intercept
                 self.assertIn(rs, random_effects)
                 self.assertIn(ri, random_effects)
+                has_correlated_ri_rs = True
             elif isinstance(re, UncorrelatedRandomSlopeAndIntercept):
                 rs = re.random_slope
                 ri = re.random_intercept
@@ -170,6 +173,10 @@ class ConstructStatisticalModelTest(unittest.TestCase):
                 self.assertIn(re, random_effects)
             elif isinstance(re, RandomIntercept):
                 self.assertIn(re, random_effects)
+                has_ri = True
+        self.assertTrue(has_ri)
+        self.assertTrue(has_correlated_ri_rs)
+        self.assertEqual(len(sm.random_effects), 2)
         family = sm.family_function
         self.assertIn(family, family_link_paired.keys())
         link = sm.link_function
