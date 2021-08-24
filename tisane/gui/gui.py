@@ -57,7 +57,6 @@ class TisaneGUI:
     # @param input is a json file that has all the data to read in
     def read_input(self, input: str):
         self.components = GUIComponents(input)
-        # TODO: Read in JSON all at once and store the data or read it in incrementally
         pass
 
     # @param input is a json file that has all the data to read in
@@ -70,25 +69,17 @@ class TisaneGUI:
 
         ### Populate app
         # Get components
-        progress = (
-            self.progress()
-        )  # TODO: Add callback to update progress according to tabs
+        progress = self.progress()
         # TODO: Add callback that enables this button once all the tabs/sections have been completed
-        # TODO: Output a JSON file as a result of clicking on generate code button
-        generate_code_button = dbc.Button(
-            "✨Generate code✨", color="dark", className="mr-1", disabled=True
-        )
+        # generate_code_button = dbc.Button(
+        #     "✨Generate code✨", color="dark", className="mr-1", disabled=True
+        # )
         overview = self.overview()
         model_tabs = self.model_tabs()
 
         # Layout components that require special formatting
         # Build progress row
 
-        # progress_row = list()
-        # for card in progress:
-        #     # TODO: Add callback for each card that when the tab/section is completed, the card changes color to "success." The callback could by tied to "locking" each tab/section?
-        #     progress_row.append(dbc.Col(card, width=2, id="")) # TODO: Try to get each card to be the same size despite different text inside. Maybe shorten text, style card, etc.
-        # progress_row.append(dbc.Col(generate_code_button, width=2))
         progress_row = [
             dbc.Col(
                 dbc.Progress(
@@ -147,12 +138,7 @@ class TisaneGUI:
                     ]
                 ),
                 dcc.Store(id="added-main-effects-store"),
-                dcc.Store(id="added-interaction-effects-store")
-                # Header("Dash Heart Disease Prediction with AIX360", app),
-                # html.Hr(),
-                # dbc.Row([dbc.Col(card) for card in cards]),
-                # html.Br(),
-                # dbc.Row([dbc.Col(graph) for graph in graphs]),
+                dcc.Store(id="added-interaction-effects-store"),
             ]
             + self.components.createEffectPopovers(),
             fluid=False,
@@ -187,60 +173,15 @@ class TisaneGUI:
 
         return progress
 
-    # @app.callback(Output("tabs", "active_tab"), [Input("continue-to-interaction-effects", "active")])
-    # def goToInteractionEffects(isActive):
-    #     if active:
-    #         return "tab-2"
-    #     return "tab-1"
-
     def model_tabs(self):
         # Many different ways to create tabs: https://dash-bootstrap-components.opensource.faculty.ai/docs/components/tabs/
         tab1_content = self.components.getMainEffectsCard()
-        # tab1_content = dbc.Card(
-        #         dbc.CardBody(
-        #             [
-        #                 html.P("Main", className="card-text"),
-        #                 dbc.Button("Click here", color="success"),
-        #
-        #                 # TODO: Maybe some kind of variable/explanation list like this?: https://dash-bootstrap-components.opensource.faculty.ai/docs/components/list_group/
-        #
-        #             ]
-        #         ),
-        #         className="mt-3",
-        #     )
 
         tab2_content = self.components.getInteractionEffectsCard()
-        # dbc.Card(
-        #     dbc.CardBody(
-        #         [
-        #             html.P("Interactions", className="card-text"),
-        #             dbc.Button("Don't click here", color="danger"),
-        #         ]
-        #     ),
-        #     className="mt-3",
-        # )
 
         tab3_content = self.components.getRandomEffectsCard()
-        # dbc.Card(
-        #     dbc.CardBody(
-        #         [
-        #             html.P("Random", className="card-text"),
-        #             dbc.Button("Contintue", color="success", id="continue-to-family-link-functions"),
-        #         ]
-        #     ),
-        #     className="mt-3",
-        # )
 
         tab4_content = self.components.getFamilyLinkFunctionsCard()
-        # dbc.Card(
-        #     dbc.CardBody(
-        #         [
-        #             html.P("Family, Link", className="card-text"),
-        #             dbc.Button("Generate Code", color="success", id="generate-code"),
-        #         ]
-        #     ),
-        #     className="mt-3",
-        # )
 
         tabs = dbc.Tabs(
             [

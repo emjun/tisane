@@ -34,4 +34,4 @@ class ExampleData:
     # TODO: Add more input sources and json files here
 
 
-start_gui(ExampleData.main_interaction_multiple_random_slopes)
+start_gui(ExampleData.main_interaction)

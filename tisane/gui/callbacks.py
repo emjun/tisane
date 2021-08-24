@@ -193,7 +193,11 @@ def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
         print(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
-            mybool = active_tab == "tab-4" or (comp and comp.highestActiveTab >= mytabs.index("tab-4") and mytabs.index(active_tab) < mytabs.index("tab-4"))
+            mybool = active_tab == "tab-4" or (
+                comp
+                and comp.highestActiveTab >= mytabs.index("tab-4")
+                and mytabs.index(active_tab) < mytabs.index("tab-4")
+            )
             return mybool, mybool
         if triggered == "continue-to-family-link-functions":
             return True, True
@@ -217,9 +221,11 @@ def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
             )
         )
         if triggered:
-            if triggered == "generate-code" or mytabs.index(active_tab) > mytabs.index(
-                "tab-4"
-            ) or (comp and comp.highestActiveTab >= mytabs.index("tab-4")):
+            if (
+                triggered == "generate-code"
+                or mytabs.index(active_tab) > mytabs.index("tab-4")
+                or (comp and comp.highestActiveTab >= mytabs.index("tab-4"))
+            ):
                 return "success"
             if triggered == "continue-to-family-link-functions" or mytabs.index(
                 active_tab
@@ -246,7 +252,11 @@ def createProgressBarCallbacks(
         print(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
-            myBool = active_tab == triggered_tab or (comp and comp.highestActiveTab >= mytabs.index(triggered_tab) and mytabs.index(active_tab) < mytabs.index(triggered_tab))
+            myBool = active_tab == triggered_tab or (
+                comp
+                and comp.highestActiveTab >= mytabs.index(triggered_tab)
+                and mytabs.index(active_tab) < mytabs.index(triggered_tab)
+            )
             return myBool, myBool
         return False, False
 
@@ -265,9 +275,15 @@ def createProgressBarCallbacks(
             comp.highestActiveTab = tabIndex
         print("{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab))
         if triggered:
-            if triggered == continueto_id or mytabs.index(active_tab) > mytabs.index(
-                triggered_tab
-            ) or (comp and comp.highestActiveTab >= 0 and comp.highestActiveTab >= mytabs.index(triggered_tab) ):
+            if (
+                triggered == continueto_id
+                or mytabs.index(active_tab) > mytabs.index(triggered_tab)
+                or (
+                    comp
+                    and comp.highestActiveTab >= 0
+                    and comp.highestActiveTab >= mytabs.index(triggered_tab)
+                )
+            ):
                 return "success"
             if triggered == continuefrom_id or mytabs.index(
                 triggered_tab

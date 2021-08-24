@@ -4,19 +4,20 @@
     "interaction effects": [],
     "link": "IdentityLink",
     "main effects": [
-        "Word_type"
+        "Word type"
     ],
     "random effects": {
         "Subject": {
-            "uncorrelated": {
-                "random intercept": {
-                    "groups": "Subject"
-                },
-                "random slope": {
-                        "groups": "Subject",
-                        "iv": "Word_type"
+            "random intercept": {
+                "groups": "Subject"
+            },
+            "random slope": [
+                {
+                    "correlated": false,
+                    "groups": "Subject",
+                    "iv": "Word type"
                 }
-            }
+            ]
         },
         "Word": {
             "random intercept": {

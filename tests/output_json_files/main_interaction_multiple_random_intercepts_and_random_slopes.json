@@ -1,5 +1,5 @@
 {
-    "dependent variable": "Dependent_variable",
+    "dependent variable": "Dependent variable",
     "family": "GaussianFamily",
     "interaction effects": [
         "Measure A*Measure B",
@@ -10,32 +10,35 @@
     "link": "IdentityLink",
     "main effects": [
         "Measure A",
-        "Meausre B",
+        "Measure B",
         "Measure C"
     ],
     "random effects": {
         "Unit": {
-            "random intercept": 
+            "random intercept":
             {
                 "groups": "Unit"
             },
             "random slope": [
                 {
-                    "iv": "Measure A",
+                    "correlated": true,
                     "groups": "Unit",
-                    "correlated": "True"
+                    "iv": "Measure A"
                 },
                 {
-                    "iv": "Measure B",
-                    "groups": "Unit"
+                    "correlated": false,
+                    "groups": "Unit",
+                    "iv": "Measure B"
                 },
                 {
+                    "correlated": false,
+                    "groups": "Unit",
                     "iv": "Measure C",
-                    "groups": "Unit"
                 },
                 {
-                    "iv": "Measure B*Measure C",
-                    "groups": "Unit"
+                    "correlated": false,
+                    "groups": "Unit",
+                    "iv": "Measure B*Measure C"
                 }
             ]
         }
