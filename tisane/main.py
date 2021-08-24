@@ -192,6 +192,8 @@ def construct_statistical_model(
     for v_name in model_dict["main effects"]:
         # Get variable object with v_name
         var = gr.get_variable(v_name)
+        # if var is None: 
+        #     import pdb; pdb.set_trace()
         assert var is not None
         assert var in main_effects_candidates
         main_effects.add(var)
@@ -261,9 +263,11 @@ def construct_statistical_model(
                         for rs in random_slopes:
                             if rs.groups.name == groups and rs.iv.name == iv:
                                 rc_group_rs_obj = rs
+                        # import pdb; pdb.set_trace()
                         if rc_group_ri_obj is not None: # May be correlated/uncorrelated
                             assert("correlated" in rs_dict.keys())
                             correlated = rs_dict["correlated"]
+                            # import pdb; pdb.set_trace()
                         
                             if correlated: 
                                 # Create correlated RS and RI
@@ -278,6 +282,7 @@ def construct_statistical_model(
                                     random_slope=rc_group_rs_obj, random_intercept=rc_group_ri_obj
                                 )
                                 # Add uncorrelated RS and RI to random effects
+                                # import pdb; pdb.set_trace()
                                 random_effects.add(corr)
                 
             if rc_group_ri_obj is None and rc_group_rs_obj is not None: 

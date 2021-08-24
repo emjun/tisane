@@ -2,16 +2,16 @@
     "dependent variable": "Dependent_variable",
     "family": "GaussianFamily",
     "interaction effects": [
-        "Measure A*Measure B",
-        "Measure A*Measure C",
-        "Measure B*Measure C",
-        "Measure A*Measure B*Measure C"
+        "Measure_0*Measure_1",
+        "Measure_0*Measure_2",
+        "Measure_1*Measure_2",
+        "Measure_0*Measure_1*Measure_2"
     ],
     "link": "IdentityLink",
     "main effects": [
-        "Measure A",
-        "Measure B",
-        "Measure C"
+        "Measure_0",
+        "Measure_1",
+        "Measure_2"
     ],
     "random effects": {
         "Unit": {
@@ -23,22 +23,22 @@
                 {
                     "correlated": true,
                     "groups": "Unit",
-                    "iv": "Measure A"
+                    "iv": "Measure_0"
                 },
                 {
                     "correlated": false,
                     "groups": "Unit",
-                    "iv": "Measure B"
+                    "iv": "Measure_1"
                 },
                 {
                     "correlated": false,
                     "groups": "Unit",
-                    "iv": "Measure C",
+                    "iv": "Measure_2"
                 },
                 {
                     "correlated": false,
                     "groups": "Unit",
-                    "iv": "Measure B*Measure C"
+                    "iv": "Measure_1*Measure_2"
                 }
             ]
         }
