@@ -152,6 +152,16 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
 
     return path
 
+def write_to_script(code: str, output_dir: str, output_filename: str): 
+    assert output_filename.endswith(".py")
+    path = Path(output_dir, output_filename)
+
+    # Output @param code to .py script
+    with open(path, "w+", encoding="utf-8") as f: 
+        f.write(code)
+    
+    return path
+
 
 # @param file is the path to the JSON file from which to construct the statistical model
 def construct_statistical_model(
@@ -409,6 +419,8 @@ def infer_statistical_model_from_design(design: Design):
     # Assign statistical model data from @parm design
     sm.assign_data(design.dataset)
     # Generate code from SM
-    script = generate_code(sm)
+    code = generate_code(sm)
+    # Write generated code out
+    path = write_to_script(code, "model.py")
 
     return script

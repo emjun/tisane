@@ -69,11 +69,28 @@ pymer4_code_templates = {
 }
 
 statsmodels_code_templates = {
-    "preamable": statsmodels_preamble,
+    "preamble": statsmodels_preamble,
     "load_data_from_csv_template": load_data_from_csv_template,
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": statsmodels_model_template,
+}
+
+# Reference from: 
+pymer4_family_name_to_functions = {
+    "GaussianFamily": "gaussian",
+    "InverseGaussianFamily": "inverse_gaussian",
+    "GammaFamily": "gamma",
+    # Not implemented in pymer4 or lme4
+    # "TweedieFamily": "Tweedie",
+    "PoissonFamily": "poisson",
+    "BinomialFamily": "binomial",
+    # Not implemented in pymer4 or lme4
+    # "NegativeBinomialFamily": "NegativeBinomial",
+}
+
+# Lme4 implements defaults for the link functions based on the family functions
+pymer4_link_name_to_functions = {
 }
 
 # Reference from: https://www.statsmodels.org/stable/glm.html#families
@@ -138,20 +155,40 @@ def generate_python_code(statistical_model: StatisticalModel):
 
 
 def generate_pymer4_code(statistical_model: StatisticalModel):
-    # UPDATE EXISTING TESTS
-    raise NotImplementedError
+    global pymer4_code_templates
 
+    ### Specify preamble
+    preamble = pymer4_code_templates["preamble"]
+
+    ### Generate data code
+    data_code = None
+    data = statistical_model.data
+    if statistical_model.data is None:
+        data_code = pymer4_code_templates["load_data_no_data_source"]
+    elif data.data_path is not None:
+        data_code = pymer4_code_templates["load_data_from_csv_template"]
+        data_code = data_code.format(path=str(data.data_path))
+    else:
+        assert data.data_path is None
+        data_path = write_out_dataframe(statistical_model.data)
+        data_code = pymer4_code_templates["load_data_from_dataframe_template"]
+
+    ### Generate model code
+    model_code = generate_pymer4_model(statistical_model=statistical_model)
+
+    ### Put everything together
+    assert data_code is not None
+    # Return string to write out to script
+    return preamble + "\n" + data_code + "\n" + model_code
 
 def generate_pymer4_model(statistical_model: StatisticalModel):
-    raise NotImplementedError
-
     global pymer4_code_templates
 
     formula_code = generate_pymer4_formula(statistical_model=statistical_model)
     family_code = generate_pymer4_family(statistical_model=statistical_model)
-    link_code = generate_pymer4_link(statistical_model=statistical_model)
+    # link_code = generate_pymer4_link(statistical_model=statistical_model)
     model_code = pymer4_code_templates["model_template"].format(
-        formula=formula_code, family_name=family_code, link_obj=link_code
+        formula=formula_code, family_name=family_code
     )
 
     return model_code
@@ -232,6 +269,16 @@ def generate_pymer4_formula(statistical_model: StatisticalModel):
         + "'"
     )
 
+
+def generate_pymer4_family(statistical_model: StatisticalModel) -> str:
+    global pymer4_family_name_to_functions
+    sm_family = statistical_model.family_function
+    sm_family_name = type(sm_family).__name__
+
+    return pymer4_family_name_to_functions[sm_family_name]
+
+# def generate_pymer4_link(statistical_model=StatisticalModel) -> str:
+#     return str()
 
 def generate_statsmodels_code(statistical_model: StatisticalModel):
     global statsmodels_code_templates
