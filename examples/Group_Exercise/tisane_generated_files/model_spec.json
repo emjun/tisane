@@ -1,0 +1,17 @@
+{
+    "dependent variable": "pounds_lost",
+    "family": "GaussianFamily",
+    "interaction effects": [],
+    "link": "IdentityLink",
+    "main effects": [
+        "treatment",
+        "motivation"
+    ],
+    "random effects": {
+        "group": {
+            "random intercept": {
+                "groups": "group"
+            }
+        }
+    }
+}

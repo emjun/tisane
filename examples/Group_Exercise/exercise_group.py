@@ -52,9 +52,3 @@ design = ts.Design(
     df
 )  # Load data
 ts.infer_statistical_model_from_design(design=design)
-
-# Equivalent:
-# treatment.treats(group, assignment='between')
-# group.has(member, 'between') # Members are part of one group and one group only
-
-# ts.infer_statistical_model(dv=pounds_lost, ivs=[treatment, motivation])
