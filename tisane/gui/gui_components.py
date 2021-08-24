@@ -789,7 +789,8 @@ class GUIComponents:
                         html.P(self.getNoRandomEffectsExplanation() or "Placeholder text for where an explanation would go"),
                         continueButton,
                     ]
-                )
+                ),
+                className="mt-3",
             )
         return dbc.Card(
             dbc.CardBody(

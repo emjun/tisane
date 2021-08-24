@@ -1,5 +1,5 @@
 {
-    "dependent variable": "Dependent_variable",
+    "dependent variable": "Dependent variable",
     "family": "GaussianFamily",
     "interaction effects": [
         "Time*Condition"
