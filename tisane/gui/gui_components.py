@@ -230,7 +230,11 @@ class GUIComponents:
         return self.data["input"]["data"]
 
     def hasData(self):
-        return "input" in self.data and "data" in self.data["input"] and self.data["input"]["data"]
+        return (
+            "input" in self.data
+            and "data" in self.data["input"]
+            and self.data["input"]["data"]
+        )
 
     def getDefaultLinkForFamily(self, family):
         if family in self.defaultLinkForFamily:
@@ -545,14 +549,21 @@ class GUIComponents:
         continueButton = dbc.Button(
             "Continue", color="success", id="continue-to-random-effects", n_clicks=0
         )
-        assert self.hasDefaultExplanation("no-interaction-effects"), "Could not find interaction effect explanation in defaults: {}".format(self.defaultExplanations)
+        assert self.hasDefaultExplanation(
+            "no-interaction-effects"
+        ), "Could not find interaction effect explanation in defaults: {}".format(
+            self.defaultExplanations
+        )
         if not interactions:
             # interactions is empty
             return dbc.Card(
                 dbc.CardBody(
                     [
                         cardP(html.I("No interaction effects")),
-                        html.P(self.getNoInteractionEffectsExplanation() or "Placeholder text for where an explanation would go"),
+                        html.P(
+                            self.getNoInteractionEffectsExplanation()
+                            or "Placeholder text for where an explanation would go"
+                        ),
                         continueButton,
                     ]
                 ),
@@ -715,25 +726,29 @@ class GUIComponents:
                             iv = r["iv"]
                             rowId = self.getNewComponentId()
                             # print("Adding row for iv {}".format(iv))
-                            correlationCheckbox = ([
-                                html.Td(
-                                    dbc.FormGroup(
-                                        [
-                                            dbc.Checkbox(
-                                                id=self.getCorrelatedIdForRandomSlope(
-                                                    group, iv
-                                                ),
-                                                checked=True,
-                                            )
-                                        ]
-                                    ),
-                                    style={"text-align": "center"},
+                            correlationCheckbox = (
+                                [
+                                    html.Td(
+                                        dbc.FormGroup(
+                                            [
+                                                dbc.Checkbox(
+                                                    id=self.getCorrelatedIdForRandomSlope(
+                                                        group, iv
+                                                    ),
+                                                    checked=True,
+                                                )
+                                            ]
+                                        ),
+                                        style={"text-align": "center"},
+                                    )
+                                ]
+                                if hasCorrelation and thisGroupHasCorrelation
+                                else (
+                                    [html.Td(className="bg-light")]
+                                    if hasCorrelation
+                                    else []
                                 )
-                            ] if hasCorrelation and thisGroupHasCorrelation else (
-                                [html.Td(className="bg-light")]
-                                if hasCorrelation
-                                else []
-                            ))
+                            )
                             tableRows.append(
                                 html.Tr(
                                     [
@@ -773,7 +788,11 @@ class GUIComponents:
         return dbc.Table(tableHeader + [html.Tbody(tableRows)])
 
     def getRandomEffectsCard(self):
-        assert self.hasDefaultExplanation("no-random-effects"), "Could not find default explanation for no random effects: {}".format(self.defaultExplanations)
+        assert self.hasDefaultExplanation(
+            "no-random-effects"
+        ), "Could not find default explanation for no random effects: {}".format(
+            self.defaultExplanations
+        )
         randomeffects = self.getGeneratedRandomEffects()
         continueButton = dbc.Button(
             "Continue",
@@ -786,7 +805,10 @@ class GUIComponents:
                 dbc.CardBody(
                     [
                         cardP(html.I("No random effects")),
-                        html.P(self.getNoRandomEffectsExplanation() or "Placeholder text for where an explanation would go"),
+                        html.P(
+                            self.getNoRandomEffectsExplanation()
+                            or "Placeholder text for where an explanation would go"
+                        ),
                         continueButton,
                     ]
                 ),
@@ -846,9 +868,7 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(linkExplanation["header"]),
-                        dbc.PopoverBody(
-                            linkExplanation["body"]
-                        ),
+                        dbc.PopoverBody(linkExplanation["body"]),
                     ],
                     target="link-function-label-info",
                     trigger="hover",
@@ -871,8 +891,6 @@ class GUIComponents:
     def createFigure(self, family):
         key = f"{family}_data"
 
-
-
         if key in self.simulatedData:
             family_data = self.simulatedData[key]
         else:
@@ -880,7 +898,12 @@ class GUIComponents:
             if self.hasData():
                 # dvData = np.log(self.dataDf[self.dv])
                 dvData = self.dataDf[self.dv]
-                family_data = simulate_data_dist(family, dataMean=dvData.mean(), dataStdDev=dvData.std(), dataSize=dvData.count())
+                family_data = simulate_data_dist(
+                    family,
+                    dataMean=dvData.mean(),
+                    dataStdDev=dvData.std(),
+                    dataSize=dvData.count(),
+                )
                 pass
             else:
                 family_data = simulate_data_dist(family)
@@ -912,19 +935,20 @@ class GUIComponents:
 
     def createNormalityTestSection(self):
         normalityTestPortion = [
-            html.H4([html.I("No Normality Tests "), getInfoBubble("no-normality-tests-info")]),
+            html.H4(
+                [
+                    html.I("No Normality Tests "),
+                    getInfoBubble("no-normality-tests-info"),
+                ]
+            ),
             dbc.Popover(
                 [
-                    dbc.PopoverHeader(
-                        "Why?"
-                    ),
-                    dbc.PopoverBody(
-                        "No data included to run the normality tests."
-                    )
+                    dbc.PopoverHeader("Why?"),
+                    dbc.PopoverBody("No data included to run the normality tests."),
                 ],
                 target="no-normality-tests-info",
-                trigger="hover"
-            )
+                trigger="hover",
+            ),
         ]
         if self.hasData():
             normalityTestExplanation = self.getDefaultExplanation("normality-tests")
@@ -936,52 +960,73 @@ class GUIComponents:
                 dbc.Row(
                     [
                         dbc.Col(
-                            dbc.Table([
-                                html.Thead(
-                                    [
-                                        html.Tr(
-                                            [
-                                                html.Th(html.A("Shapiro-Wilk Test", href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html"), colSpan=2),
-                                                html.Th(html.A("D'Agostino and Pearson's Test", href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html"), colSpan=2)
-                                            ]
-                                        ),
-                                        html.Tr(
-                                            [
-                                                html.Th("Test Statistic"),
-                                                html.Th("P-Value"),
-                                                html.Th("Test Statistic"),
-                                                html.Th("P-Value")
-                                            ]
-                                        )
-                                    ]
-
-                                ),
-                                html.Tbody(
-                                    [
-                                        html.Tr(
-                                            [
-                                                html.Td("{:.5e}".format(shapiroStat)),
-                                                html.Td("{:.5e}".format(shapiroPvalue)),
-                                                html.Td("{:.5e}".format(normaltestStat)),
-                                                html.Td("{:.5e}".format(normaltestPvalue)),
-
-                                            ]
-                                        )
-                                    ]
-                                )
-                            ])
+                            dbc.Table(
+                                [
+                                    html.Thead(
+                                        [
+                                            html.Tr(
+                                                [
+                                                    html.Th(
+                                                        html.A(
+                                                            "Shapiro-Wilk Test",
+                                                            href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html",
+                                                        ),
+                                                        colSpan=2,
+                                                    ),
+                                                    html.Th(
+                                                        html.A(
+                                                            "D'Agostino and Pearson's Test",
+                                                            href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html",
+                                                        ),
+                                                        colSpan=2,
+                                                    ),
+                                                ]
+                                            ),
+                                            html.Tr(
+                                                [
+                                                    html.Th("Test Statistic"),
+                                                    html.Th("P-Value"),
+                                                    html.Th("Test Statistic"),
+                                                    html.Th("P-Value"),
+                                                ]
+                                            ),
+                                        ]
+                                    ),
+                                    html.Tbody(
+                                        [
+                                            html.Tr(
+                                                [
+                                                    html.Td(
+                                                        "{:.5e}".format(shapiroStat)
+                                                    ),
+                                                    html.Td(
+                                                        "{:.5e}".format(shapiroPvalue)
+                                                    ),
+                                                    html.Td(
+                                                        "{:.5e}".format(normaltestStat)
+                                                    ),
+                                                    html.Td(
+                                                        "{:.5e}".format(
+                                                            normaltestPvalue
+                                                        )
+                                                    ),
+                                                ]
+                                            )
+                                        ]
+                                    ),
+                                ]
+                            )
                         )
-                    ])
-                ,
+                    ]
+                ),
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(normalityTestExplanation["header"]),
-                        dbc.PopoverBody(normalityTestExplanation["body"]
-                        )
+                        dbc.PopoverBody(normalityTestExplanation["body"]),
                     ],
                     target="normality-tests-info",
-                    trigger="hover"
-                )
+                    trigger="hover",
+                ),
             ]
             pass
         return normalityTestPortion
@@ -995,15 +1040,15 @@ class GUIComponents:
                     """
             ### Data distributions: Family and Link functions.
             #### Which distribution best matches your data?
-            """)]
+            """
+                )
+            ]
         )
 
         fig = self.createFigure("GaussianFamily")
 
         # Get form groups for family link div
-        family_link_chart = dcc.Graph(
-            id="family-link-chart", figure=fig
-        )
+        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig)
         family_link_controls = self.make_family_link_options()
 
         normalityTestPortion = self.createNormalityTestSection()
@@ -1011,20 +1056,23 @@ class GUIComponents:
         # Create div
         family_and_link_div = dbc.Card(
             dbc.CardBody(
-            [
-                family_link_title,
-                dbc.Row(
-                    [
-                        dbc.Col(family_link_chart, md=7),
-                        dbc.Col(family_link_controls, md=5),
-                    ],
-                    align="center",
-                ),
-            ] + normalityTestPortion + [
-                dbc.Button("Generate Code", color="success", id="generate-code"),
-                html.Div(id="generated-code-div")
-            ]),
-            className="mt-3"
+                [
+                    family_link_title,
+                    dbc.Row(
+                        [
+                            dbc.Col(family_link_chart, md=7),
+                            dbc.Col(family_link_controls, md=5),
+                        ],
+                        align="center",
+                    ),
+                ]
+                + normalityTestPortion
+                + [
+                    dbc.Button("Generate Code", color="success", id="generate-code"),
+                    html.Div(id="generated-code-div"),
+                ]
+            ),
+            className="mt-3",
         )
 
         ##### Return div

@@ -69,9 +69,7 @@ class TisaneGUI:
 
         ### Populate app
         # Get components
-        progress = (
-            self.progress()
-        )
+        progress = self.progress()
         # TODO: Add callback that enables this button once all the tabs/sections have been completed
         # generate_code_button = dbc.Button(
         #     "✨Generate code✨", color="dark", className="mr-1", disabled=True
@@ -140,7 +138,7 @@ class TisaneGUI:
                     ]
                 ),
                 dcc.Store(id="added-main-effects-store"),
-                dcc.Store(id="added-interaction-effects-store")
+                dcc.Store(id="added-interaction-effects-store"),
             ]
             + self.components.createEffectPopovers(),
             fluid=False,

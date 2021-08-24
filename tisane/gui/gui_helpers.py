@@ -6,7 +6,9 @@ from scipy import stats
 import pandas as pd
 
 
-def simulate_data_dist(family: str, dataMean: float = None, dataStdDev: float = None, dataSize: int = None):
+def simulate_data_dist(
+    family: str, dataMean: float = None, dataStdDev: float = None, dataSize: int = None
+):
     size = dataSize or 1000
 
     if "GaussianFamily" == family:
