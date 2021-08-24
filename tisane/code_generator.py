@@ -32,14 +32,14 @@ import statsmodels.formula.api as smf
 """
 
 load_data_from_csv_template = """
-df = pd.read_csv({path})
+df = pd.read_csv('{path}')
 """
 
 load_data_from_dataframe_template = """
 # Dataframe is stored in local file: data.csv
 # You may want to replace the data path with an existing data file you already have.
-# You may also set df equal to the dataframe you are already working with. 
-df = pd.read_csv(data.csv)
+# You may also set df equal to a pandas dataframe you are already working with. 
+df = pd.read_csv('data.csv') # Make sure that the data path is correct
 """
 
 load_data_no_data_source = """
@@ -131,7 +131,8 @@ def absolute_path(p: str) -> str:
 # Return path
 def write_out_dataframe(data: Dataset) -> os.path:
     path = absolute_path("data.csv")
-    data.dataset.to_csv(path)
+    assert(data.has_data())
+    data.get_data().to_csv(path)
 
     return path
 
@@ -162,16 +163,17 @@ def generate_pymer4_code(statistical_model: StatisticalModel):
 
     ### Generate data code
     data_code = None
-    data = statistical_model.data
-    if statistical_model.data is None:
+    if not statistical_model.has_data():
         data_code = pymer4_code_templates["load_data_no_data_source"]
-    elif data.data_path is not None:
-        data_code = pymer4_code_templates["load_data_from_csv_template"]
-        data_code = data_code.format(path=str(data.data_path))
-    else:
-        assert data.data_path is None
-        data_path = write_out_dataframe(statistical_model.data)
-        data_code = pymer4_code_templates["load_data_from_dataframe_template"]
+    else: 
+        data = statistical_model.get_data()
+        if data.has_data_path():
+            data_code = pymer4_code_templates["load_data_from_csv_template"]
+            data_code = data_code.format(path=str(data.data_path))
+        else: 
+            assert not data.has_data_path()
+            data_path = write_out_dataframe(data)
+            data_code = pymer4_code_templates["load_data_from_dataframe_template"]
 
     ### Generate model code
     model_code = generate_pymer4_model(statistical_model=statistical_model)
@@ -288,16 +290,17 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
 
     ### Generate data code
     data_code = None
-    data = statistical_model.data
-    if statistical_model.data is None:
+    if not statistical_model.has_data():
         data_code = statsmodels_code_templates["load_data_no_data_source"]
-    elif data.data_path is not None:
-        data_code = statsmodels_code_templates["load_data_from_csv_template"]
-        data_code = data_code.format(path=str(data.data_path))
-    else:
-        assert data.data_path is None
-        data_path = write_out_dataframe(statistical_model.data)
-        data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
+    else: 
+        data = statistical_model.get_data()
+        if data.data_path is not None:
+            data_code = statsmodels_code_templates["load_data_from_csv_template"]
+            data_code = data_code.format(path=str(data.data_path))
+        else:
+            assert data.data_path is None
+            data_path = write_out_dataframe(statistical_model.data)
+            data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
 
     ### Generate model code
     formula_code = generate_statsmodels_formula(statistical_model=statistical_model)

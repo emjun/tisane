@@ -159,7 +159,7 @@ def write_to_script(code: str, output_dir: str, output_filename: str):
     # Output @param code to .py script
     with open(path, "w+", encoding="utf-8") as f: 
         f.write(code)
-    
+    print("Writing out path")
     return path
 
 
@@ -172,6 +172,7 @@ def construct_statistical_model(
     random_effects_candidates: Set[RandomEffect],
     family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]],
 ):
+    print("read through {filename}")
     assert filename.endswith(".json")
     dir = os.getcwd()
     path = Path(dir, filename)
@@ -394,28 +395,26 @@ def infer_statistical_model_from_design(design: Design):
     gui = TisaneGUI()
     gui.start_app(input=path)
     # Output a JSON file
-    output_file = "model_spec.json"  # or whatever path/file that the GUI outputs
-
-    # Read JSON file
-    sm = None
-    f = open(output_file, "r")
+    output_filename = "model_spec.json"  # or whatever path/file that the GUI outputs
 
     ### Step 4: Code generation
     # Construct StatisticalModel from JSON spec
-    model_json = f.read()
+    # model_json = f.read()
     sm = construct_statistical_model(
-        file=model_json,
+        filename=output_filename,
         query=design,
         main_effects_candidates=main_effects_candidates,
         interaction_effects_candidates=interaction_effects_candidates,
         random_effects_candidates=random_effects_candidates,
         family_link_paired_candidates=family_link_paired,
-    ).assign_data(data)
-    # Assign statistical model data from @parm design
-    sm.assign_data(design.dataset)
+    )
+    
+    if design.has_data(): 
+        # Assign statistical model data from @parm design
+        sm.assign_data(design.dataset)
     # Generate code from SM
     code = generate_code(sm)
     # Write generated code out
-    path = write_to_script(code, "model.py")
+    path = write_to_script(code, "./", "model.py")
 
-    return script
+    return path

@@ -14,7 +14,7 @@ class StatisticalModel:
     random_effects: Set[AbstractVariable]
     family_function: AbstractFamily
     link_function: AbstractLink
-    data: Dataset
+    dataset: Dataset
 
     def __init__(
         self,
@@ -31,7 +31,7 @@ class StatisticalModel:
         self.random_effects = random_effects
         self.family_function = family_function
         self.link_function = link_function
-        self.data = None  # Default is that there is no data until assigned
+        self.dataset = None  # Default is that there is no data until assigned
 
     def get_independent_variables(self):
         ivs = set()
@@ -44,11 +44,23 @@ class StatisticalModel:
     def get_dependent_variable(self):
         return self.dependent_variable
 
+    # @returns this statistical model's data
+    def get_data(self): 
+        
+        return self.dataset
+
     # Add data to this statistical model
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
-        self.dataset = Dataset(source)
+        if isinstance(source, Dataset): 
+            self.dataset = source
+        else: 
+            self.dataset = Dataset(source)
 
         return self
+
+    # @returns bool val if self.dataset is not None
+    def has_data(self): 
+        return self.dataset is not None
 
     def has_random_effects(self):
         return len(self.random_effects) > 0

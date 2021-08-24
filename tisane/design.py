@@ -84,6 +84,9 @@ class Design(object):
 
         return self
 
+    def has_data(self) -> bool: 
+        return self.dataset is not None 
+
     def get_data(self) -> pd.DataFrame:
         if self.dataset is not None:
             return self.dataset.get_data()
