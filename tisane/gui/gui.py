@@ -30,6 +30,7 @@ s.bind(("", 0))
 addr = s.getsockname()
 port = addr[1]
 s.close()
+logging.basicConfig(level=logging.ERROR)
 
 # For logging Dash output
 log = logging.getLogger("werkzeug")

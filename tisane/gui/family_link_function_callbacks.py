@@ -14,7 +14,7 @@ import pandas as pd
 from tisane.gui.gui_helpers import simulate_data_dist, getTriggeredFromContext
 import json
 import os
-
+import logging
 
 def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
     createLinkFunctionCallbacks(app, comp)
@@ -23,7 +23,8 @@ def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
     pass
 
 def filterOutput(comp: GUIComponents):
-    print("Raw output: {}".format(json.dumps(comp.output, indent=4)))
+    logger = logging.getLogger("werkzeug")
+    logger.debug("Raw output: {}".format(json.dumps(comp.output, indent=4)))
     newOutput = {
         "main effects": sorted(comp.output["main effects"]),
         "interaction effects": sorted(comp.output["interaction effects"]),
@@ -148,6 +149,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
 
 
 def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     @app.callback(
         Output("link-options", "options"),
         Output("link-options", "value"),
@@ -160,9 +162,9 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
             raise PreventUpdate
         comp.output["family"] = value
         familyLinks = comp.getGeneratedFamilyLinkFunctions()
-        print("{}: {}".format(value, type(value)))
+        logger.debug("{}: {}".format(value, type(value)))
         if value and isinstance(value, str):
-            print(familyLinks)
+            logger.debug(familyLinks)
             if value in familyLinks:
                 defaultLink = comp.getDefaultLinkForFamily(value)
                 familyName = " ".join(separateByUpperCamelCase(value)[:-1])
@@ -179,7 +181,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                     "Family: {}".format(familyName),
                 )
             pass
-        print("Cannot update for some reason")
+        logger.warning("Cannot update for some reason")
         raise PreventUpdate
 
     @app.callback(Output("overview-link", "children"), Input("link-options", "value"))

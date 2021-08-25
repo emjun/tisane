@@ -94,7 +94,7 @@ class GUIComponents:
         self.unitsByRowId = {}
         self.randomSlopes = {}
         self.generatedCorrelatedIdToRandomSlope = {}
-        print(input_json)
+        log.debug(input_json)
         if os.path.exists(input_json):
             with open(input_json, "r") as f:
                 self.data = json.loads(f.read())
@@ -252,7 +252,7 @@ class GUIComponents:
 
         pass
     def filterOutput(self):
-        print("Raw output: {}".format(json.dumps(self.output, indent=4)))
+        log.debug("Raw output: {}".format(json.dumps(self.output, indent=4)))
         newOutput = {
             "main effects": sorted(self.output["main effects"]),
             "interaction effects": sorted(self.output["interaction effects"]),
