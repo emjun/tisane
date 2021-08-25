@@ -3,6 +3,7 @@ import dash
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
 import dash_core_components as dcc
+import dash_bootstrap_components as dbc
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import numpy as np
 import plotly.graph_objects as go
@@ -75,7 +76,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
         Output("modal-data-store", "data"), Input("generate-code", "n_clicks")
     )
     def generateCodeCallback(nclicks):
-        if comp:
+        if comp and nclicks:
             result = comp.generateCode()
             if result:
                 resultObject = {
@@ -83,7 +84,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
                 }
             else:
                 resultObject = {
-                    "error": "An error occurred while generating code. :("
+                    "error": "No code generator provided. Did you not run the GUI using `tisane.infer_statistical_model_from_design`?"
                 }
             return json.dumps(resultObject)
             # newOutput = filterOutput(comp)
@@ -112,13 +113,35 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
                 return (False, 0, "Code Generated!", "Placeholder")
             dataObject = json.loads(data) if data else {}
             if "path" in dataObject:
-                bodyText = ("Code has been generated! The model script is located at `{}`".format(dataObject["path"]))
-                body = dcc.Markdown(bodyText)
-                return (True, 0, body, codeGenerated)
+                bodyText = [
+                    "Code has been generated! The model script is located at",
+                    html.Div(
+                        # dbc.CardBody(
+                            [
+                                html.Code(str(dataObject["path"]), id="copy-target-id"),
+                                dcc.Clipboard(target_id="copy-target-id",
+                                              style={
+                                                  "position": "absolute",
+                                                  "top": 0,
+                                                  "right": 10
+                                              })
+                            ],
+                        #     style={
+                        #         "position": "relative"
+                        #     }
+                        # ),
+                        className="bg-light",
+                        style={
+                            "position": "relative",
+                            "padding": "5px"
+                        }
+                    )
+                ]
+                return (True, 0, codeGenerated, bodyText)
             elif "error" in dataObject:
                 header = "Error!"
-                body = dataObject["error"]
-                return (True, 0, body, header)
+                body = dcc.Markdown(dataObject["error"])
+                return (True, 0, header, body)
             pass
         raise PreventUpdate
 
