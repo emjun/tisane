@@ -497,6 +497,9 @@ class NumberValue:
     def is_equal_to_one(self):
         return self.value == 1
 
+    def get_value(self): 
+        return self.value
+
 
 """
 Class for expressing exact values

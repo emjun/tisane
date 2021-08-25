@@ -787,7 +787,7 @@ class GUIComponents:
                 dbc.CardBody(
                     [
                         cardP(html.I("No interaction effects")),
-                        html.P(
+                        dcc.Markdown(
                             self.getNoInteractionEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
                         ),
@@ -1055,7 +1055,7 @@ class GUIComponents:
                 [
                     cardP("Random Effects"),
                     self.layoutRandomEffectsTable(),
-                    html.Div(id="random-effects-not-available-explanation"),
+                    dcc.Markdown(id="random-effects-not-available-explanation"),
                     continueButton,
                 ]
             ),
@@ -1105,7 +1105,7 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(linkExplanation["header"]),
-                        dbc.PopoverBody(linkExplanation["body"]),
+                        dbc.PopoverBody(dcc.Markdown(linkExplanation["body"])),
                     ],
                     target="link-function-label-info",
                     trigger="hover",
@@ -1113,7 +1113,7 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(familyExplanation["header"]),
-                        dbc.PopoverBody(familyExplanation["body"]),
+                        dbc.PopoverBody(dcc.Markdown(familyExplanation["body"])),
                     ],
                     target="family-label-info",
                     trigger="hover",
