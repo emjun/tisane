@@ -3,10 +3,10 @@ import os
 
 
 # @param input is a json file that has all the data to read in
-def start_gui(input: str):
+def start_gui(input: str, jupyter: bool = False):
     gui = TisaneGUI()
 
-    gui.start_app(input)
+    gui.start_app(input, jupyter=jupyter)
 
 
 def createPath(fileName):
@@ -34,4 +34,5 @@ class ExampleData:
     # TODO: Add more input sources and json files here
 
 
-start_gui(ExampleData.main_interaction_random_intercepts)
+if __name__ == "__main__":
+    start_gui(ExampleData.main_interaction_random_intercepts)

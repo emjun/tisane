@@ -10,6 +10,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Output, Input, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
+from jupyter_dash import JupyterDash
 import plotly.graph_objects as go
 import webbrowser  # For autoamtically opening the browser for the CLI
 import socket  # For finding next available socket
@@ -60,12 +61,17 @@ class TisaneGUI:
         pass
 
     # @param input is a json file that has all the data to read in
-    def start_app(self, input: str):
+    def start_app(self, input: str, jupyter: bool = False):
         ### Read in input data
         self.read_input(input)
 
         ### Create app
-        app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+        if jupyter:
+            app = JupyterDash(__name__, external_stylesheets=external_stylesheets)
+            pass
+        else:
+            app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
 
         ### Populate app
         # Get components
@@ -149,7 +155,11 @@ class TisaneGUI:
         self.app = app
         createCallbacks(app, self.components)
         # open_browser()
-        app.run_server(debug=True, threaded=True, port=port)
+        if jupyter:
+            app.run_server(mode="inline")
+            pass
+        else:
+            app.run_server(debug=True, threaded=True, port=port)
 
     def progress(self):
         # TODO: Trying to make this feel like overview of installation progress on Mac
