@@ -55,14 +55,14 @@ class TisaneGUI:
         pass
 
     # @param input is a json file that has all the data to read in
-    def read_input(self, input: str):
-        self.components = GUIComponents(input)
+    def read_input(self, input: str, generateCode):
+        self.components = GUIComponents(input, generateCode)
         pass
 
     # @param input is a json file that has all the data to read in
-    def start_app(self, input: str):
+    def start_app(self, input: str, generateCode=None):
         ### Read in input data
-        self.read_input(input)
+        self.read_input(input, generateCode)
 
         ### Create app
         app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -141,7 +141,7 @@ class TisaneGUI:
                 dcc.Store(id="added-interaction-effects-store"),
                 dcc.Store(id="random-effects-check-store"),
             ]
-            + self.components.createEffectPopovers(),
+            + self.components.createEffectPopovers() + self.components.createCodeGenerationModal(),
             fluid=False,
         )
 

@@ -2,6 +2,7 @@ from dash.dependencies import Output, Input, State, ALL, MATCH
 import dash
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
+import dash_core_components as dcc
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import numpy as np
 import plotly.graph_objects as go
@@ -9,8 +10,9 @@ import tweedie
 from scipy.special import logit
 from scipy import stats
 import pandas as pd
-from tisane.gui.gui_helpers import simulate_data_dist
+from tisane.gui.gui_helpers import simulate_data_dist, getTriggeredFromContext
 import json
+import os
 
 
 def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
@@ -70,17 +72,56 @@ def filterOutput(comp: GUIComponents):
 
 def createGenerateCodeCallback(app, comp: GUIComponents = None):
     @app.callback(
-        Output("generated-code-div", "children"), Input("generate-code", "n_clicks")
+        Output("modal-data-store", "data"), Input("generate-code", "n_clicks")
     )
     def generateCodeCallback(nclicks):
         if comp:
-            newOutput = filterOutput(comp)
+            result = comp.generateCode()
+            if result:
+                resultObject = {
+                    "path": str(result)
+                }
+            else:
+                resultObject = {
+                    "error": "An error occurred while generating code. :("
+                }
+            return json.dumps(resultObject)
+            # newOutput = filterOutput(comp)
+            #
+            # with open("model_spec.json", "w") as f:
+            #     f.write(json.dumps(newOutput, indent=4, sort_keys=True))
+            #     pass
+            # pass
+        raise PreventUpdate
 
-            with open("model_spec.json", "w") as f:
-                f.write(json.dumps(newOutput, indent=4, sort_keys=True))
-                pass
+    @app.callback(
+        Output("code-generated-modal", "is_open"),
+        Output("close-code-generated-modal", "n_clicks"),
+        Output("code-generated-modal-header", "children"),
+        Output("code-generated-modal-body", "children"),
+        Input("close-code-generated-modal", "n_clicks"),
+        Input("modal-data-store", "data"),
+        State("code-generated-modal", "is_open")
+    )
+    def closeModal(n_clicks, data, is_open):
+        ctx = dash.callback_context
+        triggered = getTriggeredFromContext(ctx)
+        codeGenerated = "Code Generated!"
+        if triggered:
+            if triggered == "close-code-generated-modal" and n_clicks > 0:
+                return (False, 0, "Code Generated!", "Placeholder")
+            dataObject = json.loads(data) if data else {}
+            if "path" in dataObject:
+                bodyText = ("Code has been generated! The model script is located at `{}`".format(dataObject["path"]))
+                body = dcc.Markdown(bodyText)
+                return (True, 0, body, codeGenerated)
+            elif "error" in dataObject:
+                header = "Error!"
+                body = dataObject["error"]
+                return (True, 0, body, header)
             pass
         raise PreventUpdate
+
 
 
 def createLinkFunctionCallbacks(app, comp: GUIComponents = None):

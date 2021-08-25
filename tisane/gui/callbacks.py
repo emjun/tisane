@@ -6,6 +6,7 @@ from tisane.gui.gui_components import GUIComponents
 from tisane.gui.family_link_function_callbacks import createFamilyLinkFunctionCallbacks
 from tisane.gui.random_effects_callbacks import createRandomEffectsCallbacks
 import json
+from tisane.gui.gui_helpers import getTriggeredFromContext
 
 
 def createCallbacks(app, comp: GUIComponents = None):
@@ -45,10 +46,10 @@ def createTestDivCallbacks(app):
         return str(children)
 
 
-def getTriggeredFromContext(ctx):
-    if not ctx.triggered:
-        return False
-    return ctx.triggered[0]["prop_id"].split(".")[0]
+# def getTriggeredFromContext(ctx):
+#     if not ctx.triggered:
+#         return False
+#     return ctx.triggered[0]["prop_id"].split(".")[0]
 
 
 def createTransitionCallback(

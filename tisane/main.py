@@ -22,6 +22,7 @@ from enum import Enum
 from typing import List, Set, Dict
 import copy
 from pathlib import Path
+import os
 from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
@@ -152,12 +153,12 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
 
     return path
 
-def write_to_script(code: str, output_dir: str, output_filename: str): 
+def write_to_script(code: str, output_dir: str, output_filename: str):
     assert output_filename.endswith(".py")
     path = Path(output_dir, output_filename)
 
     # Output @param code to .py script
-    with open(path, "w+", encoding="utf-8") as f: 
+    with open(path, "w+", encoding="utf-8") as f:
         f.write(code)
     print("Writing out path")
     return path
@@ -193,7 +194,7 @@ def construct_statistical_model(
     for v_name in model_dict["main effects"]:
         # Get variable object with v_name
         var = gr.get_variable(v_name)
-        # if var is None: 
+        # if var is None:
         #     import pdb; pdb.set_trace()
         assert var is not None
         assert var in main_effects_candidates
@@ -220,20 +221,20 @@ def construct_statistical_model(
         groups = None
         iv = None
 
-        if len(rc_group_dict.keys()) == 1: 
-            for rc_type, info in rc_group_dict.items(): 
+        if len(rc_group_dict.keys()) == 1:
+            for rc_type, info in rc_group_dict.items():
                 if rc_type == "random intercept":
                     assert(isinstance(info, dict))
                     groups = info["groups"]
-                    for ri in random_intercepts:                        
+                    for ri in random_intercepts:
                         if ri.groups.name == groups:
                             ri_obj = ri
                             random_effects.add(ri_obj)
-                else: 
+                else:
                     assert(rc_type == "random slope")
                     assert(isinstance(info, list))
                     # There could be multiple random slopes associated with this group
-                    for rs_dict in info: 
+                    for rs_dict in info:
                         assert(isinstance(rs_dict, dict))
                         groups = rs_dict["groups"]
                         iv = rs_dict["iv"]
@@ -245,19 +246,19 @@ def construct_statistical_model(
             assert(len(rc_group_dict.keys()) > 1)
             rc_group_ri_obj = None
             rc_group_rs_obj = None
-            # There are multiple random effects for the group 
+            # There are multiple random effects for the group
             for rc_type, info in rc_group_dict.items():
                 if rc_type == "random intercept":
                     assert(isinstance(info, dict))
                     groups = info["groups"]
-                    for ri in random_intercepts:                        
+                    for ri in random_intercepts:
                         if ri.groups.name == groups:
                             rc_group_ri_obj = ri
-                else: 
+                else:
                     assert(rc_type == "random slope")
                     assert(isinstance(info, list))
-            
-                    for rs_dict in info: 
+
+                    for rs_dict in info:
                         assert(isinstance(rs_dict, dict))
                         groups = rs_dict["groups"]
                         iv = rs_dict["iv"]
@@ -269,15 +270,15 @@ def construct_statistical_model(
                             assert("correlated" in rs_dict.keys())
                             correlated = rs_dict["correlated"]
                             # import pdb; pdb.set_trace()
-                        
-                            if correlated: 
+
+                            if correlated:
                                 # Create correlated RS and RI
                                 corr = CorrelatedRandomSlopeAndIntercept(
                                     random_slope=rc_group_rs_obj, random_intercept=rc_group_ri_obj
                                 )
                                 # Add correlated RS and RI to random effects
                                 random_effects.add(corr)
-                            else: 
+                            else:
                                 # Create uncorrelated RS and RI
                                 corr = UncorrelatedRandomSlopeAndIntercept(
                                     random_slope=rc_group_rs_obj, random_intercept=rc_group_ri_obj
@@ -285,12 +286,12 @@ def construct_statistical_model(
                                 # Add uncorrelated RS and RI to random effects
                                 # import pdb; pdb.set_trace()
                                 random_effects.add(corr)
-                
-            if rc_group_ri_obj is None and rc_group_rs_obj is not None: 
+
+            if rc_group_ri_obj is None and rc_group_rs_obj is not None:
                 random_effects.add(rc_group_rs_obj)
             if rc_group_ri_obj is not None and rc_group_rs_obj is None:
                 random_effects.add(rc_group_ri_obj)
-                
+
     # TODO: Verify that all the random effects candidates were found
 
     family_function = None
@@ -393,28 +394,35 @@ def infer_statistical_model_from_design(design: Design):
 
     ### Step 3: Disambiguation loop (GUI)
     gui = TisaneGUI()
-    gui.start_app(input=path)
+
+    def generateCode(destinationDir: str = None, modelSpecJson: str = "model_spec.json"):
+        destinationDir = destinationDir or os.getcwd()
+        output_filename = os.path.join(destinationDir, modelSpecJson)  # or whatever path/file that the GUI outputs
+
+        ### Step 4: Code generation
+        # Construct StatisticalModel from JSON spec
+        # model_json = f.read()
+        sm = construct_statistical_model(
+            filename=output_filename,
+            query=design,
+            main_effects_candidates=main_effects_candidates,
+            interaction_effects_candidates=interaction_effects_candidates,
+            random_effects_candidates=random_effects_candidates,
+            family_link_paired_candidates=family_link_paired,
+        )
+
+        if design.has_data():
+            # Assign statistical model data from @parm design
+            sm.assign_data(design.dataset)
+        # Generate code from SM
+        code = generate_code(sm)
+        # Write generated code out
+
+        path = write_to_script(code, destinationDir, "model.py")
+        return path
+
+    gui.start_app(input=path, generateCode=generateCode)
     # Output a JSON file
-    output_filename = "model_spec.json"  # or whatever path/file that the GUI outputs
 
-    ### Step 4: Code generation
-    # Construct StatisticalModel from JSON spec
-    # model_json = f.read()
-    sm = construct_statistical_model(
-        filename=output_filename,
-        query=design,
-        main_effects_candidates=main_effects_candidates,
-        interaction_effects_candidates=interaction_effects_candidates,
-        random_effects_candidates=random_effects_candidates,
-        family_link_paired_candidates=family_link_paired,
-    )
-    
-    if design.has_data(): 
-        # Assign statistical model data from @parm design
-        sm.assign_data(design.dataset)
-    # Generate code from SM
-    code = generate_code(sm)
-    # Write generated code out
-    path = write_to_script(code, "./", "model.py")
 
-    return path
+    # return path
