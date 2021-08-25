@@ -42,6 +42,8 @@ def check_design_ivs(design: Design):
                 f"The independent variable {i.name} does not have a conceptual relationship with the dependent variable {dv.name}. Every independent variable should either CAUSE or  ASSOCIATE_WITH the dependent variable."
             )
 
+    return True
+
 
 # Checks that the DV does not cause any of the IVs
 # Issues a warning if dependent variable causes an independent variable
@@ -56,6 +58,7 @@ def check_design_dv(design: Design):
                 f"The dependent variable {dv.name} causes the independent variable {i.name}."
             )
 
+    return True
 
 # @returns a Python dict with all the effect options, can be used to output straight JSON or to write a file
 # @param output_path is the file path to write out the data

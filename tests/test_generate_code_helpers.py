@@ -3,6 +3,8 @@ Tests methods called to generate code from a statistical model
 """
 from tisane.family import AbstractFamily, AbstractLink
 from tisane.main import (
+    check_design_ivs,
+    check_design_dv,
     construct_statistical_model,
     infer_family_functions,
     infer_link_functions,
@@ -98,9 +100,15 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         m1 = u0.numeric("Measure_1")
         dv = u0.numeric("Dependent_variable")
 
+        m0.causes(dv)
+        m1.causes(dv)
         m0.moderates(moderator=m1, on=dv)
+
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -164,6 +172,9 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=weight, ivs=[week]).assign_data(df)
         gr = design.graph
 
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
+
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
         )
@@ -223,6 +234,9 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[time, condition])
         gr = design.graph
 
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
+
         main_effects = set(design.ivs)
         (
             interaction_effects,
@@ -267,6 +281,9 @@ class GenerateCodeHelpersTest(unittest.TestCase):
 
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -316,6 +333,9 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
 
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
+
         main_effects = set(design.ivs)
         interaction_effects = set()
         (random_effects, random_explanations) = infer_random_effects_with_explanations(
@@ -357,7 +377,13 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         m1 = u0.numeric("Measure_1")
         dv = u0.numeric("Dependent_variable")
 
+        m0.causes(dv)
+        m1.associates_with(dv)
+
         design = ts.Design(dv=dv, ivs=[m0, m1])
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -393,9 +419,15 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         m1 = u0.numeric("Measure_1")
         dv = u0.numeric("Dependent_variable")
 
+        m0.associates_with(dv)
+        m1.associates_with(dv)
+
         m0.moderates(moderator=m1, on=dv)
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -439,7 +471,13 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         m1 = u0.numeric("Measure_1")
         dv = u0.numeric("Dependent_variable")
 
+        m0.associates_with(dv)
+        m1.associates_with(dv)
+
         design = ts.Design(dv=dv, ivs=[m0, m1])
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -475,9 +513,15 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         m1 = u0.numeric("Measure_1")
         dv = u0.numeric("Dependent_variable")
 
+        m0.associates_with(dv)
+        m1.associates_with(dv)
         m0.moderates(moderator=m1, on=dv)
+
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -515,59 +559,59 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         reference_code = "Power(power=.5)"
         self.assertEqual(code, reference_code)
 
-    def test_generate_statsmodels_model(self):
-        u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure_0")
-        m1 = u0.numeric("Measure_1")
-        dv = u0.numeric("Dependent_variable")
+    # def test_generate_statsmodels_model(self):
+    #     u0 = ts.Unit("Unit")
+    #     m0 = u0.numeric("Measure_0")
+    #     m1 = u0.numeric("Measure_1")
+    #     dv = u0.numeric("Dependent_variable")
 
-        m0.moderates(moderator=m1, on=dv)
-        design = ts.Design(dv=dv, ivs=[m0, m1])
-        gr = design.graph
+    #     m0.moderates(moderator=m1, on=dv)
+    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+    #     gr = design.graph
 
-        (main_effects, main_explanations) = infer_main_effects_with_explanations(
-            gr=gr, query=design
-        )
-        (
-            interaction_effects,
-            interaction_explanations,
-        ) = infer_interaction_effects_with_explanations(
-            gr=gr, query=design, main_effects=main_effects
-        )
-        random_effects = set()
-        family_link_paired = get_family_link_paired_candidates(design=design)
+    #     (main_effects, main_explanations) = infer_main_effects_with_explanations(
+    #         gr=gr, query=design
+    #     )
+    #     (
+    #         interaction_effects,
+    #         interaction_explanations,
+    #     ) = infer_interaction_effects_with_explanations(
+    #         gr=gr, query=design, main_effects=main_effects
+    #     )
+    #     random_effects = set()
+    #     family_link_paired = get_family_link_paired_candidates(design=design)
 
-        output_filename = "main_interaction.json"
-        output_path = os.path.join(data_dir, output_filename)
-        sm = construct_statistical_model(
-            output_path,
-            query=design,
-            main_effects_candidates=main_effects,
-            interaction_effects_candidates=interaction_effects,
-            random_effects_candidates=random_effects,
-            family_link_paired_candidates=family_link_paired,
-        )
-        self.assertIsNotNone(sm)
-        self.assertEqual(design.dv, sm.dependent_variable)
-        self.assertEqual(main_effects, sm.main_effects)
-        self.assertEqual(interaction_effects, sm.interaction_effects)
-        self.assertEqual(random_effects, sm.random_effects)
-        family = sm.family_function
-        self.assertIn(family, family_link_paired.keys())
-        link = sm.link_function
-        self.assertIn(link, family_link_paired[family])
+    #     output_filename = "main_interaction.json"
+    #     output_path = os.path.join(data_dir, output_filename)
+    #     sm = construct_statistical_model(
+    #         output_path,
+    #         query=design,
+    #         main_effects_candidates=main_effects,
+    #         interaction_effects_candidates=interaction_effects,
+    #         random_effects_candidates=random_effects,
+    #         family_link_paired_candidates=family_link_paired,
+    #     )
+    #     self.assertIsNotNone(sm)
+    #     self.assertEqual(design.dv, sm.dependent_variable)
+    #     self.assertEqual(main_effects, sm.main_effects)
+    #     self.assertEqual(interaction_effects, sm.interaction_effects)
+    #     self.assertEqual(random_effects, sm.random_effects)
+    #     family = sm.family_function
+    #     self.assertIn(family, family_link_paired.keys())
+    #     link = sm.link_function
+    #     self.assertIn(link, family_link_paired[family])
 
-        code = generate_statsmodels_model(statistical_model=sm)
-        formula = "'Dependent_variable ~ Measure_0 + Measure_1 + Measure_0*Measure_1'"
-        family_name = "Poisson"
-        link_obj = "Power(power=.5)"
-        reference_code = model_template.format(
-            formula=formula, family_name=family_name, link_obj=link_obj
-        )
-        self.assertEqual(code, reference_code)
+    #     code = generate_statsmodels_model(statistical_model=sm)
+    #     formula = "'Dependent_variable ~ Measure_0 + Measure_1 + Measure_0*Measure_1'"
+    #     family_name = "Poisson"
+    #     link_obj = "Power(power=.5)"
+    #     reference_code = model_template.format(
+    #         formula=formula, family_name=family_name, link_obj=link_obj
+    #     )
+    #     self.assertEqual(code, reference_code)
 
-    def test_generate_statsmodels_code(self): 
-        pass
+    # def test_generate_statsmodels_code(self): 
+    #     pass
 
-    def test_generate_pymer4_code(self): 
-        pass
+    # def test_generate_pymer4_code(self): 
+    #     pass
