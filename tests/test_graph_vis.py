@@ -1,7 +1,6 @@
 from tisane import graph
 import tisane as ts
 from tisane.variable import Has
-from tisane.smt.synthesizer import Synthesizer
 
 import unittest
 

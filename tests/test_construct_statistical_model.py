@@ -14,7 +14,7 @@ from tisane.graph_inference import (
 )
 from tisane.family import AbstractFamily, AbstractLink
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
-from tisane.main import construct_statistical_model
+from tisane.main import check_design_ivs, check_design_dv, construct_statistical_model
 
 import tisane as ts
 import pandas as pd
@@ -83,9 +83,15 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         m1 = u0.numeric("Measure_1")
         dv = u0.numeric("Dependent_variable")
 
+        m0.associates_with(dv)
+        m1.associates_with(dv)
         m0.moderates(moderator=m1, on=dv)
+
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
+
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
