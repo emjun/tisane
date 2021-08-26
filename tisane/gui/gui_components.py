@@ -1084,6 +1084,7 @@ class GUIComponents:
                             id="family-options",
                             options=family_options,
                             value="GaussianFamily",
+                            optionHeight=45,
                         ),
                     ]
                 ),
@@ -1099,6 +1100,7 @@ class GUIComponents:
                             id="link-options",
                             options=[],
                             value="IdentityLink",
+                            optionHeight=45,
                         ),
                     ]
                 ),
@@ -1166,7 +1168,16 @@ class GUIComponents:
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", y=1.09, xanchor="left", x=-0.1)
+        )
+        fig.update_layout(
+            margin=dict(b=25,l=25,r=25,t=25)
+        )
+        fig.update_layout(
+            autosize=True
+        )
+        fig.update_layout(
+            height=400
         )
         return fig
 
@@ -1268,6 +1279,17 @@ class GUIComponents:
             pass
         return normalityTestPortion
 
+    def createGraph(self, family):
+        fig = self.createFigure(family)
+
+        # Get form groups for family link div
+        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig,
+                      config={"responsive": True},
+                      style={
+                          "height": "inherit"
+                      })
+        return family_link_chart
+
     def getFamilyLinkFunctionsCard(self):
         ##### Collect all elements
         # Create family and link title
@@ -1285,7 +1307,14 @@ class GUIComponents:
         fig = self.createFigure("GaussianFamily")
 
         # Get form groups for family link div
-        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig)
+        family_link_chart = html.Div(
+            dcc.Graph(id="family-link-chart", figure=fig,
+                      config={"responsive": True},
+                      style={
+                          "height": "inherit"
+                      }),
+            id="family-link-chart-div"
+        )
         family_link_controls = self.make_family_link_options()
 
         normalityTestPortion = self.createNormalityTestSection()
@@ -1294,11 +1323,12 @@ class GUIComponents:
         family_and_link_div = dbc.Card(
             dbc.CardBody(
                 [
+                    html.Div(id="output-clientside"),
                     family_link_title,
                     dbc.Row(
                         [
-                            dbc.Col(family_link_chart, md=7),
-                            dbc.Col(family_link_controls, md=5),
+                            dbc.Col(family_link_chart, sm=6, md=7, lg=8),
+                            dbc.Col(family_link_controls, sm=6, md=5, lg=4),
                         ],
                         align="center",
                     ),

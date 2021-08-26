@@ -1,4 +1,4 @@
-from dash.dependencies import Output, Input, State, ALL, MATCH
+from dash.dependencies import Output, Input, State, ALL, MATCH, ClientsideFunction
 import dash
 from dash.exceptions import PreventUpdate
 import dash_html_components as html
@@ -122,7 +122,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                 return (
                     [
                         {
-                            "label": " ".join(separateByUpperCamelCase(str(l)))
+                            "label": " ".join(separateByUpperCamelCase(str(l))[:-1])
                             + ("*" if defaultLink == l else ""),
                             "value": str(l),
                         }
@@ -151,7 +151,7 @@ def createChartCallbacks(app, comp: GUIComponents = None):
     def update_chart_family(family):
         if family is not None and comp:
             assert isinstance(family, str)
-
+            # return comp.createGraph(family)
             return comp.createFigure(family)
 
         else:
