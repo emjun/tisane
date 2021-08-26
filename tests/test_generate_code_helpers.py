@@ -34,8 +34,9 @@ script_dir = os.path.join(dir, test_script_repo_name)
 
 ### HELPERS to reduce redundancy across test cases
 model_template = """
-model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}({link_obj}))
-print(model.fit())
+model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
+res = model.fit()
+print(res.summary())
 """
 
 
@@ -559,56 +560,62 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         reference_code = "Power(power=.5)"
         self.assertEqual(code, reference_code)
 
-    # def test_generate_statsmodels_model(self):
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure_0")
-    #     m1 = u0.numeric("Measure_1")
-    #     dv = u0.numeric("Dependent_variable")
+    def test_generate_statsmodels_model(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
-    #     m0.moderates(moderator=m1, on=dv)
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
-    #     gr = design.graph
+        m0.associates_with(dv)
+        m1.associates_with(dv)
+        m0.moderates(moderator=m1, on=dv)
+        
+        design = ts.Design(dv=dv, ivs=[m0, m1])
+        gr = design.graph
 
-    #     (main_effects, main_explanations) = infer_main_effects_with_explanations(
-    #         gr=gr, query=design
-    #     )
-    #     (
-    #         interaction_effects,
-    #         interaction_explanations,
-    #     ) = infer_interaction_effects_with_explanations(
-    #         gr=gr, query=design, main_effects=main_effects
-    #     )
-    #     random_effects = set()
-    #     family_link_paired = get_family_link_paired_candidates(design=design)
+        assert(check_design_ivs(design=design))
+        assert(check_design_dv(design=design))
 
-    #     output_filename = "main_interaction.json"
-    #     output_path = os.path.join(data_dir, output_filename)
-    #     sm = construct_statistical_model(
-    #         output_path,
-    #         query=design,
-    #         main_effects_candidates=main_effects,
-    #         interaction_effects_candidates=interaction_effects,
-    #         random_effects_candidates=random_effects,
-    #         family_link_paired_candidates=family_link_paired,
-    #     )
-    #     self.assertIsNotNone(sm)
-    #     self.assertEqual(design.dv, sm.dependent_variable)
-    #     self.assertEqual(main_effects, sm.main_effects)
-    #     self.assertEqual(interaction_effects, sm.interaction_effects)
-    #     self.assertEqual(random_effects, sm.random_effects)
-    #     family = sm.family_function
-    #     self.assertIn(family, family_link_paired.keys())
-    #     link = sm.link_function
-    #     self.assertIn(link, family_link_paired[family])
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr=gr, query=design
+        )
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        random_effects = set()
+        family_link_paired = get_family_link_paired_candidates(design=design)
 
-    #     code = generate_statsmodels_model(statistical_model=sm)
-    #     formula = "'Dependent_variable ~ Measure_0 + Measure_1 + Measure_0*Measure_1'"
-    #     family_name = "Poisson"
-    #     link_obj = "Power(power=.5)"
-    #     reference_code = model_template.format(
-    #         formula=formula, family_name=family_name, link_obj=link_obj
-    #     )
-    #     self.assertEqual(code, reference_code)
+        output_filename = "main_interaction.json"
+        output_path = os.path.join(data_dir, output_filename)
+        sm = construct_statistical_model(
+            output_path,
+            query=design,
+            main_effects_candidates=main_effects,
+            interaction_effects_candidates=interaction_effects,
+            random_effects_candidates=random_effects,
+            family_link_paired_candidates=family_link_paired,
+        )
+        self.assertIsNotNone(sm)
+        self.assertEqual(design.dv, sm.dependent_variable)
+        self.assertEqual(main_effects, sm.main_effects)
+        self.assertEqual(interaction_effects, sm.interaction_effects)
+        self.assertEqual(random_effects, sm.random_effects)
+        family = sm.family_function
+        self.assertIn(family, family_link_paired.keys())
+        link = sm.link_function
+        self.assertIn(link, family_link_paired[family])
+
+        code = generate_statsmodels_model(statistical_model=sm)
+        formula = "'Dependent_variable ~ Measure_0 + Measure_1 + Measure_0*Measure_1'"
+        family_name = "Poisson"
+        link_obj = "Power(power=.5)"
+        reference_code = model_template.format(
+            formula=formula, family_name=family_name, link_obj=link_obj
+        )
+        self.assertEqual(code, reference_code)
 
     # def test_generate_statsmodels_code(self): 
     #     pass
