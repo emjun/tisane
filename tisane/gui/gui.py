@@ -149,7 +149,7 @@ class TisaneGUI:
                 dcc.Store(id="random-effects-check-store"),
             ]
             + self.components.createEffectPopovers() + self.components.createCodeGenerationModal(),
-            fluid=False,
+            fluid=jupyter,
         )
 
         ### Start and run app on local server

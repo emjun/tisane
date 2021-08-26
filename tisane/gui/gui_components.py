@@ -1166,7 +1166,11 @@ class GUIComponents:
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="bottom", xanchor="right"),
+             # y=1.02, xanchor="right", x=1)
+        )
+        fig.update_layout(
+            margin=dict(b=0, l=0, r=0, t=0)
         )
         return fig
 
@@ -1275,9 +1279,8 @@ class GUIComponents:
             [
                 dcc.Markdown(
                     """
-            ### Data distributions: Family and Link functions.
-            #### Which distribution best matches your data?
-            """
+            ### Data distributions: Family and Link Functions.
+            #### Which distribution best matches your data?"""
                 )
             ]
         )
@@ -1285,7 +1288,7 @@ class GUIComponents:
         fig = self.createFigure("GaussianFamily")
 
         # Get form groups for family link div
-        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig)
+        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig, fillFrame=True, frameMargins=10)
         family_link_controls = self.make_family_link_options()
 
         normalityTestPortion = self.createNormalityTestSection()
@@ -1301,6 +1304,7 @@ class GUIComponents:
                             dbc.Col(family_link_controls, md=5),
                         ],
                         align="center",
+                        no_gutters=True,
                     ),
                 ]
                 + normalityTestPortion
