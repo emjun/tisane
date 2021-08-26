@@ -630,4 +630,3 @@ class Graph(object):
         return gr
 
 
-# from tisane.smt.query_manager import QM

@@ -101,12 +101,13 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1, m2])
         gr = design.graph
 
-        common_ancestors = cast_to_variables(
-            find_common_ancestors([m1, m2], gr), design.ivs
+        (common_ancestors_names, common_ancestors_names_to_variables) = find_common_ancestors([m1, m2], gr)
+        common_ancestors_variables = cast_to_variables(
+            common_ancestors_names, design.ivs
         )
 
-        self.assertEqual(len(common_ancestors), 1)
-        self.assertIn(m0, common_ancestors)
+        self.assertEqual(len(common_ancestors_variables), 1)
+        self.assertIn(m0, common_ancestors_variables)
 
     def test_find_common_causal_ancestors_none(self):
         u0 = ts.Unit("Unit")
@@ -197,13 +198,15 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1, m2])
         gr = design.graph
 
-        causal_ancestors = cast_to_variables(
-            find_all_causal_ancestors([m2], gr), design.ivs
+
+        (causal_ancestors_names, variable_to_causal_ancestors) = find_all_causal_ancestors([m2], gr)
+        causal_ancestors_variables = cast_to_variables(
+            causal_ancestors_names, design.ivs
         )
 
-        self.assertEqual(len(causal_ancestors), 2)
-        self.assertIn(m0, causal_ancestors)
-        self.assertIn(m1, causal_ancestors)
+        self.assertEqual(len(causal_ancestors_variables), 2)
+        self.assertIn(m0, causal_ancestors_variables)
+        self.assertIn(m1, causal_ancestors_variables)
 
     def test_find_all_causal_ancestors_partial_graph(self):
         u0 = ts.Unit("Unit")
@@ -219,11 +222,12 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m2])
         gr = design.graph
 
-        causal_ancestors = cast_to_variables(
-            find_all_causal_ancestors([m2], gr), [m0, m1, m2]
+        (causal_ancestors_names, variable_to_causal_ancestors) = find_all_causal_ancestors([m2], gr)
+        causal_ancestors_variables = cast_to_variables(
+            causal_ancestors_names, [m0, m1, m2]
         )
 
-        self.assertEqual(len(causal_ancestors), 1)
+        self.assertEqual(len(causal_ancestors_variables), 1)
 
     def test_find_variable_associates_that_causes_dv(self):
         u0 = ts.Unit("Unit")
@@ -312,16 +316,18 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        associates_that_cause_dv = cast_to_variables(
-            find_all_associates_that_causes_or_associates_another(
+        (associates_that_cause_dv_names, variable_to_intermediaries) = find_all_associates_that_causes_or_associates_another(
                 sources=[m0, m1], sink=dv, gr=gr
-            ),
-            [m0, m1, m2],
+            )
+
+        associates_that_cause_dv_variables = cast_to_variables(
+            associates_that_cause_dv_names,
+            [m0, m1, m2]
         )
-        self.assertEqual(len(associates_that_cause_dv), 3)
-        self.assertIn(m0, associates_that_cause_dv)
-        self.assertIn(m1, associates_that_cause_dv)
-        self.assertIn(m2, associates_that_cause_dv)
+        self.assertEqual(len(associates_that_cause_dv_variables), 3)
+        self.assertIn(m0, associates_that_cause_dv_variables)
+        self.assertIn(m1, associates_that_cause_dv_variables)
+        self.assertIn(m2, associates_that_cause_dv_variables)
 
     def test_find_all_associates_that_causes_or_associates_with_dv_is_not_recursive(
         self,
@@ -341,16 +347,15 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        associates_that_cause_dv = cast_to_variables(
-            find_all_associates_that_causes_or_associates_another(
+        (associates_that_cause_dv_names, variable_to_intermediaries) = find_all_associates_that_causes_or_associates_another(
                 sources=[m0, m1], sink=dv, gr=gr
-            ),
-            [m0, m1, m2],
-        )
-        self.assertEqual(len(associates_that_cause_dv), 2)
-        self.assertIn(m0, associates_that_cause_dv)
-        self.assertIn(m1, associates_that_cause_dv)
-        self.assertNotIn(m2, associates_that_cause_dv)
+            )
+        
+        associates_that_cause_dv_variables = cast_to_variables(associates_that_cause_dv_names, [m0, m1, m2])
+        self.assertEqual(len(associates_that_cause_dv_variables), 2)
+        self.assertIn(m0, associates_that_cause_dv_variables)
+        self.assertIn(m1, associates_that_cause_dv_variables)
+        self.assertNotIn(m2, associates_that_cause_dv_variables)
 
     def test_find_variable_parent_that_associates_with_dv(self):
         u0 = ts.Unit("Unit")
