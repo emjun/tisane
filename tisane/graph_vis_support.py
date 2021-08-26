@@ -10,8 +10,8 @@ document_begin = """
 """
 
 template_begin = """
-\\begin{tikzpicture}[causes/.style={draw=black, "cause", text=black},
-                    associates/.style={draw=black, "assoc."},
+\\begin{tikzpicture}[cause/.style={draw=black, "cause", text=black},
+                    associate/.style={draw=black, "assoc."},
                     min/.style={minimum size=2cm},
                     unit/.style={min,draw=black},
                     measure/.style={min,circle,draw=black},

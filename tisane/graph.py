@@ -350,9 +350,9 @@ class Graph(object):
         style=default_dot_edge_style,
         color=default_dot_edge_color,
         label=default_dot_edge_label,
-        dv: AbstractVariable = None,
+        dv: AbstractVariable=None,
     ):
-        """Internal method to obtain a DOT graph object representing this graph.
+        """ Internal method to obtain a DOT graph object representing this graph.
 
         Parameters
         ----------
@@ -387,23 +387,16 @@ class Graph(object):
             pass
         for n0 in nodes:
             var0 = self.get_variable(n0)
-            shape = (
-                "box"
-                if isinstance(var0, Unit) and not isinstance(var0, Measure)
-                else "ellipse"
-            )
-            nodestyle = ""
-            fillcolor = "white"
+            shape = "box" if isinstance(var0, Unit) and not isinstance(var0, Measure) else "ellipse"
+            nodestyle=""
+            fillcolor="white"
             if var0 == dv:
                 nodestyle = "filled"
                 fillcolor = "#AAAAAA"
                 pass
-            graph.add_node(
-                pydot.Node(
-                    n0, label=n0, style=nodestyle, fillcolor=fillcolor, shape=shape
-                )
-            )
+            graph.add_node(pydot.Node(n0, label=n0, style=nodestyle, fillcolor=fillcolor, shape=shape))
             pass
+
 
         for (n0, n1, edge_data) in edges:
             if edge_filter(edge_data):

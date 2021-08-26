@@ -40,8 +40,7 @@ class GraphVisTest(unittest.TestCase):
         # gr.associates(student, test_score)
         gr = design.graph
 
-        gr.get_tikz_graph("examples/standalone2.tex")
-        gr.get_dot_graph(path="examples/test_units.png")
+        gr.get_tikz_graph("test_units.tex")
 
     #     race.associates_with(test_score)
     #     student.associates_with(test_score)
@@ -72,17 +71,19 @@ class GraphVisTest(unittest.TestCase):
         motivation_level.causes(pounds_lost)
         race.associates_with(pounds_lost)
         week.associates_with(pounds_lost)
+        design = ts.Design(dv=test_score, ivs=[race, ses])
+        # print(design.get_variables())
 
         age.moderates(moderator=[motivation_level], on=pounds_lost)
 
         design = ts.Design(dv=pounds_lost, ivs=[age, race, week])
         gr = design.graph
         # print(gr.get_nodes())
-        gr.get_tikz_graph("examples/standalone1.tex")
+        gr.get_tikz_graph("test_more_complex.tex")
         # self.assertTrue(gr.has_variable(test_score))
         # gr.visualize_graph()
 
-        gr.get_dot_graph(path="examples/test_more_complex.png")
+        allgraph = gr.get_dot_graph(path="test_more_complex.png")
 
         gr.get_causes_associates_dot_graph(
             path="test_more_complex-causes_associates.png"

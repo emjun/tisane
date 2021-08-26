@@ -452,6 +452,7 @@ class Has:
             self.according_to = None
 
 
+
 """
 Class for expressing repeated measures
 """
@@ -504,7 +505,6 @@ class NumberValue:
 Class for expressing exact values
 """
 
-
 class Exactly(NumberValue):
     def __init__(self, value: int):
         super(Exactly, self).__init__(value)
@@ -513,8 +513,6 @@ class Exactly(NumberValue):
 """
 Class for expressing an upper bound of values
 """
-
-
 class AtMost(NumberValue):
     def __init__(self, value: typing.Union[int, AbstractVariable]):
         if isinstance(value, int):
