@@ -251,26 +251,27 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(gr.has_variable(race))
         self.assertTrue(gr.has_variable(ses))
         self.assertTrue(gr.has_variable(test_score))
-        self.assertFalse(gr.has_variable(tutoring))
+        self.assertTrue(gr.has_variable(tutoring))
 
         identifiers = gr.get_identifiers()
         self.assertIn(student, identifiers)
         self.assertTrue(gr.has_edge(student, race, "has"))
         self.assertTrue(gr.has_edge(student, ses, "has"))
         self.assertTrue(gr.has_edge(student, test_score, "has"))
-        self.assertFalse(
+        self.assertTrue(
             gr.has_edge(student, tutoring, "has")
-        )  # SHOULD THIS BE TRUE OR FALSE
+        ) 
 
         variables = gr.get_variables()
         self.assertEqual(
-            len(variables), 5
+            len(variables), 6
         )  # Check that interaction effect is part of graph as a new variable/node
         v_names = [v.name for v in variables]
         self.assertIn("Student", v_names)
         self.assertIn("Race", v_names)
         self.assertIn("SES", v_names)
         self.assertIn("Test score", v_names)
+        self.assertIn("treatment", v_names)
         self.assertIn(
             "Race*SES", v_names
         )  # Check that interaction effect is part of graph as a new variable/node
@@ -294,7 +295,7 @@ class GraphTest(unittest.TestCase):
             else:
                 count_other_edges += 1
 
-        self.assertEqual(count_has_edges, 4)  # Should this be 5?
+        self.assertEqual(count_has_edges, 5)  
         self.assertEqual(count_associates_edges, 6)
         # Check that Moderates stores a Moderates obj in the edge meta-data for associates edges created for moderations
         self.assertEqual(count_associates_edges_associates_objs, 4)
@@ -303,7 +304,7 @@ class GraphTest(unittest.TestCase):
 
         # Identifier has interaction effect only once (no duplicates)
         # Associate (between Race*SES and Test score introduces to edges)
-        self.assertEqual(len(edges), 10)
+        self.assertEqual(len(edges), 11)
 
         # Check associate edge for interaction effect
         lhs = None
