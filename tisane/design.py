@@ -73,6 +73,9 @@ class Design(object):
         # Add any nesting relationships involving IVs that may be implicit
         self._add_nesting_relationships_to_graph()
 
+        # Add variables that the identifiers have 
+        self._add_identifiers_has_relationships_to_graph()
+
         if source is not None:
             self.dataset = Dataset(source)
         else:
@@ -106,6 +109,19 @@ class Design(object):
             for r in relationships:
                 if isinstance(r, Nests):
                     self.graph.add_relationship(relationship=r)
+    
+    def _add_identifiers_has_relationships_to_graph(self): 
+        identifiers = self.graph.get_identifiers()
+
+        for unit in identifiers: 
+            # Does this unit have any other relationships/edges not already in the graph? 
+            relationships = unit.relationships 
+
+            for r in relationships: 
+                if isinstance(r, Has): 
+                    measure = r.measure
+                    if not self.graph.has_edge(start=unit, end=measure, edge_type="has"):
+                        self.graph.add_relationship(relationship=r)
 
     # def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]):
 

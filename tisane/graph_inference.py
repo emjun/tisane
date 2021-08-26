@@ -376,7 +376,7 @@ def infer_main_effects_with_explanations(
         for key, val in variable_to_intermediaries.items(): 
             if v in val: 
                 vars.append(key)
-        vars_names_str = ivs.join(",")
+        vars_names_str = ",".join(vars)
         var = gr.get_variable(v)
         intermediary_relationship_to_dv = get_conceptual_explanation(v=var, dv=query.dv, gr=gr)
         expl = main_explanations["intermediaries"].format(intermediary=v, ivs=vars_names_str, intermediary_relationship_to_dv=intermediary_relationship_to_dv)
