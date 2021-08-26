@@ -227,7 +227,7 @@ class TisaneGUI:
                 [
                     html.H5("Variables expressed in query: "),
                     html.P("DV: {}".format(query["DV"])),
-                    html.P("IVs:"),
+                    html.Span("IVs:"),
                     html.Ul(children=[html.Li(iv) for iv in query["IVs"]]),
                     html.H5("Variables added:"),
                     html.Div(

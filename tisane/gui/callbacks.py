@@ -227,9 +227,8 @@ def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
         )
         if triggered:
             if (
-                triggered == "generate-code"
-                or mytabs.index(active_tab) > mytabs.index("tab-4")
-                or (comp and comp.highestActiveTab >= mytabs.index("tab-4"))
+                triggered == "generate-code" or
+                (comp and comp.highestActiveTab > mytabs.index(active_tab))
             ):
                 return "success"
             if triggered == "continue-to-family-link-functions" or mytabs.index(
@@ -287,7 +286,7 @@ def createProgressBarCallbacks(
                 or (
                     comp
                     and comp.highestActiveTab >= 0
-                    and comp.highestActiveTab >= mytabs.index(triggered_tab)
+                    and comp.highestActiveTab > mytabs.index(triggered_tab)
                 )
             ):
                 return "success"

@@ -22,56 +22,6 @@ def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
     createGenerateCodeCallback(app, comp)
     pass
 
-def filterOutput(comp: GUIComponents):
-    logger = logging.getLogger("werkzeug")
-    logger.debug("Raw output: {}".format(json.dumps(comp.output, indent=4)))
-    newOutput = {
-        "main effects": sorted(comp.output["main effects"]),
-        "interaction effects": sorted(comp.output["interaction effects"]),
-        "dependent variable": comp.output["dependent variable"],
-        "family": comp.output["family"],
-        "link": comp.output["link"],
-        "random effects": {}
-    }
-    if "random effects" in comp.output:
-        for group, randomEffects in comp.output["random effects"].items():
-            groupDict = {}
-            if "random intercept" in randomEffects:
-                randIntercept = randomEffects["random intercept"]
-                if "unavailable" in randIntercept:
-                    if not randIntercept["unavailable"]:
-                        groupDict["random intercept"] = {key: value for key, value in randIntercept.items() if key != "unavailable"}
-                        pass
-                    pass
-                else:
-                    groupDict["random intercept"] = randIntercept
-                pass
-            if "random slope" in randomEffects:
-                randSlope = randomEffects["random slope"]
-                for rs in randSlope:
-                    if "unavailable" in rs:
-                        if not rs["unavailable"]:
-                            if "random slope" not in groupDict:
-                                groupDict["random slope"] = []
-                                pass
-                            groupDict["random slope"].append(
-                                {key: value for key, value in rs.items() if key != "unavailable"}
-                            )
-                            pass
-                        pass
-                    else:
-                        groupDict["random slope"].append(rs)
-                        pass
-                    pass
-                pass
-            if groupDict:
-                if "random slope" in groupDict:
-                    groupDict["random slope"] = sorted(groupDict["random slope"], key=lambda rs: rs["iv"])
-                newOutput["random effects"][group] = groupDict
-            pass
-        pass
-    return newOutput
-
 def createGenerateCodeCallback(app, comp: GUIComponents = None):
     @app.callback(
         Output("modal-data-store", "data"), Input("generate-code", "n_clicks")
@@ -83,6 +33,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
                 resultObject = {
                     "path": str(result)
                 }
+                comp.highestActiveTab = 5
             else:
                 resultObject = {
                     "error": "No code generator provided. Did you not run the GUI using `tisane.infer_statistical_model_from_design`?"
