@@ -10,7 +10,7 @@ research questions.
 
 [] Add screenshots
 
-## Installation
+# Installation
 Tisane requires Python 3.8+ and also an installation of R (see below).
 
 First, install Tisane using `pip`:
@@ -33,10 +33,10 @@ install.packages(c('lme4','lmerTest','emmeans','lazyeval'))
 
 (You can do this either by copying the above code into a file and running it using R, run it in RStudio, or you open an R shell and run the above line.)
 
-### Installing R
+## Installing R
 For convenience, here are several ways you can install R:
 
-#### Anaconda
+### Anaconda
 [Anaconda](https://www.anaconda.com/distribution/) is a popular Python data science package manager, that can also be used to install R. This will also install the required R packages.
 
 ```
@@ -46,19 +46,19 @@ conda install -c conda-forge r r-base r-lmertest r-emmeans rpy2
 Caution: using conda together with poetry may cause problems with running
 models. In that case, you may want to install R in one of the alternative ways.
 
-#### Homebrew
+### Homebrew
 
 ```
 brew install r
 ```
 
-#### Download it
+### Download it
 Visit [this page](https://cran.r-project.org) and select the version for your operating system.
 
-#### Download RStudio
+### Download RStudio
 RStudio is a popular IDE for developing R scripts. You can download it [here](https://www.rstudio.com/products/rstudio/).
 
-## Using Tisane
+# Using Tisane
 Tisane is a tool for authoring generalized linear models. There are five steps to
 authoring your model:
 
@@ -71,18 +71,18 @@ authoring your model:
 
 There are two different workflows for using Tisane: using Tisane in a Jupyter notebook, and using Tisane with the editor of your choice and the command line.
 
-### Using Tisane in a Jupyter Notebook
+## Using Tisane in a Jupyter Notebook
 
 You can create your study design specification, launch the Tisane GUI, and run the model script all inside a Jupyter notebook!
 
 This requires a couple of extra steps, but if you're used to running data analyses in Jupyter notebooks, Tisane will integrate all the more smoothly into
 your data analysis workflow.
 
-#### Setting up a Jupyter kernel
+### Setting up a Jupyter kernel
 
 You will need to make sure that the jupyter notebook can find the dependencies you need, including Tisane and others.
 
-##### With poetry
+#### With poetry
 Make sure you have `ipykernel` added to your `poetry` dependencies, and then
 create a kernel for ipython.
 
@@ -91,7 +91,7 @@ poetry add ipykernel
 poetry run python -m ipykernel install --user --name <MY-KERNEL-NAME>
 ```
 
-##### With pip and a virtual environment
+#### With pip and a virtual environment
 Make sure you have your virtual environment, or venv, activated. Then run:
 
 ```
@@ -101,10 +101,10 @@ pip install ipykernel
 python -m ipykernel install --name <MY-KERNEL-NAME>
 ```
 
-#### Opening the notebook
+### Opening the notebook
 Once you've created your kernel, you can run `jupyter notebook`. Open up any notebook, and go to the menu: `Kernel > Change kernel`, and choose `<MY-KERNEL-NAME>` (whatever you called it) from the list. Then you should be good to go! After importing Tisane in your notebook, all five steps of using Tisane can be completed within the notebook itself.
 
-### Using Tisane via the command line
+## Using Tisane via the command line
 With this workflow, you
 
 1. Write your study design specification in the Tisane DSL in any IDE or plain old text editor of your choice. The last line in the file should be the call to `tisane.infer_statistical_model_from_design`
