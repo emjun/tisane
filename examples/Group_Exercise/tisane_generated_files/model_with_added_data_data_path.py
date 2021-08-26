@@ -8,14 +8,10 @@ import matplotlib.pyplot as plt # for visualizing residual plots to diagnose mod
  
 def fit_model(): 
 
-    # There was no data assigned to the Design. Add data below. 
-    path = '' # Specify path to data if loading from a csv
-    df = pd.read_csv(path)
-    # If loading from a pandas Dataframe, alias dataframe with variable df
-    # df = <your pandas Dataframe>
+    df = pd.read_csv('/Users/emjun/Git/tisane/examples/Group_Exercise/exercise_group_age_added.csv')
 
 
-    model = Lmer(formula='pounds_lost ~ motivation + treatment + (1|group)', family="gaussian", data=df)
+    model = Lmer(formula='pounds_lost ~ age + motivation + treatment + age*motivation + (1|group)', family="gaussian", data=df)
     print(model.fit())
     return model
 
