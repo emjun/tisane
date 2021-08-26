@@ -91,166 +91,166 @@ def emulate_inference_and_construction_with_gui(design, gr, output_filename):
 
 
 class GenerateCodeTest(unittest.TestCase):
-    # def test_construct_main_only(self):
-    #     u0 = ts.Unit("Unit")
-    #     m0 = u0.numeric("Measure_0")
-    #     m1 = u0.numeric("Measure_1")
-    #     dv = u0.numeric("Dependent_variable")
+    def test_construct_main_only(self):
+        u0 = ts.Unit("Unit")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
-    #     design = ts.Design(dv=dv, ivs=[m0, m1])
+        design = ts.Design(dv=dv, ivs=[m0, m1])
 
-    #     main_effects = set(design.ivs)
-    #     interaction_effects = set()
-    #     random_effects = set()
-    #     family_link_paired = get_family_link_paired_candidates(design=design)
+        main_effects = set(design.ivs)
+        interaction_effects = set()
+        random_effects = set()
+        family_link_paired = get_family_link_paired_candidates(design=design)
 
-    #     output_filename = "main_only.json"
-    #     output_path = os.path.join(data_dir, output_filename)
-    #     sm = construct_statistical_model(
-    #         output_path,
-    #         query=design,
-    #         main_effects_candidates=main_effects,
-    #         interaction_effects_candidates=interaction_effects,
-    #         random_effects_candidates=random_effects,
-    #         family_link_paired_candidates=family_link_paired,
-    #     )
-    #     self.assertIsNotNone(sm)
-    #     self.assertEqual(main_effects, sm.main_effects)
-    #     self.assertEqual(interaction_effects, sm.interaction_effects)
-    #     self.assertEqual(random_effects, sm.random_effects)
-    #     family = sm.family_function
-    #     self.assertIn(family, family_link_paired.keys())
-    #     link = sm.link_function
-    #     self.assertIn(link, family_link_paired[family])
+        output_filename = "main_only.json"
+        output_path = os.path.join(data_dir, output_filename)
+        sm = construct_statistical_model(
+            output_path,
+            query=design,
+            main_effects_candidates=main_effects,
+            interaction_effects_candidates=interaction_effects,
+            random_effects_candidates=random_effects,
+            family_link_paired_candidates=family_link_paired,
+        )
+        self.assertIsNotNone(sm)
+        self.assertEqual(main_effects, sm.main_effects)
+        self.assertEqual(interaction_effects, sm.interaction_effects)
+        self.assertEqual(random_effects, sm.random_effects)
+        family = sm.family_function
+        self.assertIn(family, family_link_paired.keys())
+        link = sm.link_function
+        self.assertIn(link, family_link_paired[family])
 
-    #     code = generate_code(statistical_model=sm, target="python")
-    #     output_filename = "main_only.py"
-    #     reference_script_path = os.path.join(script_dir, output_filename)
-    #     # generated_path = os.path.join(generated_script_dir, output_filename)
+        code = generate_code(statistical_model=sm, target="python")
+        output_filename = "main_only.py"
+        reference_script_path = os.path.join(script_dir, output_filename)
+        # generated_path = os.path.join(generated_script_dir, output_filename)
         
-    #     path = write_to_script(code, generated_script_dir, output_filename)
-    #     # Check that the generated script is the same as the target script
+        path = write_to_script(code, generated_script_dir, output_filename)
+        # Check that the generated script is the same as the target script
         
         
-    # def test_generate_code_from_GUI_output_pigs_with_no_data(self):
-    #     # Bind measures to units at the time of declaration
-    #     week = ts.SetUp("Time", cardinality=12)
-    #     pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
-    #     litter = ts.Unit("Litter", cardinality=22)  # 22 litters
-    #     # Each pig has 1 instance of an ordinal Evit measure
-    #     vitamin_e = pig.ordinal(
-    #         "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
-    #     )
-    #     # Each pig has 1 instance of an ordinal Cu measure
-    #     copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
-    #     # Each pig has for each value of week 1 instance of a numeric Weight measure
-    #     # Also: Each pig has 1 instance of a Weight measure corresponding to each week
-    #     weight = pig.numeric("Weight", number_of_instances=week)
-    #     # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
-    #     feed = pig.numeric("Feed consumption", number_of_instances=week)
+    def test_generate_code_from_GUI_output_pigs_with_no_data(self):
+        # Bind measures to units at the time of declaration
+        week = ts.SetUp("Time", cardinality=12)
+        pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
+        litter = ts.Unit("Litter", cardinality=22)  # 22 litters
+        # Each pig has 1 instance of an ordinal Evit measure
+        vitamin_e = pig.ordinal(
+            "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
+        )
+        # Each pig has 1 instance of an ordinal Cu measure
+        copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
+        # Each pig has for each value of week 1 instance of a numeric Weight measure
+        # Also: Each pig has 1 instance of a Weight measure corresponding to each week
+        weight = pig.numeric("Weight", number_of_instances=week)
+        # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
+        feed = pig.numeric("Feed consumption", number_of_instances=week)
 
-    #     ## Conceptual relationships
-    #     week.causes(weight)
+        ## Conceptual relationships
+        week.causes(weight)
 
-    #     ## Data measurement relationships
-    #     # Pigs are nested within litters
-    #     pig.nests_within(litter)
+        ## Data measurement relationships
+        # Pigs are nested within litters
+        pig.nests_within(litter)
 
-    #     ## Specify and execute query
-    #     design = ts.Design(dv=weight, ivs=[week])
-    #     gr = design.graph
+        ## Specify and execute query
+        design = ts.Design(dv=weight, ivs=[week])
+        gr = design.graph
 
-    #     # Emulate interaction with GUI
-    #     output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
-    #     sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
+        # Emulate interaction with GUI
+        output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
-    #     # Generate code from SM
-    #     code = generate_code(sm)
-    #     # Write generated code out
-    #     path = write_to_script(code, "examples/Animal_Science/", "model_no_data.py")
+        # Generate code from SM
+        code = generate_code(sm)
+        # Write generated code out
+        path = write_to_script(code, "examples/Animal_Science/", "model_no_data.py")
 
 
-    # def test_generate_code_from_GUI_output_pigs_with_data_frame(self):
-    #     dir = os.path.dirname(__file__)
-    #     df = pd.read_csv(os.path.join("examples/Animal_Science/", "pigs.csv"))
+    def test_generate_code_from_GUI_output_pigs_with_data_frame(self):
+        dir = os.path.dirname(__file__)
+        df = pd.read_csv(os.path.join("examples/Animal_Science/", "pigs.csv"))
 
-    #     ## Initialize variables with data
-    #     # Bind measures to units at the time of declaration
-    #     week = ts.SetUp("Time", cardinality=12)
-    #     pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
-    #     litter = ts.Unit("Litter", cardinality=22)  # 22 litters
-    #     # Each pig has 1 instance of an ordinal Evit measure
-    #     vitamin_e = pig.ordinal(
-    #         "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
-    #     )
-    #     # Each pig has 1 instance of an ordinal Cu measure
-    #     copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
-    #     # Each pig has for each value of week 1 instance of a numeric Weight measure
-    #     # Also: Each pig has 1 instance of a Weight measure corresponding to each week
-    #     weight = pig.numeric("Weight", number_of_instances=week)
-    #     # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
-    #     feed = pig.numeric("Feed consumption", number_of_instances=week)
+        ## Initialize variables with data
+        # Bind measures to units at the time of declaration
+        week = ts.SetUp("Time", cardinality=12)
+        pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
+        litter = ts.Unit("Litter", cardinality=22)  # 22 litters
+        # Each pig has 1 instance of an ordinal Evit measure
+        vitamin_e = pig.ordinal(
+            "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
+        )
+        # Each pig has 1 instance of an ordinal Cu measure
+        copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
+        # Each pig has for each value of week 1 instance of a numeric Weight measure
+        # Also: Each pig has 1 instance of a Weight measure corresponding to each week
+        weight = pig.numeric("Weight", number_of_instances=week)
+        # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
+        feed = pig.numeric("Feed consumption", number_of_instances=week)
 
-    #     ## Conceptual relationships
-    #     week.causes(weight)
+        ## Conceptual relationships
+        week.causes(weight)
 
-    #     ## Data measurement relationships
-    #     # Pigs are nested within litters
-    #     pig.nests_within(litter)
+        ## Data measurement relationships
+        # Pigs are nested within litters
+        pig.nests_within(litter)
 
-    #     ## Specify and execute query
-    #     design = ts.Design(dv=weight, ivs=[week]).assign_data(df)
-    #     gr = design.graph
+        ## Specify and execute query
+        design = ts.Design(dv=weight, ivs=[week]).assign_data(df)
+        gr = design.graph
 
-    #     # Emulate interaction with GUI
-    #     output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
-    #     sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
+        # Emulate interaction with GUI
+        output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
     
-    #     # Generate code from SM
-    #     code = generate_code(sm)
-    #     # Write generated code out
-    #     path = write_to_script(code, "examples/Animal_Science/", "model_df.py")
+        # Generate code from SM
+        code = generate_code(sm)
+        # Write generated code out
+        path = write_to_script(code, "examples/Animal_Science/", "model_df.py")
 
 
-    # def test_generate_code_from_GUI_output_pigs_with_data_path(self):
-    #     path = os.path.join("examples/Animal_Science/", "pigs.csv")
+    def test_generate_code_from_GUI_output_pigs_with_data_path(self):
+        path = os.path.join("examples/Animal_Science/", "pigs.csv")
 
-    #     ## Initialize variables with data
-    #     # Bind measures to units at the time of declaration
-    #     week = ts.SetUp("Time", cardinality=12)
-    #     pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
-    #     litter = ts.Unit("Litter", cardinality=22)  # 22 litters
-    #     # Each pig has 1 instance of an ordinal Evit measure
-    #     vitamin_e = pig.ordinal(
-    #         "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
-    #     )
-    #     # Each pig has 1 instance of an ordinal Cu measure
-    #     copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
-    #     # Each pig has for each value of week 1 instance of a numeric Weight measure
-    #     # Also: Each pig has 1 instance of a Weight measure corresponding to each week
-    #     weight = pig.numeric("Weight", number_of_instances=week)
-    #     # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
-    #     feed = pig.numeric("Feed consumption", number_of_instances=week)
+        ## Initialize variables with data
+        # Bind measures to units at the time of declaration
+        week = ts.SetUp("Time", cardinality=12)
+        pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
+        litter = ts.Unit("Litter", cardinality=22)  # 22 litters
+        # Each pig has 1 instance of an ordinal Evit measure
+        vitamin_e = pig.ordinal(
+            "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
+        )
+        # Each pig has 1 instance of an ordinal Cu measure
+        copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
+        # Each pig has for each value of week 1 instance of a numeric Weight measure
+        # Also: Each pig has 1 instance of a Weight measure corresponding to each week
+        weight = pig.numeric("Weight", number_of_instances=week)
+        # Each pig has for each value of week 1 instance of a numeric Feed consumption measure
+        feed = pig.numeric("Feed consumption", number_of_instances=week)
 
-    #     ## Conceptual relationships
-    #     week.causes(weight)
+        ## Conceptual relationships
+        week.causes(weight)
 
-    #     ## Data measurement relationships
-    #     # Pigs are nested within litters
-    #     pig.nests_within(litter)
+        ## Data measurement relationships
+        # Pigs are nested within litters
+        pig.nests_within(litter)
 
-    #     ## Specify and execute query
-    #     design = ts.Design(dv=weight, ivs=[week]).assign_data(path)
-    #     gr = design.graph
+        ## Specify and execute query
+        design = ts.Design(dv=weight, ivs=[week]).assign_data(path)
+        gr = design.graph
 
-    #     # Emulate interaction with GUI
-    #     output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
-    #     sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
+        # Emulate interaction with GUI
+        output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
-    #     # Generate code from SM
-    #     code = generate_code(sm)
-    #     # Write generated code out
-    #     path = write_to_script(code, "examples/Animal_Science/", "model_data_path.py")
+        # Generate code from SM
+        code = generate_code(sm)
+        # Write generated code out
+        path = write_to_script(code, "examples/Animal_Science/", "model_data_path.py")
         
 
     def test_generate_code_from_GUI_output_exercise_simple_with_no_data(self): 
