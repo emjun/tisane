@@ -38,8 +38,9 @@ treatment_approach = group.nominal(
 )  # 2 approaches to weight loss ("Control" and "Treatment")
 
 # Conceptual relationships between the observed variables
-motivation_level.causes(pounds_lost)
+motivation_level.associates_with(pounds_lost)
 treatment_approach.causes(pounds_lost)
+
 
 # Data measurement relationships
 # Declare nesting relationship
