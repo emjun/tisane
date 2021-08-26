@@ -25,6 +25,7 @@ import pandas as pd
 from pymer4.models import Lmer # supports Generalized linear models with or without mixed effects
 import matplotlib.pyplot as plt # for visualizing residual plots to diagnose model fit
 """
+
 statsmodels_preamble = """
 # Tisane inferred the following statistical model based on this query:  {}
 
@@ -34,75 +35,95 @@ import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt # for visualizing residual plots to diagnose model fit
 """
 
+model_function_wrapper = """ 
+def fit_model(): 
+"""
+
+model_diagnostics_function_wrapper = """
+# What should you look for in the plot? 
+# If there is systematic bias in how residuals are distributed, you may want to try a new link or family function. You may also want to reconsider your conceptual and statistical models. 
+# Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
+def show_model_diagnostics(model): 
+"""
+
+main_function = """
+if __name__ == "__main__":
+    model = fit_model()
+    show_model_diagnostics(model)
+"""
+
 load_data_from_csv_template = """
-df = pd.read_csv('{path}')
+    df = pd.read_csv('{path}')
 """
 
 load_data_from_dataframe_template = """
-# Dataframe is stored in local file: data.csv
-# You may want to replace the data path with an existing data file you already have.
-# You may also set df equal to a pandas dataframe you are already working with. 
-df = pd.read_csv('data.csv') # Make sure that the data path is correct
+    # Dataframe is stored in local file: data.csv
+    # You may want to replace the data path with an existing data file you already have.
+    # You may also set df equal to a pandas dataframe you are already working with. 
+    df = pd.read_csv('{path}') # Make sure that the data path is correct
 """
 
 load_data_no_data_source = """
-# There was no data assigned to the Design. Add data below. 
-path = '' # Specify path to data if loading from a csv
-df = pd.read_csv(path)
-# If loading from a pandas Dataframe, alias dataframe with variable df
-# df = <your pandas Dataframe>
+    # There was no data assigned to the Design. Add data below. 
+    path = '' # Specify path to data if loading from a csv
+    df = pd.read_csv(path)
+    # If loading from a pandas Dataframe, alias dataframe with variable df
+    # df = <your pandas Dataframe>
 """
 
 pymer4_model_template = """
-model = Lmer(formula={formula}, family=\"{family_name}\", data=df)
-print(model.fit())
+    model = Lmer(formula={formula}, family=\"{family_name}\", data=df)
+    print(model.fit())
+    return model
 """
 
 statsmodels_model_template = """
-model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
-res = model.fit()
-print(res.summary())
+    model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
+    res = model.fit()
+    print(res.summary())
+    return model
 """
 
 pymer4_model_diagnostics = """
-plt.scatter(model.fits, model.residuals)
-plt.title("Fitted values vs. Residuals")
-plt.xlabel("fitted values")
-plt.ylabel("residuals")
-plt.show()
-# What should you look for in the plot? 
-# If there is systematic bias in how residuals are distributed, you may want to try a new link or family function. You may also want to reconsider your conceptual and statistical models. 
-# Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
+    plt.scatter(model.fits, model.residuals)
+    plt.title("Fitted values vs. Residuals")
+    plt.xlabel("fitted values")
+    plt.ylabel("residuals")
+    plt.show()
 """
 
 statsmodels_model_diagnostics = """
-plt.clf()
-plt.grid(True)
-plt.plot(res.predict(linear=True), res.resid_pearson, 'o')
-plt.xlabel("Linear predictor")
-plt.ylabel("Residual")
-plt.show()
-# What should you look for in the plot? 
-# If there is systematic bias in how residuals are distributed, you may want to try a new link or family function. You may also want to reconsider your conceptual and statistical models. 
-# Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
+    res = model.fit()
+    plt.clf()
+    plt.grid(True)
+    plt.plot(res.predict(linear=True), res.resid_pearson, 'o')
+    plt.xlabel("Linear predictor")
+    plt.ylabel("Residual")
+    plt.show()
 """
 
 pymer4_code_templates = {
     "preamble": pymer4_preamble,
+    "model_function_wrapper": model_function_wrapper,
     "load_data_from_csv_template": load_data_from_csv_template,
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": pymer4_model_template,
-    "model_diagnostics": pymer4_model_diagnostics
+    "model_diagnostics_function_wrapper": model_diagnostics_function_wrapper,
+    "model_diagnostics": pymer4_model_diagnostics,
+    "main_function": main_function
 }
 
 statsmodels_code_templates = {
     "preamble": statsmodels_preamble,
+    "model_function_wrapper": model_function_wrapper,
     "load_data_from_csv_template": load_data_from_csv_template,
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": statsmodels_model_template,
-    "model_diagnostics": statsmodels_model_diagnostics
+    "model_diagnostics_function_wrapper": model_diagnostics_function_wrapper,
+    "model_diagnostics": statsmodels_model_diagnostics,
+    "main_function": main_function
 }
 
 # Reference from: 
@@ -155,15 +176,16 @@ statsmodels_link_name_to_functions = {
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
 
-
 # Write data out to path
 # Return path
 def write_out_dataframe(data: Dataset) -> os.path:
-    path = absolute_path("data.csv")
+    destinationDir = os.getcwd()
+    output_filename = os.path.join(destinationDir, "data.csv")
+    # path = absolute_path("data.csv")
     assert(data.has_data())
-    data.get_data().to_csv(path)
+    data.get_data().to_csv(output_filename)
 
-    return path
+    return output_filename
 
 
 # @param target describes the backend for which to generate code
@@ -202,7 +224,7 @@ def generate_pymer4_code(statistical_model: StatisticalModel):
         else: 
             assert not data.has_data_path()
             data_path = write_out_dataframe(data)
-            data_code = pymer4_code_templates["load_data_from_dataframe_template"]
+            data_code = pymer4_code_templates["load_data_from_dataframe_template"].format(path=data_path)
 
     ### Generate model code
     model_code = generate_pymer4_model(statistical_model=statistical_model)
@@ -211,9 +233,13 @@ def generate_pymer4_code(statistical_model: StatisticalModel):
     model_diagnostics_code = pymer4_code_templates["model_diagnostics"]
 
     ### Put everything together
+    model_function_wrapper = pymer4_code_templates["model_function_wrapper"]
+    model_diagnostics_function_wrapper = pymer4_code_templates["model_diagnostics_function_wrapper"]
+    main_function = pymer4_code_templates["main_function"]
+
     assert data_code is not None
     # Return string to write out to script
-    return preamble + "\n" + data_code + "\n" + model_code + "\n" + model_diagnostics_code
+    return preamble + "\n" + model_function_wrapper + data_code + "\n" + model_code + "\n" + model_diagnostics_function_wrapper +  model_diagnostics_code + "\n" + main_function
 
 def generate_pymer4_model(statistical_model: StatisticalModel):
     global pymer4_code_templates
@@ -332,7 +358,7 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
         else:
             assert data.data_path is None
             data_path = write_out_dataframe(data)
-            data_code = statsmodels_code_templates["load_data_from_dataframe_template"]
+            data_code = statsmodels_code_templates["load_data_from_dataframe_template"].format(path=data_path)
 
     ### Generate model code
     formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
@@ -344,9 +370,13 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
     model_diagnostics_code = statsmodels_code_templates["model_diagnostics"]
 
     ### Put everything together
+    model_function_wrapper = statsmodels_code_templates["model_function_wrapper"]
+    model_diagnostics_function_wrapper = statsmodels_code_templates["model_diagnostics_function_wrapper"]
+    main_function = statsmodels_code_templates["main_function"]
+
     assert data_code is not None
     # Return string to write out to script
-    return preamble + "\n" + data_code + "\n" + model_code + "\n" + model_diagnostics_code
+    return preamble + "\n" + model_function_wrapper +  data_code + "\n" + model_code + "\n" + model_diagnostics_function_wrapper + model_diagnostics_code + "\n" + main_function
 
 
 def generate_statsmodels_model(statistical_model: StatisticalModel):
