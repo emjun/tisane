@@ -20,8 +20,10 @@ import statsmodels.formula.api as smf
 ### GLOBALs
 pymer4_preamble = """
 # Tisane inferred the following statistical model based on this query:  {}
+
 import pandas as pd
 from pymer4.models import Lmer # supports Generalized linear models with or without mixed effects
+import rpy2.robjects.lib.ggplot2 as ggplot2 # for visualizing residual plots to diagnose model fit
 """
 statsmodels_preamble = """
 # Tisane inferred the following statistical model based on this query:  {}
@@ -29,6 +31,7 @@ statsmodels_preamble = """
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+import matplotlib.pyplot as plt # for visualizing residual plots to diagnose model fit
 """
 
 load_data_from_csv_template = """
@@ -61,12 +64,29 @@ res = model.fit()
 print(res.summary())
 """
 
+pymer4_model_diagnostics = """
+
+"""
+
+statsmodels_model_diagnostics = """
+plt.clf()
+plt.grid(True)
+plt.plot(res.predict(linear=True), res.resid_pearson, 'o')
+plt.xlabel("Linear predictor")
+plt.ylabel("Residual")
+plt.show()
+# What should you look for in the plot? 
+# If there is systematic bias in how residuals are distributed, you may want to try a new link or family function. You may also want to reconsider your conceptual and statistical models. 
+# Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
+"""
+
 pymer4_code_templates = {
     "preamble": pymer4_preamble,
     "load_data_from_csv_template": load_data_from_csv_template,
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": pymer4_model_template,
+    "model_diagnostics": pymer4_model_diagnostics
 }
 
 statsmodels_code_templates = {
@@ -75,6 +95,7 @@ statsmodels_code_templates = {
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": statsmodels_model_template,
+    "model_diagnostics": statsmodels_model_diagnostics
 }
 
 # Reference from: 
@@ -178,11 +199,14 @@ def generate_pymer4_code(statistical_model: StatisticalModel):
 
     ### Generate model code
     model_code = generate_pymer4_model(statistical_model=statistical_model)
+    
+    ### Generate model diagnostics code for plotting residuals vs. fitted 
+    model_diagnostics_code = pymer4_code_templates["model_diagnostics"]
 
     ### Put everything together
     assert data_code is not None
     # Return string to write out to script
-    return preamble + "\n" + data_code + "\n" + model_code
+    return preamble + "\n" + data_code + "\n" + model_code + "\n" + model_diagnostics_code
 
 def generate_pymer4_model(statistical_model: StatisticalModel):
     global pymer4_code_templates
@@ -310,11 +334,12 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
     model_code = statsmodels_code_templates["model_template"].format(
         formula=formula_code, family_name=family_code, link_obj=link_code
     )
+    model_diagnostics_code = statsmodels_code_templates["model_diagnostics"]
 
     ### Put everything together
     assert data_code is not None
     # Return string to write out to script
-    return preamble + "\n" + data_code + "\n" + model_code
+    return preamble + "\n" + data_code + "\n" + model_code + "\n" + model_diagnostics_code
 
 
 def generate_statsmodels_model(statistical_model: StatisticalModel):
