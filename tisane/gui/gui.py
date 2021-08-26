@@ -157,7 +157,7 @@ class TisaneGUI:
         createCallbacks(app, self.components)
         # open_browser()
         if jupyter:
-            app.run_server(mode="inline")
+            app.run_server(mode="inline", port=port)
             pass
         else:
             app.run_server(debug=True, threaded=True, port=port)
