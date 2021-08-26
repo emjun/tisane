@@ -21,10 +21,7 @@ lost.
 """
 
 # Load data
-# dir = os.path.dirname(__file__)
-# df = pd.read_csv(os.path.join(dir, "exercise_group_age_added.csv"))
-# data_path = os.path.join("/examples/Group_Exercise/", "exercise_group_age_added.csv")
-data_path = "/Users/emjun/Git/tisane/examples/Group_Exercise/exercise_group_age_added.csv"
+data_path = os.path.join("/examples/Group_Exercise/", "exercise_group_age_added.csv")
 
 # Variable declarations
 adult = ts.Unit("member", cardinality=386) 
