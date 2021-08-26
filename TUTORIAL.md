@@ -46,12 +46,15 @@ Visit [this page](https://cran.r-project.org) and select the version for your op
 RStudio is a popular IDE for developing R scripts. You can download it [here](https://www.rstudio.com/products/rstudio/).
 
 ## Using Tisane
-Tisane is a tool for authoring generalized linear models. There are three stages to
+Tisane is a tool for authoring generalized linear models. There are five steps to
 authoring your model:
 
-1. Writing the model specification in the Tisane DSL and producing a study design `tisane.Design`
-2. Using `tisane.infer_statistical_model_from_design` on your study design, which examines your model and looks for additional variables you may want to add. Then, you can decide whether or not to use those variables, and also choose family and link functions, in a GUI that is launched. After making these additional choices, the GUI will generate a model script written in Python.
-3. After running the script, the results of the model will be output so that you can examine them.
+1. Specify your **variables** of interest and their **relationships.**
+2. Create a study design `tisane.Design` with your variables. 
+3. Ask Tisane to help you author a statistical model by calling `tisane.infer_statistical_model_from_design` on your study design. Tisane will then examine your variables and variable relationships, look for additional variables that may be conceptually relevant to add, and ask you specific questions about them and the data through a GUI. 
+<!-- You can decide whether or not to use those variables, and also choose family and link functions, in a GUI that is launched.  -->
+4. After you these additional choices, the GUI will generate a model script written in Python.
+5. After running the script, the results of the model will be output so that you can examine them.
 
 There are two different workflows for using Tisane.
 
@@ -86,7 +89,7 @@ python -m ipykernel install --name <MY-KERNEL-NAME>
 ```
 
 #### Opening the notebook
-Once you've created your kernel, you can run `jupyter notebook`. Open up any notebook, and go to the menu: `Kernel > Change kernel`, and choose `<MY-KERNEL-NAME>` (whatever you called it) from the list. Then you should be good to go! After importing Tisane in your notebook, all three stages of using Tisane can be completed within the notebook itself.
+Once you've created your kernel, you can run `jupyter notebook`. Open up any notebook, and go to the menu: `Kernel > Change kernel`, and choose `<MY-KERNEL-NAME>` (whatever you called it) from the list. Then you should be good to go! After importing Tisane in your notebook, all five stesp of using Tisane can be completed within the notebook itself.
 
 ### Using Tisane via the command line
 With this workflow, you
