@@ -52,7 +52,7 @@ def getInfoBubble(id: str):
 
 
 class GUIComponents:
-    def __init__(self, input_json: str):
+    def __init__(self, input_json: str, generateCode):
         dir = os.path.dirname(os.path.abspath(__file__))
         defaultExplanationsPath = os.path.join(dir, "default_explanations.json")
         if os.path.exists(defaultExplanationsPath):
@@ -63,6 +63,7 @@ class GUIComponents:
         else:
             self.defaultExplanations = {}
         self.numGeneratedComponentIds = 0
+        self.codeGenerator = generateCode
         self.generatedComponentIdToRandomEffect = {}
         self.generatedComponentIdToMainEffect = {}
         self.generatedComponentIdToInteractionEffect = {}
@@ -93,7 +94,7 @@ class GUIComponents:
         self.unitsByRowId = {}
         self.randomSlopes = {}
         self.generatedCorrelatedIdToRandomSlope = {}
-        print(input_json)
+        log.debug(input_json)
         if os.path.exists(input_json):
             with open(input_json, "r") as f:
                 self.data = json.loads(f.read())
@@ -250,6 +251,67 @@ class GUIComponents:
             pass
 
         pass
+    def filterOutput(self):
+        log.debug("Raw output: {}".format(json.dumps(self.output, indent=4)))
+        newOutput = {
+            "main effects": sorted(self.output["main effects"]),
+            "interaction effects": sorted(self.output["interaction effects"]),
+            "dependent variable": self.output["dependent variable"],
+            "family": self.output["family"],
+            "link": self.output["link"],
+            "random effects": {}
+        }
+        if "random effects" in self.output:
+            for group, randomEffects in self.output["random effects"].items():
+                groupDict = {}
+                if "random intercept" in randomEffects:
+                    randIntercept = randomEffects["random intercept"]
+                    if "unavailable" in randIntercept:
+                        if not randIntercept["unavailable"]:
+                            groupDict["random intercept"] = {key: value for key, value in randIntercept.items() if key != "unavailable"}
+                            pass
+                        pass
+                    else:
+                        groupDict["random intercept"] = randIntercept
+                    pass
+                if "random slope" in randomEffects:
+                    randSlope = randomEffects["random slope"]
+                    for rs in randSlope:
+                        if "unavailable" in rs:
+                            if not rs["unavailable"]:
+                                if "random slope" not in groupDict:
+                                    groupDict["random slope"] = []
+                                    pass
+                                groupDict["random slope"].append(
+                                    {key: value for key, value in rs.items() if key != "unavailable"}
+                                )
+                                pass
+                            pass
+                        else:
+                            groupDict["random slope"].append(rs)
+                            pass
+                        pass
+                    pass
+                if groupDict:
+                    if "random slope" in groupDict:
+                        groupDict["random slope"] = sorted(groupDict["random slope"], key=lambda rs: rs["iv"])
+                    newOutput["random effects"][group] = groupDict
+                pass
+            pass
+        return newOutput
+
+    def generateCode(self):
+        if self.codeGenerator:
+            newOutput = self.filterOutput()
+            destinationDir = os.getcwd()
+            jsonFile = "model_spec.json"
+            with open(os.path.join(destinationDir, jsonFile), "w") as f:
+                f.write(json.dumps(newOutput, indent=4, sort_keys=True))
+                pass
+            path = self.codeGenerator(destinationDir=destinationDir, modelSpecJson=jsonFile)
+            return path
+        return False
+
 
     def getRandomInterceptCellIds(self):
         return [ri["cell-id"] for group, ri in self.randomIntercepts.items()]
@@ -725,7 +787,7 @@ class GUIComponents:
                 dbc.CardBody(
                     [
                         cardP(html.I("No interaction effects")),
-                        html.P(
+                        dcc.Markdown(
                             self.getNoInteractionEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
                         ),
@@ -993,7 +1055,7 @@ class GUIComponents:
                 [
                     cardP("Random Effects"),
                     self.layoutRandomEffectsTable(),
-                    html.Div(id="random-effects-not-available-explanation"),
+                    dcc.Markdown(id="random-effects-not-available-explanation"),
                     continueButton,
                 ]
             ),
@@ -1043,7 +1105,7 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(linkExplanation["header"]),
-                        dbc.PopoverBody(linkExplanation["body"]),
+                        dbc.PopoverBody(dcc.Markdown(linkExplanation["body"])),
                     ],
                     target="link-function-label-info",
                     trigger="hover",
@@ -1051,7 +1113,7 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(familyExplanation["header"]),
-                        dbc.PopoverBody(familyExplanation["body"]),
+                        dbc.PopoverBody(dcc.Markdown(familyExplanation["body"])),
                     ],
                     target="family-label-info",
                     trigger="hover",
@@ -1331,3 +1393,20 @@ class GUIComponents:
                         )
                     )
         return popovers
+
+    def createCodeGenerationModal(self):
+        modal = dbc.Modal(
+                    [
+                        dbc.ModalHeader("Code Generated!", id="code-generated-modal-header"),
+                        dbc.ModalBody("Placeholder", id="code-generated-modal-body"),
+                        dbc.ModalFooter(
+                            dbc.Button(
+                                "dismiss", id="close-code-generated-modal", className="ml-auto", n_clicks=0
+                            )
+                        ),
+                    ],
+                    id="code-generated-modal",
+                    is_open=False,
+        )
+        store = dcc.Store(id="modal-data-store")
+        return [modal, store]

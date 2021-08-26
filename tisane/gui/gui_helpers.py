@@ -53,3 +53,9 @@ def simulate_data_dist(
         return np.random.default_rng().multinomial(n=n, pvals=pvals, size=size)
     else:
         raise ValueError(f"Unknown distribution family: {family}")
+
+
+def getTriggeredFromContext(ctx):
+    if not ctx.triggered:
+        return False
+    return ctx.triggered[0]["prop_id"].split(".")[0]

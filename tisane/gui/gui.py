@@ -31,6 +31,7 @@ s.bind(("", 0))
 addr = s.getsockname()
 port = addr[1]
 s.close()
+logging.basicConfig(level=logging.ERROR)
 
 # For logging Dash output
 log = logging.getLogger("werkzeug")
@@ -56,14 +57,14 @@ class TisaneGUI:
         pass
 
     # @param input is a json file that has all the data to read in
-    def read_input(self, input: str):
-        self.components = GUIComponents(input)
+    def read_input(self, input: str, generateCode):
+        self.components = GUIComponents(input, generateCode)
         pass
 
     # @param input is a json file that has all the data to read in
-    def start_app(self, input: str, jupyter: bool = False):
+    def start_app(self, input: str, jupyter: bool = False, generateCode=None):
         ### Read in input data
-        self.read_input(input)
+        self.read_input(input, generateCode)
 
         ### Create app
         if jupyter:
@@ -147,7 +148,7 @@ class TisaneGUI:
                 dcc.Store(id="added-interaction-effects-store"),
                 dcc.Store(id="random-effects-check-store"),
             ]
-            + self.components.createEffectPopovers(),
+            + self.components.createEffectPopovers() + self.components.createCodeGenerationModal(),
             fluid=False,
         )
 
@@ -236,7 +237,7 @@ class TisaneGUI:
                 [
                     html.H5("Variables expressed in query: "),
                     html.P("DV: {}".format(query["DV"])),
-                    html.P("IVs:"),
+                    html.Span("IVs:"),
                     html.Ul(children=[html.Li(iv) for iv in query["IVs"]]),
                     html.H5("Variables added:"),
                     html.Div(

@@ -22,6 +22,7 @@ from enum import Enum
 from typing import List, Set, Dict
 import copy
 from pathlib import Path
+import os
 from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
@@ -393,28 +394,35 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
 
     ### Step 3: Disambiguation loop (GUI)
     gui = TisaneGUI()
-    gui.start_app(input=path, jupyter=jupyter)
+
+    def generateCode(destinationDir: str = None, modelSpecJson: str = "model_spec.json"):
+        destinationDir = destinationDir or os.getcwd()
+        output_filename = os.path.join(destinationDir, modelSpecJson)  # or whatever path/file that the GUI outputs
+
+        ### Step 4: Code generation
+        # Construct StatisticalModel from JSON spec
+        # model_json = f.read()
+        sm = construct_statistical_model(
+            filename=output_filename,
+            query=design,
+            main_effects_candidates=main_effects_candidates,
+            interaction_effects_candidates=interaction_effects_candidates,
+            random_effects_candidates=random_effects_candidates,
+            family_link_paired_candidates=family_link_paired,
+        )
+
+        if design.has_data():
+            # Assign statistical model data from @parm design
+            sm.assign_data(design.dataset)
+        # Generate code from SM
+        code = generate_code(sm)
+        # Write generated code out
+
+        path = write_to_script(code, destinationDir, "model.py")
+        return path
+
+    gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
     # Output a JSON file
-    output_filename = "model_spec.json"  # or whatever path/file that the GUI outputs
 
-    ### Step 4: Code generation
-    # Construct StatisticalModel from JSON spec
-    # model_json = f.read()
-    sm = construct_statistical_model(
-        filename=output_filename,
-        query=design,
-        main_effects_candidates=main_effects_candidates,
-        interaction_effects_candidates=interaction_effects_candidates,
-        random_effects_candidates=random_effects_candidates,
-        family_link_paired_candidates=family_link_paired,
-    )
 
-    if design.has_data():
-        # Assign statistical model data from @parm design
-        sm.assign_data(design.dataset)
-    # Generate code from SM
-    code = generate_code(sm)
-    # Write generated code out
-    path = write_to_script(code, "./", "model.py")
-
-    return path
+    # return path

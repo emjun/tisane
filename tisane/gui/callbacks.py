@@ -6,7 +6,8 @@ from tisane.gui.gui_components import GUIComponents
 from tisane.gui.family_link_function_callbacks import createFamilyLinkFunctionCallbacks
 from tisane.gui.random_effects_callbacks import createRandomEffectsCallbacks
 import json
-
+from tisane.gui.gui_helpers import getTriggeredFromContext
+import logging
 
 def createCallbacks(app, comp: GUIComponents = None):
     cont_to_interaction_effects_input = Input(
@@ -45,10 +46,10 @@ def createTestDivCallbacks(app):
         return str(children)
 
 
-def getTriggeredFromContext(ctx):
-    if not ctx.triggered:
-        return False
-    return ctx.triggered[0]["prop_id"].split(".")[0]
+# def getTriggeredFromContext(ctx):
+#     if not ctx.triggered:
+#         return False
+#     return ctx.triggered[0]["prop_id"].split(".")[0]
 
 
 def createTransitionCallback(
@@ -71,10 +72,11 @@ def createTransitionCallback(
 
 
 def createTabsCallbacks(app):
+    logger = logging.getLogger("werkzeug")
     def continueCallback(fromMain, fromInteraction, fromRandom):
         ctx = dash.callback_context
         triggered = getTriggeredFromContext(ctx)
-        print("Continue callback: {}".format(triggered))
+        logger.debug("Continue callback: {}".format(triggered))
         if triggered:
             if triggered == "continue-to-interaction-effects":
                 return "tab-2"
@@ -96,6 +98,7 @@ mytabs = ["tab-1", "tab-2", "tab-3", "tab-4"]
 
 
 def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     mainEffectCompIds = comp.getMainEffectCheckboxIds()
     inputs = [Input(id, "checked") for id in mainEffectCompIds]
     states = [State(id, "id") for id in mainEffectCompIds]
@@ -108,7 +111,7 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     )
     def addVariables(*args):
         if not comp:
-            print("Cannot update added-main-effects")
+            logger.warning("Cannot update added-main-effects")
             raise PreventUpdate
 
         # print(options)
@@ -136,13 +139,14 @@ def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                     comp.output["main effects"].remove(mainEffect)
             pass
         newChildren = [html.Li(o) for o in options]
-        print("New children: {}".format(newChildren))
+        logger.debug("New children: {}".format(newChildren))
         return newChildren, json.dumps(comp.output)
 
     pass
 
 
 def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     if comp and comp.hasInteractionEffects():
         interactionEffectCompIds = comp.getInteractionEffectCheckboxIds()
         inputs = [Input(id, "checked") for id in interactionEffectCompIds]
@@ -150,7 +154,7 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
 
         def addVariables(*args):
             if not comp:
-                print("Cannot update added-interaction-effects")
+                logger.warning("Cannot update added-interaction-effects")
                 raise PreventUpdate
             if not args:
                 raise PreventUpdate
@@ -177,7 +181,7 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
                     pass
                 pass
             newChildren = [html.Li(o) for o in options]
-            print("New children: {}".format(newChildren))
+            logger.debug("New children: {}".format(newChildren))
             return newChildren, json.dumps(comp.output)
 
         app.callback(Output("added-interaction-effects", "children"), Output("added-interaction-effects-store", "data"), inputs, states)(
@@ -186,11 +190,12 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
 
 
 def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
             raise PreventUpdate
-        print(ctx.triggered)
+        logger.debug(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
             mybool = active_tab == "tab-4" or (
@@ -215,16 +220,15 @@ def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
         triggered = getTriggeredFromContext(ctx)
         if comp.highestActiveTab < mytabs.index(active_tab):
             comp.highestActiveTab = mytabs.index(active_tab)
-        print(
+        logger.debug(
             "{}, {}: {}, {}".format(
                 "tab-4", "family-link-functions-progress", triggered, active_tab
             )
         )
         if triggered:
             if (
-                triggered == "generate-code"
-                or mytabs.index(active_tab) > mytabs.index("tab-4")
-                or (comp and comp.highestActiveTab >= mytabs.index("tab-4"))
+                triggered == "generate-code" or
+                (comp and comp.highestActiveTab > mytabs.index(active_tab))
             ):
                 return "success"
             if triggered == "continue-to-family-link-functions" or mytabs.index(
@@ -244,12 +248,13 @@ def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
 def createProgressBarCallbacks(
     app, triggered_tab, progressid, continuefrom_id, continueto_id, comp: GUIComponents
 ):
+    logger = logging.getLogger("werkzeug")
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
         index = mytabs.index(active_tab)
         if not ctx.triggered:
             return True, True
-        print(ctx.triggered)
+        logger.debug(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
             myBool = active_tab == triggered_tab or (
@@ -273,7 +278,7 @@ def createProgressBarCallbacks(
         tabIndex = mytabs.index(active_tab)
         if comp and comp.highestActiveTab < tabIndex:
             comp.highestActiveTab = tabIndex
-        print("{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab))
+        logger.debug("{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab))
         if triggered:
             if (
                 triggered == continueto_id
@@ -281,7 +286,7 @@ def createProgressBarCallbacks(
                 or (
                     comp
                     and comp.highestActiveTab >= 0
-                    and comp.highestActiveTab >= mytabs.index(triggered_tab)
+                    and comp.highestActiveTab > mytabs.index(triggered_tab)
                 )
             ):
                 return "success"
@@ -300,11 +305,12 @@ def createProgressBarCallbacks(
 
 
 def createMainEffectsProgressBarCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     def animatedCallback(nclicks_main, nclicks_interaction, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
             return True, True
-        print(ctx.triggered)
+        logger.debug(ctx.triggered)
         triggered = getTriggeredFromContext(ctx)
         if triggered == "tabs":
             return active_tab == "tab-1", active_tab == "tab-1"
@@ -336,12 +342,13 @@ def createMainEffectsProgressBarCallbacks(app, comp: GUIComponents = None):
 
 
 def createButtonCallback(app):
+    logger = logging.getLogger("werkzeug")
     def buttonCallback(nclicks_main, nclicks_interaction):
         ctx = dash.callback_context
         if not ctx.triggered:
             return ""
         else:
-            print(ctx.triggered)
+            logger.debug(ctx.triggered)
             clicked_button = ctx.triggered[0]["prop_id"].split(".")[0]
 
         return "{}, {}".format(nclicks_main, nclicks_interaction)
@@ -354,7 +361,8 @@ def createButtonCallback(app):
 
 
 def goToInteractionEffects(n_clicks):
-    print(n_clicks)
+    logger = logging.getLogger("werkzeug")
+    logger.debug(n_clicks)
     if n_clicks:
         return "tab-2", True, False, False, "success", True, True, "primary"
     return "tab-1", False, True, True, "primary", False, False, "secondary"

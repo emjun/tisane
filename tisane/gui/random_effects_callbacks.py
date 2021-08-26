@@ -4,7 +4,7 @@ from dash.exceptions import PreventUpdate
 import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import json
-
+import logging
 
 def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
     # createRandomEffectsAddedCallbacks(app, comp)
@@ -14,6 +14,7 @@ def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
 
 
 def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     inputs = [Input(id, "checked") for id in comp.getRandomEffectCheckboxIds()]
     states = [State(id, "id") for id in comp.getRandomEffectCheckboxIds()]
 
@@ -21,14 +22,14 @@ def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
     def addRandomEffects(*args):
         assert len(args) % 2 == 0, "Length of args is weird: {}".format(args)
         if not comp:
-            print("Cannot update added random effects")
+            logger.warning("Cannot update added random effects")
             raise PreventUpdate
         if args:
-            print("Adding random effects")
+            logger.debug("Adding random effects")
             half = int(len(args) / 2)
             inputs = args[:half]
             states = args[half:]
-            print(inputs)
+            logger.debug(inputs)
             checked = []
             for i in range(len(inputs)):
                 id = states[i]
@@ -39,11 +40,12 @@ def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
                     pass
                 pass
             return [html.Li(str(c)) for c in checked]
-        print("Could not add random effects")
+        logger.warning("Could not add random effects")
         raise PreventUpdate
 
 
 def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     if comp:
         checkboxIds = comp.getRandomSlopeCheckboxIds()
         if checkboxIds:
@@ -58,7 +60,7 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
                 )
 
                 if not comp:
-                    print("Cannot update correlations")
+                    logger.warning("Cannot update correlations")
                     raise PreventUpdate
 
                 if args:
@@ -78,6 +80,7 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
 
 
 def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
+    logger = logging.getLogger("werkzeug")
     if comp:
         # rowIds = comp.getRandomEffectsRowIds()
         interceptCellIds = comp.getRandomInterceptCellIds()
@@ -93,7 +96,7 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
             "opacity": 0.5
         }
         if allIds:
-            print("allIds: {}".format(allIds))
+            logger.debug("allIds: {}".format(allIds))
             # rowOutputs = [Output(id, "hidden") for id in allIds]
             rowOutputs = [Output(id, "style") for id in interceptCellIds]
             rowOutputs += [Output(id, "hidden") for id in groupingIds]
@@ -153,7 +156,7 @@ def createRandomEffectsVisibleCallbacks(app, comp: GUIComponents = None):
             cellOutputs = [Output(id, "style") for id in cellIds]
             correlatedOutputs = [Output(id, "disabled") for id in correlatedIds]
             notAvailable = [Output("random-effects-not-available-explanation", "children")]
-            print("randomSlopeAddedIds: {}, {}".format(randomSlopeAddedIds, individualIds))
+            logger.debug("randomSlopeAddedIds: {}, {}".format(randomSlopeAddedIds, individualIds))
             @app.callback(
                 randomSlopeAddedOutputs + cellOutputs + correlatedOutputs + notAvailable,
                 Input("random-effects-check-store", "data")
