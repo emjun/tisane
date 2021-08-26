@@ -23,7 +23,7 @@ pymer4_preamble = """
 
 import pandas as pd
 from pymer4.models import Lmer # supports Generalized linear models with or without mixed effects
-import rpy2.robjects.lib.ggplot2 as ggplot2 # for visualizing residual plots to diagnose model fit
+import matplotlib.pyplot as plt # for visualizing residual plots to diagnose model fit
 """
 statsmodels_preamble = """
 # Tisane inferred the following statistical model based on this query:  {}
@@ -65,7 +65,14 @@ print(res.summary())
 """
 
 pymer4_model_diagnostics = """
-
+plt.scatter(model.fits, model.residuals)
+plt.title("Fitted values vs. Residuals")
+plt.xlabel("fitted values")
+plt.ylabel("residuals")
+plt.show()
+# What should you look for in the plot? 
+# If there is systematic bias in how residuals are distributed, you may want to try a new link or family function. You may also want to reconsider your conceptual and statistical models. 
+# Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
 """
 
 statsmodels_model_diagnostics = """
