@@ -324,7 +324,7 @@ def construct_statistical_model(
 
 
 # @returns statistical model that reflects the study design
-def infer_statistical_model_from_design(design: Design):
+def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
     gr = design.graph
 
     ### Step 1: Initial conceptual checks
@@ -424,7 +424,7 @@ def infer_statistical_model_from_design(design: Design):
         path = write_to_script(code, destinationDir, "model.py")
         return path
 
-    gui.start_app(input=path, generateCode=generateCode)
+    gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
     # Output a JSON file
 
 

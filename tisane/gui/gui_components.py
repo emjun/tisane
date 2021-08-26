@@ -1297,9 +1297,8 @@ class GUIComponents:
             [
                 dcc.Markdown(
                     """
-            ### Data distributions: Family and Link functions.
-            #### Which distribution best matches your data?
-            """
+            ### Data distributions: Family and Link Functions.
+            #### Which distribution best matches your data?"""
                 )
             ]
         )
@@ -1331,6 +1330,7 @@ class GUIComponents:
                             dbc.Col(family_link_controls, sm=6, md=5, lg=4),
                         ],
                         align="center",
+                        no_gutters=True,
                     ),
                 ]
                 + normalityTestPortion

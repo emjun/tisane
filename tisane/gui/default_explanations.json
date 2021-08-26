@@ -7,7 +7,7 @@
   },
   "link-functions": {
     "header": "More on Link Functions",
-    "body": "* indicates the default/canonical link function for the chosen family function."
+    "body": "\\* indicates the default/canonical link function for the chosen family function."
   },
   "distribution-families": {
     "header": "More on Family functions",
