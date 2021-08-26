@@ -1,7 +1,6 @@
 from tisane.graph import Graph
 import tisane as ts
 from tisane.variable import Causes, Has, Moderates, Nests, Associates
-from tisane.smt.synthesizer import Synthesizer
 
 import unittest
 
