@@ -34,9 +34,10 @@ script_dir = os.path.join(dir, test_script_repo_name)
 
 ### HELPERS to reduce redundancy across test cases
 model_template = """
-model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
-res = model.fit()
-print(res.summary())
+    model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
+    res = model.fit()
+    print(res.summary())
+    return model
 """
 
 
