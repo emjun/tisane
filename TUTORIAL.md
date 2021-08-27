@@ -2,13 +2,14 @@
 Welcome to Tisane, a data analysis tool that focuses on supporting conceptual
 statistical relationships in study designs. After providing a study design
 specification in the Tisane domain-specific language (DSL), the Tisane GUI
-guides you through the process of generating an appropriate model. The resulting
+guides you through the process of generating an appropriate model.
+
+![The Tisane GUI](examples/tutorial_screenshots/tisane_gui.png?raw=true)
+
+The resulting
 model is written in Python, and you can run it to get results that answer your
 research questions.
 
-## TODO
-
-[] Add screenshots
 
 # Installation
 Tisane requires Python 3.8+ and also an installation of R (see below).
@@ -102,7 +103,15 @@ python -m ipykernel install --name <MY-KERNEL-NAME>
 ```
 
 ### Opening the notebook
-Once you've created your kernel, you can run `jupyter notebook`. Open up any notebook, and go to the menu: `Kernel > Change kernel`, and choose `<MY-KERNEL-NAME>` (whatever you called it) from the list. Then you should be good to go! After importing Tisane in your notebook, all five steps of using Tisane can be completed within the notebook itself.
+Once you've created your kernel, you can run `jupyter notebook`. Open up any notebook, and go to the menu: `Kernel > Change kernel`, and choose `<MY-KERNEL-NAME>` (whatever you called it) from the list.
+
+![You can change the kernel of a Jupyter notebook by going to the menu and choosing Kernel > Change kernel, and then selecting a kernel from the list.](examples/tutorial_screenshots/change_kernel.png?raw=true)
+
+Then you should be good to go! After importing Tisane in your notebook, all five steps of using Tisane can be completed within the notebook itself.
+
+An example showing the GUI running in a jupyter notebook from `examples/Animal_Science/pigs.ipynb`:
+
+![The Tisane GUI running in the output of the Jupyter notebook examples/Animal_Science/pigs.ipynb](examples/tutorial_screenshots/query_tisane_in_jupyter.png?raw=true)
 
 ## Using Tisane via the command line
 With this workflow, you
@@ -110,6 +119,8 @@ With this workflow, you
 1. Write your study design specification in the Tisane DSL in any IDE or plain old text editor of your choice. The last line in the file should be the call to `tisane.infer_statistical_model_from_design`
 2. Run the python file from the command line. This should look like `python3 <my-tisane-design-file>.py` or `poetry run python3 <my-tisane-design-file>.py`. This will open up the Tisane GUI.
 3. After generating code in the Tisane GUI, you will get the path to the output model. You can copy it, and then go back to the command line and run `python3 <copied-path-goes-here>` or `poetry run python3 <copied-path-goes-here>`
+
+![A pop-up after generating the code in the Tisane GUI, which gives a copy-able path to the output model script](examples/tutorial_screenshots/code_generated.png?raw=true)
 
 This way, you get to use whatever IDE you like to write the specification using the Tisane DSL.
 
