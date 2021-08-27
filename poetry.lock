@@ -371,19 +371,6 @@ optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
 [[package]]
-name = "graphviz"
-version = "0.17"
-description = "Simple Python interface for Graphviz"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.extras]
-dev = ["tox (>=3)", "flake8", "pep8-naming", "wheel", "twine"]
-docs = ["sphinx (>=1.8)", "sphinx-autodoc-typehints", "sphinx-rtd-theme"]
-test = ["mock (>=3)", "pytest (>=5.2)", "pytest-mock (>=2)", "pytest-cov"]
-
-[[package]]
 name = "h5"
 version = "0.4.1"
 description = "H5py utils"
@@ -1539,7 +1526,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.11"
-content-hash = "8de6f3bd676f9770e880e397c8c56164c93a1a94fc17013e1e380bb80e1768f8"
+content-hash = "7740328d9777900441588dbcdb45fae747e8fd276d809cfbd9bed80a8afa0399"
 
 [metadata.files]
 ansi2html = [
@@ -1881,10 +1868,6 @@ flask-compress = [
 ]
 future = [
     {file = "future-0.18.2.tar.gz", hash = "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"},
-]
-graphviz = [
-    {file = "graphviz-0.17-py3-none-any.whl", hash = "sha256:5dadec94046d82adaae6019311a30e0487536d9d5a60d85451f0ba32f9fc6559"},
-    {file = "graphviz-0.17.zip", hash = "sha256:ef6e2c5deb9cdcc0c7eece1d89625fd07b0f2208ea2bcb483520907ddf8b4e12"},
 ]
 h5 = [
     {file = "h5-0.4.1-py3-none-any.whl", hash = "sha256:3d02c79ad2b7f6c93bae16ceb976105e4b4b6c280b736663012b49b4e8c9b7ec"},
