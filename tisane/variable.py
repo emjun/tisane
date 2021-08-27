@@ -1,3 +1,4 @@
+import unittest
 from tisane.data import Dataset, DataVector
 from typing import Any, List
 import typing  # for typing.Unit
@@ -353,6 +354,13 @@ class Ordinal(Measure):
 
     def get_cardinality(self):
         return self.cardinality
+
+    # Estimate the cardinality of a variable by 
+    def calculate_cardinality_from_data(self, data: Dataset): 
+        data = data.dataset[self.name] # Get data corresponding to this variable 
+        unique_values = data.unique() 
+        
+        return len(unique_values)
 
 
 """

@@ -1,11 +1,9 @@
+from pandas.core.frame import DataFrame
 from tisane.variable import (
-    Measure,
-    Unit,
     AbstractVariable,
+    Nominal, 
+    Ordinal,
     Has,
-    Associates,
-    Causes,
-    Moderates,
     Nests,
     Repeats,
 )
@@ -62,9 +60,26 @@ class Design(object):
         else:
             self.dataset = None
 
+    # Calculates and assigns cardinality to variables if cardinality is not already specified 
+    # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
+    def check_variable_cardinality(self): 
+        variables = self.graph.get_variables()
+
+        for v in variables: 
+            if isinstance(v, Ordinal): 
+                assert(self.dataset is not None)
+                assert(isinstance(self.dataset, Dataset))
+                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+
+                if calculated_cardinality > v.cardinality: 
+                    diff = calculated_cardinality - v.cardinality
+                    raise ValueError(f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect.")
+    
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
         self.dataset = Dataset(source)
+
+        self.check_variable_cardinality()
 
         return self
 
