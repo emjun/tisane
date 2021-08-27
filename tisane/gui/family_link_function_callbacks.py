@@ -105,19 +105,28 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
         Output("link-options", "options"),
         Output("link-options", "value"),
         Output("overview-family", "children"),
+        Output("generate-code", "disabled"),
+        Output("generate-code-tooltip", "className"),
         Input("family-options", "value"),
     )
     def updateLinkOptions(value):
         if not comp:
-            print("Cannot update")
+            logger.warning("Cannot update")
             raise PreventUpdate
+        oldFamily = comp.output["family"]
         comp.output["family"] = value
+        if oldFamily and not value:
+            return [], "", "", True, ""
         familyLinks = comp.getGeneratedFamilyLinkFunctions()
         logger.debug("{}: {}".format(value, type(value)))
         if value and isinstance(value, str):
+            # print("Updating...")
             logger.debug(familyLinks)
             if value in familyLinks:
                 defaultLink = comp.getDefaultLinkForFamily(value)
+                comp.output["link"] = defaultLink
+                fls = comp.getFamilyLinkFunctions()
+                assert value in fls, "Family {} not found in {}".format(value, fls)
                 familyName = " ".join(separateByUpperCamelCase(value)[:-1])
                 return (
                     [
@@ -125,11 +134,14 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                             "label": " ".join(separateByUpperCamelCase(str(l))[:-1])
                             + ("*" if defaultLink == l else ""),
                             "value": str(l),
+                            "disabled": str(l) not in fls[value]["links"]
                         }
                         for l in familyLinks[value]
                     ],
                     defaultLink,
                     "Family: {}".format(familyName),
+                    False,
+                    "tooltip-hide"
                 )
             pass
         logger.warning("Cannot update for some reason")

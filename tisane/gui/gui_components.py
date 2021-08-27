@@ -70,6 +70,13 @@ class GUIComponents:
         self.generatedComponentIdToMainEffect = {}
         self.generatedComponentIdToInteractionEffect = {}
         self.simulatedData = {}
+        self.familyLinkFunctions = {}
+        familyLinkFunctionsPath = os.path.join(dir, "family_link_functions.json")
+        if os.path.exists(familyLinkFunctionsPath):
+            with open(familyLinkFunctionsPath, "r") as f:
+                self.familyLinkFunctions = json.loads(f.read())
+                pass
+            pass
         self.defaultLinkForFamily = {
             "GaussianFamily": "IdentityLink",
             "BinomialFamily": "LogitLink",
@@ -84,8 +91,8 @@ class GUIComponents:
             "dependent variable": "",
             "interaction effects": [],
             "random effects": {},
-            "family": "GaussianFamily",
-            "link": "IdentityLink",
+            "family": "",
+            "link": "",
         }
         self.highestActiveTab = -1
 
@@ -301,6 +308,11 @@ class GUIComponents:
                 pass
             pass
         return newOutput
+
+    def getFamilyLinkFunctions(self):
+        if self.hasRandomEffects():
+            return self.familyLinkFunctions["with-mixed-effects"]
+        return self.familyLinkFunctions["without-mixed-effects"]
 
     def generateCode(self):
         if self.codeGenerator:
@@ -770,36 +782,6 @@ class GUIComponents:
                     {me: me in ivs for me in self.getGeneratedMainEffects()},
                 ),
             ]
-            # return dbc.Card(
-            #     dbc.CardBody(
-            #         [
-            #             cardP(self.strings.getMainEffectsPageTitle()),
-            #             self.layoutFancyChecklist(
-            #                 {
-            #                     me: html.Span(
-            #                         [
-            #                             me + " ",
-            #                             getInfoBubble(
-            #                                 self.variables["main effects"][me]["info-id"]
-            #                             ),
-            #                         ]
-            #                     )
-            #                     for me in self.getGeneratedMainEffects()
-            #                 },
-            #                 self.setComponentIdForMainEffect,
-            #                 {me: me in ivs for me in self.getGeneratedMainEffects()},
-            #             ),
-            #             html.P(""),
-            #             dbc.Button(
-            #                 "Continue",
-            #                 color="success",
-            #                 id="continue-to-interaction-effects",
-            #                 n_clicks=0,
-            #             ),
-            #         ]
-            #     ),
-            #     className="mt-3",
-            # )
         else:
             body = [
                 cardP(html.I(self.strings.getMainEffectsNoPageTitle()))
@@ -1104,12 +1086,20 @@ class GUIComponents:
 
     def make_family_link_options(self):
         family_options = list()
+
+        fls = self.getFamilyLinkFunctions()
         # link_options =
 
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
 
-            family_options.append({"label": label, "value": f})
+            family_options.append(
+                {
+                    "label": label,
+                    "value": f,
+                    "disabled": f not in fls
+                }
+            )
             pass
 
         linkExplanation = self.getDefaultExplanation("link-functions")
@@ -1123,7 +1113,7 @@ class GUIComponents:
                         dcc.Dropdown(
                             id="family-options",
                             options=family_options,
-                            value="GaussianFamily",
+                            value="",
                             optionHeight=45,
                         ),
                     ]
@@ -1139,7 +1129,7 @@ class GUIComponents:
                         dcc.Dropdown(
                             id="link-options",
                             options=[],
-                            value="IdentityLink",
+                            value="",
                             optionHeight=45,
                         ),
                     ]
@@ -1168,27 +1158,6 @@ class GUIComponents:
         return controls
 
     def createFigure(self, family):
-        key = f"{family}_data"
-
-        if key in self.simulatedData:
-            family_data = self.simulatedData[key]
-        else:
-            # Do we need to generate data?
-            if self.hasData():
-                # dvData = np.log(self.dataDf[self.dv])
-                dvData = self.dataDf[self.dv]
-                family_data = simulate_data_dist(
-                    family,
-                    dataMean=dvData.mean(),
-                    dataStdDev=dvData.std(),
-                    dataSize=dvData.count(),
-                )
-                pass
-            else:
-                family_data = simulate_data_dist(family)
-                pass
-            self.simulatedData[key] = family_data
-            pass
         # Generate figure
         fig = go.Figure()
         if self.hasData():
@@ -1198,13 +1167,36 @@ class GUIComponents:
                     name=f"{self.dv}",
                 )
             )
-        fig.add_trace(
-            go.Histogram(
-                x=family_data,
-                name=f"Simulated {family} distribution.",
-                showlegend=True,
+        if family:
+            key = f"{family}_data"
+
+            if key in self.simulatedData:
+                family_data = self.simulatedData[key]
+            else:
+                # Do we need to generate data?
+                if self.hasData():
+                    # dvData = np.log(self.dataDf[self.dv])
+                    dvData = self.dataDf[self.dv]
+                    family_data = simulate_data_dist(
+                        family,
+                        dataMean=dvData.mean(),
+                        dataStdDev=dvData.std(),
+                        dataSize=dvData.count(),
+                    )
+                    pass
+                else:
+                    family_data = simulate_data_dist(family)
+                    pass
+                self.simulatedData[key] = family_data
+                pass
+
+            fig.add_trace(
+                go.Histogram(
+                    x=family_data,
+                    name=f"Simulated {family} distribution.",
+                    showlegend=True,
+                )
             )
-        )
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
@@ -1219,6 +1211,7 @@ class GUIComponents:
         fig.update_layout(
             height=400
         )
+
         return fig
 
     def createNormalityTestSection(self):
@@ -1373,8 +1366,16 @@ class GUIComponents:
                 ]
                 + normalityTestPortion
                 + [
-                    dbc.Button("Generate Code", color="success", id="generate-code"),
-                    html.Div(id="generated-code-div"),
+                    html.Span(
+                        dbc.Button("Generate Code", color="success", id="generate-code", disabled=True, style={"pointer-events": "none"}),
+                        id="generate-code-button-div",
+                        tabIndex="0",
+                        className="d-inline-block"
+                    ),
+                    html.Div(id="generated-code-div", hidden=True),
+                    dbc.Tooltip("You still need to choose family and link functions before you can generate code.",
+                                target="generate-code-button-div",
+                                id="generate-code-tooltip")
                 ]
             ),
             className="mt-3",
