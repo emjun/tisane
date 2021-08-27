@@ -6,8 +6,8 @@
 \usegdlibrary{force,layered}
 \begin{document}
 
-\begin{tikzpicture}[causes/.style={draw=black, "cause", text=black},
-                    associates/.style={draw=black, "assoc."},
+\begin{tikzpicture}[cause/.style={draw=black, "cause", text=black},
+                    associate/.style={draw=black, "assoc."},
                     min/.style={minimum size=2cm},
                     unit/.style={min,draw=black},
                     measure/.style={min,circle,draw=black},
@@ -18,12 +18,13 @@
     \graph[layered layout,sibling distance=3cm,level distance=3cm]{
 		member[unit] -> [has] pounds lost[measure,depvar];
 		member -> [has] age[measure];
+		member -> [has] motivation[measure];
 		member -> [has] age*motivation[measure];
 		member -> [has] race group[measure];
 		pounds lost -> [associates] race group;
 		pounds lost -> [associates] Week[measure];
 		pounds lost -> [associates] age*motivation;
-		motivation[measure] -> [causes] pounds lost;
+		motivation -> [causes] pounds lost;
 		race group -> [associates] pounds lost;
 		Week -> [associates] pounds lost;
 		age*motivation -> [associates] pounds lost;

@@ -1,0 +1,28 @@
+{
+    "dependent variable": "Time",
+    "family": "GaussianFamily",
+    "interaction effects": [],
+    "link": "IdentityLink",
+    "main effects": [
+        "Word_type"
+    ],
+    "random effects": {
+        "Subject": {
+            "random intercept": {
+                "groups": "Subject"
+            },
+            "random slope": [
+                {
+                    "correlated": true,
+                    "groups": "Subject",
+                    "iv": "Word_type"
+                }
+            ]
+        },
+        "Word": {
+            "random intercept": {
+                "groups": "Word"
+            }
+        }
+    }
+}

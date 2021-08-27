@@ -1,6 +1,6 @@
 import tisane as ts
-
 import pandas as pd
+import os
 
 """
 Example from Cohen, Cohen, West, Aiken 2003. Chapter 7 
@@ -11,7 +11,10 @@ of vigorous physical exercise in which they have engaged."
 """
 
 # Load data
-df = pd.read_csv("./exercise_simple.csv")
+dir = os.path.dirname(__file__)
+df = pd.read_csv(os.path.join(dir, "exercise_simple.csv"))
+
+# df = pd.read_csv("./exercise_simple.csv")
 
 # Declare observed variables
 pid = ts.Unit("case", cardinality=50)  # 50 participants
@@ -22,7 +25,7 @@ endurance = pid.numeric(
 )  # number of minutes of sustained jogging on a treadmill
 
 # Declare conceptual relationships between the observed variables
-exercise.cause(endurance)
+exercise.causes(endurance)
 age.associates_with(endurance)
 
 # Query Tisane to infer a statistical model and generate a script

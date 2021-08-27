@@ -1,0 +1,11 @@
+{
+    "dependent variable": "Dependent_variable",
+    "family": "GaussianFamily",
+    "interaction effects": [],
+    "link": "IdentityLink",
+    "main effects": [
+        "Measure_0",
+        "Measure_1"
+    ],
+    "random effects": {}
+}

@@ -1,7 +1,6 @@
-from tisane import graph
+from tisane.graph import Graph
 import tisane as ts
 from tisane.variable import Causes, Has, Moderates, Nests, Associates
-from tisane.smt.synthesizer import Synthesizer
 
 import unittest
 
@@ -12,7 +11,7 @@ class GraphTest(unittest.TestCase):
         v2 = ts.Unit("V2")
         v3 = ts.Unit("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         gr._add_variable(v1)
         gr._add_variable(v2)
         gr._add_variable(v3)
@@ -21,10 +20,10 @@ class GraphTest(unittest.TestCase):
 
     def test_graph_construction_recursive_1(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.associates_with(dv)
@@ -42,10 +41,10 @@ class GraphTest(unittest.TestCase):
 
     def test_graph_construction_recursive_2(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.associates_with(dv)
@@ -66,7 +65,7 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         causes_obj_1 = Causes(v1, v2)
         causes_obj_2 = Causes(v2, v3)
         gr.causes(v1, v2, causes_obj_1)
@@ -84,7 +83,7 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         causes_obj = Causes(v1, v2)
         gr.causes(v1, v2, causes_obj)
         associates_obj = Associates(v2, v3)
@@ -104,7 +103,7 @@ class GraphTest(unittest.TestCase):
         v2 = v1.nominal("V2")
         v3 = v1.nominal("V3")
 
-        gr = ts.Graph()
+        gr = Graph()
         has_obj = v1.relationships[0]
         self.assertIsInstance(has_obj, Has)
         gr.has(v1, v2, has_obj, 1)
@@ -252,26 +251,27 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(gr.has_variable(race))
         self.assertTrue(gr.has_variable(ses))
         self.assertTrue(gr.has_variable(test_score))
-        self.assertFalse(gr.has_variable(tutoring))
+        self.assertTrue(gr.has_variable(tutoring))
 
         identifiers = gr.get_identifiers()
         self.assertIn(student, identifiers)
         self.assertTrue(gr.has_edge(student, race, "has"))
         self.assertTrue(gr.has_edge(student, ses, "has"))
         self.assertTrue(gr.has_edge(student, test_score, "has"))
-        self.assertFalse(
+        self.assertTrue(
             gr.has_edge(student, tutoring, "has")
-        )  # SHOULD THIS BE TRUE OR FALSE
+        ) 
 
         variables = gr.get_variables()
         self.assertEqual(
-            len(variables), 5
+            len(variables), 6
         )  # Check that interaction effect is part of graph as a new variable/node
         v_names = [v.name for v in variables]
         self.assertIn("Student", v_names)
         self.assertIn("Race", v_names)
         self.assertIn("SES", v_names)
         self.assertIn("Test score", v_names)
+        self.assertIn("treatment", v_names)
         self.assertIn(
             "Race*SES", v_names
         )  # Check that interaction effect is part of graph as a new variable/node
@@ -295,7 +295,7 @@ class GraphTest(unittest.TestCase):
             else:
                 count_other_edges += 1
 
-        self.assertEqual(count_has_edges, 4)  # Should this be 5?
+        self.assertEqual(count_has_edges, 5)  
         self.assertEqual(count_associates_edges, 6)
         # Check that Moderates stores a Moderates obj in the edge meta-data for associates edges created for moderations
         self.assertEqual(count_associates_edges_associates_objs, 4)
@@ -304,7 +304,7 @@ class GraphTest(unittest.TestCase):
 
         # Identifier has interaction effect only once (no duplicates)
         # Associate (between Race*SES and Test score introduces to edges)
-        self.assertEqual(len(edges), 10)
+        self.assertEqual(len(edges), 11)
 
         # Check associate edge for interaction effect
         lhs = None
@@ -325,7 +325,7 @@ class GraphTest(unittest.TestCase):
         c = u.nominal(
             "Measure C", cardinality=2, number_of_instances=2
         )  # B is within-subjects
-        dv = u.numeric("Dependent variable")
+        dv = u.numeric("Dependent_variable")
 
         a.moderates(moderator=[b, c], on=dv)
 

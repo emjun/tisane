@@ -24,12 +24,12 @@ Output: Set of candidate main effects
 
 
 ## Inferring interaction effects
-Inputs: Graph IR (specifically, conceptual subgraph), query with analyst-specified IVs and DV
+Inputs: Graph IR (specifically, conceptual subgraph), query with analyst-specified IVs and DV, candidate main effects that the analyst has included/added during disambiguation (optional)
 Output: Set of candidate interaction effects 
 
 Because we provide a language construct for specifying ``moderates`` relationships that are translated into interaction effects, we do not need to infer additional interaction effects that are not specified in the conceptual subgraph.
 
-**Rule 1: Avoid omissions:** For the DV in the query, obtain all the moderating relationships in the subgraph. For each moderating relationship, if two or more of the moderating variables in the moderating relatiosnship are included as IVs in the query, add the moderating relationship to the set of interaction effects. 
+**Rule 1: Avoid omissions:** For the DV in the query, obtain all the moderating relationships in the conceptual subgraph. For each moderating relationship, if two or more of the moderating variables in the moderating relatiosnship are included as main effects candidates (could include variables that are added as main effects in addition to the IVs in the query), add the moderating relationship to the set of interaction effects. 
 
 *Note:* The ``moderates`` language construct and the interaction effect generation process/rule is agnostic to if the interaction term is within-level or across-levels in a generalized linear mixed-effects model. 
 

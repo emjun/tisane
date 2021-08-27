@@ -1,8 +1,11 @@
 import tisane as ts
 import pandas as pd
+import os
+
+dir = os.path.dirname(os.path.abspath(__file__))
 
 # Load data
-df = pd.read_csv("./radon_data_combined.csv")
+df = pd.read_csv(os.path.join(dir, "radon_data_combined.csv"))
 
 ## Initialize variables
 household = ts.Unit("household")

@@ -11,13 +11,3 @@ from tisane.statistical_model import (
 from tisane.design import (
     Design,
 )
-
-from tisane.graph import (
-    Graph,
-)
-
-from tisane.random_effects import (
-    RandomSlope,
-    RandomIntercept,
-    CorrelatedRandomSlopeAndIntercept,
-)

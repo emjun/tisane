@@ -342,6 +342,7 @@ class Graph(object):
             # Create the directory, if it doesn't exist
             os.makedirs(path_dir)
             pass
+        
         graph.write(path, format=format)
 
     def _get_dot_graph(
@@ -799,4 +800,3 @@ class Graph(object):
         return gr
 
 
-# from tisane.smt.query_manager import QM

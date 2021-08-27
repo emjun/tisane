@@ -25,9 +25,13 @@ class CorrelatedRandomSlopeAndIntercept:
     random_slope: RandomSlope
     random_intercept: RandomIntercept
 
-    def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable):
-        self.random_slope = RandomSlope(iv=iv, groups=groups)
-        self.random_intercept = RandomIntercept(groups=groups)
+    # def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable):
+    #     self.random_slope = RandomSlope(iv=iv, groups=groups)
+    #     self.random_intercept = RandomIntercept(groups=groups)
+
+    def __init__(self, random_slope: RandomSlope, random_intercept: RandomIntercept):
+        self.random_slope = random_slope
+        self.random_intercept = random_intercept
 
 
 # Each group can have a different random intercept
@@ -36,9 +40,13 @@ class UncorrelatedRandomSlopeAndIntercept:
     random_slope: RandomSlope
     random_intercept: RandomIntercept
 
-    def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable):
-        self.random_slope = RandomSlope(iv=iv, groups=groups)
-        self.random_intercept = RandomIntercept(groups=groups)
+    # def __init__(self, iv: Union[AbstractVariable, int], groups: AbstractVariable):
+    #     self.random_slope = RandomSlope(iv=iv, groups=groups)
+    #     self.random_intercept = RandomIntercept(groups=groups)
+
+    def __init__(self, random_slope: RandomSlope, random_intercept: RandomIntercept):
+        self.random_slope = random_slope
+        self.random_intercept = random_intercept
 
 
 def correlate_random_slope_and_intercept(

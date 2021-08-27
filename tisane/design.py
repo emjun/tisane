@@ -1,33 +1,13 @@
+from pandas.core.frame import DataFrame
 from tisane.variable import (
-    Measure,
-    Unit,
     AbstractVariable,
+    Nominal, 
+    Ordinal,
     Has,
-    Associates,
-    Causes,
-    Moderates,
     Nests,
     Repeats,
 )
 from tisane.graph import Graph
-from tisane.smt.rules import (
-    MainEffect,
-    NoMainEffect,
-    Interaction,
-    NoInteraction,
-    NominalDataType,
-    OrdinalDataType,
-    NumericDataType,
-    Transformation,
-    NoTransformation,
-    NumericTransformation,
-    CategoricalTransformation,
-    LogTransform,
-    SquarerootTransform,
-    LogLogTransform,
-    ProbitTransform,
-    LogitTransform,
-)
 from tisane.data import Dataset
 
 import os
@@ -35,7 +15,6 @@ from typing import List
 import typing  # to use typing.Union; Union is overloaded in z3
 import pandas as pd
 import pydot
-from z3 import *
 
 """
 Class for expressing (i) data collection structure, (ii) that there is a manipulation and (iii) how there is a manipulation (e.g., between-subjects, within-subjects)
@@ -73,16 +52,45 @@ class Design(object):
         # Add any nesting relationships involving IVs that may be implicit
         self._add_nesting_relationships_to_graph()
 
+        # Add variables that the identifiers have 
+        self._add_identifiers_has_relationships_to_graph()
+
         if source is not None:
             self.dataset = Dataset(source)
         else:
             self.dataset = None
 
+    # Calculates and assigns cardinality to variables if cardinality is not already specified 
+    # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
+    def check_variable_cardinality(self): 
+        variables = self.graph.get_variables()
+
+        for v in variables: 
+            if isinstance(v, Ordinal): 
+                assert(self.dataset is not None)
+                assert(isinstance(self.dataset, Dataset))
+                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+
+                if calculated_cardinality > v.cardinality: 
+                    diff = calculated_cardinality - v.cardinality
+                    raise ValueError(f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect.")
+    
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
         self.dataset = Dataset(source)
 
+        self.check_variable_cardinality()
+
         return self
+
+    def has_data(self) -> bool: 
+        return self.dataset is not None 
+
+    def get_data(self) -> pd.DataFrame:
+        if self.dataset is not None:
+            return self.dataset.get_data()
+        # else
+        return None
 
     def _add_variable_to_graph(self, variable: AbstractVariable):
         for r in variable.relationships:
@@ -97,6 +105,19 @@ class Design(object):
             for r in relationships:
                 if isinstance(r, Nests):
                     self.graph.add_relationship(relationship=r)
+    
+    def _add_identifiers_has_relationships_to_graph(self): 
+        identifiers = self.graph.get_identifiers()
+
+        for unit in identifiers: 
+            # Does this unit have any other relationships/edges not already in the graph? 
+            relationships = unit.relationships 
+
+            for r in relationships: 
+                if isinstance(r, Has): 
+                    measure = r.measure
+                    if not self.graph.has_edge(start=unit, end=measure, edge_type="has"):
+                        self.graph.add_relationship(relationship=r)
 
     # def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]):
 
@@ -149,7 +170,7 @@ class Design(object):
 
         return variables
 
-    def get_data(self, variable: AbstractVariable):
+    def get_data_for_variable(self, variable: AbstractVariable):
 
         # Does design object have data?
         if self.dataset is not None:
@@ -179,226 +200,6 @@ class Design(object):
         assert self.dv is None
         self.dv = dv
         self.graph._add_variable(dv)
-
-    # @return dict of Z3 consts for variables in model
-    def generate_const_from_fact(self, fact_dict: dict):
-        # Declare data type
-        Object = DeclareSort("Object")
-
-        # Prepare variables
-        var_names_to_variables = dict()
-        for v in self.get_variables():
-            var_names_to_variables[v.name] = v
-
-        main_seq = None
-        interaction_seq = None
-        # Get variable names
-
-        start_name = fact_dict["start"]
-        end_name = fact_dict["end"]
-        # Get variables
-        start_var = var_names_to_variables[start_name]
-        end_var = var_names_to_variables[end_name]
-
-        if fact_dict["function"] == "MainEffect":
-            assert end_var is self.dv
-
-            if "main_effects" not in self.consts:
-                main_seq = Unit(start_var.const)
-            else:
-                main_seq = self.consts["main_effects"]
-                main_seq = Concat(Unit(start_var.const), main_seq)
-            self.consts["main_effects"] = main_seq
-
-        elif fact_dict["function"] == "NoMainEffect":
-            main_seq = Empty(SeqSort(Object))
-
-            # If there are no main effects so far, create an empty SeqSort
-            if "main_effects" not in self.consts:
-                self.consts["main_effects"] = main_seq
-            # Else: If there are main effects already, do nothing
-
-        elif fact_dict["function"] == "Interaction":
-            # Create set for interaction
-            interaction = EmptySet(Object)
-            SetAdd(interaction, start_var.const)
-            SetAdd(interaction, end_var.const)
-            if "interactions" not in self.consts:
-                interaction_seq = Unit(interaction)
-            else:
-                interaction_seq = self.consts["interactions"]
-                interaction_seq = Concat(Unit(interaction), interaction_seq)
-            self.consts["interactions"] = interaction_seq
-
-        elif fact_dict["function"] == "NoInteraction":
-            interaction = EmptySet(Object)
-
-            # If there are no interactions so far, create a SeqSort of Sets
-            if "interactions" not in self.consts:
-                interaction_seq = Unit(interaction)
-                self.consts["interactions"] = interaction_seq
-
-            # Else: If there are interactions already, do nothing
-
-        else:
-            pass
-
-    def generate_consts(self):
-        # Declare data type
-        Object = DeclareSort("Object")
-
-        # If we haven't already generated consts from facts
-        if "main_effects" not in self.consts:
-            main_seq = None
-            # Does not use self.ivs
-            nodes = list(self.graph._graph.nodes(data=True))  # get list of edges
-
-            for (n, data) in nodes:
-                n_var = data["variable"]
-                if n_var is not self.dv:
-                    if main_seq is None:
-                        main_seq = Unit(n_var.const)
-                    else:
-                        main_seq = Concat(Unit(n_var.const), main_seq)
-
-            self.consts["main_effects"] = main_seq
-
-        if "interactions" not in self.consts:
-            interactions_seq = Unit(EmptySet(Object))
-            self.consts["interactions"] = interactions_seq
-
-    # @returns the set of logical facts that this Design "embodies"
-    def compile_to_facts(self) -> List:
-        facts = list()  # TODO: Should be a dict?
-
-        nodes = list(self.graph._graph.nodes(data=True))  # get list of nodes
-        for (n, data) in nodes:
-            n_var = data["variable"]
-            if isinstance(n_var, Nominal):
-                facts.append(NominalDataType(n_var.const))
-            elif isinstance(n_var, Ordinal):
-                facts.append(OrdinalDataType(n_var.const))
-            else:
-                assert isinstance(n_var, Numeric)
-                facts.append(NumericDataType(n_var.const))
-
-        edges = self.graph.get_edges()  # get list of edges
-
-        for (n0, n1, edge_data) in edges:
-            edge_type = edge_data["edge_type"]
-            n0_var = gr.get_variable(n0)
-            n1_var = gr.get_variable(n1)
-            if edge_type == "nests":
-                pass
-            elif edge_type == "treat":
-                pass
-            else:
-                pass
-
-        return facts
-
-    def collect_ambiguous_effects_facts(
-        self, main_effects: bool, interactions: bool
-    ) -> List:
-        facts = list()
-        edges = self.graph.get_edges()  # get list of edges
-
-        # Declare data type
-        Object = DeclareSort("Object")
-
-        # Do we care about Main Effects?
-        if main_effects:
-            # What Main Effects should we consider?
-            for (n0, n1, edge_data) in edges:
-                edge_type = edge_data["edge_type"]
-                n0_var = gr.get_variable(n0)
-                n1_var = gr.get_variable(n1)
-                if edge_type == "nests":
-                    pass
-                elif edge_type == "treat":
-                    pass
-                elif edge_type == "contribute":
-                    facts.append(MainEffect(n0_var.const, n1_var.const))
-                    facts.append(NoMainEffect(n0_var.const, n1_var.const))
-
-        if interactions:
-            # What Interaction Effects should we consider?
-            # Check if the edge does not include the DV
-            incoming_edges = list(self.graph._graph.in_edges(self.dv.name, data=True))
-
-            interactions_considered = list()
-            for (ie, dv, data) in incoming_edges:
-                ie_var = self.graph._graph.nodes[ie]["variable"]
-                for (other, dv, data) in incoming_edges:
-                    # Asks about interactions even if end-user does not want to
-                    # include the corresponding main effects
-                    other_var = self.graph._graph.nodes[other]["variable"]
-                    if (ie is not other) and (
-                        {ie, other} not in interactions_considered
-                    ):
-                        # TODO: Add all combinatorial interactions, should we ask end-user for some interesting ones?
-                        i_set = EmptySet(Object)
-                        i_set = SetAdd(i_set, ie_var.const)
-                        i_set = SetAdd(i_set, other_var.const)
-
-                        facts.append(Interaction(i_set))
-                        facts.append(NoInteraction(i_set))
-
-                        interactions_considered.append({ie, other})
-
-        return facts
-
-    # @return additional set of logical facts that needs disambiguation depending on @param desired output_obj
-    def collect_ambiguous_facts(self, output: str) -> List:
-
-        facts = list()
-        edges = self.graph.get_edges()  # get list of edges
-
-        # Iterate over edges
-        for (n0, n1, edge_data) in edges:
-            edge_type = edge_data["edge_type"]
-            n0_var = gr.get_variable(n0)
-            n1_var = gr.get_variable(n1)
-            if edge_type == "contribute":
-                if output.upper() == "VARIABLE RELATIONSHIP GRAPH":
-                    # Induce UNSAT in order to get end-user clarification
-                    facts.append(Cause(n0_var.const, n1_var.const))
-                    facts.append(Correlate(n0_var.const, n1_var.const))
-            elif edge_type == "treat":
-                pass
-            elif edge_type == "nests":
-                # TODO: Mixed Effect
-                raise NotImplementedError
-            else:
-                pass
-
-        # Iterate over nodes
-        if output == "STATISTICAL MODEL":
-            nodes = list(self.graph._graph.nodes(data=True))
-            for (n, data) in nodes:
-                # Check if the variable is included as a main effect
-                var = data["variable"]
-                if is_true(
-                    BoolVal(Contains(self.consts["main_effects"], Unit(var.const)))
-                ):
-                    # Induce UNSAT
-                    facts.append(Transformation(var.const))
-                    facts.append(NoTransformation(var.const))
-                    # # Induce UNSAT
-                    # Depending on variable data type, add more constraints for possible transformations
-                    if isinstance(var, Numeric):
-                        facts.append(NumericTransformation(var.const))
-                        facts.append(LogTransform(var.const))
-                        facts.append(SquarerootTransform(var.const))
-                    elif isinstance(var, Nominal) or isinstance(var, Ordinal):
-                        facts.append(CategoricalTransformation(var.const))
-                        facts.append(LogLogTransform(var.const))
-                        facts.append(ProbitTransform(var.const))
-                        # facts.append(LogitTransform(var.const)) # TODO: Might only make sense for binary data??
-
-                    # TODO: If update main effect variable and it is involved in interaction, ask about or propagate automatically?
-
-        return facts
 
     # @returns underlying graph IR
     def get_graph_ir(self):

@@ -6,9 +6,8 @@ authors = ["Eunice Jun <eunice.m.jun@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7.11"
-pandas = "^1.2.4"
+pandas = "^1.1.0"
 networkx = "^2.5.1"
-z3-solver = "^4.8.10"
 statsmodels = "^0.12.2"
 more-itertools = "^8.7.0"
 pydot = "^1.4.2"
@@ -21,6 +20,13 @@ dash-daq = "^0.5.0"
 patsy = "^0.5.1"
 coverage = "^5.5"
 pytest-cov = "^2.11.1"
+h5 = "^0.4.1"
+h5py = "^3.3.0"
+pymer4 = "^0.7.5"
+pytest = "^6.2.4"
+jupyter-dash = "^0.4.0"
+jupyter = "^1.0.0"
+graphviz = "^0.17"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"

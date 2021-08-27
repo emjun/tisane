@@ -1,0 +1,75 @@
+{
+    "input": {
+        "query": {
+            "DV": "Dependent_variable",
+            "IVs": [
+                "Measure_0",
+                "Measure_1",
+                "Measure_2"
+            ]
+        },
+        "generated main effects": [
+            "Measure_2",
+            "Measure_1",
+            "Measure_0"
+        ],
+        "generated interaction effects": [
+            "Measure 2*Measure_1"
+        ],
+        "generated random effects": {},
+        "generated family, link functions": {
+            "GaussianFamily": [
+                "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
+                "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "OPowerLink",
+                "NegativeBinomialLink"
+            ],
+            "TweedieFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "IdentityLink",
+                "LogLink",
+                "PowerLink"
+            ],
+            "GammaFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ]
+        },
+        "measures to units": {
+            "Dependent_variable": "Unit",
+            "Measure_0": "Unit",
+            "Measure_1": "Unit",
+            "Measure_2": "Unit",
+            "Measure 2*Measure_1": "Unit"
+        },
+        "explanations": {
+            "Measure_0": [
+                "Explanation for query"
+            ],
+            "Measure_1": [
+                "Explanation for query"
+            ],
+            "Measure_2": [
+                "Explanation for query"
+            ],
+            "Measure 2*Measure_1": [
+                "Explanation for interaction effects"
+            ]
+        }
+    }
+}

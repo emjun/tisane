@@ -1,0 +1,81 @@
+{
+    "input": {
+        "query": {
+            "DV": "Dependent_variable",
+            "IVs": [
+                "Measure A",
+                "Measure B"
+            ]
+        },
+        "generated main effects": [
+            "Measure B",
+            "Measure A"
+        ],
+        "generated interaction effects": [
+            "Measure A*Measure B"
+        ],
+        "generated random effects": {
+            "Unit": {
+                "random slope": [
+                    {
+                        "iv": "Measure A",
+                        "groups": "Unit"
+                    }
+                ]
+            }
+        },
+        "generated family, link functions": {
+            "TweedieFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "GaussianFamily": [
+                "CLogLogLink",
+                "PowerLink",
+                "OPowerLink",
+                "NegativeBinomialLink",
+                "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
+                "ProbitLink"
+            ],
+            "GammaFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ]
+        },
+        "measures to units": {
+            "Dependent_variable": "Unit",
+            "Measure A": "Unit",
+            "Measure B": "Unit",
+            "Measure A*Measure B": "Unit"
+        },
+        "explanations": {
+            "Measure A": [
+                "Explanation for query"
+            ],
+            "Measure B": [
+                "Explanation for query"
+            ],
+            "Measure A*Measure B": [
+                "Explanation for interaction effects"
+            ],
+            "Unit, Measure A, RandomSlope": [
+                "Explanation about within-subjects variables for interaction effects"
+            ]
+        }
+    }
+}

@@ -1,0 +1,8 @@
+{
+    "dependent variable": "Dependent_variable",
+    "family": "PoissonFamily",
+    "interaction effects": ["Measure_0*Measure_1"],
+    "link": "SquarerootLink",
+    "main effects": ["Measure_0", "Measure_1"],
+    "random effects": {}
+  }

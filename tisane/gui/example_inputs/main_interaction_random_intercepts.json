@@ -1,0 +1,103 @@
+{
+    "input": {
+        "query": {
+            "DV": "Dependent_variable",
+            "IVs": [
+                "Measure_0",
+                "Measure_1",
+                "Measure_2",
+                "Time"
+            ]
+        },
+        "generated main effects": [
+            "Measure_2",
+            "Measure_0",
+            "Measure_1",
+            "Time"
+        ],
+        "generated interaction effects": [
+            "Measure 2*Measure_1"
+        ],
+        "generated random effects": {
+            "Unit": {
+                "random intercept": {
+                    "groups": "Unit"
+                }
+            },
+            "Time": {
+                "random intercept": {
+                    "groups": "Time"
+                }
+            }
+        },
+        "generated family, link functions": {
+            "GammaFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "GaussianFamily": [
+                "PowerLink",
+                "OPowerLink",
+                "NegativeBinomialLink",
+                "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
+                "ProbitLink",
+                "CLogLogLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "InverseGaussianFamily": [
+                "IdentityLink",
+                "LogLink",
+                "PowerLink"
+            ]
+        },
+        "measures to units": {
+            "Dependent_variable": "Unit",
+            "Measure_0": "Unit",
+            "Measure_1": "Unit",
+            "Measure_2": "Unit",
+            "Measure 2*Measure_1": "Unit"
+        },
+        "explanations": {
+            "Measure_0": [
+                "Explanation for query"
+            ],
+            "Measure_1": [
+                "Explanation for query"
+            ],
+            "Measure_2": [
+                "Explanation for query"
+            ],
+            "Time": [
+                "Explanation for query"
+            ],
+            "Measure 2*Measure_1": [
+                "Explanation for interaction effects"
+            ],
+            "Unit,RandomIntercept": [
+                "Explanation for repeated measures. Explain why pooling across variables.",
+                "Explanation for hierarchical data",
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ],
+            "Time,RandomIntercept": [
+                "Explanation for repeated measures. Explain why pooling across variables.",
+                "Explanation for hierarchical data",
+                "Explanation for non-nesting",
+                "Explanation about within-subjects variables for interaction effects"
+            ]
+        }
+    }
+}

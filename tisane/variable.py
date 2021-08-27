@@ -1,3 +1,4 @@
+import unittest
 from tisane.data import Dataset, DataVector
 from typing import Any, List
 import typing  # for typing.Unit
@@ -167,6 +168,8 @@ class Unit(AbstractVariable):
         elif isinstance(number_of_instances, AbstractVariable):
             repet = Exactly(number_of_instances.get_cardinality())
             according_to = number_of_instances
+
+            # TODO: Add implied relationship of associates with for measures that have number_of_instances as AbstractVariable
         elif isinstance(number_of_instances, AtMost):
             repet = number_of_instances
 
@@ -176,6 +179,8 @@ class Unit(AbstractVariable):
         )
         self.relationships.append(has_relat)
         measure.relationships.append(has_relat)
+
+        # Add relationships between @number_of_instances (if AbstractVariable) variables and DV?
 
     # def repeats(self, measure: "Measure", according_to: "Measure"):
     #     repeats_relat = Repeats(unit=self, measure=measure, according_to=according_to)
@@ -350,6 +355,13 @@ class Ordinal(Measure):
     def get_cardinality(self):
         return self.cardinality
 
+    # Estimate the cardinality of a variable by 
+    def calculate_cardinality_from_data(self, data: Dataset): 
+        data = data.dataset[self.name] # Get data corresponding to this variable 
+        unique_values = data.unique() 
+        
+        return len(unique_values)
+
 
 """
 Class for Numeric measures
@@ -437,19 +449,13 @@ class Has:
         variable: AbstractVariable,
         measure: AbstractVariable,
         repetitions: "NumberValue",
+        according_to: AbstractVariable = None,
         **kwargs,
     ):
         self.variable = variable
         self.measure = measure
         self.repetitions = repetitions
-
-        # This allows us to keep track of the "time reference" variable for repeated measures
-        if "according_to" in kwargs.keys():
-            if kwargs["according_to"] is not None:
-                assert isinstance(kwargs["according_to"], AbstractVariable)
-                self.according_to = kwargs["according_to"]
-        else:
-            self.according_to = None
+        self.according_to = according_to
 
 
 
@@ -499,6 +505,9 @@ class NumberValue:
 
     def is_equal_to_one(self):
         return self.value == 1
+
+    def get_value(self): 
+        return self.value
 
 
 """

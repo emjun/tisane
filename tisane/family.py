@@ -6,19 +6,19 @@ from typing import Any, List
 import typing  # for typing.Unit
 
 """
-Abstract super class for all family functions. 
+Abstract super class for all family functions.
 """
 
 
 class AbstractFamily(ABC):
     variable: AbstractVariable
 
+    def set_link(self, link: "AbstractLink"):
+        self.link = link
+
     @abstractmethod
     def simulate_data(self):
         pass
-
-    def set_link(self, link: "AbstractLink"):
-        self.link = link
 
     # TODO: Should this be an abstract super class method?
     # @abstractmethod
@@ -72,6 +72,15 @@ class LogLink(AbstractLink):
         pass
 
 
+class LogCLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
+        super().set_variable(variable)
+
+    def transform_data(self, data):
+        # return np.log(data)
+        pass
+
+
 class LogitLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
@@ -84,6 +93,15 @@ class LogitLink(AbstractLink):
 
 
 class ProbitLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
+        super().set_variable(variable)
+
+    def transform_data(self, data):
+        # wrapper around python statsmodels?
+        pass
+
+
+class CauchyLink(AbstractLink):
     def __init__(self, variable: AbstractVariable):
         super().set_variable(variable)
 
@@ -109,6 +127,16 @@ class PowerLink(AbstractLink):
         # wrapper around python statsmodels?
         # transformed_data = stats.boxcox(data["data"])[0]
         # return pd.DataFrame(data=transformed_data)
+        pass
+
+
+class SquarerootLink(AbstractLink):
+    def __init__(self, variable: AbstractVariable):
+        super().set_variable(variable)
+
+    def transform_data(self, data):
+        # wrapper around python statsmodels?
+        # return sm.Power(power=.5) ??
         pass
 
 

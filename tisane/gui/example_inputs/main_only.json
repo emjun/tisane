@@ -1,0 +1,63 @@
+{
+    "input": {
+        "query": {
+            "DV": "Dependent_variable",
+            "IVs": [
+                "Measure_0",
+                "Measure_1"
+            ]
+        },
+        "generated main effects": [
+            "Measure_0",
+            "Measure_1"
+        ],
+        "generated interaction effects": [],
+        "generated random effects": {},
+        "generated family, link functions": {
+            "InverseGaussianFamily": [
+                "IdentityLink",
+                "LogLink",
+                "PowerLink"
+            ],
+            "GaussianFamily": [
+                "CLogLogLink",
+                "PowerLink",
+                "OPowerLink",
+                "NegativeBinomialLink",
+                "LogLogLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
+                "ProbitLink"
+            ],
+            "GammaFamily": [
+                "PowerLink",
+                "IdentityLink",
+                "LogLink"
+            ],
+            "TweedieFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ],
+            "PoissonFamily": [
+                "LogLink",
+                "PowerLink",
+                "IdentityLink"
+            ]
+        },
+        "measures to units": {
+            "Dependent_variable": "Unit",
+            "Measure_0": "Unit",
+            "Measure_1": "Unit"
+        },
+        "explanations": {
+            "Measure_0": [
+                "Explanation for query"
+            ],
+            "Measure_1": [
+                "Explanation for query"
+            ]
+        }
+    }
+}

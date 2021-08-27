@@ -19,10 +19,13 @@ from tisane.family import (
     InverseLink,
     InverseSquaredLink,
     LogLink,
+    LogCLink,
     LogitLink,
     ProbitLink,
+    CauchyLink,
     CLogLogLink,
     PowerLink,
+    SquarerootLink,
     OPowerLink,
     NegativeBinomialLink,
     LogLogLink,
@@ -40,11 +43,6 @@ from tisane.variable import (
 from tisane.random_effects import RandomSlope, RandomIntercept
 from tisane.graph import Graph
 from tisane.design import Design
-from tisane.graph_inference import (
-    infer_main_effects,
-    infer_interaction_effects,
-    infer_random_effects,
-)
 from itertools import chain, combinations
 from typing import Dict, List, Set, Any, Tuple
 import typing  # for Union
@@ -71,7 +69,8 @@ def infer_family_functions(query: Design) -> Set[AbstractFamily]:
         # Treats ordinal data as discrete
         family_candidates.add(BinomialFamily(dv))
         family_candidates.add(NegativeBinomialFamily(dv))
-        family_candidates.add(MultinomialFamily(dv))
+        # Not implemented in statsmodels or pymer4
+        # family_candidates.add(MultinomialFamily(dv))
     else:
         assert isinstance(dv, Nominal)
 
@@ -80,15 +79,15 @@ def infer_family_functions(query: Design) -> Set[AbstractFamily]:
         else:
             assert dv.get_cardinality() > 2
             family_candidates.add(NegativeBinomialFamily(dv))
-            family_candidates.add(MultinomialFamily(dv))
+            # Not implemented in statsmodels or pymer4
+            # family_candidates.add(MultinomialFamily(dv))
 
     return family_candidates
 
 
-def infer_link_functions(query: Design, family: AbstractFamily):
+def infer_link_functions(query: Design, family: AbstractFamily) -> Set[AbstractLink]:
     link_candidates = set()
 
-    # TODO: Identify which of these is actually implemented in Statsmodels
     dv = query.dv
     if isinstance(family, GaussianFamily):
         link_candidates.add(IdentityLink(dv))
@@ -97,41 +96,61 @@ def infer_link_functions(query: Design, family: AbstractFamily):
         link_candidates.add(ProbitLink(dv))
         link_candidates.add(CLogLogLink(dv))
         link_candidates.add(PowerLink(dv))
-        link_candidates.add(OPowerLink(dv))
+        # Not currently implemented in statsmodels
+        # link_candidates.add(OPowerLink(dv))
         link_candidates.add(NegativeBinomialLink(dv))
-        link_candidates.add(LogLogLink(dv))
+        # Not currently implemented in statsmodels
+        # link_candidates.add(LogLogLink(dv))
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        link_candidates.add(InverseLink(dv))
     elif isinstance(family, InverseGaussianFamily):
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
-        link_candidates.add(PowerLink(dv))
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        link_candidates.add(InverseLink(dv))
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        link_candidates.add(InverseSquaredLink(dv))
     elif isinstance(family, GammaFamily):
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
-        link_candidates.add(PowerLink(dv))
+        # Not currently implemented in statsmodels
+        # link_candidates.add(PowerLink(dv))
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        link_candidates.add(InverseLink(dv))
     elif isinstance(family, TweedieFamily):
-        link_candidates.add(IdentityLink(dv))
+        # link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
         link_candidates.add(PowerLink(dv))
     elif isinstance(family, PoissonFamily):
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
-        link_candidates.add(PowerLink(dv))
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        # Sqrt is implemented as Power(power=.5)
+        link_candidates.add(SquarerootLink(dv))
     elif isinstance(family, BinomialFamily):
-        link_candidates.add(IdentityLink(dv))
+        # Not currently implemented in statsmodels
+        # link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
         link_candidates.add(LogitLink(dv))
         link_candidates.add(ProbitLink(dv))
+        link_candidates.add(CauchyLink(dv))
         link_candidates.add(CLogLogLink(dv))
-        link_candidates.add(PowerLink(dv))
-        link_candidates.add(OPowerLink(dv))
-        link_candidates.add(LogLogLink(dv))
+        # link_candidates.add(PowerLink(dv))
+        # Not currently implemented in statsmodels
+        # link_candidates.add(OPowerLink(dv))
+        # Not currently implemented in statsmodels
+        # link_candidates.add(LogLogLink(dv))
+        # Not currently implemented in statsmodels
         # link_candidates.add(LogCLink(dv))
     elif isinstance(family, NegativeBinomialFamily):
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))
         link_candidates.add(PowerLink(dv))
         link_candidates.add(NegativeBinomialLink(dv))
+        # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
+        link_candidates.add(CLogLogLink(dv))
     else:
+        # Not implemented in statsmodels or pymer4
         assert isinstance(family, MultinomialFamily)
         link_candidates.add(IdentityLink(dv))
         link_candidates.add(LogLink(dv))

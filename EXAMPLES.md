@@ -235,7 +235,7 @@ word = ts.Unit("Word")
 # Each subject has a two values for condition, which is nominal.
 # Verbose: Each instance of subject has two instances of a nominal variable condition. 
 # Informally: Each subjects sees two (both) conditions. 
-condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
 
 # Repeated measures
 # Each subject has a measure reaction time, which is numeric, for each instance of a word

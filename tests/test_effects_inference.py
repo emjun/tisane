@@ -6,9 +6,9 @@ NOTE: The tests are only to test, not to make any statements about how these var
 import tisane as ts
 from tisane import graph_inference
 from tisane.graph_inference import (
-    infer_main_effects,
-    infer_interaction_effects,
-    infer_random_effects,
+    infer_main_effects_with_explanations,
+    infer_interaction_effects_with_explanations,
+    infer_random_effects_with_explanations,
 )
 from tisane.variable import (
     AbstractVariable,
@@ -29,9 +29,9 @@ import unittest
 class EffectsInferenceTest(unittest.TestCase):
     def test_main_included_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -40,7 +40,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -48,9 +50,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_included_associates(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.associates_with(dv)
         m1.associates_with(dv)
@@ -59,7 +61,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -67,10 +71,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_excluded_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -79,7 +83,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -88,10 +94,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_excluded_associates(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.associates_with(dv)
         m1.associates_with(dv)
@@ -100,7 +106,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -109,10 +117,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_conceptual_parent_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -122,7 +130,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 3)
         self.assertIn(m0, main_effects)
@@ -131,10 +141,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_shared_ancestor_causes(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -145,7 +155,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 3)
         self.assertIn(m0, main_effects)
@@ -154,9 +166,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_ivs_associated_and_causes_dv(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -166,7 +178,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -174,9 +188,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_ivs_associated_and_associates_with_dv(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.associates_with(dv)
         m1.associates_with(dv)
@@ -186,7 +200,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -194,9 +210,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_main_ivs_cause(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -206,7 +222,9 @@ class EffectsInferenceTest(unittest.TestCase):
 
         gr = design.graph
 
-        main_effects = infer_main_effects(gr, design)
+        (main_effects, main_explanations) = infer_main_effects_with_explanations(
+            gr, design
+        )
 
         self.assertEqual(len(main_effects), 2)
         self.assertIn(m0, main_effects)
@@ -214,10 +232,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_interaction_moderates_one_variable(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -228,7 +246,10 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [m0, m1]
-        interaction_effects = infer_interaction_effects(gr, design, main_effects)
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(gr, design, main_effects)
         self.assertEqual(len(interaction_effects), 0)
 
         self.assertEqual(len(m2.relationships), 2)
@@ -240,10 +261,10 @@ class EffectsInferenceTest(unittest.TestCase):
 
     def test_interaction_moderates_two_variables(self):
         u0 = ts.Unit("Unit")
-        m0 = u0.numeric("Measure 0")
-        m1 = u0.numeric("Measure 1")
-        m2 = u0.numeric("Measure 2")
-        dv = u0.numeric("Dependent variable")
+        m0 = u0.numeric("Measure_0")
+        m1 = u0.numeric("Measure_1")
+        m2 = u0.numeric("Measure_2")
+        dv = u0.numeric("Dependent_variable")
 
         m0.causes(dv)
         m1.causes(dv)
@@ -254,7 +275,10 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = [m0, m1, m2]
-        interaction_effects = infer_interaction_effects(gr, design, main_effects)
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(gr, design, main_effects)
         self.assertEqual(len(interaction_effects), 1)
         var = interaction_effects.pop()
 
@@ -270,25 +294,34 @@ class EffectsInferenceTest(unittest.TestCase):
     def test_random_repeats(self):
         u0 = ts.Unit("Unit")
         s0 = ts.SetUp("Time", order=[1, 2, 3, 4, 5])
-        dv = u0.numeric("Dependent variable", number_of_instances=s0)
+        dv = u0.numeric("Dependent_variable", number_of_instances=s0)
 
         design = ts.Design(dv=dv, ivs=[s0])  # main effect of Time
         gr = design.graph
 
         main_effects = [s0]
-        random_effects = infer_random_effects(
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
-        self.assertEqual(len(random_effects), 1)
-        ri = random_effects.pop()
-        self.assertIsInstance(ri, RandomIntercept)
-        self.assertIs(ri.groups, u0)
+        self.assertEqual(len(random_effects), 2)
+        has_unit_ri = False
+        has_time_ri = False
+        for ri in random_effects:
+            self.assertIsInstance(ri, RandomIntercept)
+            if isinstance(ri.groups, ts.Unit):
+                self.assertIs(ri.groups, u0)
+                has_unit_ri = True
+            elif isinstance(ri.groups, ts.SetUp):
+                self.assertIs(ri.groups, s0)
+                has_time_ri = True
+        self.assertTrue(has_unit_ri)
+        self.assertTrue(has_time_ri)
 
     def test_random_nested(self):
         u0 = ts.Unit("Unit 0")
-        m0 = u0.numeric("Measure 0")
+        m0 = u0.numeric("Measure_0")
         u1 = ts.Unit("Unit 1")
-        dv = u0.numeric("Dependent variable")
+        dv = u0.numeric("Dependent_variable")
 
         u0.nests_within(u1)
 
@@ -296,7 +329,7 @@ class EffectsInferenceTest(unittest.TestCase):
         gr = design.graph
 
         main_effects = design.ivs
-        random_effects = infer_random_effects(
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         self.assertEqual(len(random_effects), 1)
@@ -311,7 +344,7 @@ class EffectsInferenceTest(unittest.TestCase):
         # Each subject has a two values for condition, which is nominal.
         # Verbose: Each instance of subject has two instances of a nominal variable condition.
         # Informally: Each subjects sees two (both) conditions.
-        condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+        condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
         # Repeated measures
         # Each subject has a measure reaction time, which is numeric, for each instance of a word
         # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
@@ -327,7 +360,7 @@ class EffectsInferenceTest(unittest.TestCase):
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
         main_effects = design.ivs
-        random_effects = infer_random_effects(
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(
             gr=gr, query=design, main_effects=main_effects
         )
         self.assertEqual(
@@ -341,7 +374,51 @@ class EffectsInferenceTest(unittest.TestCase):
                 self.assertIsInstance(re, RandomIntercept)
                 if re.groups != subject:
                     self.assertIs(re.groups, word)
-        # TODO: How to ask if slope and intercept are correlated?
+
+    # Barr 2013 time * group interaction example:
+    # "For example, consider a design with two independent groups of subjects,
+    # where there are observations at multiple time points for each subject.
+    # When testing the time-by-group interaction, the model should include a
+    # random slope for the continuous variable of time..."
+    def test_random_effects_for_two_way_time_group_interaction(self):
+        subject = ts.Unit("Unit")
+        time = ts.SetUp("Time")
+        condition = subject.nominal(
+            "Condition", cardinality=2, number_of_instances=1
+        )  # "two independent groups of subjects"
+        dv = subject.numeric(
+            "Dependent_variable", number_of_instances=time
+        )  # within-subject
+
+        time.associates_with(dv)
+        condition.causes(dv)
+        time.moderates(moderator=[condition], on=dv)
+
+        design = ts.Design(dv=dv, ivs=[time, condition])
+        gr = design.graph
+
+        main_effects = design.ivs
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        (random_effects, random_explanations) = infer_random_effects_with_explanations(
+            gr=gr,
+            query=design,
+            main_effects=main_effects,
+            interaction_effects=interaction_effects,
+        )
+        #     gr=gr, query=design, main_effects
+
+        #     interactions=list(interaction_effects)
+        # )
+        self.assertEqual(len(random_effects), 1)
+        rs = random_effects.pop()
+        self.assertIsInstance(rs, RandomSlope)
+        self.assertEqual(rs.iv.name, time.name)
+        self.assertIs(rs.groups, subject)
 
     # def test_composed_measures_no_repeats(self):
     #     subject = ts.Unit("Subject")
@@ -349,7 +426,7 @@ class EffectsInferenceTest(unittest.TestCase):
     #     # Each subject has a two values for condition, which is nominal.
     #     # Verbose: Each instance of subject has two instances of a nominal variable condition.
     #     # Informally: Each subjects sees two (both) conditions.
-    #     condition = subject.nominal("Word type", cardinality=2, number_of_instances=2)
+    #     condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
     #     # Repeated measures
     #     # Each subject has a measure reaction time, which is numeric, for each instance of a word
     #     # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
@@ -365,6 +442,6 @@ class EffectsInferenceTest(unittest.TestCase):
     #     design = ts.Design(dv=reaction_time, ivs=[condition])
     #     gr = design.graph
     #     main_effects = design.ivs
-    #     random_effects = infer_random_effects(gr=gr, query=design, main_effects=main_effects)
+    #     (random_effects, random_explanations) = infer_random_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
     #     self.assertEqual(len(random_effects), 3) # two random intercepts, 1 random slope
     #     # TODO: How to ask if slope and intercept are correlated?

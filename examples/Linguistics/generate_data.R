@@ -5,4 +5,5 @@ install.packages("~/R/simgen_1.54.tar.gz", repos=NULL) # Change to path where ta
 
 library(simgen)
 
-# TODO: START HERE: Copy paste the code for generating the data; open 24.csv
+# TODO: START HERE: Copy paste the code for generating the data; open 24
+.csv

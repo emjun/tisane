@@ -1,0 +1,46 @@
+{
+    "dependent variable": "Dependent_variable",
+    "family": "GaussianFamily",
+    "interaction effects": [
+        "Measure_0*Measure_1",
+        "Measure_0*Measure_2",
+        "Measure_1*Measure_2",
+        "Measure_0*Measure_1*Measure_2"
+    ],
+    "link": "IdentityLink",
+    "main effects": [
+        "Measure_0",
+        "Measure_1",
+        "Measure_2"
+    ],
+    "random effects": {
+        "Unit": {
+            "random intercept":
+            {
+                "groups": "Unit"
+            },
+            "random slope": [
+                {
+                    "correlated": true,
+                    "groups": "Unit",
+                    "iv": "Measure_0"
+                },
+                {
+                    "correlated": false,
+                    "groups": "Unit",
+                    "iv": "Measure_1"
+                },
+                {
+                    "correlated": false,
+                    "groups": "Unit",
+                    "iv": "Measure_2"
+                },
+                {
+                    "correlated": false,
+                    "groups": "Unit",
+                    "iv": "Measure_1*Measure_2"
+                }
+            ]
+        }
+    }
+}

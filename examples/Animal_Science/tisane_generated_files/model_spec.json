@@ -1,0 +1,26 @@
+{
+    "dependent variable": "Weight",
+    "family": "GaussianFamily",
+    "interaction effects": [],
+    "link": "IdentityLink",
+    "main effects": [
+        "Time"
+    ],
+    "random effects": {
+        "Litter": {
+            "random intercept": {
+                "groups": "Litter"
+            }
+        },
+        "Pig": {
+            "random intercept": {
+                "groups": "Pig"
+            }
+        },
+        "Time": {
+            "random intercept": {
+                "groups": "Time"
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "dependent variable": "endurance",
+    "family": "GaussianFamily",
+    "interaction effects": [],
+    "link": "IdentityLink",
+    "main effects": [
+        "age",
+        "exercise"
+    ],
+    "random effects": {}
+}
