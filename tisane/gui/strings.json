@@ -16,7 +16,7 @@
   },
   "interaction-effects": {
     "titles": {
-      "tab": "Interactions",
+      "tab": "IVs: Interactions",
       "page": "IVs: Interactions",
       "page-no": "No interactions"
     },
@@ -27,8 +27,8 @@
   "random-effects": {
     "titles": {
       "tab": "Clustering",
-      "page": "Clustering and Controls",
-      "page-no": "No clustering or controls"
+      "page": "Accounting for data clustering",
+      "page-no": "No clusters to account for"
     },
     "headers": {
 
@@ -37,7 +37,7 @@
   "family-link-functions": {
     "titles": {
       "tab": "Data Distributions",
-      "page": "Choose a data distribution and link function.",
+      "page": "Choose a data distribution: family and link functions.",
       "page-sub-title": "_Which distribution best matches your dependent variable `{}`'s distribution?_"
     },
     "headers": {
@@ -58,8 +58,8 @@
   },
   "progress": {
     "main-effects": "Review independent variables",
-    "interaction-effects": "Review interactions",
-    "random-effects": "Review clustering and controls",
+    "interaction-effects": "Review IVs: Interactions",
+    "random-effects": "Review data clustering",
     "family-link-functions": "Pick data distributions"
   }
 }
