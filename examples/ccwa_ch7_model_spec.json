@@ -1,1 +1,0 @@
-"{\"main_effects\": [\"FixedEffect(age, endurance)\"], \"interaction_effects\": [\"Store(Store(K(Object, False), age, True), exercise, True)\"], \"random_effects\": [], \"family\": \"GaussianFamily(endurance)\", \"link\": \"IdentityTransform(endurance)\"}"
