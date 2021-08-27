@@ -37,10 +37,10 @@
   "family-link-functions": {
     "titles": {
       "tab": "Data Distributions",
-      "page": "Choose a data distribution and link function."
+      "page": "Choose a data distribution and link function.",
+      "page-sub-title": "_Which distribution best matches your dependent variable `{}`'s distribution?_"
     },
     "headers": {
-
     }
   },
   "overview": {

@@ -765,7 +765,9 @@ class GUIComponents:
         ]
         if ivs:
             body = [
+
                 cardP(self.strings.getMainEffectsPageTitle()),
+                dcc.Markdown(self.defaultExplanations["overall-main-effects"]),
                 self.layoutFancyChecklist(
                     {
                         me: html.Span(
@@ -822,6 +824,7 @@ class GUIComponents:
             dbc.CardBody(
                 [
                     cardP(self.strings.getInteractionEffectsPageTitle()),
+                    dcc.Markdown(self.defaultExplanations["overall-interaction-effects"]),
                     self.layoutFancyChecklist(
                         {
                             me: html.Span(
@@ -1076,6 +1079,7 @@ class GUIComponents:
             dbc.CardBody(
                 [
                     cardP(self.strings.getRandomEffectsPageTitle()),
+                    dcc.Markdown(self.defaultExplanations["overall-random-effects"]),
                     self.layoutRandomEffectsTable(),
                     dcc.Markdown(id="random-effects-not-available-explanation"),
                     continueButton,
@@ -1165,6 +1169,7 @@ class GUIComponents:
                 go.Histogram(
                     x=self.dataDf[self.dv],
                     name=f"{self.dv}",
+                    showlegend=True
                 )
             )
         if family:
@@ -1216,7 +1221,7 @@ class GUIComponents:
 
     def createNormalityTestSection(self):
         normalityTestPortion = [
-            html.H4(
+            html.H5(
                 [
                     html.I("No Normality Tests "),
                     getInfoBubble("no-normality-tests-info"),
@@ -1237,7 +1242,7 @@ class GUIComponents:
             shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
             normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
             normalityTestPortion = [
-                html.H4(["Normality Tests ", getInfoBubble("normality-tests-info")]),
+                html.H5(["Normality Tests ", getInfoBubble("normality-tests-info")]),
                 dbc.Row(
                     [
                         dbc.Col(
@@ -1328,9 +1333,9 @@ class GUIComponents:
         # Create family and link title
         family_link_title = html.Div(
             [
-                html.H3(self.strings.getFamilyLinksPageTitle()),
+                html.H5(self.strings.getFamilyLinksPageTitle()),
                 dcc.Markdown(
-                    """#### Which distribution best matches your data?"""
+                    self.strings("family-link-functions", "titles", "page-sub-title").format(self.getDependentVariable())
                 )
             ]
         )
