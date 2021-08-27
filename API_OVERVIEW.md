@@ -154,6 +154,20 @@ Parameters:
 - `group: tisane.Unit` -- the `tisane.Unit` to nest this unit in
 
 
+## Has
+```python
+tisane.Measure.has(self, measure, number_of_instances=1)
+```
+
+Describes that the `tisane.Measure` is composed of (or "has") additional variables. This occurs when, for example, conditions are tied to their simuli and stimuli cannot be randomized inside a condition. Concretely, imagine a study where participants are assigned to conditions that dictate the type of tool they will be able to use to accomplish their task. Because the type of a tool is intrinsic to the tool itself, one cannot separate condition from tool. In this case, you would declare 
+
+```
+participant = ts.Unit("participant", cardinality=50) # 50 participants
+tool = ts.Unit("tool", cardinlity=10) # 10 tools
+condition = participant.nominal("condition", cardinlity=5) # 5 conditions
+condition.has(tool, number_of_instances=2) # Each condition has 2 tools
+```
+
 # Study design: tisane.Design
 
 ## Initialization
