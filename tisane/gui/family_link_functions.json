@@ -1,0 +1,96 @@
+{
+  "with-mixed-effects": {
+    "GaussianFamily": {
+      "default": "IdentityLink",
+      "links": [
+        "IdentityLink"
+      ]
+    },
+    "InverseGaussianFamily": {
+      "default": "InverseSquaredLink",
+      "links": [
+        "InverseSquaredLink"
+      ]
+    },
+    "GammaFamily": {
+      "default": "InverseLink",
+      "links": [
+        "InverseLink"
+      ]
+    },
+    "PoissonFamily": {
+      "default": "LogLink",
+      "links": [
+        "LogLink"
+      ]
+    },
+    "BinomialFamily": {
+      "default": "LogitLink",
+      "links": [
+        "LogitLink"
+      ]
+    }
+  },
+  "without-mixed-effects": {
+    "GaussianFamily": {
+      "default": "IdentityLink",
+      "links": [
+        "IdentityLink",
+        "InverseLink",
+        "LogLink"
+      ]
+    },
+    "InverseGaussianFamily": {
+      "default": "InverseSquaredLink",
+      "links": [
+        "IdentityLink",
+        "InverseLink",
+        "InverseSquaredLink",
+        "LogLink"
+      ]
+    },
+    "GammaFamily": {
+      "default": "InverseLink",
+      "links": [
+        "IdentityLink",
+        "InverseLink",
+        "LogLink"
+      ]
+    },
+    "PoissonFamily": {
+      "default": "LogLink",
+      "links": [
+        "IdentityLink",
+        "LogLink",
+        "SquarerootLink"
+      ]
+    },
+    "BinomialFamily": {
+      "default": "LogitLink",
+      "links": [
+        "CauchyLink",
+        "CLogLogLink",
+        "LogLink",
+        "LogitLink",
+        "ProbitLink"
+      ]
+    },
+    "NegativeBinomialFamily": {
+      "default": "LogLink",
+      "links": [
+        "CLogLogLink",
+        "IdentityLink",
+        "LogLink",
+        "NegativeBinomialLink",
+        "PowerLink"
+      ]
+    },
+    "TweedieFamily": {
+      "default": "LogLink",
+      "links": [
+        "LogLink",
+        "PowerLink"
+      ]
+    }
+  }
+}

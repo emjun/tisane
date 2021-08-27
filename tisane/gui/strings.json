@@ -53,8 +53,8 @@
     "random-effects-added": "Clustering:",
     "random-effects-no-add": "No clustering to add",
     "distribution": "Data Distribution:",
-    "family": "Family: Gaussian",
-    "link": "Link: Identity"
+    "family": "Family:",
+    "link": "Link:"
   },
   "progress": {
     "main-effects": "Review independent variables",
