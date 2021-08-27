@@ -112,3 +112,19 @@ With this workflow, you
 3. After generating code in the Tisane GUI, you will get the path to the output model. You can copy it, and then go back to the command line and run `python3 <copied-path-goes-here>` or `poetry run python3 <copied-path-goes-here>`
 
 This way, you get to use whatever IDE you like to write the specification using the Tisane DSL.
+
+# Examples
+
+Examples can be found in the `examples` directory. There are three main examples, each of which has both a Python script version and a Jupyter notebook version.
+
+ - `examples/Animal_Science`:
+   - `pigs.py` or `pigs.ipynb`
+ - `examples/Exercise`:
+   - `exercise_simple.py` or `exercise_simple.ipynb`
+ - `examples/Group_Exercise`:
+   - `exercise_group.py` or `exercise_group.ipynb`
+   - `exercise_group_age_added.py` or `exercise_group_age_added.ipynb`
+
+Now that you've installed Tisane, you should be able to run the examples!
+
+The notebook versions include extra explanations and information that you may find useful as an introduction to Tisane.
