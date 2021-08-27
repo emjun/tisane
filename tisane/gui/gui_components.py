@@ -11,6 +11,7 @@ import plotly.graph_objects as go
 import pandas as pd
 import scipy.stats as stats
 import numpy as np
+from tisane.gui.gui_strings import GUIStrings
 
 log = logging.getLogger("")
 log.setLevel(logging.ERROR)
@@ -53,6 +54,7 @@ def getInfoBubble(id: str):
 
 class GUIComponents:
     def __init__(self, input_json: str, generateCode):
+        self.strings = GUIStrings()
         dir = os.path.dirname(os.path.abspath(__file__))
         defaultExplanationsPath = os.path.join(dir, "default_explanations.json")
         if os.path.exists(defaultExplanationsPath):
@@ -653,12 +655,12 @@ class GUIComponents:
     def getInteractionEffectsAddedSection(self):
         if self.hasInteractionEffects():
             return [
-                html.H6("Interaction effects added:"),
+                html.H6(self.strings("overview", "interaction-effects-added")),
                 html.Ul(id="added-interaction-effects"),
             ]
         return [
             html.H6(
-                html.I("No interaction effects to add"), id="added-interaction-effects"
+                html.I(self.strings("overview", "interaction-effects-no-add")), id="added-interaction-effects"
             )
         ]
 
@@ -722,11 +724,11 @@ class GUIComponents:
                                         id=self.randomIntercepts[group]["group-id"]))
 
             return [
-                html.H5("Random effects:"),
+                html.H5(self.strings("overview", "random-effects-added")),
                 html.Ul(id="added-random-effects"),
                 html.Ul(info),
             ]
-        return [html.H6(html.I("No random effects to add"), id="added-random-effects")]
+        return [html.H6(html.I(self.strings("overview", "random-effects-no-add")), id="added-random-effects")]
 
     def hasRandomEffects(self):
         if self.getGeneratedRandomEffects():
@@ -740,35 +742,73 @@ class GUIComponents:
 
     def getMainEffectsCard(self):
         ivs = self.getIndependentVariables()
+        continueButtonPortion = [
+            html.P(""),
+            dbc.Button(
+                "Continue",
+                color="success",
+                id="continue-to-interaction-effects",
+                n_clicks=0,
+            )
+        ]
+        if ivs:
+            body = [
+                cardP(self.strings.getMainEffectsPageTitle()),
+                self.layoutFancyChecklist(
+                    {
+                        me: html.Span(
+                            [
+                                me + " ",
+                                getInfoBubble(
+                                    self.variables["main effects"][me]["info-id"]
+                                ),
+                            ]
+                        )
+                        for me in self.getGeneratedMainEffects()
+                    },
+                    self.setComponentIdForMainEffect,
+                    {me: me in ivs for me in self.getGeneratedMainEffects()},
+                ),
+            ]
+            # return dbc.Card(
+            #     dbc.CardBody(
+            #         [
+            #             cardP(self.strings.getMainEffectsPageTitle()),
+            #             self.layoutFancyChecklist(
+            #                 {
+            #                     me: html.Span(
+            #                         [
+            #                             me + " ",
+            #                             getInfoBubble(
+            #                                 self.variables["main effects"][me]["info-id"]
+            #                             ),
+            #                         ]
+            #                     )
+            #                     for me in self.getGeneratedMainEffects()
+            #                 },
+            #                 self.setComponentIdForMainEffect,
+            #                 {me: me in ivs for me in self.getGeneratedMainEffects()},
+            #             ),
+            #             html.P(""),
+            #             dbc.Button(
+            #                 "Continue",
+            #                 color="success",
+            #                 id="continue-to-interaction-effects",
+            #                 n_clicks=0,
+            #             ),
+            #         ]
+            #     ),
+            #     className="mt-3",
+            # )
+        else:
+            body = [
+                cardP(html.I(self.strings.getMainEffectsNoPageTitle()))
+            ]
         return dbc.Card(
             dbc.CardBody(
-                [
-                    cardP("Generated Main Effects"),
-                    self.layoutFancyChecklist(
-                        {
-                            me: html.Span(
-                                [
-                                    me + " ",
-                                    getInfoBubble(
-                                        self.variables["main effects"][me]["info-id"]
-                                    ),
-                                ]
-                            )
-                            for me in self.getGeneratedMainEffects()
-                        },
-                        self.setComponentIdForMainEffect,
-                        {me: me in ivs for me in self.getGeneratedMainEffects()},
-                    ),
-                    html.P(""),
-                    dbc.Button(
-                        "Continue",
-                        color="success",
-                        id="continue-to-interaction-effects",
-                        n_clicks=0,
-                    ),
-                ]
+                body + continueButtonPortion
             ),
-            className="mt-3",
+            className="mt-3"
         )
 
     def getInteractionEffectsCard(self):
@@ -786,7 +826,7 @@ class GUIComponents:
             return dbc.Card(
                 dbc.CardBody(
                     [
-                        cardP(html.I("No interaction effects")),
+                        cardP(html.I(self.strings.getInteractionEffectsNoPageTitle())),
                         dcc.Markdown(
                             self.getNoInteractionEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
@@ -799,7 +839,7 @@ class GUIComponents:
         return dbc.Card(
             dbc.CardBody(
                 [
-                    cardP("Interactions"),
+                    cardP(self.strings.getInteractionEffectsPageTitle()),
                     self.layoutFancyChecklist(
                         {
                             me: html.Span(
@@ -1040,7 +1080,7 @@ class GUIComponents:
             return dbc.Card(
                 dbc.CardBody(
                     [
-                        cardP(html.I("No random effects")),
+                        cardP(html.I(self.strings.getRangetRandomEffectsNoPageTitle())),
                         html.P(
                             self.getNoRandomEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
@@ -1053,7 +1093,7 @@ class GUIComponents:
         return dbc.Card(
             dbc.CardBody(
                 [
-                    cardP("Random Effects"),
+                    cardP(self.strings.getRandomEffectsPageTitle()),
                     self.layoutRandomEffectsTable(),
                     dcc.Markdown(id="random-effects-not-available-explanation"),
                     continueButton,
@@ -1295,10 +1335,9 @@ class GUIComponents:
         # Create family and link title
         family_link_title = html.Div(
             [
+                html.H3(self.strings.getFamilyLinksPageTitle()),
                 dcc.Markdown(
-                    """
-            ### Data distributions: Family and Link Functions.
-            #### Which distribution best matches your data?"""
+                    """#### Which distribution best matches your data?"""
                 )
             ]
         )
@@ -1322,7 +1361,6 @@ class GUIComponents:
         family_and_link_div = dbc.Card(
             dbc.CardBody(
                 [
-                    html.Div(id="output-clientside"),
                     family_link_title,
                     dbc.Row(
                         [

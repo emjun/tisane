@@ -1,0 +1,65 @@
+{
+  "main-effects": {
+    "titles": {
+      "tab": "IVs",
+      "page": "Main Independent Variables",
+      "page-no": "No Main Effects"
+    },
+    "headers": {
+      "added": {
+        "yes": "Main effects added:",
+        "no": "No main effects to add",
+        "id": "",
+        "comment": "these headers sections don't actually do anything at the moment, just an idea"
+      }
+    }
+  },
+  "interaction-effects": {
+    "titles": {
+      "tab": "Interactions",
+      "page": "IVs: Interactions",
+      "page-no": "No interactions"
+    },
+    "headers": {
+
+    }
+  },
+  "random-effects": {
+    "titles": {
+      "tab": "Clustering",
+      "page": "Clustering and Controls",
+      "page-no": "No clustering or controls"
+    },
+    "headers": {
+
+    }
+  },
+  "family-link-functions": {
+    "titles": {
+      "tab": "Data Distributions",
+      "page": "Choose a data distribution and link function."
+    },
+    "headers": {
+
+    }
+  },
+  "overview": {
+    "vars-in-query": "Variables expressed in query:",
+    "ivs": "IVs:",
+    "vars-added": "Variables added:",
+    "main-effects-added": "IVs added:",
+    "interaction-effects-added": "Interactions added:",
+    "interaction-effects-no-add": "No interactions to add",
+    "random-effects-added": "Clustering:",
+    "random-effects-no-add": "No clustering to add",
+    "distribution": "Data Distribution:",
+    "family": "Family: Gaussian",
+    "link": "Link: Identity"
+  },
+  "progress": {
+    "main-effects": "Review independent variables",
+    "interaction-effects": "Review interactions",
+    "random-effects": "Review clustering and controls",
+    "family-link-functions": "Pick data distributions"
+  }
+}

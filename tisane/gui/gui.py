@@ -76,7 +76,7 @@ class TisaneGUI:
 
         ### Populate app
         # Get components
-        progress = self.progress()
+        # progress = self.progress()
         # TODO: Add callback that enables this button once all the tabs/sections have been completed
         # generate_code_button = dbc.Button(
         #     "✨Generate code✨", color="dark", className="mr-1", disabled=True
@@ -92,7 +92,7 @@ class TisaneGUI:
                 dbc.Progress(
                     [
                         dbc.Progress(
-                            "Look over main effects",
+                            self.components.strings.access("progress", "main-effects"),
                             value=25,
                             animated=True,
                             striped=True,
@@ -100,7 +100,7 @@ class TisaneGUI:
                             id="main-effects-progress",
                         ),
                         dbc.Progress(
-                            "Look over interaction effects",
+                            self.components.strings("progress", "interaction-effects"),
                             value=25,
                             animated=False,
                             bar=True,
@@ -108,7 +108,7 @@ class TisaneGUI:
                             color="secondary",
                         ),
                         dbc.Progress(
-                            "Look over random effects",
+                            self.components.strings("progress", "random-effects"),
                             value=25,
                             animated=False,
                             bar=True,
@@ -116,7 +116,7 @@ class TisaneGUI:
                             color="secondary",
                         ),
                         dbc.Progress(
-                            "Pick family and link functions",
+                            self.components.strings("progress", "family-link-functions"),
                             value=25,
                             animated=False,
                             bar=True,
@@ -162,29 +162,6 @@ class TisaneGUI:
         else:
             app.run_server(debug=True, threaded=True, port=port)
 
-    def progress(self):
-        # TODO: Trying to make this feel like overview of installation progress on Mac
-        progress = [
-            dbc.Card(
-                [html.P("Look over main effects")],
-                body=True,
-            ),
-            dbc.Card(
-                [html.P("Look over interaction effects")],
-                body=True,
-            ),
-            dbc.Card(
-                [html.P("Look over random effects")],
-                body=True,
-            ),
-            dbc.Card(
-                [html.P("Pick family and link functions")],
-                body=True,
-            ),
-        ]
-
-        return progress
-
     def model_tabs(self):
         # Many different ways to create tabs: https://dash-bootstrap-components.opensource.faculty.ai/docs/components/tabs/
         tab1_content = self.components.getMainEffectsCard()
@@ -199,28 +176,28 @@ class TisaneGUI:
             [
                 dbc.Tab(
                     tab1_content,
-                    label="Main effects",
+                    label=self.components.strings.getMainEffectsTabTitle(),
                     tab_style={"marginLeft": "auto"},
                     tab_id="tab-1",
                     id="main-effects-tab",
                 ),
                 dbc.Tab(
                     tab2_content,
-                    label="Interaction effects",
+                    label=self.components.strings.getInteractionEffectsTabTitle(),
                     tab_style={"marginLeft": "auto"},
                     tab_id="tab-2",
                     id="interaction-effects-tab",
                 ),
                 dbc.Tab(
                     tab3_content,
-                    label="Random effects",
+                    label=self.components.strings.getRandomEffectsTabTitle(),
                     tab_style={"marginLeft": "auto"},
                     tab_id="tab-3",
                     id="random-effects-tab",
                 ),
                 dbc.Tab(
                     tab4_content,
-                    label="Family, Link functions",
+                    label=self.components.strings.getFamilyLinksTabTitle(),
                     tab_style={"marginLeft": "auto"},
                     tab_id="tab-4",
                     id="family-link-functions-tab",
@@ -235,24 +212,27 @@ class TisaneGUI:
         overview = dbc.Card(
             dbc.CardBody(
                 [
-                    html.H5("Variables expressed in query: "),
+                    html.H5(self.components.strings.access("overview", "vars-in-query")),
                     html.P("DV: {}".format(query["DV"])),
-                    html.Span("IVs:"),
+                    html.Span(self.components.strings.access("overview", "ivs")),
                     html.Ul(children=[html.Li(iv) for iv in query["IVs"]]),
-                    html.H5("Variables added:"),
+                    html.H5(self.components.strings.access("overview", "vars-added")),
+
                     html.Div(
                         [
-                            html.H6("Main effects added:"),
+                            html.H6(self.components.strings.access("overview", "main-effects-added")),
                             html.Ul(id="added-main-effects"),
                         ]
                         + self.components.getInteractionEffectsAddedSection(),
                         id="added-variables-paragraph",
                     ),
                 ]
+                
                 + self.components.getRandomEffectsAddedSection()
                 + [
-                    html.H5("Family: Gaussian", id="overview-family"),
-                    html.H5("Link: Identity", id="overview-link")
+                    html.H5(self.components.strings("overview", "distribution")),
+                    html.H6(self.components.strings.access("overview", "family"), id="overview-family"),
+                    html.H6(self.components.strings.access("overview", "link"), id="overview-link")
                     # html.Div(id="test-div-output")
                 ]
             ),
