@@ -101,6 +101,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
         Output("link-options", "value"),
         Output("overview-family", "children"),
         Output("generate-code", "disabled"),
+        Output("generate-code", "style"),
         Output("generate-code-tooltip", "className"),
         Input("family-options", "value"),
     )
@@ -110,8 +111,12 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
             raise PreventUpdate
         oldFamily = comp.output["family"]
         comp.output["family"] = value
+        buttonDisabledStyle = {
+            "pointer-events": "none"
+        }
+        buttonEnabledStyle = {}
         if oldFamily and not value:
-            return [], "", "", True, ""
+            return [], "", "", True, buttonDisabledStyle, ""
         familyLinks = comp.getGeneratedFamilyLinkFunctions()
         logger.debug("{}: {}".format(value, type(value)))
         if value and isinstance(value, str):
@@ -129,14 +134,15 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                             "label": " ".join(separateByUpperCamelCase(str(l))[:-1])
                             + ("*" if defaultLink == l else ""),
                             "value": str(l),
-                            "disabled": str(l) not in fls[value]["links"],
+                            "disabled": str(l) not in fls[value]["links"]
                         }
                         for l in familyLinks[value]
                     ],
                     defaultLink,
                     "Family: {}".format(familyName),
                     False,
-                    "tooltip-hide",
+                    buttonEnabledStyle,
+                    "tooltip-hide"
                 )
             pass
         logger.warning("Cannot update for some reason")
