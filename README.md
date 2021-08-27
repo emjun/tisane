@@ -48,7 +48,8 @@ There are three different types of conceptual relationships.
 - A variable can be *associated with* another variable. (e.g., ``race.associates_with(pounds_lost)``)
 - One or more variables can *moderate* the effect of a variable on another variable.  (e.g., ``age.moderates(moderator=[motivation_level], on=pounds_lost)``)
 Currently, a variable, V1, can have a moderated relationship with a variable, V2, without also having a causal or associative relationship with V2.
-> FEEDBACK REQUESTED: Should this be the case? Initially, I though that moderation (which is later translated into an interaction effect) is another way/type of how two variables relate. At the same time, if V1 has a moderated effec on V2, it is implied that V1 has some kind of associative relationship with V2. 
+
+<!-- > FEEDBACK REQUESTED: Should this be the case? Initially, I though that moderation (which is later translated into an interaction effect) is another way/type of how two variables relate. At the same time, if V1 has a moderated effec on V2, it is implied that V1 has some kind of associative relationship with V2.  -->
 
 These relationships are used to construct an internal graph representation of variables and their relationships with one another.
 
@@ -75,8 +76,6 @@ A key aspect of Tisane that distinguishes it from other systems, such as [Tea](t
 Tisane generates a space of candidate statistical models and asks analysts disambiguation questions for (i) including additional main or interaction effects and, if applicable, correlating (or uncorrelating) random slopes and random intercepts as well as (ii) selecting among viable family/link function pairs.
 
 To help analysts, Tisane provides text explanations and visualizations. For example, to show possible family functions, Tisane simulates data to fit a family function and visualizes it on top of a histogram of the analyst's data and explains to the how to use the visualization to compare family functions. 
-
-> Would love to include/looking into: Tisane also provides the results of statistical tests (e.g., Shapiro-Wilk) that test if the underlying data follows a family distribution. 
 
 ### Statistical model inference
 After validating a query, Tisane traverses the internal graph representation in order to generate candidate generalized linear models with or without mixed effects. A generalized linear model consists of a model effects structure and a family/link function pair. 
