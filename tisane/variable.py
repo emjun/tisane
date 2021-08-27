@@ -355,11 +355,11 @@ class Ordinal(Measure):
     def get_cardinality(self):
         return self.cardinality
 
-    # Estimate the cardinality of a variable by 
-    def calculate_cardinality_from_data(self, data: Dataset): 
-        data = data.dataset[self.name] # Get data corresponding to this variable 
-        unique_values = data.unique() 
-        
+    # Estimate the cardinality of a variable by
+    def calculate_cardinality_from_data(self, data: Dataset):
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
         return len(unique_values)
 
 
@@ -458,7 +458,6 @@ class Has:
         self.according_to = according_to
 
 
-
 """
 Class for expressing repeated measures
 """
@@ -506,13 +505,14 @@ class NumberValue:
     def is_equal_to_one(self):
         return self.value == 1
 
-    def get_value(self): 
+    def get_value(self):
         return self.value
 
 
 """
 Class for expressing exact values
 """
+
 
 class Exactly(NumberValue):
     def __init__(self, value: int):
@@ -522,6 +522,8 @@ class Exactly(NumberValue):
 """
 Class for expressing an upper bound of values
 """
+
+
 class AtMost(NumberValue):
     def __init__(self, value: typing.Union[int, AbstractVariable]):
         if isinstance(value, int):

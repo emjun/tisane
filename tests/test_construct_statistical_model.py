@@ -90,8 +90,8 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -125,7 +125,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         link = sm.link_function
         self.assertIn(link, family_link_paired[family])
 
-    def test_construct_main_uncorrelated_random_slope_intercept(self): 
+    def test_construct_main_uncorrelated_random_slope_intercept(self):
         subject = ts.Unit("Subject", cardinality=12)
         word = ts.Unit("Word", cardinality=4)
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
@@ -252,7 +252,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         self.assertIn(link, family_link_paired[family])
 
     # Testing edge case
-    def test_construct_main_interaction_multiple_random_slopes_random_intercept(self): 
+    def test_construct_main_interaction_multiple_random_slopes_random_intercept(self):
         u0 = ts.Unit("Unit")
         m0 = u0.numeric("Measure_0")
         m1 = u0.numeric("Measure_1")
@@ -263,16 +263,21 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         m0.moderates(m2, dv)
         m1.moderates(m2, dv)
         m0.moderates([m1, m2], dv)
-        
+
         design = ts.Design(dv=dv, ivs=[m0, m1, m2])
         gr = design.graph
 
         main_effects = set(design.ivs)
-        (interaction_effects, interaction_explanations) = infer_interaction_effects_with_explanations(gr=gr, query=design, main_effects=main_effects)
-        ixn_var = None 
+        (
+            interaction_effects,
+            interaction_explanations,
+        ) = infer_interaction_effects_with_explanations(
+            gr=gr, query=design, main_effects=main_effects
+        )
+        ixn_var = None
         for ixn in interaction_effects:
-            if ixn.name == "Measure_1*Measure_2": 
-                ixn_var = ixn 
+            if ixn.name == "Measure_1*Measure_2":
+                ixn_var = ixn
         self.assertIsNotNone(ixn_var)
         random_effects = set()
         random_effects.add(RandomIntercept(groups=u0))
@@ -282,7 +287,9 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         random_effects.add(RandomSlope(groups=u0, iv=ixn_var))
         family_link_paired = get_family_link_paired_candidates(design=design)
 
-        output_filename = "main_interaction_random_intercept_and_multiple_random_slopes.json"
+        output_filename = (
+            "main_interaction_random_intercept_and_multiple_random_slopes.json"
+        )
         output_path = os.path.join(dir, output_filename)
         sm = construct_statistical_model(
             output_path,

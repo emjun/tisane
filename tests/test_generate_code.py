@@ -47,7 +47,8 @@ def get_family_link_paired_candidates(
 
     return family_link_paired
 
-def emulate_inference_and_construction_with_gui(design, gr, output_filename): 
+
+def emulate_inference_and_construction_with_gui(design, gr, output_filename):
     (main_effects_candidates, main_explanations) = infer_main_effects_with_explanations(
         gr=gr, query=design
     )
@@ -76,17 +77,17 @@ def emulate_inference_and_construction_with_gui(design, gr, output_filename):
         family_link_paired[f] = l
 
     sm = construct_statistical_model(
-    filename=output_filename,
-    query=design,
-    main_effects_candidates=main_effects_candidates,
-    interaction_effects_candidates=interaction_effects_candidates,
-    random_effects_candidates=random_effects_candidates,
-    family_link_paired_candidates=family_link_paired,
+        filename=output_filename,
+        query=design,
+        main_effects_candidates=main_effects_candidates,
+        interaction_effects_candidates=interaction_effects_candidates,
+        random_effects_candidates=random_effects_candidates,
+        family_link_paired_candidates=family_link_paired,
     )
-    if design.has_data(): 
+    if design.has_data():
         # Assign statistical model data from @parm design
         sm.assign_data(design.dataset)
-    
+
     return sm
 
 
@@ -127,11 +128,10 @@ class GenerateCodeTest(unittest.TestCase):
         output_filename = "main_only.py"
         reference_script_path = os.path.join(script_dir, output_filename)
         # generated_path = os.path.join(generated_script_dir, output_filename)
-        
+
         path = write_to_script(code, generated_script_dir, output_filename)
         # Check that the generated script is the same as the target script
-        
-        
+
     def test_generate_code_from_GUI_output_pigs_with_no_data(self):
         # Bind measures to units at the time of declaration
         week = ts.SetUp("Time", cardinality=12)
@@ -142,7 +142,9 @@ class GenerateCodeTest(unittest.TestCase):
             "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
         )
         # Each pig has 1 instance of an ordinal Cu measure
-        copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
+        copper = pig.ordinal(
+            "Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1
+        )
         # Each pig has for each value of week 1 instance of a numeric Weight measure
         # Also: Each pig has 1 instance of a Weight measure corresponding to each week
         weight = pig.numeric("Weight", number_of_instances=week)
@@ -161,14 +163,15 @@ class GenerateCodeTest(unittest.TestCase):
         gr = design.graph
 
         # Emulate interaction with GUI
-        output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        output_filename = (
+            "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        )
         sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
         path = write_to_script(code, "examples/Animal_Science/", "model_no_data.py")
-
 
     def test_generate_code_from_GUI_output_pigs_with_data_frame(self):
         dir = os.path.dirname(__file__)
@@ -184,7 +187,9 @@ class GenerateCodeTest(unittest.TestCase):
             "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
         )
         # Each pig has 1 instance of an ordinal Cu measure
-        copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
+        copper = pig.ordinal(
+            "Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1
+        )
         # Each pig has for each value of week 1 instance of a numeric Weight measure
         # Also: Each pig has 1 instance of a Weight measure corresponding to each week
         weight = pig.numeric("Weight", number_of_instances=week)
@@ -203,14 +208,15 @@ class GenerateCodeTest(unittest.TestCase):
         gr = design.graph
 
         # Emulate interaction with GUI
-        output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        output_filename = (
+            "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        )
         sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
-    
+
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
         path = write_to_script(code, "examples/Animal_Science/", "model_df.py")
-
 
     def test_generate_code_from_GUI_output_pigs_with_data_path(self):
         path = os.path.join("examples/Animal_Science/", "pigs.csv")
@@ -225,7 +231,9 @@ class GenerateCodeTest(unittest.TestCase):
             "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
         )
         # Each pig has 1 instance of an ordinal Cu measure
-        copper = pig.ordinal("Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1)
+        copper = pig.ordinal(
+            "Cu", order=["Cu000", "Cu035", "Cu175"], number_of_instances=1
+        )
         # Each pig has for each value of week 1 instance of a numeric Weight measure
         # Also: Each pig has 1 instance of a Weight measure corresponding to each week
         weight = pig.numeric("Weight", number_of_instances=week)
@@ -244,16 +252,17 @@ class GenerateCodeTest(unittest.TestCase):
         gr = design.graph
 
         # Emulate interaction with GUI
-        output_filename = "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        output_filename = (
+            "examples/Animal_Science/tisane_generated_files/model_spec.json"
+        )
         sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
         path = write_to_script(code, "examples/Animal_Science/", "model_data_path.py")
-        
 
-    def test_generate_code_from_GUI_output_exercise_simple_with_no_data(self): 
+    def test_generate_code_from_GUI_output_exercise_simple_with_no_data(self):
         # # Load data
         # dir = os.path.dirname(__file__)
         # df = pd.read_csv(os.path.join(dir, "exercise_simple.csv"))
@@ -282,9 +291,11 @@ class GenerateCodeTest(unittest.TestCase):
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
-        path = write_to_script(code, "examples/Exercise/tisane_generated_files/", "model_no_data.py")
+        path = write_to_script(
+            code, "examples/Exercise/tisane_generated_files/", "model_no_data.py"
+        )
 
-    def test_generate_code_from_GUI_output_exercise_simple_with_data_frame(self): 
+    def test_generate_code_from_GUI_output_exercise_simple_with_data_frame(self):
         # Load data
         df = pd.read_csv(os.path.join("examples/Exercise/", "exercise_simple.csv"))
 
@@ -311,9 +322,11 @@ class GenerateCodeTest(unittest.TestCase):
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
-        path = write_to_script(code, "examples/Exercise/tisane_generated_files/", "model_df.py")
+        path = write_to_script(
+            code, "examples/Exercise/tisane_generated_files/", "model_df.py"
+        )
 
-    def test_generate_code_from_GUI_output_exercise_simple_with_data_path(self): 
+    def test_generate_code_from_GUI_output_exercise_simple_with_data_path(self):
         # Load data
         path = os.path.join("examples/Exercise/", "exercise_simple.csv")
 
@@ -340,9 +353,11 @@ class GenerateCodeTest(unittest.TestCase):
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
-        path = write_to_script(code, "examples/Exercise/tisane_generated_files/", "model_data_path.py")
+        path = write_to_script(
+            code, "examples/Exercise/tisane_generated_files/", "model_data_path.py"
+        )
 
-    def test_generate_code_from_GUI_output_group_exercise_with_no_data(self): 
+    def test_generate_code_from_GUI_output_group_exercise_with_no_data(self):
         # Observed variables
         adult = ts.Unit("member", cardinality=386)  # 386 adults
         # Each adult has a value for motivation, which is ordinal
@@ -364,21 +379,23 @@ class GenerateCodeTest(unittest.TestCase):
         adult.nests_within(group)  # Members are part of groups
 
         # Query Tisane to infer a statistical model and generate a script
-        design = ts.Design(
-            dv=pounds_lost, ivs=[treatment_approach, motivation_level]
-        )
+        design = ts.Design(dv=pounds_lost, ivs=[treatment_approach, motivation_level])
         gr = design.graph
-        
+
         # Emulate interaction with GUI
-        output_filename = "examples/Group_Exercise/tisane_generated_files/model_spec.json"
+        output_filename = (
+            "examples/Group_Exercise/tisane_generated_files/model_spec.json"
+        )
         sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
-        path = write_to_script(code, "examples/Group_Exercise/tisane_generated_files/", "model_no_data.py")
+        path = write_to_script(
+            code, "examples/Group_Exercise/tisane_generated_files/", "model_no_data.py"
+        )
 
-    def test_generate_code_from_GUI_output_group_exercise_with_data_frame(self): 
+    def test_generate_code_from_GUI_output_group_exercise_with_data_frame(self):
         # Load data
         dir = os.path.dirname(__file__)
         df = pd.read_csv(os.path.join("examples/Group_Exercise/", "exercise_group.csv"))
@@ -408,17 +425,21 @@ class GenerateCodeTest(unittest.TestCase):
             dv=pounds_lost, ivs=[treatment_approach, motivation_level]
         ).assign_data(df)
         gr = design.graph
-        
+
         # Emulate interaction with GUI
-        output_filename = "examples/Group_Exercise/tisane_generated_files/model_spec.json"
+        output_filename = (
+            "examples/Group_Exercise/tisane_generated_files/model_spec.json"
+        )
         sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
-        path = write_to_script(code, "examples/Group_Exercise/tisane_generated_files/", "model_df.py")
+        path = write_to_script(
+            code, "examples/Group_Exercise/tisane_generated_files/", "model_df.py"
+        )
 
-    def test_generate_code_from_GUI_output_group_exercise_with_data_path(self): 
+    def test_generate_code_from_GUI_output_group_exercise_with_data_path(self):
         path = os.path.join("examples/Group_Exercise/", "exercise_group.csv")
 
         # Observed variables
@@ -446,12 +467,18 @@ class GenerateCodeTest(unittest.TestCase):
             dv=pounds_lost, ivs=[treatment_approach, motivation_level]
         ).assign_data(path)
         gr = design.graph
-        
+
         # Emulate interaction with GUI
-        output_filename = "examples/Group_Exercise/tisane_generated_files/model_spec.json"
+        output_filename = (
+            "examples/Group_Exercise/tisane_generated_files/model_spec.json"
+        )
         sm = emulate_inference_and_construction_with_gui(design, gr, output_filename)
 
         # Generate code from SM
         code = generate_code(sm)
         # Write generated code out
-        path = write_to_script(code, "examples/Group_Exercise/tisane_generated_files/", "model_data_path.py")
+        path = write_to_script(
+            code,
+            "examples/Group_Exercise/tisane_generated_files/",
+            "model_data_path.py",
+        )

@@ -173,7 +173,7 @@ class GUIComponents:
                         "correlated-id": newId,
                         "info-id": infoId,
                         "added-id": addedId,
-                        "cell-id": cellId
+                        "cell-id": cellId,
                     }
                     self.generatedCorrelatedIdToRandomSlope[newId] = rs
                     self.generatedCorrelatedIdToGroupIv[newId] = (unit, rs["iv"])
@@ -192,7 +192,7 @@ class GUIComponents:
                     self.randomSlopes[unit][rs["iv"]] = {
                         "info-id": infoId,
                         "added-id": addedId,
-                        "cell-id": cellId
+                        "cell-id": cellId,
                     }
                     self.randomSlopeAddedIdToGroupIv[addedId] = (unit, rs["iv"])
                     self.randomSlopeIdToGroupIv[cellId] = (unit, rs["iv"])
@@ -233,7 +233,11 @@ class GUIComponents:
         # making sure they appear in random effects if present
         self.unitsWithoutVariables = set()
         for unit in self.units:
-            if unit != self.dv and unit not in self.unitToMeasures and unit not in self.getGeneratedMainEffects():
+            if (
+                unit != self.dv
+                and unit not in self.unitToMeasures
+                and unit not in self.getGeneratedMainEffects()
+            ):
                 self.unitsWithoutVariables.add(unit)
                 pass
             pass
@@ -243,7 +247,9 @@ class GUIComponents:
         for group, randomEffect in randomEffects.items():
             if "random slope" in randomEffect:
                 if randomEffect["random slope"]:
-                    self.randomEffectsUnitToRandomSlopeAddedId[group] = self.getNewComponentId()
+                    self.randomEffectsUnitToRandomSlopeAddedId[
+                        group
+                    ] = self.getNewComponentId()
                 for rs in randomEffect["random slope"]:
                     if "iv" in rs:
                         if group not in self.randomEffectsUnitToRandomSlopeIVs:
@@ -260,6 +266,7 @@ class GUIComponents:
             pass
 
         pass
+
     def filterOutput(self):
         log.debug("Raw output: {}".format(json.dumps(self.output, indent=4)))
         newOutput = {
@@ -268,7 +275,7 @@ class GUIComponents:
             "dependent variable": self.output["dependent variable"],
             "family": self.output["family"],
             "link": self.output["link"],
-            "random effects": {}
+            "random effects": {},
         }
         if "random effects" in self.output:
             for group, randomEffects in self.output["random effects"].items():
@@ -277,7 +284,11 @@ class GUIComponents:
                     randIntercept = randomEffects["random intercept"]
                     if "unavailable" in randIntercept:
                         if not randIntercept["unavailable"]:
-                            groupDict["random intercept"] = {key: value for key, value in randIntercept.items() if key != "unavailable"}
+                            groupDict["random intercept"] = {
+                                key: value
+                                for key, value in randIntercept.items()
+                                if key != "unavailable"
+                            }
                             pass
                         pass
                     else:
@@ -292,7 +303,11 @@ class GUIComponents:
                                     groupDict["random slope"] = []
                                     pass
                                 groupDict["random slope"].append(
-                                    {key: value for key, value in rs.items() if key != "unavailable"}
+                                    {
+                                        key: value
+                                        for key, value in rs.items()
+                                        if key != "unavailable"
+                                    }
                                 )
                                 pass
                             pass
@@ -303,7 +318,9 @@ class GUIComponents:
                     pass
                 if groupDict:
                     if "random slope" in groupDict:
-                        groupDict["random slope"] = sorted(groupDict["random slope"], key=lambda rs: rs["iv"])
+                        groupDict["random slope"] = sorted(
+                            groupDict["random slope"], key=lambda rs: rs["iv"]
+                        )
                     newOutput["random effects"][group] = groupDict
                 pass
             pass
@@ -322,10 +339,11 @@ class GUIComponents:
             with open(os.path.join(destinationDir, jsonFile), "w") as f:
                 f.write(json.dumps(newOutput, indent=4, sort_keys=True))
                 pass
-            path = self.codeGenerator(destinationDir=destinationDir, modelSpecJson=jsonFile)
+            path = self.codeGenerator(
+                destinationDir=destinationDir, modelSpecJson=jsonFile
+            )
             return path
         return False
-
 
     def getRandomInterceptCellIds(self):
         return [ri["cell-id"] for group, ri in self.randomIntercepts.items()]
@@ -334,7 +352,11 @@ class GUIComponents:
         return [ri["group-id"] for group, ri in self.randomIntercepts.items()]
 
     def getGroupFromRandomInterceptId(self, id):
-        assert id in self.randomInterceptIdToGroup, "Id {} not found in randomInterceptIdToGroup\n{}".format(id, json.dumps(self.randomInterceptIdToGroup, sort_keys=True, indent=2))
+        assert (
+            id in self.randomInterceptIdToGroup
+        ), "Id {} not found in randomInterceptIdToGroup\n{}".format(
+            id, json.dumps(self.randomInterceptIdToGroup, sort_keys=True, indent=2)
+        )
         return self.randomInterceptIdToGroup[id]
 
     def getRandomSlopesVariousIds(self, key):
@@ -529,16 +551,32 @@ class GUIComponents:
             pass
         pass
 
-    def markUnavailableRandomEffect(self, group: str, iv: str = None, unavailable: bool = False):
-        assert group in self.output["random effects"], "Group {} not in output random effects: {}".format(group, self.output["random effects"])
+    def markUnavailableRandomEffect(
+        self, group: str, iv: str = None, unavailable: bool = False
+    ):
+        assert (
+            group in self.output["random effects"]
+        ), "Group {} not in output random effects: {}".format(
+            group, self.output["random effects"]
+        )
         if iv is None:
             # iv is None, so this is a random intercept
-            assert "random intercept" in self.output["random effects"][group], "Could not find random intercept for group {} in output: {}".format(group, self.output["random effects"][group])
-            self.output["random effects"][group]["random intercept"]["unavailable"] = unavailable
+            assert (
+                "random intercept" in self.output["random effects"][group]
+            ), "Could not find random intercept for group {} in output: {}".format(
+                group, self.output["random effects"][group]
+            )
+            self.output["random effects"][group]["random intercept"][
+                "unavailable"
+            ] = unavailable
             pass
         elif iv:
             # iv needs to not be the empty string
-            assert "random slope" in self.output["random effects"][group], "Could not find random slopes for group {} in output: {}".format(group, self.output["random effects"][group])
+            assert (
+                "random slope" in self.output["random effects"][group]
+            ), "Could not find random slopes for group {} in output: {}".format(
+                group, self.output["random effects"][group]
+            )
             for slope in self.output["random effects"][group]["random slope"]:
                 if slope["iv"] == iv:
                     slope["unavailable"] = unavailable
@@ -546,8 +584,6 @@ class GUIComponents:
                 pass
             pass
         pass
-
-
 
     def hasGroupAndIvForCorrelatedId(self, componentId):
         return componentId in self.generatedCorrelatedIdToGroupIv
@@ -672,7 +708,8 @@ class GUIComponents:
             ]
         return [
             html.H6(
-                html.I(self.strings("overview", "interaction-effects-no-add")), id="added-interaction-effects"
+                html.I(self.strings("overview", "interaction-effects-no-add")),
+                id="added-interaction-effects",
             )
         ]
 
@@ -698,7 +735,9 @@ class GUIComponents:
                     randomSlopes = []
                     for rs in randomEffect["random slope"]:
                         iv = rs["iv"]
-                        listItemId = self.randomSlopes[group][iv]["added-id"] #self.getNewComponentId()
+                        listItemId = self.randomSlopes[group][iv][
+                            "added-id"
+                        ]  # self.getNewComponentId()
                         self.unitsByAddedRandomVariableId[listItemId] = group
                         randomSlopes.append(
                             html.Li(
@@ -721,26 +760,48 @@ class GUIComponents:
                         )
                         pass
                     if randomEffect["random slope"]:
-                        info.append(html.Li([
-                            titleElement,
-                            html.Span("Random slopes", id=self.randomEffectsUnitToRandomSlopeAddedId[group]),
-                            html.Ul(randomSlopes)],
-                                            id=self.randomIntercepts[group]["group-id"]))
+                        info.append(
+                            html.Li(
+                                [
+                                    titleElement,
+                                    html.Span(
+                                        "Random slopes",
+                                        id=self.randomEffectsUnitToRandomSlopeAddedId[
+                                            group
+                                        ],
+                                    ),
+                                    html.Ul(randomSlopes),
+                                ],
+                                id=self.randomIntercepts[group]["group-id"],
+                            )
+                        )
                         pass
                     else:
-                        info.append(html.Li([titleElement],
-                                            id=self.randomIntercepts[group]["group-id"]))
+                        info.append(
+                            html.Li(
+                                [titleElement],
+                                id=self.randomIntercepts[group]["group-id"],
+                            )
+                        )
                     pass
                 else:
-                    info.append(html.Li(titleElement,
-                                        id=self.randomIntercepts[group]["group-id"]))
+                    info.append(
+                        html.Li(
+                            titleElement, id=self.randomIntercepts[group]["group-id"]
+                        )
+                    )
 
             return [
                 html.H5(self.strings("overview", "random-effects-added")),
                 html.Ul(id="added-random-effects"),
                 html.Ul(info),
             ]
-        return [html.H6(html.I(self.strings("overview", "random-effects-no-add")), id="added-random-effects")]
+        return [
+            html.H6(
+                html.I(self.strings("overview", "random-effects-no-add")),
+                id="added-random-effects",
+            )
+        ]
 
     def hasRandomEffects(self):
         if self.getGeneratedRandomEffects():
@@ -761,11 +822,10 @@ class GUIComponents:
                 color="success",
                 id="continue-to-interaction-effects",
                 n_clicks=0,
-            )
+            ),
         ]
         if ivs:
             body = [
-
                 cardP(self.strings.getMainEffectsPageTitle()),
                 dcc.Markdown(self.defaultExplanations["overall-main-effects"]),
                 self.layoutFancyChecklist(
@@ -785,15 +845,8 @@ class GUIComponents:
                 ),
             ]
         else:
-            body = [
-                cardP(html.I(self.strings.getMainEffectsNoPageTitle()))
-            ]
-        return dbc.Card(
-            dbc.CardBody(
-                body + continueButtonPortion
-            ),
-            className="mt-3"
-        )
+            body = [cardP(html.I(self.strings.getMainEffectsNoPageTitle()))]
+        return dbc.Card(dbc.CardBody(body + continueButtonPortion), className="mt-3")
 
     def getInteractionEffectsCard(self):
         interactions = self.getGeneratedInteractionEffects()
@@ -824,7 +877,9 @@ class GUIComponents:
             dbc.CardBody(
                 [
                     cardP(self.strings.getInteractionEffectsPageTitle()),
-                    dcc.Markdown(self.defaultExplanations["overall-interaction-effects"]),
+                    dcc.Markdown(
+                        self.defaultExplanations["overall-interaction-effects"]
+                    ),
                     self.layoutFancyChecklist(
                         {
                             me: html.Span(
@@ -882,11 +937,7 @@ class GUIComponents:
                         className="form-check-input",
                         checked=checked,
                     ),
-                    dbc.Label(
-                        label,
-                        html_for=id,
-                        className="form-check-label"
-                    )
+                    dbc.Label(label, html_for=id, className="form-check-label"),
                 ],
                 check=True,
             )
@@ -896,6 +947,7 @@ class GUIComponents:
                 checked=checked,
             )
         )
+
     def layoutRandomEffectsTable(self):
         randomEffects = self.getGeneratedRandomEffects()
         hasRandomSlope = any(
@@ -915,7 +967,11 @@ class GUIComponents:
         # this one's a special case, so we add it separately
         # Also, it looked weird previously when it wasn't centered
         headers += [html.Th("Correlated", style=centeredStyle)]
-        assert len(booleans) == len(headers), "Number of booleans and headers does not match!\nNumber of booleans: {}\nNumber of headers: {}".format(len(booleans), len(headers))
+        assert len(booleans) == len(
+            headers
+        ), "Number of booleans and headers does not match!\nNumber of booleans: {}\nNumber of headers: {}".format(
+            len(booleans), len(headers)
+        )
         # Use the `booleans` list to filter the headers
         headersLayout = [headers[i] for i in range(len(headers)) if booleans[i]]
         tableHeader = [html.Thead(html.Tr(headersLayout))]
@@ -968,13 +1024,16 @@ class GUIComponents:
                                 "IV: {} ".format(randomSlopes[0]["iv"]),
                                 getInfoBubble(self.randomSlopes[group][iv]["info-id"]),
                             ],
-                            id=self.randomSlopes[group][iv]["cell-id"]
+                            id=self.randomSlopes[group][iv]["cell-id"],
                         )
                     )
                     if thisGroupHasCorrelation:
                         row.append(
                             html.Td(
-                                self.makeFancyCheckbox(id=self.getCorrelatedIdForRandomSlope(group, iv), checked=True),
+                                self.makeFancyCheckbox(
+                                    id=self.getCorrelatedIdForRandomSlope(group, iv),
+                                    checked=True,
+                                ),
                                 style=centeredStyle,
                             )
                         )
@@ -998,7 +1057,12 @@ class GUIComponents:
                             correlationCheckbox = (
                                 [
                                     html.Td(
-                                        self.getFancyCheckbox(id=self.getCorrelatedIdForRandomSlope(group, iv), checked=True),
+                                        self.getFancyCheckbox(
+                                            id=self.getCorrelatedIdForRandomSlope(
+                                                group, iv
+                                            ),
+                                            checked=True,
+                                        ),
                                         style=centeredStyle,
                                     )
                                 ]
@@ -1021,7 +1085,7 @@ class GUIComponents:
                                                     ]
                                                 ),
                                             ],
-                                            id=self.randomSlopes[group][iv]["cell-id"]
+                                            id=self.randomSlopes[group][iv]["cell-id"],
                                         )
                                     ]
                                     + correlationCheckbox,
@@ -1098,11 +1162,7 @@ class GUIComponents:
             label = " ".join(separateByUpperCamelCase(f)[:-1])
 
             family_options.append(
-                {
-                    "label": label,
-                    "value": f,
-                    "disabled": f not in fls
-                }
+                {"label": label, "value": f, "disabled": f not in fls}
             )
             pass
 
@@ -1166,11 +1226,7 @@ class GUIComponents:
         fig = go.Figure()
         if self.hasData():
             fig.add_trace(
-                go.Histogram(
-                    x=self.dataDf[self.dv],
-                    name=f"{self.dv}",
-                    showlegend=True
-                )
+                go.Histogram(x=self.dataDf[self.dv], name=f"{self.dv}", showlegend=True)
             )
         if family:
             key = f"{family}_data"
@@ -1205,17 +1261,13 @@ class GUIComponents:
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
-            legend=dict(orientation="h", yanchor="bottom", y=1.09, xanchor="left", x=-0.1)
+            legend=dict(
+                orientation="h", yanchor="bottom", y=1.09, xanchor="left", x=-0.1
+            )
         )
-        fig.update_layout(
-            margin=dict(b=25,l=25,r=25,t=25)
-        )
-        fig.update_layout(
-            autosize=True
-        )
-        fig.update_layout(
-            height=400
-        )
+        fig.update_layout(margin=dict(b=25, l=25, r=25, t=25))
+        fig.update_layout(autosize=True)
+        fig.update_layout(height=400)
 
         return fig
 
@@ -1321,11 +1373,12 @@ class GUIComponents:
         fig = self.createFigure(family)
 
         # Get form groups for family link div
-        family_link_chart = dcc.Graph(id="family-link-chart", figure=fig,
-                      config={"responsive": True},
-                      style={
-                          "height": "inherit"
-                      })
+        family_link_chart = dcc.Graph(
+            id="family-link-chart",
+            figure=fig,
+            config={"responsive": True},
+            style={"height": "inherit"},
+        )
         return family_link_chart
 
     def getFamilyLinkFunctionsCard(self):
@@ -1335,8 +1388,10 @@ class GUIComponents:
             [
                 html.H5(self.strings.getFamilyLinksPageTitle()),
                 dcc.Markdown(
-                    self.strings("family-link-functions", "titles", "page-sub-title").format(self.getDependentVariable())
-                )
+                    self.strings(
+                        "family-link-functions", "titles", "page-sub-title"
+                    ).format(self.getDependentVariable())
+                ),
             ]
         )
 
@@ -1344,12 +1399,13 @@ class GUIComponents:
 
         # Get form groups for family link div
         family_link_chart = html.Div(
-            dcc.Graph(id="family-link-chart", figure=fig,
-                      config={"responsive": True},
-                      style={
-                          "height": "inherit"
-                      }),
-            id="family-link-chart-div"
+            dcc.Graph(
+                id="family-link-chart",
+                figure=fig,
+                config={"responsive": True},
+                style={"height": "inherit"},
+            ),
+            id="family-link-chart-div",
         )
         family_link_controls = self.make_family_link_options()
 
@@ -1372,15 +1428,23 @@ class GUIComponents:
                 + normalityTestPortion
                 + [
                     html.Span(
-                        dbc.Button("Generate Code", color="success", id="generate-code", disabled=True, style={"pointer-events": "none"}),
+                        dbc.Button(
+                            "Generate Code",
+                            color="success",
+                            id="generate-code",
+                            disabled=True,
+                            style={"pointer-events": "none"},
+                        ),
                         id="generate-code-button-div",
                         tabIndex="0",
-                        className="d-inline-block"
+                        className="d-inline-block",
                     ),
                     html.Div(id="generated-code-div", hidden=True),
-                    dbc.Tooltip("You still need to choose family and link functions before you can generate code.",
-                                target="generate-code-button-div",
-                                id="generate-code-tooltip")
+                    dbc.Tooltip(
+                        "You still need to choose family and link functions before you can generate code.",
+                        target="generate-code-button-div",
+                        id="generate-code-tooltip",
+                    ),
                 ]
             ),
             className="mt-3",
@@ -1470,17 +1534,20 @@ class GUIComponents:
 
     def createCodeGenerationModal(self):
         modal = dbc.Modal(
-                    [
-                        dbc.ModalHeader("Code Generated!", id="code-generated-modal-header"),
-                        dbc.ModalBody("Placeholder", id="code-generated-modal-body"),
-                        dbc.ModalFooter(
-                            dbc.Button(
-                                "dismiss", id="close-code-generated-modal", className="ml-auto", n_clicks=0
-                            )
-                        ),
-                    ],
-                    id="code-generated-modal",
-                    is_open=False,
+            [
+                dbc.ModalHeader("Code Generated!", id="code-generated-modal-header"),
+                dbc.ModalBody("Placeholder", id="code-generated-modal-body"),
+                dbc.ModalFooter(
+                    dbc.Button(
+                        "dismiss",
+                        id="close-code-generated-modal",
+                        className="ml-auto",
+                        n_clicks=0,
+                    )
+                ),
+            ],
+            id="code-generated-modal",
+            is_open=False,
         )
         store = dcc.Store(id="modal-data-store")
         return [modal, store]

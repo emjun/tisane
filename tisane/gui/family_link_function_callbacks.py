@@ -16,11 +16,13 @@ import json
 import os
 import logging
 
+
 def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
     createLinkFunctionCallbacks(app, comp)
     createChartCallbacks(app, comp)
     createGenerateCodeCallback(app, comp)
     pass
+
 
 def createGenerateCodeCallback(app, comp: GUIComponents = None):
     @app.callback(
@@ -30,9 +32,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
         if comp and nclicks:
             result = comp.generateCode()
             if result:
-                resultObject = {
-                    "path": str(result)
-                }
+                resultObject = {"path": str(result)}
                 comp.highestActiveTab = 5
             else:
                 resultObject = {
@@ -54,7 +54,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
         Output("code-generated-modal-body", "children"),
         Input("close-code-generated-modal", "n_clicks"),
         Input("modal-data-store", "data"),
-        State("code-generated-modal", "is_open")
+        State("code-generated-modal", "is_open"),
     )
     def closeModal(n_clicks, data, is_open):
         ctx = dash.callback_context
@@ -69,25 +69,20 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
                     "Code has been generated! The model script is located at",
                     html.Div(
                         # dbc.CardBody(
-                            [
-                                html.Code(str(dataObject["path"]), id="copy-target-id"),
-                                dcc.Clipboard(target_id="copy-target-id",
-                                              style={
-                                                  "position": "absolute",
-                                                  "top": 0,
-                                                  "right": 10
-                                              })
-                            ],
+                        [
+                            html.Code(str(dataObject["path"]), id="copy-target-id"),
+                            dcc.Clipboard(
+                                target_id="copy-target-id",
+                                style={"position": "absolute", "top": 0, "right": 10},
+                            ),
+                        ],
                         #     style={
                         #         "position": "relative"
                         #     }
                         # ),
                         className="bg-light",
-                        style={
-                            "position": "relative",
-                            "padding": "5px"
-                        }
-                    )
+                        style={"position": "relative", "padding": "5px"},
+                    ),
                 ]
                 return (True, 0, codeGenerated, bodyText)
             elif "error" in dataObject:
@@ -98,9 +93,9 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
         raise PreventUpdate
 
 
-
 def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
     logger = logging.getLogger("werkzeug")
+
     @app.callback(
         Output("link-options", "options"),
         Output("link-options", "value"),
@@ -134,14 +129,14 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                             "label": " ".join(separateByUpperCamelCase(str(l))[:-1])
                             + ("*" if defaultLink == l else ""),
                             "value": str(l),
-                            "disabled": str(l) not in fls[value]["links"]
+                            "disabled": str(l) not in fls[value]["links"],
                         }
                         for l in familyLinks[value]
                     ],
                     defaultLink,
                     "Family: {}".format(familyName),
                     False,
-                    "tooltip-hide"
+                    "tooltip-hide",
                 )
             pass
         logger.warning("Cannot update for some reason")

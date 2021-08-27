@@ -306,7 +306,9 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), len(DataForTests.negative_binomial_links))
+        self.assertEqual(
+            len(link_candidates), len(DataForTests.negative_binomial_links)
+        )
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.negative_binomial_links)
@@ -357,7 +359,9 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIsInstance(family.link, LogLink)
         link_candidates = infer_link_functions(query=design, family=family)
 
-        self.assertEqual(len(link_candidates), len(DataForTests.negative_binomial_links))
+        self.assertEqual(
+            len(link_candidates), len(DataForTests.negative_binomial_links)
+        )
         for l in link_candidates:
             l_type = type(l)
             self.assertIn(l_type, DataForTests.negative_binomial_links)
@@ -427,7 +431,7 @@ class DataForTests:
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
         InverseLink,
         # Included in statsmodels implementation as options for Families, but not included in table (https://www.statsmodels.org/stable/generated/statsmodels.genmod.generalized_linear_model.GLM.html#statsmodels.genmod.generalized_linear_model.GLM)
-        InverseSquaredLink
+        InverseSquaredLink,
     ]
     gamma_links = [
         IdentityLink,
@@ -452,5 +456,11 @@ class DataForTests:
         # Not currently implemented in statsmodels
         # LogLogLink,
     ]
-    negative_binomial_links = [IdentityLink, LogLink, PowerLink, NegativeBinomialLink, CLogLogLink]
+    negative_binomial_links = [
+        IdentityLink,
+        LogLink,
+        PowerLink,
+        NegativeBinomialLink,
+        CLogLogLink,
+    ]
     multinomial_links = [IdentityLink, LogLink, LogitLink, ProbitLink]

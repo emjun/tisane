@@ -258,9 +258,7 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(gr.has_edge(student, race, "has"))
         self.assertTrue(gr.has_edge(student, ses, "has"))
         self.assertTrue(gr.has_edge(student, test_score, "has"))
-        self.assertTrue(
-            gr.has_edge(student, tutoring, "has")
-        ) 
+        self.assertTrue(gr.has_edge(student, tutoring, "has"))
 
         variables = gr.get_variables()
         self.assertEqual(
@@ -295,7 +293,7 @@ class GraphTest(unittest.TestCase):
             else:
                 count_other_edges += 1
 
-        self.assertEqual(count_has_edges, 5)  
+        self.assertEqual(count_has_edges, 5)
         self.assertEqual(count_associates_edges, 6)
         # Check that Moderates stores a Moderates obj in the edge meta-data for associates edges created for moderations
         self.assertEqual(count_associates_edges_associates_objs, 4)

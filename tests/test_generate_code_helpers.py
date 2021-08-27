@@ -109,8 +109,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -174,8 +174,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=weight, ivs=[week]).assign_data(df)
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -236,8 +236,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[time, condition])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         main_effects = set(design.ivs)
         (
@@ -284,8 +284,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -335,8 +335,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -384,8 +384,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
 
         design = ts.Design(dv=dv, ivs=[m0, m1])
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -428,8 +428,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -478,8 +478,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
 
         design = ts.Design(dv=dv, ivs=[m0, m1])
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         main_effects = set(design.ivs)
         interaction_effects = set()
@@ -522,8 +522,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -570,12 +570,12 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         m0.associates_with(dv)
         m1.associates_with(dv)
         m0.moderates(moderator=m1, on=dv)
-        
+
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        assert(check_design_ivs(design=design))
-        assert(check_design_dv(design=design))
+        assert check_design_ivs(design=design)
+        assert check_design_dv(design=design)
 
         (main_effects, main_explanations) = infer_main_effects_with_explanations(
             gr=gr, query=design
@@ -618,8 +618,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         )
         self.assertEqual(code, reference_code)
 
-    # def test_generate_statsmodels_code(self): 
+    # def test_generate_statsmodels_code(self):
     #     pass
 
-    # def test_generate_pymer4_code(self): 
+    # def test_generate_pymer4_code(self):
     #     pass

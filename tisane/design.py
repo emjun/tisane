@@ -1,7 +1,7 @@
 from pandas.core.frame import DataFrame
 from tisane.variable import (
     AbstractVariable,
-    Nominal, 
+    Nominal,
     Ordinal,
     Has,
     Nests,
@@ -52,7 +52,7 @@ class Design(object):
         # Add any nesting relationships involving IVs that may be implicit
         self._add_nesting_relationships_to_graph()
 
-        # Add variables that the identifiers have 
+        # Add variables that the identifiers have
         self._add_identifiers_has_relationships_to_graph()
 
         if source is not None:
@@ -60,21 +60,25 @@ class Design(object):
         else:
             self.dataset = None
 
-    # Calculates and assigns cardinality to variables if cardinality is not already specified 
+    # Calculates and assigns cardinality to variables if cardinality is not already specified
     # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
-    def check_variable_cardinality(self): 
+    def check_variable_cardinality(self):
         variables = self.graph.get_variables()
 
-        for v in variables: 
-            if isinstance(v, Ordinal): 
-                assert(self.dataset is not None)
-                assert(isinstance(self.dataset, Dataset))
-                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+        for v in variables:
+            if isinstance(v, Ordinal):
+                assert self.dataset is not None
+                assert isinstance(self.dataset, Dataset)
+                calculated_cardinality = v.calculate_cardinality_from_data(
+                    data=self.dataset
+                )
 
-                if calculated_cardinality > v.cardinality: 
+                if calculated_cardinality > v.cardinality:
                     diff = calculated_cardinality - v.cardinality
-                    raise ValueError(f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect.")
-    
+                    raise ValueError(
+                        f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect."
+                    )
+
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
         self.dataset = Dataset(source)
@@ -83,8 +87,8 @@ class Design(object):
 
         return self
 
-    def has_data(self) -> bool: 
-        return self.dataset is not None 
+    def has_data(self) -> bool:
+        return self.dataset is not None
 
     def get_data(self) -> pd.DataFrame:
         if self.dataset is not None:
@@ -105,18 +109,20 @@ class Design(object):
             for r in relationships:
                 if isinstance(r, Nests):
                     self.graph.add_relationship(relationship=r)
-    
-    def _add_identifiers_has_relationships_to_graph(self): 
+
+    def _add_identifiers_has_relationships_to_graph(self):
         identifiers = self.graph.get_identifiers()
 
-        for unit in identifiers: 
-            # Does this unit have any other relationships/edges not already in the graph? 
-            relationships = unit.relationships 
+        for unit in identifiers:
+            # Does this unit have any other relationships/edges not already in the graph?
+            relationships = unit.relationships
 
-            for r in relationships: 
-                if isinstance(r, Has): 
+            for r in relationships:
+                if isinstance(r, Has):
                     measure = r.measure
-                    if not self.graph.has_edge(start=unit, end=measure, edge_type="has"):
+                    if not self.graph.has_edge(
+                        start=unit, end=measure, edge_type="has"
+                    ):
                         self.graph.add_relationship(relationship=r)
 
     # def _add_ivs(self, ivs: List[typing.Union[Treatment, AbstractVariable]]):

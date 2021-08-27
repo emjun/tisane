@@ -45,21 +45,21 @@ class StatisticalModel:
         return self.dependent_variable
 
     # @returns this statistical model's data
-    def get_data(self): 
-        
+    def get_data(self):
+
         return self.dataset
 
     # Add data to this statistical model
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
-        if isinstance(source, Dataset): 
+        if isinstance(source, Dataset):
             self.dataset = source
-        else: 
+        else:
             self.dataset = Dataset(source)
 
         return self
 
     # @returns bool val if self.dataset is not None
-    def has_data(self): 
+    def has_data(self):
         return self.dataset is not None
 
     def has_random_effects(self):

@@ -9,6 +9,7 @@ import json
 from tisane.gui.gui_helpers import getTriggeredFromContext
 import logging
 
+
 def createCallbacks(app, comp: GUIComponents = None):
     cont_to_interaction_effects_input = Input(
         "continue-to-interaction-effects", "n_clicks"
@@ -73,6 +74,7 @@ def createTransitionCallback(
 
 def createTabsCallbacks(app):
     logger = logging.getLogger("werkzeug")
+
     def continueCallback(fromMain, fromInteraction, fromRandom):
         ctx = dash.callback_context
         triggered = getTriggeredFromContext(ctx)
@@ -184,13 +186,17 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
             logger.debug("New children: {}".format(newChildren))
             return newChildren, json.dumps(comp.output)
 
-        app.callback(Output("added-interaction-effects", "children"), Output("added-interaction-effects-store", "data"), inputs, states)(
-            addVariables
-        )
+        app.callback(
+            Output("added-interaction-effects", "children"),
+            Output("added-interaction-effects-store", "data"),
+            inputs,
+            states,
+        )(addVariables)
 
 
 def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
     logger = logging.getLogger("werkzeug")
+
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
@@ -226,9 +232,8 @@ def createFamilyLinkFunctionsProgressCallbacks(app, comp: GUIComponents = None):
             )
         )
         if triggered:
-            if (
-                triggered == "generate-code" or
-                (comp and comp.highestActiveTab > mytabs.index(active_tab))
+            if triggered == "generate-code" or (
+                comp and comp.highestActiveTab > mytabs.index(active_tab)
             ):
                 return "success"
             if triggered == "continue-to-family-link-functions" or mytabs.index(
@@ -249,6 +254,7 @@ def createProgressBarCallbacks(
     app, triggered_tab, progressid, continuefrom_id, continueto_id, comp: GUIComponents
 ):
     logger = logging.getLogger("werkzeug")
+
     def animatedCallback(nclicks, active_tab):
         ctx = dash.callback_context
         index = mytabs.index(active_tab)
@@ -278,7 +284,9 @@ def createProgressBarCallbacks(
         tabIndex = mytabs.index(active_tab)
         if comp and comp.highestActiveTab < tabIndex:
             comp.highestActiveTab = tabIndex
-        logger.debug("{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab))
+        logger.debug(
+            "{}, {}: {}, {}".format(triggered_tab, progressid, triggered, active_tab)
+        )
         if triggered:
             if (
                 triggered == continueto_id
@@ -306,6 +314,7 @@ def createProgressBarCallbacks(
 
 def createMainEffectsProgressBarCallbacks(app, comp: GUIComponents = None):
     logger = logging.getLogger("werkzeug")
+
     def animatedCallback(nclicks_main, nclicks_interaction, active_tab):
         ctx = dash.callback_context
         if not ctx.triggered:
@@ -343,6 +352,7 @@ def createMainEffectsProgressBarCallbacks(app, comp: GUIComponents = None):
 
 def createButtonCallback(app):
     logger = logging.getLogger("werkzeug")
+
     def buttonCallback(nclicks_main, nclicks_interaction):
         ctx = dash.callback_context
         if not ctx.triggered:

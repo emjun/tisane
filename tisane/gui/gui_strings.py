@@ -5,7 +5,8 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.ERROR)
 
-class GUIStrings():
+
+class GUIStrings:
     def __init__(self):
         self.data = {}
         dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +27,9 @@ class GUIStrings():
         for i in range(len(args)):
             arg = args[i]
             if i == 0:
-                assert arg in self.data, "Could not find {} in {}".format(arg, self.data)
+                assert arg in self.data, "Could not find {} in {}".format(
+                    arg, self.data
+                )
                 pass
             else:
                 level = self.data[args[0]]
@@ -35,7 +38,9 @@ class GUIStrings():
                         level = level[args[j]]
                         pass
                     pass
-                assert arg in level, "Could not find {} for ({}) in {}".format(arg, ",".join(args[0:i]), level)
+                assert arg in level, "Could not find {} for ({}) in {}".format(
+                    arg, ",".join(args[0:i]), level
+                )
                 pass
             pass
         result = self.data[args[0]]
@@ -51,7 +56,6 @@ class GUIStrings():
 
     def access(self, *args):
         return self._safeAccess(*args)
-
 
     def getTitle(self, topic: str, elementType: str):
         return self._safeAccess(topic, "titles", elementType)

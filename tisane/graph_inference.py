@@ -38,7 +38,7 @@ explanations = {
         # },
         "query": {
             "causes": "You included {cause} in your query. You specified that {cause} causes {effect}.",
-            "associates": "You included {var1} in your query. You specified that {var1} is associated with {var2}."
+            "associates": "You included {var1} in your query. You specified that {var1} is associated with {var2}.",
         },
         "common ancestors": "The variable {ancestor} is a shared cause of the following independent variables included in your query: {ivs}. {ancestor} might also exert causal influence on the dependent variable {dv}.",
         "causal ancestors": "The variable {ancestor} causes the following independent variables included in your query: {ivs}. {ancestor} might also exert causal influence on the dependent variable {dv}.",
@@ -52,11 +52,12 @@ explanations = {
         "repeated measures, distinguisher": "{measure} is measured multiple times, once per {distinguisher}. Observations at each {distinguisher}, might be similar to each other.",
         "hierarchical data": "Because {nested} is nested within {nesting}, {nested} in the same {nesting} might be more alike, leading to non-independence in observations.",
         "non-nesting": "Observations belong to {groups} as well as others.",
-        "interaction": "{unit} sees multiple instances of each of the variables {variables} in the interaction. Controling for the largest subset of interaction variables that are \'within-subjects\' maximizes generalizability of statistical findings.",
+        "interaction": "{unit} sees multiple instances of each of the variables {variables} in the interaction. Controling for the largest subset of interaction variables that are 'within-subjects' maximizes generalizability of statistical findings.",
     },
 }
 
-def get_conceptual_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph): 
+
+def get_conceptual_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
     causes_expl = "You specified that {cause} causes {effect}."
     associates_expl = "You specified that {var1} is associated with {var2}."
 
@@ -64,18 +65,19 @@ def get_conceptual_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Gr
     associates_edge = gr.get_edge(start=v, end=dv, edge_type="associates")
     # Each variable @param v either causes or (logical or) is associated with @param dv
     # There must be a causes or associates edge between @param v and @param dv
-    if causes_edge is None: 
-        assert(associates_edge is not None)
+    if causes_edge is None:
+        assert associates_edge is not None
         expl = causes_expl.format(cause=v.name, effect=dv.name)
-    else: 
-        assert(causes_edge is not None)
-        assert(associates_edge is None)
+    else:
+        assert causes_edge is not None
+        assert associates_edge is None
         expl = associates_expl.format(var1=v.name, var2=dv.name)
-    
+
     return expl
 
+
 # Get personalized explanation of variables that were included in a query to infer a statistical model from a set of variable relationships
-def get_query_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph): 
+def get_query_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
     global explanations
 
     main_explanations = explanations["main effects"]
@@ -85,17 +87,20 @@ def get_query_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
     # Each variable @param v either causes or (logical or) is associated with @param dv
     # There must be a causes or associates edge between @param v and @param dv
     if causes_edge is None:
-        assert(associates_edge is not None)
+        assert associates_edge is not None
         expl = main_explanations["query"]["causes"].format(cause=v.name, effect=dv.name)
-    else: 
-        assert(causes_edge is not None)
-        assert(associates_edge is None)
-        expl = main_explanations["query"]["associates"].format(var1=v.name, var2=dv.name)
-    
+    else:
+        assert causes_edge is not None
+        assert associates_edge is None
+        expl = main_explanations["query"]["associates"].format(
+            var1=v.name, var2=dv.name
+        )
+
     return expl
 
+
 # Get personalized explanation of interaction effects that could be included in an inferred statistical model
-def get_interaction_explanation(interaction_name: str, gr: Graph): 
+def get_interaction_explanation(interaction_name: str, gr: Graph):
     global explanations
 
     interaction_explanations = explanations["interaction effects"]
@@ -103,8 +108,9 @@ def get_interaction_explanation(interaction_name: str, gr: Graph):
     var_names = interaction_name.split("*")
     var_names_str = ",".join(var_names)
     expl = interaction_explanations.format(variables=var_names_str)
-    
+
     return expl
+
 
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
@@ -126,13 +132,17 @@ def cast_to_variables(
 
 
 ## Rule 1: Find common ancestors
-def find_common_ancestors(variables: List[AbstractVariable], gr: Graph) -> Tuple[Set[str], Dict[str, List[str]]]:
+def find_common_ancestors(
+    variables: List[AbstractVariable], gr: Graph
+) -> Tuple[Set[str], Dict[str, List[str]]]:
     common_ancestors = set()
     common_ancestor_to_children = dict()
 
     # Map counting ancestors of all @param variables
     _ancestor_to_count_ = dict()
-    _ancestor_to_children_ = dict() # keep track of children IVs for each common ancestor, mostly useful for explanations
+    _ancestor_to_children_ = (
+        dict()
+    )  # keep track of children IVs for each common ancestor, mostly useful for explanations
     # Get causal subgraph
     causal_sub = gr.get_causal_subgraph()
 
@@ -166,10 +176,9 @@ def find_common_ancestors(variables: List[AbstractVariable], gr: Graph) -> Tuple
             else:
                 _ancestor_to_count_[p] = 1
                 _ancestor_to_children_[p] = list()
-            # Add v to list of children that @p is an ancestor to 
+            # Add v to list of children that @p is an ancestor to
             assert p in _ancestor_to_children_.keys()
             _ancestor_to_children_[p].append(v.name)
-                
 
     # At the end, add to set and return set of variables that have count > 1
     # At the end, also add to the dict of shared ancestor to variables that share that ancestor
@@ -178,7 +187,7 @@ def find_common_ancestors(variables: List[AbstractVariable], gr: Graph) -> Tuple
             common_ancestors.add(key)
             common_ancestor_to_children[key] = _ancestor_to_children_[key]
 
-    assert(len(common_ancestors) == len(common_ancestor_to_children.keys()))
+    assert len(common_ancestors) == len(common_ancestor_to_children.keys())
     return (common_ancestors, common_ancestor_to_children)
 
 
@@ -189,7 +198,9 @@ def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph) -> Set
 
     causal_sub = gr.get_causal_subgraph()
     if not isinstance(variable, AbstractVariable):
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
     assert isinstance(variable, AbstractVariable)
     if gr.has_variable(variable):
         pred = causal_sub._graph.predecessors(variable.name)  # Returns an iterator obj
@@ -202,13 +213,17 @@ def find_variable_causal_ancestors(variable: AbstractVariable, gr: Graph) -> Set
     return causal_ancestors
 
 
-def find_all_causal_ancestors(variables: List[AbstractVariable], gr: Graph) -> Tuple[Set[str], Dict[str, List[str]]]:
+def find_all_causal_ancestors(
+    variables: List[AbstractVariable], gr: Graph
+) -> Tuple[Set[str], Dict[str, List[str]]]:
     all_causal_ancestors = set()
     variable_to_causal_ancestors = dict()
 
     for v in variables:
         ancestors = find_variable_causal_ancestors(variable=v, gr=gr)
-        variable_to_causal_ancestors[v.name] = list(ancestors) # Add to dict which is used for deriving explanations 
+        variable_to_causal_ancestors[v.name] = list(
+            ancestors
+        )  # Add to dict which is used for deriving explanations
         all_causal_ancestors = all_causal_ancestors.union(ancestors)
 
     return (all_causal_ancestors, variable_to_causal_ancestors)
@@ -250,7 +265,7 @@ def find_all_associates_that_causes_or_associates_another(
         variable_to_intermediaries[var.name] = list(intermediaries)
         all_intermediaries = all_intermediaries.union(intermediaries)
 
-    assert(len(sources) == len(variable_to_intermediaries.keys()))
+    assert len(sources) == len(variable_to_intermediaries.keys())
     return (all_intermediaries, variable_to_intermediaries)
 
 
@@ -317,7 +332,10 @@ def infer_main_effects_with_explanations(
     dv = query.dv
     all_variables_in_graph = gr.get_variables()
 
-    (common_ancestors_names, common_ancestors_names_to_variables) = find_common_ancestors(variables=ivs, gr=gr)
+    (
+        common_ancestors_names,
+        common_ancestors_names_to_variables,
+    ) = find_common_ancestors(variables=ivs, gr=gr)
     common_ancestors_variables = cast_to_variables(
         names=common_ancestors_names, variables=all_variables_in_graph
     )
@@ -331,10 +349,14 @@ def infer_main_effects_with_explanations(
             main_candidates_explanations[v] = list()
         # add explanation
         vars_names = common_ancestors_names_to_variables[v]
-        expl = main_explanations["common ancestors"].format(ancestor=v, ivs=vars_names, dv=query.dv.name)
+        expl = main_explanations["common ancestors"].format(
+            ancestor=v, ivs=vars_names, dv=query.dv.name
+        )
         main_candidates_explanations[v].append(expl)
 
-    (causal_ancestors, variable_to_causal_ancestors) = find_all_causal_ancestors(variables=ivs, gr=gr)
+    (causal_ancestors, variable_to_causal_ancestors) = find_all_causal_ancestors(
+        variables=ivs, gr=gr
+    )
     causal_ancestors_variables = cast_to_variables(
         names=causal_ancestors, variables=all_variables_in_graph
     )
@@ -346,19 +368,24 @@ def infer_main_effects_with_explanations(
         if v not in main_candidates_explanations.keys():
             # declare the list of explanations/reasons for this variable
             main_candidates_explanations[v] = list()
-        
+
         # add explanation
         # Get list of variables that this causal ancestor v causes
         v_causes_vars = list()
-        for var_name, causal_ancestors in variable_to_causal_ancestors.items(): 
-            if v in causal_ancestors: 
+        for var_name, causal_ancestors in variable_to_causal_ancestors.items():
+            if v in causal_ancestors:
                 v_causes_vars.append(var_name)
         v_causes_vars_str = ",".join(v_causes_vars)
-        expl = main_explanations["causal ancestors"].format(ancestor=v, ivs=v_causes_vars_str, dv=query.dv.name)
+        expl = main_explanations["causal ancestors"].format(
+            ancestor=v, ivs=v_causes_vars_str, dv=query.dv.name
+        )
         main_candidates_explanations[v].append(expl)
 
     # TODO: "intermediaries" might not be the best variable name
-    (intermediaries, variable_to_intermediaries) = find_all_associates_that_causes_or_associates_another(
+    (
+        intermediaries,
+        variable_to_intermediaries,
+    ) = find_all_associates_that_causes_or_associates_another(
         sources=ivs, sink=dv, gr=gr
     )
     intermediaries_variables = cast_to_variables(
@@ -372,16 +399,22 @@ def infer_main_effects_with_explanations(
         if v not in main_candidates_explanations.keys():
             # declare the list of explanations/reasons for this variable
             main_candidates_explanations[v] = list()
-        
+
         # add explanation
         vars = list()
-        for key, val in variable_to_intermediaries.items(): 
-            if v in val: 
+        for key, val in variable_to_intermediaries.items():
+            if v in val:
                 vars.append(key)
         vars_names_str = ",".join(vars)
         var = gr.get_variable(v)
-        intermediary_relationship_to_dv = get_conceptual_explanation(v=var, dv=query.dv, gr=gr)
-        expl = main_explanations["intermediaries"].format(intermediary=v, ivs=vars_names_str, intermediary_relationship_to_dv=intermediary_relationship_to_dv)
+        intermediary_relationship_to_dv = get_conceptual_explanation(
+            v=var, dv=query.dv, gr=gr
+        )
+        expl = main_explanations["intermediaries"].format(
+            intermediary=v,
+            ivs=vars_names_str,
+            intermediary_relationship_to_dv=intermediary_relationship_to_dv,
+        )
         main_candidates_explanations[v].append(expl)
 
     # Redundant with Rule 2: Finding causal ancestors
@@ -485,7 +518,7 @@ def infer_interaction_effects_with_explanations(
             # declare the list of explanations/reasons for this variable
             interaction_candidates_explanations[v] = list()
         # add explanation
-        assert(isinstance(v, str))
+        assert isinstance(v, str)
         expl = get_interaction_explanation(v, gr)
         interaction_candidates_explanations[v].append(expl)
         # interaction_candidates_explanations[v].append(interaction_explanation)
@@ -840,23 +873,31 @@ def infer_random_effects_with_explanations(
             # declare the list of explanations/reasons for this variable
             random_candidates_explanations[name_key] = list()
         # add explanation
-        
-        if isinstance(rc.groups, Unit) and gr.has_edge(start=rc.groups, end=query.dv, edge_type="has"):
+
+        if isinstance(rc.groups, Unit) and gr.has_edge(
+            start=rc.groups, end=query.dv, edge_type="has"
+        ):
             groups = rc.groups.name
             # if not gr.has_edge(start=rc.groups, end=query.dv, edge_type="has"):
             #     import pdb; pdb.set_trace()
-            (n0, n1, edge_data) = gr.get_edge(start=rc.groups, end=query.dv, edge_type="has")
+            (n0, n1, edge_data) = gr.get_edge(
+                start=rc.groups, end=query.dv, edge_type="has"
+            )
             has_relat = edge_data["edge_obj"]
             num_times_measured = has_relat.repetitions.get_value()
             distinguisher = has_relat.according_to.name
             # expl = random_explanations["repeated measures"].format(measure=query.dv.name, num_times_measured=num_times_measured, unit=groups, distinguisher=distinguisher)
-            expl = random_explanations["repeated measures, unit"].format(measure=query.dv.name, num_times_measured=num_times_measured, unit=groups)
-            random_candidates_explanations[name_key].append(
-                expl
+            expl = random_explanations["repeated measures, unit"].format(
+                measure=query.dv.name,
+                num_times_measured=num_times_measured,
+                unit=groups,
             )
+            random_candidates_explanations[name_key].append(expl)
         else:
-            # expl = f"There are multiple observations of {query.dv.name} for every {rc.groups.name}." 
-            expl = random_explanations["repeated measures, distinguisher"].format(measure=query.dv.name, distinguisher=rc.groups.name)
+            # expl = f"There are multiple observations of {query.dv.name} for every {rc.groups.name}."
+            expl = random_explanations["repeated measures, distinguisher"].format(
+                measure=query.dv.name, distinguisher=rc.groups.name
+            )
             random_candidates_explanations[name_key].append(expl)
 
     nests_effects = construct_random_effects_for_nests(
@@ -879,16 +920,16 @@ def infer_random_effects_with_explanations(
         units = find_ordered_list_of_units(gr)
         nested = rc.groups.name
         idx = units.index(nested)
-        if idx+1 < len(units):
-            nesting = units[idx+1]
-        else: 
-            nesting = nested 
-            nested = units[idx-1]
-        expl = random_explanations["hierarchical data"].format(nested=nested, nesting=nesting)
-        
-        random_candidates_explanations[name_key].append(
-            expl
+        if idx + 1 < len(units):
+            nesting = units[idx + 1]
+        else:
+            nesting = nested
+            nested = units[idx - 1]
+        expl = random_explanations["hierarchical data"].format(
+            nested=nested, nesting=nesting
         )
+
+        random_candidates_explanations[name_key].append(expl)
 
     composed_effects = construct_random_effects_for_composed_measures(
         gr=gr, variables=main_effects
@@ -907,9 +948,7 @@ def infer_random_effects_with_explanations(
             random_candidates_explanations[name_key] = list()
         # add explanation
         expl = random_explanations["non-nesting"].format(groups=rc.groups.name)
-        random_candidates_explanations[name_key].append(
-            expl
-        )
+        random_candidates_explanations[name_key].append(expl)
 
     interaction_random_effects = construct_random_effects_for_interactions(
         gr=gr, query=query, interactions=interaction_effects
@@ -917,29 +956,29 @@ def infer_random_effects_with_explanations(
     random_candidates = random_candidates.union(interaction_random_effects)
     # Add explanations
     for rc in interaction_random_effects:
-        assert(isinstance(rc, RandomSlope))
+        assert isinstance(rc, RandomSlope)
         # Is the variable a new random effect candidate?
         # if isinstance(rc, RandomIntercept):
         #     name_key = f"{rc.groups.name},{type(rc).__name__}"
         # else:
         #     assert isinstance(rc, RandomSlope)
-        
+
         name_key = f"{rc.groups.name}, {rc.iv.name}, {type(rc).__name__}"
         if name_key not in random_candidates_explanations.keys():
             # declare the list of explanations/reasons for this variable
             random_candidates_explanations[name_key] = list()
-        
+
         # add explanation
         # Get unit for interaction effect
         unit = gr.get_identifier_for_variable(variable=rc.iv)
-        assert(unit is not None)
-    
+        assert unit is not None
+
         var_names = rc.iv.name.split("*")
         var_names_str = ",".join(var_names)
-        expl = random_explanations["interaction"].format(unit=unit, variables=var_names_str)
-        random_candidates_explanations[name_key].append(
-            expl
+        expl = random_explanations["interaction"].format(
+            unit=unit, variables=var_names_str
         )
+        random_candidates_explanations[name_key].append(expl)
 
     random_candidates = filter_random_candidates(random_candidates)
 

@@ -342,7 +342,7 @@ class VariableTest(unittest.TestCase):
         self.assertIsNotNone(word_has_relat)
         self.assertIs(condit_has_relat, word_has_relat)
 
-    # def test_calculate_cardinality_from_data_nominal(self): 
+    # def test_calculate_cardinality_from_data_nominal(self):
     #     unit = ts.Unit("Unit")
     #     measure = unit.nominal("Nominal_variable")
     #     dv = unit.numeric("Dependent_variable")
@@ -355,10 +355,10 @@ class VariableTest(unittest.TestCase):
     #     data = Dataset(source=df)
 
     #     calculated_cardinality = measure.calculate_cardinality_from_data(data)
-        
+
     #     self.assertEqual(calculated_cardinality, 6)
 
-    # def test_specified_calculated_cardinality_mismatch_nominal(self): 
+    # def test_specified_calculated_cardinality_mismatch_nominal(self):
     #     unit = ts.Unit("Unit")
     #     measure = unit.nominal("Nominal_variable")
     #     dv = unit.numeric("Dependent_variable")
@@ -370,43 +370,44 @@ class VariableTest(unittest.TestCase):
 
     #     design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
     #     raises_error = False
-    #     try: 
+    #     try:
     #         design.check_variable_cardinality()
-    #     except ValueError: 
-    #         raises_error = True 
+    #     except ValueError:
+    #         raises_error = True
 
     #     self.assertTrue(raises_error)
 
-    def test_calculate_cardinality_from_data_ordinal(self): 
+    def test_calculate_cardinality_from_data_ordinal(self):
         unit = ts.Unit("Unit")
         measure = unit.ordinal("Ordinal_variable", order=[1, 2, 3, 4, 5])
         dv = unit.numeric("Dependent_variable")
 
-        df = pd.DataFrame({
-            'Ordinal_variable': [1, 1, 2, 3, 5, 8, 13],
-            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
-        })
+        df = pd.DataFrame(
+            {
+                "Ordinal_variable": [1, 1, 2, 3, 5, 8, 13],
+                "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
+            }
+        )
 
         data = Dataset(source=df)
 
         calculated_cardinality = measure.calculate_cardinality_from_data(data)
         self.assertEqual(calculated_cardinality, 6)
 
-    def test_specified_calculated_cardinality_mismatch_ordinal(self): 
+    def test_specified_calculated_cardinality_mismatch_ordinal(self):
         unit = ts.Unit("Unit")
         measure = unit.ordinal("Ordinal_variable", order=[1, 2, 3, 4, 5])
         dv = unit.numeric("Dependent_variable")
 
-        df = pd.DataFrame({
-            'Ordinal_variable': [1, 1, 2, 3, 5, 8, 13],
-            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
-        })
-        
-        with self.assertRaises(Exception): 
+        df = pd.DataFrame(
+            {
+                "Ordinal_variable": [1, 1, 2, 3, 5, 8, 13],
+                "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
+            }
+        )
+
+        with self.assertRaises(Exception):
             design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
-
-        
-
 
     # def test_has_variables(self):
     #     # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects

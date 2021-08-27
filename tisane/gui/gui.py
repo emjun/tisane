@@ -73,7 +73,6 @@ class TisaneGUI:
         else:
             app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-
         ### Populate app
         # Get components
         # progress = self.progress()
@@ -116,7 +115,9 @@ class TisaneGUI:
                             color="secondary",
                         ),
                         dbc.Progress(
-                            self.components.strings("progress", "family-link-functions"),
+                            self.components.strings(
+                                "progress", "family-link-functions"
+                            ),
                             value=25,
                             animated=False,
                             bar=True,
@@ -148,7 +149,8 @@ class TisaneGUI:
                 dcc.Store(id="added-interaction-effects-store"),
                 dcc.Store(id="random-effects-check-store"),
             ]
-            + self.components.createEffectPopovers() + self.components.createCodeGenerationModal(),
+            + self.components.createEffectPopovers()
+            + self.components.createCodeGenerationModal(),
             fluid=jupyter,
         )
 
@@ -212,27 +214,37 @@ class TisaneGUI:
         overview = dbc.Card(
             dbc.CardBody(
                 [
-                    html.H5(self.components.strings.access("overview", "vars-in-query")),
+                    html.H5(
+                        self.components.strings.access("overview", "vars-in-query")
+                    ),
                     html.P("DV: {}".format(query["DV"])),
                     html.Span(self.components.strings.access("overview", "ivs")),
                     html.Ul(children=[html.Li(iv) for iv in query["IVs"]]),
                     html.H5(self.components.strings.access("overview", "vars-added")),
-
                     html.Div(
                         [
-                            html.H6(self.components.strings.access("overview", "main-effects-added")),
+                            html.H6(
+                                self.components.strings.access(
+                                    "overview", "main-effects-added"
+                                )
+                            ),
                             html.Ul(id="added-main-effects"),
                         ]
                         + self.components.getInteractionEffectsAddedSection(),
                         id="added-variables-paragraph",
                     ),
                 ]
-                
                 + self.components.getRandomEffectsAddedSection()
                 + [
                     html.H5(self.components.strings("overview", "distribution")),
-                    html.H6(self.components.strings.access("overview", "family"), id="overview-family"),
-                    html.H6(self.components.strings.access("overview", "link"), id="overview-link")
+                    html.H6(
+                        self.components.strings.access("overview", "family"),
+                        id="overview-family",
+                    ),
+                    html.H6(
+                        self.components.strings.access("overview", "link"),
+                        id="overview-link",
+                    )
                     # html.Div(id="test-div-output")
                 ]
             ),

@@ -24,12 +24,16 @@ lost.
 data_path = os.path.join("/examples/Group_Exercise/", "exercise_group_age_added.csv")
 
 # Variable declarations
-adult = ts.Unit("member", cardinality=386) 
-motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6], number_of_instances=1)
+adult = ts.Unit("member", cardinality=386)
+motivation_level = adult.ordinal(
+    "motivation", order=[1, 2, 3, 4, 5, 6], number_of_instances=1
+)
 pounds_lost = adult.numeric("pounds_lost", number_of_instances=1)
 age = adult.numeric("age", number_of_instances=1)
-group = ts.Unit("group", cardinality=40) 
-condition = group.nominal("treatment", cardinality=2, number_of_instances=1) # control vs. treatment
+group = ts.Unit("group", cardinality=40)
+condition = group.nominal(
+    "treatment", cardinality=2, number_of_instances=1
+)  # control vs. treatment
 
 # Variable relationships
 condition.causes(pounds_lost)
@@ -39,6 +43,8 @@ age.associates_with(pounds_lost)
 age.moderates(motivation_level, on=pounds_lost)
 adult.nests_within(group)
 
-# Query Tisane for a statistical model 
-design = ts.Design(dv=pounds_lost, ivs=[condition, motivation_level]).assign_data(data_path) 
+# Query Tisane for a statistical model
+design = ts.Design(dv=pounds_lost, ivs=[condition, motivation_level]).assign_data(
+    data_path
+)
 ts.infer_statistical_model_from_design(design=design)

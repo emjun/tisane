@@ -1,11 +1,16 @@
-
 # Tisane inferred the following statistical model based on this query:  {}
 import pandas as pd
-from pymer4.models import Lmer # supports Generalized linear models with or without mixed effects
+from pymer4.models import (
+    Lmer,
+)  # supports Generalized linear models with or without mixed effects
 
 
-df = pd.read_csv('examples/Animal_Science/pigs.csv')
+df = pd.read_csv("examples/Animal_Science/pigs.csv")
 
 
-model = Lmer(formula='Weight ~ Time + (1|Litter) + (1|Time) + (1|Pig)', family="gaussian", data=df)
+model = Lmer(
+    formula="Weight ~ Time + (1|Litter) + (1|Time) + (1|Pig)",
+    family="gaussian",
+    data=df,
+)
 print(model.fit())

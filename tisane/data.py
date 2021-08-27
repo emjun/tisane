@@ -27,16 +27,18 @@ class Dataset(object):
         elif isinstance(source, pd.DataFrame):
             df = source
             self.data_path = None
-        else: 
-            import pdb; pdb.set_trace()
+        else:
+            import pdb
+
+            pdb.set_trace()
 
         # TODO: post-processing? E.g., break up into DataVectors?
         self.dataset = df
 
     def get_data(self) -> pd.DataFrame:
         return self.dataset
-    
-    def get_data_path(self) -> os.path: 
+
+    def get_data_path(self) -> os.path:
         return self.data_path
 
     def get_column(self, name: str):
@@ -54,10 +56,10 @@ class Dataset(object):
             # else:
             return 0
 
-    def has_data(self) -> bool: 
-        return self.dataset is not None 
-        
-    def has_data_path(self) -> bool: 
+    def has_data(self) -> bool:
+        return self.dataset is not None
+
+    def has_data_path(self) -> bool:
 
         return self.data_path is not None
 

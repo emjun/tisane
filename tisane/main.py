@@ -60,6 +60,7 @@ def check_design_dv(design: Design):
 
     return True
 
+
 # @returns a Python dict with all the effect options, can be used to output straight JSON or to write a file
 # @param output_path is the file path to write out the data
 def collect_model_candidates(
@@ -156,6 +157,7 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
 
     return path
 
+
 def write_to_script(code: str, output_dir: str, output_filename: str):
     assert output_filename.endswith(".py")
     path = Path(output_dir, output_filename)
@@ -227,18 +229,18 @@ def construct_statistical_model(
         if len(rc_group_dict.keys()) == 1:
             for rc_type, info in rc_group_dict.items():
                 if rc_type == "random intercept":
-                    assert(isinstance(info, dict))
+                    assert isinstance(info, dict)
                     groups = info["groups"]
                     for ri in random_intercepts:
                         if ri.groups.name == groups:
                             ri_obj = ri
                             random_effects.add(ri_obj)
                 else:
-                    assert(rc_type == "random slope")
-                    assert(isinstance(info, list))
+                    assert rc_type == "random slope"
+                    assert isinstance(info, list)
                     # There could be multiple random slopes associated with this group
                     for rs_dict in info:
-                        assert(isinstance(rs_dict, dict))
+                        assert isinstance(rs_dict, dict)
                         groups = rs_dict["groups"]
                         iv = rs_dict["iv"]
                         for rs in random_slopes:
@@ -246,45 +248,49 @@ def construct_statistical_model(
                                 rs_obj = rs
                                 random_effects.add(rs_obj)
         else:
-            assert(len(rc_group_dict.keys()) > 1)
+            assert len(rc_group_dict.keys()) > 1
             rc_group_ri_obj = None
             rc_group_rs_obj = None
             # There are multiple random effects for the group
             for rc_type, info in rc_group_dict.items():
                 if rc_type == "random intercept":
-                    assert(isinstance(info, dict))
+                    assert isinstance(info, dict)
                     groups = info["groups"]
                     for ri in random_intercepts:
                         if ri.groups.name == groups:
                             rc_group_ri_obj = ri
                 else:
-                    assert(rc_type == "random slope")
-                    assert(isinstance(info, list))
+                    assert rc_type == "random slope"
+                    assert isinstance(info, list)
 
                     for rs_dict in info:
-                        assert(isinstance(rs_dict, dict))
+                        assert isinstance(rs_dict, dict)
                         groups = rs_dict["groups"]
                         iv = rs_dict["iv"]
                         for rs in random_slopes:
                             if rs.groups.name == groups and rs.iv.name == iv:
                                 rc_group_rs_obj = rs
                         # import pdb; pdb.set_trace()
-                        if rc_group_ri_obj is not None: # May be correlated/uncorrelated
-                            assert("correlated" in rs_dict.keys())
+                        if (
+                            rc_group_ri_obj is not None
+                        ):  # May be correlated/uncorrelated
+                            assert "correlated" in rs_dict.keys()
                             correlated = rs_dict["correlated"]
                             # import pdb; pdb.set_trace()
 
                             if correlated:
                                 # Create correlated RS and RI
                                 corr = CorrelatedRandomSlopeAndIntercept(
-                                    random_slope=rc_group_rs_obj, random_intercept=rc_group_ri_obj
+                                    random_slope=rc_group_rs_obj,
+                                    random_intercept=rc_group_ri_obj,
                                 )
                                 # Add correlated RS and RI to random effects
                                 random_effects.add(corr)
                             else:
                                 # Create uncorrelated RS and RI
                                 corr = UncorrelatedRandomSlopeAndIntercept(
-                                    random_slope=rc_group_rs_obj, random_intercept=rc_group_ri_obj
+                                    random_slope=rc_group_rs_obj,
+                                    random_intercept=rc_group_ri_obj,
                                 )
                                 # Add uncorrelated RS and RI to random effects
                                 # import pdb; pdb.set_trace()
@@ -398,10 +404,14 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
     ### Step 3: Disambiguation loop (GUI)
     gui = TisaneGUI()
 
-    ### Step 4: GUI generates code 
-    def generateCode(destinationDir: str = None, modelSpecJson: str = "model_spec.json"):
+    ### Step 4: GUI generates code
+    def generateCode(
+        destinationDir: str = None, modelSpecJson: str = "model_spec.json"
+    ):
         destinationDir = destinationDir or os.getcwd()
-        output_filename = os.path.join(destinationDir, modelSpecJson)  # or whatever path/file that the GUI outputs
+        output_filename = os.path.join(
+            destinationDir, modelSpecJson
+        )  # or whatever path/file that the GUI outputs
 
         ### Step 4: Code generation
         # Construct StatisticalModel from JSON spec
@@ -426,4 +436,3 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         return path
 
     gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
-

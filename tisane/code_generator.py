@@ -111,7 +111,7 @@ pymer4_code_templates = {
     "model_template": pymer4_model_template,
     "model_diagnostics_function_wrapper": model_diagnostics_function_wrapper,
     "model_diagnostics": pymer4_model_diagnostics,
-    "main_function": main_function
+    "main_function": main_function,
 }
 
 statsmodels_code_templates = {
@@ -123,10 +123,10 @@ statsmodels_code_templates = {
     "model_template": statsmodels_model_template,
     "model_diagnostics_function_wrapper": model_diagnostics_function_wrapper,
     "model_diagnostics": statsmodels_model_diagnostics,
-    "main_function": main_function
+    "main_function": main_function,
 }
 
-# Reference from: 
+# Reference from:
 pymer4_family_name_to_functions = {
     "GaussianFamily": "gaussian",
     "InverseGaussianFamily": "inverse_gaussian",
@@ -140,8 +140,7 @@ pymer4_family_name_to_functions = {
 }
 
 # Lme4 implements defaults for the link functions based on the family functions
-pymer4_link_name_to_functions = {
-}
+pymer4_link_name_to_functions = {}
 
 # Reference from: https://www.statsmodels.org/stable/glm.html#families
 statsmodels_family_name_to_functions = {
@@ -176,13 +175,14 @@ statsmodels_link_name_to_functions = {
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
 
+
 # Write data out to path
 # Return path
 def write_out_dataframe(data: Dataset) -> os.path:
     destinationDir = os.getcwd()
     output_filename = os.path.join(destinationDir, "data.csv")
     # path = absolute_path("data.csv")
-    assert(data.has_data())
+    assert data.has_data()
     data.get_data().to_csv(output_filename)
 
     return output_filename
@@ -216,30 +216,47 @@ def generate_pymer4_code(statistical_model: StatisticalModel):
     data_code = None
     if not statistical_model.has_data():
         data_code = pymer4_code_templates["load_data_no_data_source"]
-    else: 
+    else:
         data = statistical_model.get_data()
         if data.has_data_path():
             data_code = pymer4_code_templates["load_data_from_csv_template"]
             data_code = data_code.format(path=str(data.data_path))
-        else: 
+        else:
             assert not data.has_data_path()
             data_path = write_out_dataframe(data)
-            data_code = pymer4_code_templates["load_data_from_dataframe_template"].format(path=data_path)
+            data_code = pymer4_code_templates[
+                "load_data_from_dataframe_template"
+            ].format(path=data_path)
 
     ### Generate model code
     model_code = generate_pymer4_model(statistical_model=statistical_model)
-    
-    ### Generate model diagnostics code for plotting residuals vs. fitted 
+
+    ### Generate model diagnostics code for plotting residuals vs. fitted
     model_diagnostics_code = pymer4_code_templates["model_diagnostics"]
 
     ### Put everything together
     model_function_wrapper = pymer4_code_templates["model_function_wrapper"]
-    model_diagnostics_function_wrapper = pymer4_code_templates["model_diagnostics_function_wrapper"]
+    model_diagnostics_function_wrapper = pymer4_code_templates[
+        "model_diagnostics_function_wrapper"
+    ]
     main_function = pymer4_code_templates["main_function"]
 
     assert data_code is not None
     # Return string to write out to script
-    return preamble + "\n" + model_function_wrapper + data_code + "\n" + model_code + "\n" + model_diagnostics_function_wrapper +  model_diagnostics_code + "\n" + main_function
+    return (
+        preamble
+        + "\n"
+        + model_function_wrapper
+        + data_code
+        + "\n"
+        + model_code
+        + "\n"
+        + model_diagnostics_function_wrapper
+        + model_diagnostics_code
+        + "\n"
+        + main_function
+    )
+
 
 def generate_pymer4_model(statistical_model: StatisticalModel):
     global pymer4_code_templates
@@ -337,8 +354,10 @@ def generate_pymer4_family(statistical_model: StatisticalModel) -> str:
 
     return pymer4_family_name_to_functions[sm_family_name]
 
+
 # def generate_pymer4_link(statistical_model=StatisticalModel) -> str:
 #     return str()
+
 
 def generate_statsmodels_code(statistical_model: StatisticalModel):
     global statsmodels_code_templates
@@ -350,7 +369,7 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
     data_code = None
     if not statistical_model.has_data():
         data_code = statsmodels_code_templates["load_data_no_data_source"]
-    else: 
+    else:
         data = statistical_model.get_data()
         if data.data_path is not None:
             data_code = statsmodels_code_templates["load_data_from_csv_template"]
@@ -358,7 +377,9 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
         else:
             assert data.data_path is None
             data_path = write_out_dataframe(data)
-            data_code = statsmodels_code_templates["load_data_from_dataframe_template"].format(path=data_path)
+            data_code = statsmodels_code_templates[
+                "load_data_from_dataframe_template"
+            ].format(path=data_path)
 
     ### Generate model code
     formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
@@ -371,12 +392,26 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
 
     ### Put everything together
     model_function_wrapper = statsmodels_code_templates["model_function_wrapper"]
-    model_diagnostics_function_wrapper = statsmodels_code_templates["model_diagnostics_function_wrapper"]
+    model_diagnostics_function_wrapper = statsmodels_code_templates[
+        "model_diagnostics_function_wrapper"
+    ]
     main_function = statsmodels_code_templates["main_function"]
 
     assert data_code is not None
     # Return string to write out to script
-    return preamble + "\n" + model_function_wrapper +  data_code + "\n" + model_code + "\n" + model_diagnostics_function_wrapper + model_diagnostics_code + "\n" + main_function
+    return (
+        preamble
+        + "\n"
+        + model_function_wrapper
+        + data_code
+        + "\n"
+        + model_code
+        + "\n"
+        + model_diagnostics_function_wrapper
+        + model_diagnostics_code
+        + "\n"
+        + main_function
+    )
 
 
 def generate_statsmodels_model(statistical_model: StatisticalModel):

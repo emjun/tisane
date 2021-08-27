@@ -101,7 +101,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1, m2])
         gr = design.graph
 
-        (common_ancestors_names, common_ancestors_names_to_variables) = find_common_ancestors([m1, m2], gr)
+        (
+            common_ancestors_names,
+            common_ancestors_names_to_variables,
+        ) = find_common_ancestors([m1, m2], gr)
         common_ancestors_variables = cast_to_variables(
             common_ancestors_names, design.ivs
         )
@@ -198,8 +201,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1, m2])
         gr = design.graph
 
-
-        (causal_ancestors_names, variable_to_causal_ancestors) = find_all_causal_ancestors([m2], gr)
+        (
+            causal_ancestors_names,
+            variable_to_causal_ancestors,
+        ) = find_all_causal_ancestors([m2], gr)
         causal_ancestors_variables = cast_to_variables(
             causal_ancestors_names, design.ivs
         )
@@ -222,7 +227,10 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m2])
         gr = design.graph
 
-        (causal_ancestors_names, variable_to_causal_ancestors) = find_all_causal_ancestors([m2], gr)
+        (
+            causal_ancestors_names,
+            variable_to_causal_ancestors,
+        ) = find_all_causal_ancestors([m2], gr)
         causal_ancestors_variables = cast_to_variables(
             causal_ancestors_names, [m0, m1, m2]
         )
@@ -316,13 +324,15 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0, m1])
         gr = design.graph
 
-        (associates_that_cause_dv_names, variable_to_intermediaries) = find_all_associates_that_causes_or_associates_another(
-                sources=[m0, m1], sink=dv, gr=gr
-            )
+        (
+            associates_that_cause_dv_names,
+            variable_to_intermediaries,
+        ) = find_all_associates_that_causes_or_associates_another(
+            sources=[m0, m1], sink=dv, gr=gr
+        )
 
         associates_that_cause_dv_variables = cast_to_variables(
-            associates_that_cause_dv_names,
-            [m0, m1, m2]
+            associates_that_cause_dv_names, [m0, m1, m2]
         )
         self.assertEqual(len(associates_that_cause_dv_variables), 3)
         self.assertIn(m0, associates_that_cause_dv_variables)
@@ -347,11 +357,16 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         design = ts.Design(dv=dv, ivs=[m0])
         gr = design.graph
 
-        (associates_that_cause_dv_names, variable_to_intermediaries) = find_all_associates_that_causes_or_associates_another(
-                sources=[m0, m1], sink=dv, gr=gr
-            )
-        
-        associates_that_cause_dv_variables = cast_to_variables(associates_that_cause_dv_names, [m0, m1, m2])
+        (
+            associates_that_cause_dv_names,
+            variable_to_intermediaries,
+        ) = find_all_associates_that_causes_or_associates_another(
+            sources=[m0, m1], sink=dv, gr=gr
+        )
+
+        associates_that_cause_dv_variables = cast_to_variables(
+            associates_that_cause_dv_names, [m0, m1, m2]
+        )
         self.assertEqual(len(associates_that_cause_dv_variables), 2)
         self.assertIn(m0, associates_that_cause_dv_variables)
         self.assertIn(m1, associates_that_cause_dv_variables)
