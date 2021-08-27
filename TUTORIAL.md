@@ -127,4 +127,4 @@ Examples can be found in the `examples` directory. There are three main examples
 
 Now that you've installed Tisane, you should be able to run the examples!
 
-The notebook versions include extra explanations and information that you may find useful as an introduction to Tisane.
+The notebook versions include extra explanations and information that you may find useful as an introduction to Tisane.  
