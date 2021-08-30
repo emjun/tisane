@@ -11,6 +11,24 @@ TODO: Added Time variable, not sure if we should include it?
 
 
 class AbstractVariable:
+    """Super class for all variables, containing basic common attributes.
+
+    Parameters
+    ----------
+    name : str
+        the name of the variable. If you have data, this should correspond to
+        the column's name. The dataset must be in long format.
+    data : None
+        TODO: fill
+
+    Attributes
+    ----------
+    relationships : list of Has, Repeats, Nests, Associates, or Moderates
+        The relationships this variable has with other variables
+    name
+    data
+
+    """
     name: str
     data: DataVector
     relationships: List[typing.Union["Has", "Repeats", "Nests"]]
@@ -25,6 +43,19 @@ class AbstractVariable:
 
     # @param effect the variable causes
     def causes(self, effect: "AbstractVariable"):
+        """Short summary.
+
+        Parameters
+        ----------
+        effect : "AbstractVariable"
+            Description of parameter `effect`.
+
+        Returns
+        -------
+        type
+            Description of returned object.
+
+        """
         # Update both variables
         cause_relat = Causes(cause=self, effect=effect)
         self.relationships.append(cause_relat)
@@ -32,6 +63,19 @@ class AbstractVariable:
 
     # @param variable associated with self
     def associates_with(self, variable: "AbstractVariable"):
+        """Short summary.
+
+        Parameters
+        ----------
+        variable : "AbstractVariable"
+            Description of parameter `variable`.
+
+        Returns
+        -------
+        type
+            Description of returned object.
+
+        """
         # Update both variables
         assoc_relat = Associates(lhs=self, rhs=variable)
         self.relationships.append(assoc_relat)
@@ -119,6 +163,30 @@ class Unit(AbstractVariable):
         number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
         **kwargs,
     ):
+        """Creates a categorical data variable that is an attribute of a `tisane.Unit.`
+
+        Parameters
+        ----------
+        name : str
+            the name of the variable. If you have data, this should correspond
+            to the column's name.
+        data : type
+            TODO: Description of parameter `data`.
+        number_of_instances : int, AbstractVariable, or AtMost, default=1
+            This should be the number of measurements of an attribute per
+            unique instance of the associated tisane.Unit. For example, if you
+            measure the reaction time of a person 10 times, then you should
+            enter 10.
+        **kwargs : type
+            TODO: Description of parameter `**kwargs`.
+
+        Returns
+        -------
+        Nominal
+            The categorical data variable defined as an attribute of this
+            `Unit`
+
+        """
         # Create new measure
         measure = Nominal(name, data=data, **kwargs)
         # Add relationship to self and to measure
@@ -134,6 +202,54 @@ class Unit(AbstractVariable):
         data=None,
         number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
     ):
+        """Creates a categorical data variable whose categories are ordered.
+
+        Parameters
+        ----------
+        name : str
+            the name of the variable. If you have data, this should correspond
+            to the column's name.
+        order : list
+            a list of the categories, in the order desired
+        cardinality : int, optional
+            Description of parameter `cardinality`.
+        data : type, optional
+            Description of parameter `data`.
+        number_of_instances : int, AbstractVariable, or "AtMost", default=1
+             This should be the number of measurements of an attribute per
+             unique instance of the associated tisane.Unit. For example, if you
+             measure the reaction time of a person 10 times, then you should
+             enter 10.
+
+        Returns
+        -------
+        Ordinal
+            The categorical data variable with ordered categories
+
+        Examples
+        --------
+
+        Representing age ranges: <18, 18-30, 31-45, 46-64, 65+
+
+        >>> person = ts.Unit("person")
+        >>> ageRange = person.ordinal(name="age", order=["<18", "18-30", "31-45", "46-64", "65+"])
+
+        Representing 3 different treatments of differing amounts of vitamin E:
+
+        >>> pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
+        >>> vitamin_e = pig.ordinal("Evit",
+        ...                         order=["Evit000", "Evit100", "Evit200"],
+        ...                         number_of_instances=1)
+
+        Suppose you have 100 people, and you measure using a Likert scale how
+        well they're feeling 10 times, for each person.
+
+        >>> person = ts.Unit("person", cardinality=100) # 100 people
+        >>> feeling = person.ordinal("well",
+        ...                          order=[1, 2, 3, 4, 5],
+        ...                          number_of_instances=10)
+
+        """
         # Create new measure
         measure = Ordinal(name=name, order=order, cardinality=cardinality, data=data)
         # Add relationship to self and to measure
@@ -439,6 +555,30 @@ Class for Has relationships
 
 
 class Has:
+    # TODO: Finish
+    """ Class for Has relationships
+
+    Parameters
+    ----------
+    variable : AbstractVariable
+        Description of parameter `variable`.
+    measure : AbstractVariable
+        Description of parameter `measure`.
+    repetitions : "NumberValue"
+        Description of parameter `repetitions`.
+    according_to : AbstractVariable
+        Description of parameter `according_to`.
+    **kwargs : type
+        Description of parameter `**kwargs`.
+
+    Attributes
+    ----------
+    variable
+    measure
+    repetitions
+    according_to
+
+    """
     variable: AbstractVariable
     measure: AbstractVariable
     repetitions: "NumberValue"
@@ -458,12 +598,27 @@ class Has:
         self.according_to = according_to
 
 
-"""
-Class for expressing repeated measures
-"""
-
 
 class Repeats:
+    # TODO: finish
+    """ Class for expressing repeated measures
+
+    Parameters
+    ----------
+    unit : Unit
+        Description of parameter `unit`.
+    measure : Measure
+        Description of parameter `measure`.
+    according_to : Measure
+        Description of parameter `according_to`.
+
+    Attributes
+    ----------
+    unit
+    measure
+    according_to
+
+    """
     unit: Unit
     measure: Measure
     according_to: Measure
@@ -474,12 +629,25 @@ class Repeats:
         self.according_to = according_to
 
 
-"""
-Class for expressing nesting relationship between units
-"""
 
 
 class Nests:
+    # TODO: Finish
+    """ Class for expressing nesting relationship between units
+
+    Parameters
+    ----------
+    base : Unit
+        Description of parameter `base`.
+    group : Unit
+        Description of parameter `group`.
+
+    Attributes
+    ----------
+    base
+    group
+
+    """
     base: Unit
     group: Unit
 
@@ -488,12 +656,21 @@ class Nests:
         self.group = group
 
 
-"""
-Wrapper class for expressing values for the number of repetitions of a condition, etc.
-"""
-
 
 class NumberValue:
+    # TODO: Finish
+    """ Wrapper class for expressing values for the number of repetitions of a condition, etc.
+
+    Parameters
+    ----------
+    value : int
+        Description of parameter `value`.
+
+    Attributes
+    ----------
+    value
+
+    """
     value: int
 
     def __init__(self, value: int):
@@ -525,7 +702,21 @@ Class for expressing an upper bound of values
 
 
 class AtMost(NumberValue):
+    """Short summary."""
     def __init__(self, value: typing.Union[int, AbstractVariable]):
+        """Short summary.
+
+        Parameters
+        ----------
+        value : typing.Union[int, AbstractVariable]
+            Description of parameter `value`.
+
+        Returns
+        -------
+        type
+            Description of returned object.
+
+        """
         if isinstance(value, int):
             super(AtMost, self).__init__(value)
         elif isinstance(value, AbstractVariable):
