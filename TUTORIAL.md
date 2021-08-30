@@ -139,17 +139,21 @@ With this workflow, you
 
 This way, you get to use whatever IDE you like to write the specification using the Tisane DSL.
 
-# Examples
+# Additional Resources
+
+You might want to check out the [API reference](API_OVERVIEW.md) for more information, in addition to the examples below.
+
+## Examples
 
 Examples can be found in the `examples` directory. There are three main examples, each of which has both a Python script version and a Jupyter notebook version.
 
  - `examples/Animal_Science`:
-   - `pigs.py` or `pigs.ipynb`
+   - [`pigs.py`](examples/Animal_Science/pigs.py) or [`pigs.ipynb`](examples/Animal_Science/pigs.ipynb)
  - `examples/Exercise`:
-   - `exercise_simple.py` or `exercise_simple.ipynb`
+   - [`exercise_simple.py`](examples/Exercise/exercise_simple.py) or [`exercise_simple.ipynb`](examples/Exercise/exercise_simple.ipynb)
  - `examples/Group_Exercise`:
-   - `exercise_group.py` or `exercise_group.ipynb`
-   - `exercise_group_age_added.py` or `exercise_group_age_added.ipynb`
+   - [`exercise_group.py`](examples/Group_Exercise/exercise_group.py) or [`exercise_group.ipynb`](examples/Group_Exercise/exercise_group.ipynb)
+   - [`exercise_group_age_added.py`](examples/Group_Exercise/exercise_group_age_added.py) or [`exercise_group_age_added.ipynb`](examples/Group_Exercise/exercise_group_age_added.ipynb)
 
 Now that you've installed Tisane, you should be able to run the examples!
 
