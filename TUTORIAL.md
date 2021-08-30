@@ -14,9 +14,15 @@ research questions.
 # Installation
 Tisane requires Python 3.8+ and also an installation of R (see below).
 
-First, install Tisane using `pip`:
+First, install Tisane using `pip`, in a virtual environment:
 
 ```
+# create and activate your virtual environment, if you haven't already
+# replace <MY-ENV-NAME> with the name of your env
+python3 -m venv <MY-ENV-NAME>
+source <MY-ENV-NAME>/bin/activate
+
+# install tisane
 pip install tisane
 ```
 
@@ -26,13 +32,22 @@ We recommend using a virtualenv with `pip` to keep your dependencies clean. Equi
 poetry add tisane
 ```
 
-Second, you will need to install the R packages `lme4`, `lmerTest`, and `emmeans`, and also `lazyeval`.
+Second, you will need to install the R packages `lme4`, `lmerTest`, and `emmeans`, and also `lazyeval`. (You can do this either by copying the above code into a file and running it using R, run it in RStudio, or you open an R shell and run the above line.)
 
-```
-install.packages(c('lme4','lmerTest','emmeans','lazyeval'))
+
+```R
+install.packages(c('lme4','lmerTest','emmeans','lazyeval'));
 ```
 
-(You can do this either by copying the above code into a file and running it using R, run it in RStudio, or you open an R shell and run the above line.)
+If you have issues with installing all 4 at once, for convenience, here they are individually:
+
+```R
+install.packages('lme4');
+install.packages('lmerTest');
+install.packages('emmeans');
+install.packages('lazyeval');
+```
+
 
 ## Installing R
 For convenience, here are several ways you can install R:
