@@ -26,6 +26,9 @@ pymer4 = "^0.7.5"
 pytest = "^6.2.4"
 jupyter-dash = "^0.4.0"
 jupyter = "^1.0.0"
+Sphinx = "^4.1.2"
+pydata-sphinx-theme = "^0.6.3"
+sphinx-autoapi = "^1.8.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
