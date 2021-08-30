@@ -49,7 +49,7 @@ def separateByUpperCamelCase(mystr):
 
 
 def getInfoBubble(id: str):
-    return html.I(className="bi bi-info-circle", id=id)
+    return html.I(className="bi bi-info-circle text-info", id=id)
 
 
 class GUIComponents:
@@ -1293,78 +1293,77 @@ class GUIComponents:
             dvData = self.dataDf[self.dv]
             shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
             normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
+
+            shapiroHeader = html.Th(
+                html.A(
+                    "Shapiro-Wilk Test",
+                    href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html",
+                ),
+                colSpan=2,
+            )
+            dagostinoAndPearsonsHeader = html.Th(
+                html.A(
+                    "D'Agostino and Pearson's Test",
+                    href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html",
+                ),
+                colSpan=2,
+            )
+            testHeader = [
+                html.Th("Test Statistic"),
+                html.Th("P-Value"),
+            ]
+
+            tableHeader = html.Thead(
+                [
+                    html.Tr([shapiroHeader, dagostinoAndPearsonsHeader]),
+                    html.Tr(testHeader + testHeader),
+                ]
+            )
+            tableBody = html.Tbody(
+                [
+                    html.Tr(
+                        [
+                            html.Td("{:.5e}".format(shapiroStat)),
+                            html.Td(
+                                "{:.5e}{}".format(shapiroPvalue, "*" if shapiroPvalue < 0.05 else "")
+                            ),
+                            html.Td("{:.5e}".format(normaltestStat)),
+                            html.Td(
+                                "{:.5e}{}".format(
+                                    normaltestPvalue,
+                                    "*" if normaltestPvalue < 0.05 else ""
+                                )
+                            ),
+                        ]
+                    )
+                ]
+            )
             normalityTestPortion = [
-                html.H5(["Normality Tests ", getInfoBubble("normality-tests-info")]),
+                html.H5(["Normality Tests"]),
                 dbc.Row(
                     [
                         dbc.Col(
                             dbc.Table(
                                 [
-                                    html.Thead(
-                                        [
-                                            html.Tr(
-                                                [
-                                                    html.Th(
-                                                        html.A(
-                                                            "Shapiro-Wilk Test",
-                                                            href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html",
-                                                        ),
-                                                        colSpan=2,
-                                                    ),
-                                                    html.Th(
-                                                        html.A(
-                                                            "D'Agostino and Pearson's Test",
-                                                            href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html",
-                                                        ),
-                                                        colSpan=2,
-                                                    ),
-                                                ]
-                                            ),
-                                            html.Tr(
-                                                [
-                                                    html.Th("Test Statistic"),
-                                                    html.Th("P-Value"),
-                                                    html.Th("Test Statistic"),
-                                                    html.Th("P-Value"),
-                                                ]
-                                            ),
-                                        ]
-                                    ),
-                                    html.Tbody(
-                                        [
-                                            html.Tr(
-                                                [
-                                                    html.Td(
-                                                        "{:.5e}".format(shapiroStat)
-                                                    ),
-                                                    html.Td(
-                                                        "{:.5e}".format(shapiroPvalue)
-                                                    ),
-                                                    html.Td(
-                                                        "{:.5e}".format(normaltestStat)
-                                                    ),
-                                                    html.Td(
-                                                        "{:.5e}".format(
-                                                            normaltestPvalue
-                                                        )
-                                                    ),
-                                                ]
-                                            )
-                                        ]
-                                    ),
+                                    tableHeader,
+                                    tableBody
                                 ]
                             )
                         )
+
                     ]
                 ),
-                dbc.Popover(
-                    [
-                        dbc.PopoverHeader(normalityTestExplanation["header"]),
-                        dbc.PopoverBody(normalityTestExplanation["body"]),
-                    ],
-                    target="normality-tests-info",
-                    trigger="hover",
-                ),
+                dcc.Markdown(normalityTestExplanation["note"]),
+                html.H6(normalityTestExplanation["header"]),
+                dcc.Markdown(normalityTestExplanation["body"])
+                # dbc.Popover(
+                #     [
+                #         dbc.PopoverHeader(normalityTestExplanation["header"]),
+                #         dbc.PopoverBody(normalityTestExplanation["body"]),
+                #     ],
+                #     target="normality-tests-info",
+                #     trigger="hover",
+                # ),
             ]
             pass
         return normalityTestPortion

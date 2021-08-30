@@ -3,7 +3,8 @@
   "no-random-effects": "**There are no random effects to include!** Random effects are included to control for clustering in your data. Based on your expressed variable relationships, Tisane detects and automatically includes random effects. In this way, Tisane maximizes the statistical conclusion and external validity, or generalizabilty, if your statistical findings. ",
   "normality-tests": {
     "header": "Explanation of P-Values",
-    "body": "For both tests, the null hypothesis is that the data is sampled from a normal distribution. Therefore, a p-value of less than 0.05 is considered to reject the null hypothesis, i.e., the data does not seem to be normally distributed. P-values of more than or equal to 0.05 however do not mean that the data is definitely sampled from a normal distribution. For more information on these tests, as well as documentation on their implementations, please click on the links in the table header."
+    "body": "For both tests, the null hypothesis is that the data is sampled from a normal distribution. Therefore, a p-value of less than 0.05 is considered to reject the null hypothesis, i.e., the data does not seem to be normally distributed. P-values of more than or equal to 0.05 however do not mean that the data is definitely sampled from a normal distribution.\n\nFor more information on these tests, as well as documentation on their implementations, you can click on the links in the table header.",
+    "note": "_(\\* indicates significant p-values)_"
   },
   "link-functions": {
     "header": "About Link Functions",

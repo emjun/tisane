@@ -25,6 +25,19 @@ class AbstractVariable:
 
     # @param effect the variable causes
     def causes(self, effect: "AbstractVariable"):
+        """Short summary.
+
+        Parameters
+        ----------
+        effect : "AbstractVariable"
+            Description of parameter `effect`.
+
+        Returns
+        -------
+        type
+            Description of returned object.
+
+        """
         # Update both variables
         cause_relat = Causes(cause=self, effect=effect)
         self.relationships.append(cause_relat)
@@ -439,6 +452,30 @@ Class for Has relationships
 
 
 class Has:
+    # TODO: Finish
+    """ Class for Has relationships
+
+    Parameters
+    ----------
+    variable : AbstractVariable
+        Description of parameter `variable`.
+    measure : AbstractVariable
+        Description of parameter `measure`.
+    repetitions : "NumberValue"
+        Description of parameter `repetitions`.
+    according_to : AbstractVariable
+        Description of parameter `according_to`.
+    **kwargs : type
+        Description of parameter `**kwargs`.
+
+    Attributes
+    ----------
+    variable
+    measure
+    repetitions
+    according_to
+
+    """
     variable: AbstractVariable
     measure: AbstractVariable
     repetitions: "NumberValue"
@@ -458,12 +495,27 @@ class Has:
         self.according_to = according_to
 
 
-"""
-Class for expressing repeated measures
-"""
-
 
 class Repeats:
+    # TODO: finish
+    """ Class for expressing repeated measures
+
+    Parameters
+    ----------
+    unit : Unit
+        Description of parameter `unit`.
+    measure : Measure
+        Description of parameter `measure`.
+    according_to : Measure
+        Description of parameter `according_to`.
+
+    Attributes
+    ----------
+    unit
+    measure
+    according_to
+
+    """
     unit: Unit
     measure: Measure
     according_to: Measure
@@ -474,12 +526,25 @@ class Repeats:
         self.according_to = according_to
 
 
-"""
-Class for expressing nesting relationship between units
-"""
 
 
 class Nests:
+    # TODO: Finish
+    """ Class for expressing nesting relationship between units
+
+    Parameters
+    ----------
+    base : Unit
+        Description of parameter `base`.
+    group : Unit
+        Description of parameter `group`.
+
+    Attributes
+    ----------
+    base
+    group
+
+    """
     base: Unit
     group: Unit
 
@@ -488,12 +553,21 @@ class Nests:
         self.group = group
 
 
-"""
-Wrapper class for expressing values for the number of repetitions of a condition, etc.
-"""
-
 
 class NumberValue:
+    # TODO: Finish
+    """ Wrapper class for expressing values for the number of repetitions of a condition, etc.
+
+    Parameters
+    ----------
+    value : int
+        Description of parameter `value`.
+
+    Attributes
+    ----------
+    value
+
+    """
     value: int
 
     def __init__(self, value: int):
@@ -525,7 +599,21 @@ Class for expressing an upper bound of values
 
 
 class AtMost(NumberValue):
+    """Short summary."""
     def __init__(self, value: typing.Union[int, AbstractVariable]):
+        """Short summary.
+
+        Parameters
+        ----------
+        value : typing.Union[int, AbstractVariable]
+            Description of parameter `value`.
+
+        Returns
+        -------
+        type
+            Description of returned object.
+
+        """
         if isinstance(value, int):
             super(AtMost, self).__init__(value)
         elif isinstance(value, AbstractVariable):
