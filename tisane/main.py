@@ -330,7 +330,25 @@ def construct_statistical_model(
 
 
 # @returns statistical model that reflects the study design
+
 def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
+    """Infer a stats model from design and launch the Tisane GUI.
+
+    The Tisane GUI will walk you through making additional
+    choices for your statistical model, all inferred from your
+    original design. After selecting any additional variables as
+    well as a family and link functions, the Tisane GUI will
+    generate code.
+
+    Parameters
+    ----------
+    design : Design
+        The study design to infer a statistical model from
+    jupyter : bool, default=False
+        Whether to run the GUI in a plain server or as the output
+        of a jupyter notebook cell.
+
+    """
     gr = design.graph
 
     ### Step 1: Initial conceptual checks

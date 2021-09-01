@@ -35,7 +35,7 @@ release = '0.0.3'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
-    'autoapi.extension'
+    'numpydoc'
 ]
 
 autoapi_type = "python"
@@ -47,7 +47,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'autodoc']
 
 
 # -- Options for HTML output -------------------------------------------------
