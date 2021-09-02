@@ -7,3 +7,5 @@
 function
 
 .. auto{{ objtype }}:: {{ fullname }}
+
+{# Template based on the numpy template #}

@@ -38,3 +38,5 @@
    {%- endfor %}
 {% endif %}
 {% endblock %}
+
+{# Template based on the numpy template #}
