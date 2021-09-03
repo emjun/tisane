@@ -145,6 +145,19 @@ class SetUp(AbstractVariable):
     def get_cardinality(self):
         return self.variable.get_cardinality()
 
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
+    def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return len(unique_values)
+
+    # Assign cardinalty from data
+    def assign_cardinality_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.cardinality = self.calculate_cardinality_from_data(data)
+
 
 """
 Class for Units
@@ -160,6 +173,7 @@ class Unit(AbstractVariable):
         self,
         name: str,
         data=None,
+        cardinality=None,
         number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
         **kwargs,
     ):
@@ -188,7 +202,7 @@ class Unit(AbstractVariable):
 
         """
         # Create new measure
-        measure = Nominal(name, data=data, **kwargs)
+        measure = Nominal(name, data=data, cardinality=cardinality, **kwargs)
         # Add relationship to self and to measure
         self._has(measure=measure, number_of_instances=number_of_instances)
         # Return handle to measure
@@ -313,6 +327,18 @@ class Unit(AbstractVariable):
     def get_cardinality(self):
         return self.cardinality
 
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
+    def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return len(unique_values)
+
+    # Assign cardinalty from data
+    def assign_cardinality_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.cardinality = self.calculate_cardinality_from_data(data)
 
 """
 Super class for Measures
@@ -383,7 +409,7 @@ class Nominal(Measure):
         if "categories" in kwargs.keys():
             self.categories = kwargs["categories"]
             num_categories = len(kwargs["categories"])
-            assert int(kwargs["cardinality"]) == len(kwargs["categories"])
+            # assert int(kwargs["cardinality"]) == len(kwargs["categories"])
             if num_categories == 1:
                 # self.assert_property(prop="cardinality", val="unary")
                 pass
@@ -398,10 +424,16 @@ class Nominal(Measure):
         else:
             if "cardinality" in kwargs.keys():
                 self.cardinality = kwargs["cardinality"]
-            else:
-                if "categories" in kwargs.keys():
-                    num_categories = len(kwargs["categories"])
-                    self.cardinality = num_categories
+            # cardinality is not specified but categories is specified
+            elif "categories" in kwargs.keys():
+                num_categories = len(kwargs["categories"])
+                self.cardinality = num_categories
+            # neither cardinality nor categories are specified
+            else: 
+                # There is no data
+                self.cardinality = None 
+                self.categories = None
+
 
         # has data
         if self.data is not None:
@@ -420,11 +452,42 @@ class Nominal(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        return f"NominalVariable: data:{self.data}"
+        description = f"Nominal variable:\n" + f"name: {self.name}, cardinality: {self.cardinality}, categories: {self.categories}" + f"data: {self.data}"
+        return description
 
     # @returns cardinality
     def get_cardinality(self):
         return self.cardinality
+
+    # @returns categories
+    def get_categories(self): 
+        return self.categories
+
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
+    def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return len(unique_values)
+    
+    # Get the number of unique categorical values this nominal variable represents
+    def calculate_categories_from_data(self, data: Dataset) -> List[Any]: 
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return unique_values
+
+    # Assign cardinalty from data
+    def assign_cardinality_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.cardinality = self.calculate_cardinality_from_data(data)
+
+    # Assign categories from data
+    def assign_categories_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.categories = self.calculate_categories_from_data(data)
 
 
 """
@@ -466,13 +529,20 @@ class Ordinal(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        return f"OrdinalVariable: ordered_cat: {self.ordered_cat}, data:{self.data}"
+        description = f"Ordinal variable:\n" + f"name: {self.name}, cardinality: {self.cardinality}, ordered categories: {self.ordered_cat}" + f"data: {self.data}"
+        return description
 
+    # @returns cardinality
     def get_cardinality(self):
         return self.cardinality
 
-    # Estimate the cardinality of a variable by
+    # @returns categories in their order
+    def get_categories(self): 
+        return self.ordered_cat
+
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -495,7 +565,8 @@ class Numeric(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        return f"NumericVariable: data:{self.data}"
+        description = f"Numeric variable:\n" + f"name: {self.name}" + f"data: {self.data}"
+        return description
 
     def get_cardinality(self):
         if self.data is not None:
