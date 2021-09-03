@@ -59,16 +59,52 @@ class Design(object):
             self.dataset = Dataset(source)
         else:
             self.dataset = None
-
+                
     # Calculates and assigns cardinality to variables if cardinality is not already specified
     # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
     def check_variable_cardinality(self):
         variables = self.graph.get_variables()
 
         for v in variables:
-            if isinstance(v, Ordinal):
+            if isinstance(v, Nominal): 
                 assert self.dataset is not None
                 assert isinstance(self.dataset, Dataset)
+
+                # If cardinality was not specified previously, calculate it
+                if v.cardinality is None: 
+                    v.assign_cardinality_from_data(self.dataset)
+                
+                # If categories were not specified previously, calculate it
+                if v.categories is None: 
+                    v.assign_categories_from_data(self.dataset)
+                
+                # Check now 
+                calculated_cardinality = v.calculate_cardinality_from_data(
+                    data=self.dataset
+                )
+                calculated_categories = v.calculate_categories_from_data(data=self.dataset)
+                assert(calculated_cardinality == len(calculated_categories))
+
+                if calculated_cardinality > v.cardinality: 
+                    diff = calculated_cardinality - v.cardinality
+                    raise ValueError(
+                        f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect."
+                    )
+                # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
+                
+                # Are there more categories than the user specified? 
+                diff = set(calculated_categories) - set(v.categories)
+                if len(diff) > 0: 
+                    
+                    raise ValueError(
+                        f"Variable {v.name} is specified to have the following categories: {v.categories}. However, in the data provided, {v.name} has {calculated_categories} unique values. These are the categories that exist in the data but you may not have expected: {diff}"
+                    )
+                # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
+
+            elif isinstance(v, Ordinal):
+                assert self.dataset is not None
+                assert isinstance(self.dataset, Dataset)
+
                 calculated_cardinality = v.calculate_cardinality_from_data(
                     data=self.dataset
                 )
@@ -78,6 +114,7 @@ class Design(object):
                     raise ValueError(
                         f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect."
                     )
+                # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):

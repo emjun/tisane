@@ -383,7 +383,7 @@ class Nominal(Measure):
         if "categories" in kwargs.keys():
             self.categories = kwargs["categories"]
             num_categories = len(kwargs["categories"])
-            assert int(kwargs["cardinality"]) == len(kwargs["categories"])
+            # assert int(kwargs["cardinality"]) == len(kwargs["categories"])
             if num_categories == 1:
                 # self.assert_property(prop="cardinality", val="unary")
                 pass
@@ -398,10 +398,16 @@ class Nominal(Measure):
         else:
             if "cardinality" in kwargs.keys():
                 self.cardinality = kwargs["cardinality"]
-            else:
-                if "categories" in kwargs.keys():
-                    num_categories = len(kwargs["categories"])
-                    self.cardinality = num_categories
+            # cardinality is not specified but categories is specified
+            elif "categories" in kwargs.keys():
+                num_categories = len(kwargs["categories"])
+                self.cardinality = num_categories
+            # neither cardinality nor categories are specified
+            else: 
+                # There is no data
+                self.cardinality = None 
+                self.categories = None
+
 
         # has data
         if self.data is not None:
@@ -425,6 +431,32 @@ class Nominal(Measure):
     # @returns cardinality
     def get_cardinality(self):
         return self.cardinality
+
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
+    def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return len(unique_values)
+    
+    # Get the number of unique categorical values this nominal variable represents
+    def calculate_categories_from_data(self, data: Dataset) -> List[Any]: 
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return unique_values
+
+    # Assign cardinalty from data
+    def assign_cardinality_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.cardinality = self.calculate_cardinality_from_data(data)
+
+    # Assign categories from data
+    def assign_categories_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.categories = self.calculate_categories_from_data(data)
 
 
 """
@@ -471,8 +503,9 @@ class Ordinal(Measure):
     def get_cardinality(self):
         return self.cardinality
 
-    # Estimate the cardinality of a variable by
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
