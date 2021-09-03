@@ -494,6 +494,34 @@ class VariableTest(unittest.TestCase):
         with self.assertRaises(Exception):
             design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
 
+    def test_tostring_nominal(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", categories=[1, 2, 3])
+
+        description = str(measure)
+        self.assertIn(f"name: {measure.name}", description)
+        self.assertIn(f"cardinality: {measure.get_cardinality()}", description)
+        self.assertIn(f"categories: {measure.get_categories()}", description)
+        self.assertIn(f"data: {measure.data}", description)
+
+    def test_tostring_ordinal(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.ordinal("Ordinal_variable", order=[1, 2, 3, 4, 5])
+
+        description = str(measure)
+        self.assertIn(f"name: {measure.name}", description)
+        self.assertIn(f"cardinality: {measure.get_cardinality()}", description)
+        self.assertIn(f"ordered categories: {measure.get_categories()}", description)
+        self.assertIn(f"data: {measure.data}", description)
+
+    def test_tostring_numeric(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.numeric("Ordinal_variable")
+
+        description = str(measure)
+        self.assertIn(f"name: {measure.name}", description)
+        self.assertIn(f"data: {measure.data}", description)
+
     # def test_has_variables(self):
     #     # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects
 
