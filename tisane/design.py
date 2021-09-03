@@ -59,6 +59,17 @@ class Design(object):
             self.dataset = Dataset(source)
         else:
             self.dataset = None
+
+    def __str__(self): 
+        ivs_descriptions = list()
+        for v in self.ivs: 
+            ivs_descriptions.append(str(v))
+        ivs_descriptions_str = "\n".join(ivs_descriptions)
+
+        dv_description = str(self.dv)
+        description = f"dependent variable: {dv_description}" + "\n" + f"independent variables: {ivs_descriptions_str}" + "\n" + f"data: {self.data}"
+
+        return description
                 
     # Calculates and assigns cardinality to variables if cardinality is not already specified
     # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
