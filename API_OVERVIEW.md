@@ -8,7 +8,10 @@ There are four main categories of APIs in Tisane:
  - Inference functions
 
 # Data Variables
-
+Pro-tip: To see all the attributes of a variable, you can print it out: 
+```python
+print(variable)
+```
 ## Observational or Experimental Units: tisane.Unit
 
 ### Initialization
