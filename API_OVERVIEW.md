@@ -22,7 +22,7 @@ Parameters:
 
  - `name: str` -- the name of the variable. If you have data, this should correspond to the column's name. The dataset must be in long format. 
  <!-- - `data: tisane.data.DataVector` -- -->
- - `cardinality: int` -- the number of unique instances of the variable. For example, if there are 100 participants in the study, even if you have multiple data points from each participant, you specify `cardinality=100`.
+ - `cardinality: int` -- (optional) the number of unique instances of the variable. For example, if there are 100 participants in the study, even if you have multiple data points from each participant, you specify `cardinality=100`. If specified, Tisane will check that the cardinality is correct. If left unspecified, Tisane will calculate the cardinality. 
  <!-- - `kwargs` -- -->
 
 ## Measures
@@ -30,7 +30,7 @@ Measures are values or attributes pertaining to a specific unit. Each measure mu
 
 ### tisane.Unit.nominal
 ```python
-tisane.Unit.nominal(self, name, number_of_instances=1, **kwargs)
+tisane.Unit.nominal(self, name, cardinality=None, number_of_instances=1, **kwargs)
 ```
 
 Creates a categorical data variable that is an attribute of a `tisane.Unit`. 
@@ -39,6 +39,7 @@ Parameters:
 
  - `name: str` -- the name of the variable. If you have data, this should correspond to the column's name.
  <!-- - `data: tisane.data.DataVector` -- -->
+ - `cardinality: int` -- (optional) the number of unique instances of the variable
  - `number_of_instances` -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10.
  <!-- - `kwargs` -- -->
 
@@ -55,7 +56,7 @@ Parameters:
 
 - `name: str` -- the name of the variable. If you have data, this should correspond to the column's name.
 - `order: list` -- a list of the categories, in the order desired
-- `cardinality: int` -- the number of unique instances of the variable (optional)
+- `cardinality: int` -- (optional) the number of unique instances of the variable
 - `data: tisane.data.DataVector` --
 - `number_of_instances` -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10.
 <!-- - `kwargs` -- -->
@@ -89,7 +90,7 @@ Creates a data variable for the experiment's environment settings. One example o
 Parameters:
 - `name: str` -- the name of the variable. If you have data, this should correspond to the column's name
 - `order: list` -- a list of categories, in the order desired (e.g., time)
-- `cardinality: int` -- the number of unique measurements of the variable
+- `cardinality: int` -- (optional) the number of unique measurements of the variable
 <!-- - `data: tisane.data.DataVector` -- -->
 <!-- - `kwargs` -- -->
 

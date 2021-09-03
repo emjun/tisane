@@ -1,6 +1,8 @@
 from pandas.core.frame import DataFrame
 from tisane.variable import (
     AbstractVariable,
+    SetUp,
+    Unit, 
     Nominal,
     Ordinal,
     Has,
@@ -74,13 +76,13 @@ class Design(object):
     # Calculates and assigns cardinality to variables if cardinality is not already specified
     # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
     def check_variable_cardinality(self):
+        assert self.dataset is not None
+        assert isinstance(self.dataset, Dataset)
+
         variables = self.graph.get_variables()
 
         for v in variables:
             if isinstance(v, Nominal): 
-                assert self.dataset is not None
-                assert isinstance(self.dataset, Dataset)
-
                 # If cardinality was not specified previously, calculate it
                 if v.cardinality is None: 
                     v.assign_cardinality_from_data(self.dataset)
@@ -113,9 +115,6 @@ class Design(object):
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
             elif isinstance(v, Ordinal):
-                assert self.dataset is not None
-                assert isinstance(self.dataset, Dataset)
-
                 calculated_cardinality = v.calculate_cardinality_from_data(
                     data=self.dataset
                 )
@@ -126,6 +125,38 @@ class Design(object):
                         f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect."
                     )
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
+
+            elif isinstance(v, Unit): 
+                # If cardinality was not specified previously, calculate it
+                if v.cardinality is None: 
+                    v.assign_cardinality_from_data(self.dataset)
+
+                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+
+                if calculated_cardinality != v.cardinality:
+                    diff = calculated_cardinality - v.cardinality
+                    raise ValueError(
+                        f"Unit {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more instances of the unit in the data than you expect."
+                    )
+            elif isinstance(v, SetUp): 
+                v_cardinality = v.get_cardinality()
+                # If cardinality was not specified previously, calculate it
+                if v_cardinality is None: 
+                    v.assign_cardinality_from_data(self.dataset)
+
+                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+
+                if calculated_cardinality != v_cardinality:
+                    diff = calculated_cardinality - v_cardinality
+                    if diff > 0: 
+                        raise ValueError(
+                            f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more instances of the setting in the data than you expect."
+                        )
+                    else: 
+                        assert(diff < 0)
+                        raise ValueError(
+                            f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} fewer instances of the setting in the data than you expect."
+                        )
 
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):

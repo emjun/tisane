@@ -145,6 +145,19 @@ class SetUp(AbstractVariable):
     def get_cardinality(self):
         return self.variable.get_cardinality()
 
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
+    def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return len(unique_values)
+
+    # Assign cardinalty from data
+    def assign_cardinality_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.cardinality = self.calculate_cardinality_from_data(data)
+
 
 """
 Class for Units
@@ -160,6 +173,7 @@ class Unit(AbstractVariable):
         self,
         name: str,
         data=None,
+        cardinality=None,
         number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
         **kwargs,
     ):
@@ -188,7 +202,7 @@ class Unit(AbstractVariable):
 
         """
         # Create new measure
-        measure = Nominal(name, data=data, **kwargs)
+        measure = Nominal(name, data=data, cardinality=cardinality, **kwargs)
         # Add relationship to self and to measure
         self._has(measure=measure, number_of_instances=number_of_instances)
         # Return handle to measure
@@ -313,6 +327,18 @@ class Unit(AbstractVariable):
     def get_cardinality(self):
         return self.cardinality
 
+    # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
+    def calculate_cardinality_from_data(self, data: Dataset):
+        assert(data is not None)
+        data = data.dataset[self.name]  # Get data corresponding to this variable
+        unique_values = data.unique()
+
+        return len(unique_values)
+
+    # Assign cardinalty from data
+    def assign_cardinality_from_data(self, data: Dataset): 
+        assert(data is not None)
+        self.cardinality = self.calculate_cardinality_from_data(data)
 
 """
 Super class for Measures
