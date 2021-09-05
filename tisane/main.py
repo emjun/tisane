@@ -348,6 +348,19 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         Whether to run the GUI in a plain server or as the output
         of a jupyter notebook cell.
 
+    Examples
+    --------
+
+    >>> import tisane as ts
+    >>> participant = ts.Unit("participant", cardinality=20)
+    >>> input_device = ts.Unit("input_device", cardinality=2) # The two within-subjects conditions
+    >>> reaction_time = participant.numeric("reaction_time", number_of_instances=input_device)
+    >>> design = ts.Design(dv=reaction_time, ivs=[reaction_time])
+    >>> ts.infer_statistical_model_from_design(design)
+
+    If you want to run the GUI inside of a jupyter notebook, you use:
+
+    >>> ts.infer_statistical_model_from_design(design, jupyter=True)
     """
     gr = design.graph
 
