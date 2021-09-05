@@ -1129,7 +1129,7 @@ class GUIComponents:
             return dbc.Card(
                 dbc.CardBody(
                     [
-                        cardP(html.I(self.strings.getRangetRandomEffectsNoPageTitle())),
+                        cardP(html.I(self.strings.getRandomEffectsNoPageTitle())),
                         html.P(
                             self.getNoRandomEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
