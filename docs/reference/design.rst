@@ -5,6 +5,6 @@ tisane.design module
 
    tisane.design.Design
 
-.. autoclass:: tisane.design.Design
-   :members:
-   :show-inheritance:
+.. .. autoclass:: tisane.design.Design
+..    :members:
+..    :show-inheritance:

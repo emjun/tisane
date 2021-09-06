@@ -1,4 +1,2 @@
 _build
-reference/design_summary
-reference/main_summary
-reference/variables_summary
+reference/*_summary

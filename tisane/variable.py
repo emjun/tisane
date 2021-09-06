@@ -3,11 +3,11 @@ from tisane.data import Dataset, DataVector
 from typing import Any, List
 import typing  # for typing.Unit
 
-"""
-Abstract super class for all variables.
-Distinguish between Unit and Measures (Nominal, Ordinal, Numeric).
-TODO: Added Time variable, not sure if we should include it?
-"""
+# """
+# Abstract super class for all variables.
+# Distinguish between Unit and Measures (Nominal, Ordinal, Numeric).
+# TODO: Added Time variable, not sure if we should include it?
+# """
 
 
 class AbstractVariable:
@@ -16,17 +16,19 @@ class AbstractVariable:
     Parameters
     ----------
     name : str
-        the name of the variable. If you have data, this should correspond to
+        The name of the variable. If you have data, this should correspond to
         the column's name. The dataset must be in long format.
-    data : None
-        TODO: fill
+    data : DataVector, optional
+        For internal use only.
 
     Attributes
     ----------
     relationships : list of Has, Repeats, Nests, Associates, or Moderates
         The relationships this variable has with other variables
-    name
-    data
+    name : str
+        The name of the variable. If you are going to use data, this should correspond to the column's name.
+    data : DataVector
+        The data for this variable, in long format.
 
     """
     name: str
@@ -43,17 +45,26 @@ class AbstractVariable:
 
     # @param effect the variable causes
     def causes(self, effect: "AbstractVariable"):
-        """Short summary.
+        """Adds a `causes` relationship to a data variable.
 
         Parameters
         ----------
-        effect : "AbstractVariable"
-            Description of parameter `effect`.
+        effect : AbstractVariable
+            The effect of the data variable
 
-        Returns
-        -------
-        type
-            Description of returned object.
+        See Also
+        --------
+        associates_with: create a correlation relationship
+
+        Examples
+        --------
+
+        >>> import tisane as ts
+        >>> adult = ts.Unit(name="adult")
+        >>> pounds_lost = adult.numeric("pounds_lost")
+        >>> group = ts.Unit(name="group")
+        >>> exercise_regimen = group.nominal(name="exercise_regimen")
+        >>> exercise_regimen.causes(pounds_lost) # the exercise regimen causes the number of pounds lost
 
         """
         # Update both variables
@@ -63,17 +74,25 @@ class AbstractVariable:
 
     # @param variable associated with self
     def associates_with(self, variable: "AbstractVariable"):
-        """Short summary.
+        """ Adds a correlation relationship to a data variable.
 
         Parameters
         ----------
         variable : "AbstractVariable"
-            Description of parameter `variable`.
+            The variable that this variable is associated with/correlated to.
 
-        Returns
-        -------
-        type
-            Description of returned object.
+        See Also
+        --------
+        causes: add a causal relationship
+
+        Examples
+        --------
+
+        >>> import tisane as ts
+        >>> adult = ts.Unit(name="adult", cardinality=386)
+        >>> pounds_lost = adult.numeric(name="pounds_lost")
+        >>> age = adult.numeric(name="age")
+        >>> age.associates_with(pounds_lost)
 
         """
         # Update both variables
@@ -87,6 +106,28 @@ class AbstractVariable:
         moderator: typing.Union["AbstractVariable", List["AbstractVariable"]],
         on: "AbstractVariable",
     ):
+        """Adds an interaction relationship to a data variable
+
+        Parameters
+        ----------
+        moderator : AbstractVariable or List[AbstractVariable]
+            The variable(s) that moderate(s) the effect of this variable on another variable
+        on : AbstractVariable
+            The target of the moderated effect
+
+        Examples
+        --------
+
+        Race interacts with SES to cause math achievement:
+
+        >>> import tisane as ts
+        >>> student = ts.Unit(name="student_id")
+        >>> race = student.nominal(name="race")
+        >>> ses = student.ordinal(name="SES")
+        >>> math_achievement = student.numeric(name="math_score")
+        >>> race.moderates(moderator=ses, on=math_achievement)
+
+        """
         # Update both variables
         m_vars = list()
         m_vars.append(self)
@@ -110,12 +151,51 @@ class AbstractVariable:
         on.relationships.append(moderate_relat)
 
 
-"""
-Class for SetUp (experiment's environment) settings
-"""
 
 
 class SetUp(AbstractVariable):
+    """Class for experiment's environment settings and variables
+
+    This can represent time, year, etc.
+
+    Parameters
+    ----------
+    name : str
+        The name of the variable. If you have data, this should correspond to
+        the column's name. The dataset must be in long format.
+    order : List, optional
+        Use a specific ordering of the values of environment settings.
+    cardinality : int, optional
+        The number of unique values of the variable.
+    data : DataVector, optional
+        For internal use only.
+    **kwargs : optional
+        Additional keyword arguments are not currently implemented, i.e., specifying additional keyword arguments will do nothing.
+
+    Attributes
+    ----------
+    variable : Measure
+        The internal representation of this variable.
+
+    Examples
+    --------
+
+    Time as a `SetUp` variable:
+
+    >>> import tisane as ts
+    >>> time = ts.SetUp("time")
+
+    Year as a `SetUp` variable, and we know that we have 30 years of data.
+
+    >>> year = ts.SetUp("year", cardinality=30)
+
+    Suppose we had a sensor in the field somewhere, and the sensor records multiple types of data, such as temperature, humidity, etc., as well as the time for each measurement. We can have ``timestamp`` a `SetUp` variable, and we have a temperature for every time stamp.
+
+    >>> sensor = ts.Unit("sensor")
+    >>> timestamp = ts.SetUp("timestamp")
+    >>> temperature = sensor.numeric("temperature", number_of_instances=timestamp)
+
+    """
     variable: "Measure"
 
     def __init__(
@@ -154,17 +234,55 @@ class SetUp(AbstractVariable):
         return len(unique_values)
 
     # Assign cardinalty from data
-    def assign_cardinality_from_data(self, data: Dataset): 
+    def assign_cardinality_from_data(self, data: Dataset):
         assert(data is not None)
         self.cardinality = self.calculate_cardinality_from_data(data)
 
 
-"""
-Class for Units
-"""
+
 
 
 class Unit(AbstractVariable):
+    """Class for Units
+
+    A data variable that can have attributes. For example, if you have people
+    in your dataset, and each person has an eye color, height, age, etc., then
+    you should make the person variable a `Unit`.
+
+    Parameters
+    ----------
+    name : str
+        The name of the variable. If you have data, this should correspond to
+        the column's name. The dataset must be in long format.
+    data : DataVector, optional
+        For internal use only.
+    cardinality : int, optional
+        The number of unique values of the variable.
+        `cardinality` is optional only if you have a data set.
+        If specified, Tisane will check that the cardinality is correct if you
+        include data in the design.
+        If left unspecified, and data is available, Tisane will try to calculate
+        the cardinality.
+    **kwargs : optional
+        Additional keyword arguments are not currently implemented.
+
+    Attributes
+    ----------
+    cardinality: int
+        The number of unique values of the variable.
+
+    Examples
+    --------
+
+    >>> import tisane as ts
+    >>> person = ts.Unit(name="person_id")
+
+    An example with cardinality: there were 40 unique groups.
+
+    >>> group = ts.Unit(name="group_id", cardinality=40)
+
+    """
+
     def __init__(self, name: str, data=None, cardinality: int = None, **kwargs):
         super(Unit, self).__init__(name, data)
         self.cardinality = cardinality
@@ -177,28 +295,54 @@ class Unit(AbstractVariable):
         number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
         **kwargs,
     ):
-        """Creates a categorical data variable that is an attribute of a `tisane.Unit.`
+        """Creates a categorical data variable that is an attribute of a :py:class:`Unit`
 
         Parameters
         ----------
         name : str
             the name of the variable. If you have data, this should correspond
             to the column's name.
-        data : type
-            TODO: Description of parameter `data`.
+        data : DataVector, optional
+            For internal use only.
+        cardinality : int, optional
+            The number of unique values that the categorical variable can take.
+            This should correspond to the number of "categories." If left
+            unspecified, Tisane will infer this from the data.
         number_of_instances : int, AbstractVariable, or AtMost, default=1
             This should be the number of measurements of an attribute per
-            unique instance of the associated tisane.Unit. For example, if you
-            measure the reaction time of a person 10 times, then you should
-            enter 10.
-        **kwargs : type
-            TODO: Description of parameter `**kwargs`.
+            unique instance of the associated :py:class:`Unit`. For example, if
+            you asked how someone felt 5 different times, the
+        **kwargs : optional
+            You can optionally specify the categories using the keyword
+            argument ``categories``. This should be a list. If left unspecified,
+            Tisane will infer this from the data.
 
         Returns
         -------
         Nominal
             The categorical data variable defined as an attribute of this
-            `Unit`
+            :py:class:`Unit`
+
+        See Also
+        --------
+        numeric: create a numeric data variable
+        ordinal: create an ordered categorical data variable
+
+        Examples
+        --------
+
+        A study asked participants how they felt 5 separate times.
+
+        >>> import tisane as ts
+        >>> participant = ts.Unit(name="participant")
+        >>> feelings = participant.nominal(name="feeling",
+        ...                                categories=["sad", "happy", "angry", "excited"], # optional, specified here as an example
+        ...                                number_of_instances=5)
+
+        The study also collected participants' eye color.
+
+        >>> eye_color = participant.nominal(name="eye_color",
+                                            categories=["blue", "brown", "green", "hazel", "gray", "black"])
 
         """
         # Create new measure
@@ -226,10 +370,13 @@ class Unit(AbstractVariable):
         order : list
             a list of the categories, in the order desired
         cardinality : int, optional
-            Description of parameter `cardinality`.
-        data : type, optional
-            Description of parameter `data`.
-        number_of_instances : int, AbstractVariable, or "AtMost", default=1
+            The number of unique values that the variable can take. If left
+            unspecified, Tisane will automatically infer this from the data,
+            if any, or the `order` argument. `cardinality` is required if using
+            Tisane without providing data.
+        data : DataVector, optional
+            For internal use only.
+        number_of_instances : int, AbstractVariable, or AtMost, default=1
              This should be the number of measurements of an attribute per
              unique instance of the associated tisane.Unit. For example, if you
              measure the reaction time of a person 10 times, then you should
@@ -239,6 +386,11 @@ class Unit(AbstractVariable):
         -------
         Ordinal
             The categorical data variable with ordered categories
+
+        See Also
+        --------
+        numeric: create a numeric data variable
+        nominal: create an (unordered) categorical variable
 
         Examples
         --------
@@ -277,6 +429,30 @@ class Unit(AbstractVariable):
         data=None,
         number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
     ):
+        """Creates a variable that takes on integer or real number values
+
+
+
+        Parameters
+        ----------
+        name : str
+            The name of the variable. If you have data, this should correspond to the column's name.
+        data : DataVector, optional
+            For internal use only.
+        number_of_instances : int, AbstractVariable, or AtMost, default=1
+            This should be the number of measurements of an attribute per unique instance of the associated `Unit`. For example, if you measure the reaction time of each person in a study 10 times, then you should enter 10.
+
+        Examples
+        --------
+
+        Participants in a study each had their reaction time measured 10 times.
+
+        >>> import tisane as ts
+        >>> participant = ts.Unit(name="participant")
+        >>> reaction_time = participant.numeric(name="reaction_time",
+        ...                                     number_of_instances=10)
+
+        """
         # Create new measure
         measure = Numeric(name=name, data=data)
         # Add relationship to self and to measure
@@ -336,16 +512,15 @@ class Unit(AbstractVariable):
         return len(unique_values)
 
     # Assign cardinalty from data
-    def assign_cardinality_from_data(self, data: Dataset): 
+    def assign_cardinality_from_data(self, data: Dataset):
         assert(data is not None)
         self.cardinality = self.calculate_cardinality_from_data(data)
 
-"""
-Super class for Measures
-"""
-
 
 class Measure(AbstractVariable):
+    """
+    Super class for Measures
+    """
     def __init__(self, name: str, data: None, **kwargs):
         super(Measure, self).__init__(name, data)
 
@@ -391,12 +566,42 @@ class Measure(AbstractVariable):
         return None
 
 
-"""
-Class for Nominal measures
-"""
-
 
 class Nominal(Measure):
+    """ Class for nominal (a.k.a. categorical) measures
+
+    Represents a categorical variable. You never
+    instantiate this class directly, and instead you should
+    create instances via the :py:meth:`tisane.Unit.nominal` method.
+
+    Parameters
+    ----------
+    name : str
+        The name of the categorical variable. If you have data, this should correspond to the column's name in the data.
+    data : DataVector, optional
+        For internal use only
+    **kwargs : optional
+        Additional keyword arguments from the :py:meth:`tisane.Unit.nominal` method, such as ``categories`` or ``cardinality``.
+
+    Attributes
+    ----------
+    categories : type
+        Description of attribute `categories`.
+    assert_property : type
+        Description of attribute `assert_property`.
+    cardinality : type
+        Description of attribute `cardinality`.
+    self with : type
+        Description of attribute `self with`.
+    self and : type
+        Description of attribute `self and`.
+    data
+
+    See Also
+    --------
+    Unit.nominal: create a categorical variable associated with a :py:class:`tisane.Unit`
+
+    """
     cardinality: int
     categories = list
 
@@ -429,9 +634,9 @@ class Nominal(Measure):
                 num_categories = len(kwargs["categories"])
                 self.cardinality = num_categories
             # neither cardinality nor categories are specified
-            else: 
+            else:
                 # There is no data
-                self.cardinality = None 
+                self.cardinality = None
                 self.categories = None
 
 
@@ -460,7 +665,7 @@ class Nominal(Measure):
         return self.cardinality
 
     # @returns categories
-    def get_categories(self): 
+    def get_categories(self):
         return self.categories
 
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
@@ -470,9 +675,9 @@ class Nominal(Measure):
         unique_values = data.unique()
 
         return len(unique_values)
-    
+
     # Get the number of unique categorical values this nominal variable represents
-    def calculate_categories_from_data(self, data: Dataset) -> List[Any]: 
+    def calculate_categories_from_data(self, data: Dataset) -> List[Any]:
         assert(data is not None)
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
@@ -480,22 +685,59 @@ class Nominal(Measure):
         return unique_values
 
     # Assign cardinalty from data
-    def assign_cardinality_from_data(self, data: Dataset): 
+    def assign_cardinality_from_data(self, data: Dataset):
         assert(data is not None)
         self.cardinality = self.calculate_cardinality_from_data(data)
 
     # Assign categories from data
-    def assign_categories_from_data(self, data: Dataset): 
+    def assign_categories_from_data(self, data: Dataset):
         assert(data is not None)
         self.categories = self.calculate_categories_from_data(data)
 
 
-"""
-Class for Ordinal measures
-"""
-
 
 class Ordinal(Measure):
+    """Represents ordinal measures
+
+    Represents a categorical variable whose categories are ordered. You never
+    instantiate this class directly, and instead you should
+    create instances via the :py:meth:`tisane.Unit.ordinal` method.
+
+    Parameters
+    ----------
+    name : str
+        The name of the ordinal variable. If you have data, this should be the column name in the data.
+    order : list
+        The ordering of the categories of the variable
+    cardinality : int, optional
+        The number of unique values for the variable. This should
+        equal the length of `order`.
+    data : DataVector, optional
+        For internal use only.
+
+
+    Attributes
+    ----------
+    ordered_cat : type
+        Description of attribute `ordered_cat`.
+    properties : type
+        Description of attribute `properties`.
+    assert_property : type
+        Description of attribute `assert_property`.
+    self with : type
+        Description of attribute `self with`.
+    self and : type
+        Description of attribute `self and`.
+    data : DataVector
+        The data associated with this variable
+    cardinality : int
+        The number of values the ordered categorical variable can take on
+
+    See Also
+    --------
+    Unit.ordinal : create an ordinal measure attribute of a given `tisane.Unit`
+
+    """
     cardinality: int
     ordered_cat: list
 
@@ -537,7 +779,7 @@ class Ordinal(Measure):
         return self.cardinality
 
     # @returns categories in their order
-    def get_categories(self): 
+    def get_categories(self):
         return self.ordered_cat
 
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
@@ -549,12 +791,39 @@ class Ordinal(Measure):
         return len(unique_values)
 
 
-"""
-Class for Numeric measures
-"""
-
 
 class Numeric(Measure):
+    """Represents numeric variables
+
+    Numeric variables take on values that are integers, real numbers,
+    ratios, etc. You never
+    instantiate this class directly, and instead you should
+    create instances via the :py:meth:`Unit.numeric` method.
+
+    Parameters
+    ----------
+    name : str
+        The name of the numeric variable. If you have data, this should correspond to the column's name in the data.
+    data : DataVector, optional
+        For internal use only.
+
+    Attributes
+    ----------
+    properties : dict
+        Description of attribute `properties`.
+    assert_property : type
+        Description of attribute `assert_property`.
+    self with : type
+        Description of attribute `self with`.
+    self and : type
+        Description of attribute `self and`.
+    data
+
+    See Also
+    --------
+    Unit.numeric : create a `Numeric` variable attributed to a given `Unit`
+
+    """
     def __init__(self, name: str, data=None):
         super(Numeric, self).__init__(name=name, data=data)
         self.data = data
@@ -620,9 +889,9 @@ class Moderates(object):
 
 
 ##### Data measurement relationships
-"""
-Class for Has relationships
-"""
+# """
+# Class for Has relationships
+# """
 
 
 class Has:
@@ -773,21 +1042,32 @@ Class for expressing an upper bound of values
 
 
 class AtMost(NumberValue):
-    """Short summary."""
+    """An upper bound of a number of instances
+
+    Used to represent when the number of instances of a
+    data variable has a ceiling. Should be given to the
+    ``number_of_instances`` parameter of :py:meth:`Unit.nominal`, :py:meth:`Unit.numeric`, or
+    :py:meth:`Unit.ordinal`.
+
+    Parameters
+    ----------
+    value : int or AbstractVariable
+        The value of the upper bound. If an :py:class:`tisane.variable.AbstractVariable`, then the cardinality of
+        `value` is used as the upper bound.
+
+    Examples
+    --------
+
+    A study using MTurkers allowed the MTurkers to participate
+    in the study at most 20 times.
+
+    >>> import tisane as ts
+    >>> mturker = ts.Unit(name="mturker_id")
+    >>> response = mturker.ordinal(name="response", number_of_instances=AtMost(20))
+
+    """
+
     def __init__(self, value: typing.Union[int, AbstractVariable]):
-        """Short summary.
-
-        Parameters
-        ----------
-        value : typing.Union[int, AbstractVariable]
-            Description of parameter `value`.
-
-        Returns
-        -------
-        type
-            Description of returned object.
-
-        """
         if isinstance(value, int):
             super(AtMost, self).__init__(value)
         elif isinstance(value, AbstractVariable):

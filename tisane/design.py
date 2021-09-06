@@ -2,7 +2,7 @@ from pandas.core.frame import DataFrame
 from tisane.variable import (
     AbstractVariable,
     SetUp,
-    Unit, 
+    Unit,
     Nominal,
     Ordinal,
     Has,
@@ -27,6 +27,29 @@ interaction_effects = list()
 
 
 class Design(object):
+    """Represents your study design
+
+    Parameters
+    ----------
+    dv : AbstractVariable
+        The *d*ependent *v*ariable.
+    ivs : List[AbstractVariable]
+        A list of the *i*ndependent *v*ariable(s).
+    source : os.PathLike or pd.DataFrame, optional
+        For internal use only.
+
+    Attributes
+    ----------
+    graph : Graph
+        The underlying graph representation of the variables in the design.
+    dataset : Dataset
+        The `Dataset`
+    dv : AbstractVariable
+        The dependent variable in the study design
+    ivs : List[AbstractVariable]
+        The independent variable(s), if any, in your study design
+
+    """
     dv: AbstractVariable
     ivs: List[AbstractVariable]
     graph: Graph  # IR
@@ -62,9 +85,9 @@ class Design(object):
         else:
             self.dataset = None
 
-    def __str__(self): 
+    def __str__(self):
         ivs_descriptions = list()
-        for v in self.ivs: 
+        for v in self.ivs:
             ivs_descriptions.append(str(v))
         ivs_descriptions_str = "\n".join(ivs_descriptions)
 
@@ -72,7 +95,7 @@ class Design(object):
         description = f"dependent variable: {dv_description}" + "\n" + f"independent variables: {ivs_descriptions_str}" + "\n" + f"data: {self.data}"
 
         return description
-                
+
     # Calculates and assigns cardinality to variables if cardinality is not already specified
     # If calculated cardinality differs from cardinality estimated from the data, raises a ValueError
     def check_variable_cardinality(self):
@@ -82,33 +105,33 @@ class Design(object):
         variables = self.graph.get_variables()
 
         for v in variables:
-            if isinstance(v, Nominal): 
+            if isinstance(v, Nominal):
                 # If cardinality was not specified previously, calculate it
-                if v.cardinality is None: 
+                if v.cardinality is None:
                     v.assign_cardinality_from_data(self.dataset)
-                
+
                 # If categories were not specified previously, calculate it
-                if v.categories is None: 
+                if v.categories is None:
                     v.assign_categories_from_data(self.dataset)
-                
-                # Check now 
+
+                # Check now
                 calculated_cardinality = v.calculate_cardinality_from_data(
                     data=self.dataset
                 )
                 calculated_categories = v.calculate_categories_from_data(data=self.dataset)
                 assert(calculated_cardinality == len(calculated_categories))
 
-                if calculated_cardinality > v.cardinality: 
+                if calculated_cardinality > v.cardinality:
                     diff = calculated_cardinality - v.cardinality
                     raise ValueError(
                         f"Variable {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more categories in the data than you expect."
                     )
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
-                
-                # Are there more categories than the user specified? 
+
+                # Are there more categories than the user specified?
                 diff = set(calculated_categories) - set(v.categories)
-                if len(diff) > 0: 
-                    
+                if len(diff) > 0:
+
                     raise ValueError(
                         f"Variable {v.name} is specified to have the following categories: {v.categories}. However, in the data provided, {v.name} has {calculated_categories} unique values. These are the categories that exist in the data but you may not have expected: {diff}"
                     )
@@ -126,9 +149,9 @@ class Design(object):
                     )
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
-            elif isinstance(v, Unit): 
+            elif isinstance(v, Unit):
                 # If cardinality was not specified previously, calculate it
-                if v.cardinality is None: 
+                if v.cardinality is None:
                     v.assign_cardinality_from_data(self.dataset)
 
                 calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
@@ -138,21 +161,21 @@ class Design(object):
                     raise ValueError(
                         f"Unit {v.name} is specified to have cardinality = {v.cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more instances of the unit in the data than you expect."
                     )
-            elif isinstance(v, SetUp): 
+            elif isinstance(v, SetUp):
                 v_cardinality = v.get_cardinality()
                 # If cardinality was not specified previously, calculate it
-                if v_cardinality is None: 
+                if v_cardinality is None:
                     v.assign_cardinality_from_data(self.dataset)
 
                 calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
 
                 if calculated_cardinality != v_cardinality:
                     diff = calculated_cardinality - v_cardinality
-                    if diff > 0: 
+                    if diff > 0:
                         raise ValueError(
                             f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more instances of the setting in the data than you expect."
                         )
-                    else: 
+                    else:
                         assert(diff < 0)
                         raise ValueError(
                             f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} fewer instances of the setting in the data than you expect."

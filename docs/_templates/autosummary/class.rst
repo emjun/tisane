@@ -1,4 +1,5 @@
-{% extends "!autosummary/class.rst" %}
+{% extends "base_class.rst" %}
+
 
 {% block methods %}
 {% if methods %}

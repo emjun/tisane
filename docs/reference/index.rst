@@ -5,6 +5,6 @@ Tisane Reference
 .. toctree::
   :hidden:
 
-  variable2
+  variable
   design
   main
