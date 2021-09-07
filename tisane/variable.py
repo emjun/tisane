@@ -298,7 +298,7 @@ class Unit(AbstractVariable):
         elif isinstance(number_of_instances, AbstractVariable):
             # repet = Exactly(number_of_instances.get_cardinality())
             repet = Exactly(1)
-            repet = repet.per(cardinality=number_of_instances)
+            repet = repet.per(variable=number_of_instances) # cardinality=True, number_of_instances=False
             according_to = number_of_instances
 
             # TODO: Add implied relationship of associates with for measures that have number_of_instances as AbstractVariable
@@ -761,7 +761,7 @@ class NumberValue:
         self.value = value
 
     def is_greater_than_one(self):
-        return self.value > 1
+        return self.get_value() > 1
 
     def is_equal_to_one(self):
         return self.value == 1
@@ -769,8 +769,10 @@ class NumberValue:
     def get_value(self):
         return self.value
 
-    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
-        return Per(number=self, cardinality=cardinality, number_of_instances=number_of_instances)
+    def per(self, variable: AbstractVariable, cardinality: bool=True, number_of_instances: bool=False):
+        assert(not number_of_instances if cardinality else True)
+        assert(not cardinality if number_of_instances else True)
+        return Per(number=self, variable=variable, cardinality=cardinality, number_of_instances=number_of_instances)
 
 
 
@@ -817,32 +819,33 @@ class Per(NumberValue):
     cardinality: bool
     number_of_instances: bool
     value: int
+    
+    def __init__(self, number: NumberValue, variable: AbstractVariable, cardinality: bool=True, number_of_instances: bool=False):
+        assert(not number_of_instances if cardinality else True)
+        assert(not cardinality if number_of_instances else True)
 
-    def __init__(self, number: NumberValue, cardinality: AbstractVariable=None, number_of_instances: Measure=None):
         self.number = number
-        if number_of_instances is not None:
-            assert(cardinality is None)
+        self.variable = variable
+        self.cardinality = cardinality
+        self.number_of_instances = number_of_instances
 
-            self.variable = number_of_instances
-            self.cardinality = False
-            self.number_of_instances = True
-
-            # Only measures have number_of_instances
-            assert(self.variable, Measure)
+        if self.cardinality:
+            # Cardinality is not specified yet either because data isn't associated with the variable yet or the program is incomplete (missing info)
+            if self.variable.get_cardinality() is None: 
+                self.value = None
+            else: 
+                self.value = number.value * self.variable.get_cardinality()
+        else: 
+            assert self.number_of_instances
             self.value = number.value * self.variable.get_number_of_instances().value
 
-        else:
-            assert(number_of_instances is None)
-            assert(cardinality is not None)
+    def get_value(self):
+        if self.cardinality:
+            self.value = self.number.get_value() * self.variable.get_cardinality()
+        else: 
+            assert self.number_of_instances
+            self.value = self.number.get_value() * self.variable.get_number_of_instances().get_value()
 
-            self.variable = cardinality
-            self.cardinality = True
-            self.number_of_instances = False
+        return self.value
 
-            # if self.variable.get_cardinality() is None:
-            #     import pdb; pdb.set_trace()
-            self.value = number.value * self.variable.get_cardinality()
-
-        assert(self.cardinality or self.number_of_instances)
-        assert(not self.cardinality if self.number_of_instances else True)
-        assert(not self.number_of_instances if self.cardinality else True)
+            

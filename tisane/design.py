@@ -59,6 +59,8 @@ class Design(object):
 
         if source is not None:
             self.dataset = Dataset(source)
+            # Check and update cardinality for variables in this design
+            self.check_variable_cardinality()
         else:
             self.dataset = None
 
@@ -127,6 +129,7 @@ class Design(object):
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
             elif isinstance(v, Unit): 
+                # import pdb; pdb.set_trace()
                 # If cardinality was not specified previously, calculate it
                 if v.cardinality is None: 
                     v.assign_cardinality_from_data(self.dataset)
@@ -157,6 +160,10 @@ class Design(object):
                         raise ValueError(
                             f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} fewer instances of the setting in the data than you expect."
                         )
+            # else:
+                # import pdb; pdb.set_trace()
+            
+
 
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
