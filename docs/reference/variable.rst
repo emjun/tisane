@@ -10,7 +10,7 @@ tisane.variable module
   tisane.variable.Nominal
   tisane.variable.Numeric
   tisane.variable.Ordinal
-  tisane.AtMost
+  .. tisane.AtMost
 
 .. autoclass:: tisane.Unit
   :members:
@@ -22,5 +22,5 @@ tisane.variable module
   :show-inheritance:
   :noindex:
 
-.. autoclass:: tisane.variable.AtMost
-  :noindex:
+.. .. autoclass:: tisane.variable.AtMost
+..   :noindex:

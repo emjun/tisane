@@ -2,6 +2,7 @@ import unittest
 from tisane.data import Dataset, DataVector
 from typing import Any, List
 import typing  # for typing.Unit
+import re
 
 # """
 # Abstract super class for all variables.
@@ -9,6 +10,21 @@ import typing  # for typing.Unit
 # TODO: Added Time variable, not sure if we should include it?
 # """
 
+# for decorating class methods and extending docstrings
+# from: https://stackoverflow.com/questions/60000179/sphinx-insert-argument-documentation-from-parent-method/60012943#60012943
+class extend_docstring:
+    def __init__(self, method, replace=None, replaceWith=None):
+        self.doc = method.__doc__
+        if replace and replaceWith:
+            self.doc = re.sub(replace, replaceWith, self.doc)
+
+    def __call__(self, function):
+        if self.doc is not None:
+            doc = function.__doc__
+            function.__doc__ = self.doc
+            if doc is not None:
+                function.__doc__ += doc
+        return function
 
 class AbstractVariable:
     """Super class for all variables, containing basic common attributes.
@@ -826,10 +842,6 @@ class Numeric(Measure):
         Description of attribute `properties`.
     assert_property : type
         Description of attribute `assert_property`.
-    self with : type
-        Description of attribute `self with`.
-    self and : type
-        Description of attribute `self and`.
     data
 
     See Also
@@ -1039,22 +1051,75 @@ class NumberValue:
         return self.value
 
     def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+        """Express a `per` relationship on a given `NumberValue`
+
+        Even though `cardinality` and `number_of_instances` are both
+        optional parameters, this method requires exactly one of them to be
+        specified -- you currently cannot specify both.
+
+        Parameters
+        ----------
+        cardinality : AbstractVariable, optional
+            The :py:class:`AbstractVariable` whose cardinality we want to use
+        number_of_instances : AbstractVariable, optional
+            The :py:class:`AbstractVariable` whose number of instances we want
+            to use
+
+        Returns
+        -------
+        tisane.variable.Per
+            An object representing a "_ per _" relationship.
+
+        """
+        assert number_of_instances or cardinality, "Exactly one of the parameters `number_of_instances` and `cardinality` must be not `None`"
+        assert not (number_of_instances and cardinality), "Cannot have both `number_of_instances` and `cardinality` specified as non-`None` values"
         return Per(number=self, cardinality=cardinality, number_of_instances=number_of_instances)
 
 
 
-"""
-Class for expressing exact values
-"""
+
 
 
 class Exactly(NumberValue):
+    """Class for expressing exact values
+
+    Used to represent when the ``number_of_instances`` parameter of a variable
+    (such as :py:class:`tisane.Unit`, :py:class:`Numeric`/:py:meth:`tisane.Unit.numeric`, etc.)
+    is supposed to be *exactly* :py:attr:`value`
+
+    Parameters
+    ----------
+    value: int
+        the exact value to be used.
+    """
     def __init__(self, value: int):
         super(Exactly, self).__init__(value)
 
-"""
-Class for expressing an upper bound of values
-"""
+    @extend_docstring(NumberValue.per, "`NumberValue`", "`Exactly`")
+    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+        """
+        See Also
+        --------
+        tisane.AtMost.per : create a per relationship with an :py:class:`AtMost` multiplier
+
+        Examples
+        --------
+
+        Rats are either given a supplement or a placebo three times a day, so exactly 3 *per* day
+
+        >>> import tisane as ts
+        >>> from tisane import Exactly
+        >>> rat = ts.Unit(name="rat_id", cardinality=30) # 30 rats in the study
+        >>> days = rat.ordinal(name="day_num", cardinality=28) # 4 weeks of data for each rat
+        >>> memory_test_result = rat.numeric(name="memory_test_result",
+        ...                                  number_of_instances=days)
+        >>> supplements = rat.nominal(name="supplement",
+        ...                           categories=["placebo", "supp"],
+        ...                           number_of_instances=Exactly(3).per(cardinality=days))
+
+        """
+        super(Exactly, self).per(cardinality=cardinality, number_of_instances=number_of_instances)
+
 
 class AtMost(NumberValue):
     """An upper bound of a number of instances
@@ -1088,16 +1153,92 @@ class AtMost(NumberValue):
         elif isinstance(value, AbstractVariable):
             super(AtMost, self).__init__(value.get_cardinality())
 
+    @extend_docstring(NumberValue.per, "`NumberValue`", "`AtMost`")
+    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+        """
+        See Also
+        --------
+        tisane.Exactly.per : create a per relationship with an exact multiplier
+
+        Examples
+        --------
+
+        Suppose we have a within-subjects study where participants are subjected
+        to two conditions and can memorize a list of numbers at most five times
+        in both conditions, before being tested.
+
+        >>> import tisane as ts
+        >>> from tisane import AtMost
+        >>> participant = ts.Unit(name="participant")
+        >>> condition = participant.nominal(name="condition",
+        ...                                 cardinality=2,
+        ...                                 number_of_instances=2)
+        >>> memorization_session_time = participant.numeric(
+        ...                    name="learning_session_time",
+        ...                    number_of_instances=AtMost(5).per(
+        ...                              number_of_instances=condition))
+
+        >>> import tisane as ts
+        >>> variable = ts.Unit(name="variable", cardinality=5)
+        >>> atmost_five_per_variable = ts.AtMost(5).per(cardinality=variable)
+        >>> atmost_five_per_variable.value # this should be 5 * (cardinality of variable = 5)
+        25
+
+
+        """
+        super(AtMost, self).per(cardinality=cardinality, number_of_instances=number_of_instances)
+
 """
 Class for expressing Per relationships
 """
 class Per(NumberValue):
+    """ Represents a "per" relationship, such as "2 per participant"
+
+    Enables complex number of instances where the number of instances is
+    a multiple of the number of instances or cardinality of another variable.
+
+    Instead of instantiating this class directly, you should use the methods
+    :py:meth:`tisane.Exactly.per` or :py:meth:`tisane.AtMost.per`.
+
+    Parameters
+    ----------
+    number : NumberValue
+        A `NumberValue` object that fills in the first blank in "_ per _".
+        Should have the type :py:class:`Exactly` or :py:class:`AtMost`
+    cardinality : AbstractVariable
+        Designates that the blank in "`number` per _" should be filled in with
+        the cardinality of the given :py:class:`AbstractVariable`
+    number_of_instances : Measure
+        Designates that the blank in "`number` per _" should be filled in with
+        the number of instances of the given :py:class:`Measure`, such as a
+        :py:class:`Nominal`, :py:class:`Numeric`, or :py:class:`Ordinal`.
+
+    Attributes
+    ----------
+    variable : AbstractVariable
+        The data variable use as the
+    value : int
+        The total value given by the `Per` object. If using cardinality,
+        then this is calculated as `number` * (cardinality of `variable`).
+        If using number of instances, then this is calculated as
+        `number` * (number of instances of `variable`)
+    number : NumberValue
+        The base multiplier of the `Per` instance, which is used to calculate
+        :py:attr:`value`
+    cardinality  : bool
+        Whether or not this `Per` instance is using the cardinality of
+        :py:attr:`variable` to calculate the value.
+    number_of_instances : bool
+        Whether or not this `Per` instance is using the number of instances of
+        :py:attr:`variable`
+
+    """
     number: NumberValue
     variable: AbstractVariable
     cardinality: bool
     number_of_instances: bool
     value: int
-    
+
     def __init__(self, number: NumberValue, cardinality: AbstractVariable=None, number_of_instances: Measure=None):
         self.number = number
         if number_of_instances is not None:
@@ -1111,20 +1252,18 @@ class Per(NumberValue):
             assert(self.variable, Measure)
             self.value = number.value * self.variable.get_number_of_instances().value
 
-        else: 
+        else:
             assert(number_of_instances is None)
             assert(cardinality is not None)
 
             self.variable = cardinality
             self.cardinality = True
             self.number_of_instances = False
-            
-            # if self.variable.get_cardinality() is None: 
+
+            # if self.variable.get_cardinality() is None:
             #     import pdb; pdb.set_trace()
             self.value = number.value * self.variable.get_cardinality()
-        
-        assert(self.cardinality or self.number_of_instances)
+
+        assert(self.cardinality or self.number_of_instances, "Must specify either cardinality or number_of_instances (exclusive or) for Per")
         assert(not self.cardinality if self.number_of_instances else True)
         assert(not self.number_of_instances if self.cardinality else True)
-
-            
