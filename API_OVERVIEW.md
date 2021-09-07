@@ -43,7 +43,7 @@ Parameters:
  - `name: str` -- the name of the variable. If you have data, this should correspond to the column's name.
  <!-- - `data: tisane.data.DataVector` -- -->
  - `cardinality: int` -- (optional) the number of unique instances of the variable
- - `number_of_instances` -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10.
+ - `number_of_instances`* -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10. **See "Note about number_of_instances" below.*
  <!-- - `kwargs` -- -->
 
 Returns: A `tisane.variable.Nominal` object
@@ -61,7 +61,7 @@ Parameters:
 - `order: list` -- a list of the categories, in the order desired
 - `cardinality: int` -- (optional) the number of unique instances of the variable
 - `data: tisane.data.DataVector` --
-- `number_of_instances` -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10.
+- `number_of_instances`* -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10. **See "Note about number_of_instances" below.*
 <!-- - `kwargs` -- -->
 
 Returns: `tisane.variable.Ordinal`, the `Ordinal` data variable
@@ -77,9 +77,19 @@ Parameters:
 
 - `name: str` -- the name of the variable. If you have data, this should correspond to the column's name.
 - `data: tisane.data.DataVector` --
-- `number_of_instances` -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10.
+- `number_of_instances`* -- either an `int`, `tisane.AbstractVariable`, or `tisane.variable.AtMost`. Defaults to `1`. This should be the number of measurements of an attribute per unique instance of the associated `tisane.Unit`. For example, if you measure the reaction time of a person 10 times, then you should enter 10. **See "Note about number_of_instances" below.*
 
 Returns: `tisane.variable.Numeric`, the `Numeric` data variable
+
+
+### Note about number_of_instances
+When declaring a Measure through a Unit, the `number_of_instances` parameter can take one of the following: 
+- `int`: Number of times that a Measure is collected. For example, if you measure the reaction time of a person 10 times, then you should enter 10.
+- `ts.AbstractVariable`: If there is one instance of a Measure for each value in another variable. For example, if you measure the reaction time of a person 10 times, once per day, then you should (i) declare day as another variable (likely SetUp) and then (ii) specify `number_of_instances=day`. This is syntactic sugar for the below.
+- `ts.NumberValue`: To more generally express that there are multiple instances of a Measure according to another variable, specify (i) the number of instances per (ii) which variable. For example, if you measure the reaction time of a person two times per condition the person receives: 
+`number_of_instances=Exactly(2).per(number_of_instances=condition)`. If you measure the reaction time of a person two times per value in condition, which could be more than the number of conditions each person receives: 
+`number_of_instances=Exactly(2).per(cardinality=condition)`.
+
 
 ## Study environment settings: tisane.SetUp
 
