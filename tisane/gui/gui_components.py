@@ -1057,7 +1057,7 @@ class GUIComponents:
                             correlationCheckbox = (
                                 [
                                     html.Td(
-                                        self.getFancyCheckbox(
+                                        self.makeFancyCheckbox(
                                             id=self.getCorrelatedIdForRandomSlope(
                                                 group, iv
                                             ),
@@ -1290,7 +1290,7 @@ class GUIComponents:
         ]
         if self.hasData():
             normalityTestExplanation = self.getDefaultExplanation("normality-tests")
-            dvData = self.dataDf[self.dv]
+            dvData = self.dataDf[self.dv].dropna()
             shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
             normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
 
