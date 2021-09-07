@@ -342,18 +342,12 @@ class GraphTest(unittest.TestCase):
         self.assertTrue(gr.has_edge(u, dv, "has"))
 
     def test_specify_non_nesting_relationship(self):
-        participant = ts.Unit("participant id", cardinality=12)  # 12 participants
-        condition = participant.nominal(
-            "condition", cardinality=2, number_of_instances=2
-        )
-        word = ts.Unit("word", cardinality=4)  # 4 different words
-        reaction_time = participant.numeric("reaction time", number_of_instances=word)
-
-        # Each condition has exactly 2 words
-        # Measure has measure
-        condition.has(word, number_of_instances=2)
+        subject = ts.Unit("Subject")
+        condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
+        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
 
-        self.assertTrue(gr.has_edge(start=condition, end=word, edge_type="has"))
+        self.assertTrue(gr.has_edge(start=subject, end=word, edge_type="has"))

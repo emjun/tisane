@@ -402,7 +402,7 @@ class Unit(AbstractVariable):
 
         Representing 3 different treatments of differing amounts of vitamin E:
 
-        >>> pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
+        >>> pig = ts.Unit("Pig", cardinality=72)  # 72 pigs
         >>> vitamin_e = pig.ordinal("Evit",
         ...                         order=["Evit000", "Evit100", "Evit200"],
         ...                         number_of_instances=1)
@@ -463,7 +463,7 @@ class Unit(AbstractVariable):
     def _has(
         self,
         measure: AbstractVariable,
-        number_of_instances: typing.Union[int, AbstractVariable, "AtMost"],
+        number_of_instances: typing.Union[int, AbstractVariable, "AtMost", "Per"],
     ):
         # Figure out the number of times/repetitions this Unit (self) has of the measure
 
@@ -472,11 +472,16 @@ class Unit(AbstractVariable):
         if isinstance(number_of_instances, int):
             repet = Exactly(number_of_instances)
         elif isinstance(number_of_instances, AbstractVariable):
-            repet = Exactly(number_of_instances.get_cardinality())
+            # repet = Exactly(number_of_instances.get_cardinality())
+            repet = Exactly(1)
+            repet = repet.per(cardinality=number_of_instances)
             according_to = number_of_instances
 
             # TODO: Add implied relationship of associates with for measures that have number_of_instances as AbstractVariable
         elif isinstance(number_of_instances, AtMost):
+            repet = number_of_instances
+
+        elif isinstance(number_of_instances, Per):
             repet = number_of_instances
 
         # Bind measure and unit to each other
@@ -524,28 +529,28 @@ class Measure(AbstractVariable):
     def __init__(self, name: str, data: None, **kwargs):
         super(Measure, self).__init__(name, data)
 
-    # Composition relationship between two measures
-    def has(
-        self,
-        measure: AbstractVariable,
-        number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
-    ):
-        repet = None
-        according_to = None
-        if isinstance(number_of_instances, int):
-            repet = Exactly(number_of_instances)
-        elif isinstance(number_of_instances, AbstractVariable):
-            repet = Exactly(number_of_instances.get_cardinality())
-            according_to = number_of_instances
-        elif isinstance(number_of_instances, AtMost):
-            repet = number_of_instances
+    # # Composition relationship between two measures
+    # def has(
+    #     self,
+    #     measure: AbstractVariable,
+    #     number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
+    # ):
+    #     repet = None
+    #     according_to = None
+    #     if isinstance(number_of_instances, int):
+    #         repet = Exactly(number_of_instances)
+    #     elif isinstance(number_of_instances, AbstractVariable):
+    #         repet = Exactly(number_of_instances.get_cardinality())
+    #         according_to = number_of_instances
+    #     elif isinstance(number_of_instances, AtMost):
+    #         repet = number_of_instances
 
-        # Bind measure and unit to each other
-        has_relat = Has(
-            variable=self, measure=measure, repetitions=repet, according_to=according_to
-        )
-        self.relationships.append(has_relat)
-        measure.relationships.append(has_relat)
+    #     # Bind measure and unit to each other
+    #     has_relat = Has(
+    #         variable=self, measure=measure, repetitions=repet, according_to=according_to
+    #     )
+    #     self.relationships.append(has_relat)
+    #     measure.relationships.append(has_relat)
 
     # @returns the unit this measure is an attribute of
     def get_unit(self) -> Unit:
@@ -557,13 +562,21 @@ class Measure(AbstractVariable):
         return None
 
     # @returns the unit relationship, None otherwise
-    def get_unit_relationsihp(self) -> "Has":
+    def get_unit_relationship(self) -> "Has":
         for r in self.relationships:
             if isinstance(r, Has):
                 if r.measure is self and isinstance(r.variable, Unit):
                     return r
 
         return None
+
+    def get_number_of_instances(self) -> "NumberValue":
+        unit_relat = self.get_unit_relationship()
+
+        if unit_relat is not None:
+            return unit_relat.repetitions
+        #else
+        return Exactly(0)
 
 
 
@@ -1025,6 +1038,10 @@ class NumberValue:
     def get_value(self):
         return self.value
 
+    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+        return Per(number=self, cardinality=cardinality, number_of_instances=number_of_instances)
+
+
 
 """
 Class for expressing exact values
@@ -1035,11 +1052,9 @@ class Exactly(NumberValue):
     def __init__(self, value: int):
         super(Exactly, self).__init__(value)
 
-
 """
 Class for expressing an upper bound of values
 """
-
 
 class AtMost(NumberValue):
     """An upper bound of a number of instances
@@ -1072,3 +1087,44 @@ class AtMost(NumberValue):
             super(AtMost, self).__init__(value)
         elif isinstance(value, AbstractVariable):
             super(AtMost, self).__init__(value.get_cardinality())
+
+"""
+Class for expressing Per relationships
+"""
+class Per(NumberValue):
+    number: NumberValue
+    variable: AbstractVariable
+    cardinality: bool
+    number_of_instances: bool
+    value: int
+    
+    def __init__(self, number: NumberValue, cardinality: AbstractVariable=None, number_of_instances: Measure=None):
+        self.number = number
+        if number_of_instances is not None:
+            assert(cardinality is None)
+
+            self.variable = number_of_instances
+            self.cardinality = False
+            self.number_of_instances = True
+
+            # Only measures have number_of_instances
+            assert(self.variable, Measure)
+            self.value = number.value * self.variable.get_number_of_instances().value
+
+        else: 
+            assert(number_of_instances is None)
+            assert(cardinality is not None)
+
+            self.variable = cardinality
+            self.cardinality = True
+            self.number_of_instances = False
+            
+            # if self.variable.get_cardinality() is None: 
+            #     import pdb; pdb.set_trace()
+            self.value = number.value * self.variable.get_cardinality()
+        
+        assert(self.cardinality or self.number_of_instances)
+        assert(not self.cardinality if self.number_of_instances else True)
+        assert(not self.number_of_instances if self.cardinality else True)
+
+            

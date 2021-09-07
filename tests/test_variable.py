@@ -17,7 +17,7 @@ from tisane.variable import (
     NumberValue,
     Exactly,  # Subclass of NumberValue
     AtMost,  # Subclass of NumberValue
-    Repeats,
+    Per
 )
 from tisane.data import Dataset
 import pandas as pd
@@ -275,7 +275,7 @@ class VariableTest(unittest.TestCase):
         self.assertIsInstance(pig.relationships[1], Has)
         self.assertEqual(pig.relationships[1].variable, pig)
         self.assertEqual(pig.relationships[1].measure, weight)
-        self.assertIsInstance(pig.relationships[1].repetitions, Exactly)
+        self.assertIsInstance(pig.relationships[1].repetitions, Per)
         self.assertTrue(pig.relationships[1].repetitions.is_greater_than_one())
         self.assertEqual(pig.relationships[1].repetitions.value, 12)
 
@@ -317,31 +317,30 @@ class VariableTest(unittest.TestCase):
     # Test that the has/composition relationship updates both variables involved
     def test_has(self):
         participant = ts.Unit("participant id", cardinality=12)  # 12 participants
-        condition = participant.nominal("condition", cardinality=2)
-        word = ts.Unit("word", cardinality=4)  # 4 different words
+        condition = participant.nominal("condition", cardinality=2, number_of_instances=2)
+        word = participant.nominal("word", number_of_instances=Exactly(2).per(number_of_instances=condition))
 
         # Each condition has exactly 2 words
         # Measure has measure
-        condition.has(word, number_of_instances=2)
+        # condition.has(word, number_of_instances=2)
 
-        self.assertEqual(len(condition.relationships), 2)
+        self.assertEqual(len(condition.relationships), 1)
         cond_has_relat = None
         for r in condition.relationships:
             self.assertIsInstance(r, Has)
-            if isinstance(r.variable, Measure) and isinstance(r.measure, Unit):
+            if r.variable==participant and r.measure==condition:
                 condit_has_relat = r
         self.assertIsNotNone(condit_has_relat)
-        self.assertIs(condit_has_relat.variable, condition)
-        self.assertIs(condit_has_relat.measure, word)
+        self.assertIsInstance(condit_has_relat.repetitions, Exactly)
+        self.assertEqual(condit_has_relat.repetitions.get_value(), 2)
 
         self.assertEqual(len(word.relationships), 1)
         word_has_relat = None
         for r in word.relationships:
             self.assertIsInstance(r, Has)
-            if isinstance(r.variable, Measure) and isinstance(r.measure, Unit):
+            if r.variable==participant and r.measure==word:
                 word_has_relat = r
         self.assertIsNotNone(word_has_relat)
-        self.assertIs(condit_has_relat, word_has_relat)
 
     def test_calculate_cardinality_from_data_nominal(self):
         unit = ts.Unit("Unit")
@@ -627,6 +626,35 @@ class VariableTest(unittest.TestCase):
         description = str(measure)
         self.assertIn(f"name: {measure.name}", description)
         self.assertIn(f"data: {measure.data}", description)
+
+    def test_per_exactly(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("condition", cardinality=5)
+
+        num = Exactly(2)
+        per_obj = num.per(cardinality=measure)
+        
+        self.assertIsInstance(per_obj, Per)
+        self.assertIsInstance(per_obj.number, NumberValue)
+        self.assertEqual(per_obj.number.get_value(), 2)
+        self.assertIs(per_obj.variable, measure)
+        self.assertTrue(per_obj.cardinality)
+        self.assertFalse(per_obj.number_of_instances)
+
+    def test_per_atMost(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("condition", cardinality=5)
+
+        num = AtMost(2)
+        per_obj = num.per(cardinality=measure)
+        
+        self.assertIsInstance(per_obj, Per)
+        self.assertIsInstance(per_obj.number, NumberValue)
+        self.assertEqual(per_obj.number.get_value(), 2)
+        self.assertIs(per_obj.variable, measure)
+        self.assertTrue(per_obj.cardinality)
+        self.assertFalse(per_obj.number_of_instances)
+
 
     # def test_has_variables(self):
     #     # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects

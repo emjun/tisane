@@ -135,8 +135,8 @@ class GenerateCodeTest(unittest.TestCase):
     def test_generate_code_from_GUI_output_pigs_with_no_data(self):
         # Bind measures to units at the time of declaration
         week = ts.SetUp("Time", cardinality=12)
-        pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
-        litter = ts.Unit("Litter", cardinality=22)  # 22 litters
+        pig = ts.Unit("Pig", cardinality=72)  # 72 pigs
+        litter = ts.Unit("Litter", cardinality=21)  # 21 litters
         # Each pig has 1 instance of an ordinal Evit measure
         vitamin_e = pig.ordinal(
             "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
@@ -180,8 +180,8 @@ class GenerateCodeTest(unittest.TestCase):
         ## Initialize variables with data
         # Bind measures to units at the time of declaration
         week = ts.SetUp("Time", cardinality=12)
-        pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
-        litter = ts.Unit("Litter", cardinality=22)  # 22 litters
+        pig = ts.Unit("Pig", cardinality=72)  # 72 pigs
+        litter = ts.Unit("Litter", cardinality=21)  # 21 litters
         # Each pig has 1 instance of an ordinal Evit measure
         vitamin_e = pig.ordinal(
             "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
@@ -224,8 +224,8 @@ class GenerateCodeTest(unittest.TestCase):
         ## Initialize variables with data
         # Bind measures to units at the time of declaration
         week = ts.SetUp("Time", cardinality=12)
-        pig = ts.Unit("Pig", cardinality=82)  # 82 pigs
-        litter = ts.Unit("Litter", cardinality=22)  # 22 litters
+        pig = ts.Unit("Pig", cardinality=72)  # 72 pigs
+        litter = ts.Unit("Litter", cardinality=21)  # 21 litters
         # Each pig has 1 instance of an ordinal Evit measure
         vitamin_e = pig.ordinal(
             "Evit", order=["Evit000", "Evit100", "Evit200"], number_of_instances=1
@@ -269,7 +269,7 @@ class GenerateCodeTest(unittest.TestCase):
 
         # df = pd.read_csv("./exercise_simple.csv")
         # Declare observed variables
-        pid = ts.Unit("case", cardinality=50)  # 50 participants
+        pid = ts.Unit("case")
         age = pid.numeric("age")  # participant age
         exercise = pid.numeric("exercise")  # years of vigorous physical exercise
         endurance = pid.numeric(
@@ -300,7 +300,7 @@ class GenerateCodeTest(unittest.TestCase):
         df = pd.read_csv(os.path.join("examples/Exercise/", "exercise_simple.csv"))
 
         # Declare observed variables
-        pid = ts.Unit("case", cardinality=50)  # 50 participants
+        pid = ts.Unit("case")
         age = pid.numeric("age")  # participant age
         exercise = pid.numeric("exercise")  # years of vigorous physical exercise
         endurance = pid.numeric(
@@ -331,7 +331,7 @@ class GenerateCodeTest(unittest.TestCase):
         path = os.path.join("examples/Exercise/", "exercise_simple.csv")
 
         # Declare observed variables
-        pid = ts.Unit("case", cardinality=50)  # 50 participants
+        pid = ts.Unit("case")
         age = pid.numeric("age")  # participant age
         exercise = pid.numeric("exercise")  # years of vigorous physical exercise
         endurance = pid.numeric(
@@ -359,7 +359,7 @@ class GenerateCodeTest(unittest.TestCase):
 
     def test_generate_code_from_GUI_output_group_exercise_with_no_data(self):
         # Observed variables
-        adult = ts.Unit("member", cardinality=386)  # 386 adults
+        adult = ts.Unit("member")  # 386 adults
         # Each adult has a value for motivation, which is ordinal
         motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
         pounds_lost = adult.numeric("pounds_lost")
@@ -401,7 +401,7 @@ class GenerateCodeTest(unittest.TestCase):
         df = pd.read_csv(os.path.join("examples/Group_Exercise/", "exercise_group.csv"))
 
         # Observed variables
-        adult = ts.Unit("member", cardinality=386)  # 386 adults
+        adult = ts.Unit("member")  # 386 adults
         # Each adult has a value for motivation, which is ordinal
         motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
         pounds_lost = adult.numeric("pounds_lost")
@@ -443,7 +443,7 @@ class GenerateCodeTest(unittest.TestCase):
         path = os.path.join("examples/Group_Exercise/", "exercise_group.csv")
 
         # Observed variables
-        adult = ts.Unit("member", cardinality=386)  # 386 adults
+        adult = ts.Unit("member")  # 386 adults
         # Each adult has a value for motivation, which is ordinal
         motivation_level = adult.ordinal("motivation", order=[1, 2, 3, 4, 5, 6])
         pounds_lost = adult.numeric("pounds_lost")

@@ -2,7 +2,7 @@
 name = "tisane"
 version = "0.0.5"
 description = ""
-authors = ["Eunice Jun <eunice.m.jun@gmail.com>"]
+authors = ["Eunice Jun <eunice.m.jun@gmail.com>", "Audrey Seo <audreyleeseo@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7.11"
