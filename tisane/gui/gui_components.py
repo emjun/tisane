@@ -1057,7 +1057,7 @@ class GUIComponents:
                             correlationCheckbox = (
                                 [
                                     html.Td(
-                                        self.getFancyCheckbox(
+                                        self.makeFancyCheckbox(
                                             id=self.getCorrelatedIdForRandomSlope(
                                                 group, iv
                                             ),
