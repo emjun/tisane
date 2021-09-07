@@ -59,6 +59,8 @@ class Design(object):
 
         if source is not None:
             self.dataset = Dataset(source)
+            # Check and update cardinality for variables in this design
+            self.check_variable_cardinality()
         else:
             self.dataset = None
 
