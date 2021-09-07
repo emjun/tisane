@@ -3,6 +3,7 @@ Tests variable API.
 NOTE: The API tests are only to test the API, not to make any statements about how these variables relate in the real world
 """
 
+from networkx.algorithms.core import k_core
 import tisane as ts
 from tisane.variable import (
     AbstractVariable,
@@ -342,40 +343,132 @@ class VariableTest(unittest.TestCase):
         self.assertIsNotNone(word_has_relat)
         self.assertIs(condit_has_relat, word_has_relat)
 
-    # def test_calculate_cardinality_from_data_nominal(self):
-    #     unit = ts.Unit("Unit")
-    #     measure = unit.nominal("Nominal_variable")
-    #     dv = unit.numeric("Dependent_variable")
+    def test_calculate_cardinality_from_data_nominal(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
 
-    #     df = pd.DataFrame({
-    #         'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
-    #         'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
-    #     })
+        df = pd.DataFrame({
+            'Unit': [1, 2, 3, 4, 5, 6, 7],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
+        })
 
-    #     data = Dataset(source=df)
+        data = Dataset(source=df)
 
-    #     calculated_cardinality = measure.calculate_cardinality_from_data(data)
+        calculated_cardinality = measure.calculate_cardinality_from_data(data)
 
-    #     self.assertEqual(calculated_cardinality, 6)
+        self.assertEqual(calculated_cardinality, 6)
 
-    # def test_specified_calculated_cardinality_mismatch_nominal(self):
-    #     unit = ts.Unit("Unit")
-    #     measure = unit.nominal("Nominal_variable")
-    #     dv = unit.numeric("Dependent_variable")
+    def test_specified_calculated_cardinality_mismatch_nominal_fewer_in_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", cardinality=7)
+        dv = unit.numeric("Dependent_variable")
 
-    #     df = pd.DataFrame({
-    #         'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
-    #         'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
-    #     })
+        df = pd.DataFrame(
+            {
+                'Unit': [1, 2, 3, 4, 5, 6, 7],
+                "Nominal_variable": [1, 1, 2, 3, 5, 8, 13],
+                "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
+            }
+        )
+        
+        design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
 
-    #     design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
-    #     raises_error = False
-    #     try:
-    #         design.check_variable_cardinality()
-    #     except ValueError:
-    #         raises_error = True
+    def test_specified_calculated_cardinality_mismatch_nominal_more_in_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", cardinality=3)
+        dv = unit.numeric("Dependent_variable")
 
-    #     self.assertTrue(raises_error)
+        df = pd.DataFrame(
+            {
+                'Unit': [1, 2, 3, 4, 5, 6, 7],
+                "Nominal_variable": [1, 1, 2, 3, 5, 8, 13],
+                "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
+            }
+        )
+
+        with self.assertRaises(Exception):
+            design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
+
+    def test_calculate_categories_from_data_nominal(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
+
+        df = pd.DataFrame({
+            'Unit': [1, 2, 3, 4, 5, 6, 7],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
+        })
+
+        data = Dataset(source=df)
+
+        calculated_categories = measure.calculate_categories_from_data(data)
+
+        unique_df = df[measure.name].unique()
+
+        self.assertEqual(calculated_categories.all(), unique_df.all())
+
+    def test_specified_calculated_categories_mismatch_nominal_fewer_in_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", categories=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15])
+        dv = unit.numeric("Dependent_variable")
+
+        df = pd.DataFrame(
+            {
+                'Unit': [1, 2, 3, 4, 5, 6, 7],
+                "Nominal_variable": [1, 1, 2, 3, 5, 8, 13],
+                "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
+            }
+        )
+
+        data = Dataset(source=df)
+
+        calculated_categories = measure.calculate_categories_from_data(data)
+
+        design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
+
+
+    def test_specified_calculated_categories_mismatch_nominal_more_in_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", categories=[1, 2, 3])
+        dv = unit.numeric("Dependent_variable")
+
+        df = pd.DataFrame(
+            {
+                'Unit': [1, 2, 3, 4, 5, 6, 7],
+                "Nominal_variable": [1, 1, 2, 3, 5, 8, 13],
+                "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
+            }
+        )
+
+        data = Dataset(source=df)
+
+        calculated_categories = measure.calculate_categories_from_data(data)
+
+        with self.assertRaises(Exception): 
+            design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
+
+    def test_specified_calculated_categories_mismatch_nominal_same_length_diff_values_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", categories=["A", "B", "C"])
+        dv = unit.numeric("Dependent_variable")
+
+        df = pd.DataFrame(
+            {
+                'Unit': [1, 2, 3],
+                "Nominal_variable": [1, 2, 3],
+                "Dependent_variable": [100, 100, 100]
+            }
+        )
+
+        data = Dataset(source=df)
+
+        calculated_categories = measure.calculate_categories_from_data(data)
+
+        with self.assertRaises(Exception): 
+            design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
 
     def test_calculate_cardinality_from_data_ordinal(self):
         unit = ts.Unit("Unit")
@@ -384,6 +477,7 @@ class VariableTest(unittest.TestCase):
 
         df = pd.DataFrame(
             {
+                'Unit': [1, 2, 3, 4, 5, 6, 7],
                 "Ordinal_variable": [1, 1, 2, 3, 5, 8, 13],
                 "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
             }
@@ -401,6 +495,7 @@ class VariableTest(unittest.TestCase):
 
         df = pd.DataFrame(
             {
+                'Unit': [1, 2, 3, 4, 5, 6, 7],
                 "Ordinal_variable": [1, 1, 2, 3, 5, 8, 13],
                 "Dependent_variable": [100, 100, 100, 100, 100, 100, 100],
             }
@@ -408,6 +503,130 @@ class VariableTest(unittest.TestCase):
 
         with self.assertRaises(Exception):
             design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)
+
+    def test_calculate_cardinality_from_data_unit(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
+
+        df = pd.DataFrame({
+            'Unit': [1, 2, 3, 4, 5, 6, 7],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
+        })
+
+        data = Dataset(source=df)
+
+        calculated_cardinality = unit.calculate_cardinality_from_data(data)
+
+        self.assertEqual(calculated_cardinality, 7)
+
+    def test_specified_calculated_cardinality_mismatch_unit(self):
+        unit = ts.Unit("Unit", cardinality=8)
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
+
+        df = pd.DataFrame({
+            'Unit': [1, 2, 3, 4, 5, 6, 7],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100]
+        })
+
+        data = Dataset(source=df)
+
+        with self.assertRaises(Exception):
+            design = ts.Design(dv=dv, ivs=[measure]).assign_data(df)        
+
+    def test_calculate_cardinality_from_data_setup(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
+        s = ts.SetUp("Time")
+
+        df = pd.DataFrame({
+            'Unit': [1, 2, 3, 4, 5, 6, 7],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100], 
+            "Time": [1, 1, 1, 1, 1, 1, 1]
+        })
+
+        data = Dataset(source=df)
+
+        calculated_cardinality = s.calculate_cardinality_from_data(data)
+
+        self.assertEqual(calculated_cardinality, 1)
+
+    def test_specified_calculated_cardinality_mismatch_setup_fewer_in_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
+        s = ts.SetUp("Time", cardinality=7)
+
+        df = pd.DataFrame({
+            'Unit': [1, 2, 3, 4, 5, 6, 7],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8, 13],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100, 100],
+            "Time": [1, 1, 1, 1, 1, 1, 1]
+        })
+
+        data = Dataset(source=df)
+
+        design = ts.Design(dv=dv, ivs=[measure])
+        gr = design.graph
+        gr._add_variable(s)
+
+        with self.assertRaises(Exception):
+            design.assign_data(df)
+
+    def test_specified_calculated_cardinality_mismatch_setup_more_in_data(self):
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable")
+        dv = unit.numeric("Dependent_variable")
+        s = ts.SetUp("Time", cardinality=1)
+
+        df = pd.DataFrame({
+            'Unit': [1, 1, 2, 2, 3, 3],
+            'Nominal_variable': [1, 1, 2, 3, 5, 8],
+            'Dependent_variable': [100, 100, 100, 100, 100, 100],
+            "Time": [1, 2, 1, 2, 1, 2]
+        })
+
+        data = Dataset(source=df)
+
+        design = ts.Design(dv=dv, ivs=[measure])
+        gr = design.graph
+        gr._add_variable(s)
+
+        with self.assertRaises(Exception):
+            design.assign_data(df)
+
+    def test_tostring_nominal(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.nominal("Nominal_variable", categories=[1, 2, 3])
+
+        description = str(measure)
+        self.assertIn(f"name: {measure.name}", description)
+        self.assertIn(f"cardinality: {measure.get_cardinality()}", description)
+        self.assertIn(f"categories: {measure.get_categories()}", description)
+        self.assertIn(f"data: {measure.data}", description)
+
+    def test_tostring_ordinal(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.ordinal("Ordinal_variable", order=[1, 2, 3, 4, 5])
+
+        description = str(measure)
+        self.assertIn(f"name: {measure.name}", description)
+        self.assertIn(f"cardinality: {measure.get_cardinality()}", description)
+        self.assertIn(f"ordered categories: {measure.get_categories()}", description)
+        self.assertIn(f"data: {measure.data}", description)
+
+    def test_tostring_numeric(self): 
+        unit = ts.Unit("Unit")
+        measure = unit.numeric("Ordinal_variable")
+
+        description = str(measure)
+        self.assertIn(f"name: {measure.name}", description)
+        self.assertIn(f"data: {measure.data}", description)
 
     # def test_has_variables(self):
     #     # Main question: How do we specify "time" variables that are necessary for expressing repeated measures and inferring random effects
