@@ -656,7 +656,7 @@ class Graph(object):
                 assert identifier is not None
                 # If the moderator is not in the graph, add it first
                 if not self.has_edge(start=identifier, end=m, edge_type="has"):
-                    relationship = m.get_unit_relationsihp()
+                    relationship = m.get_unit_relationship()
                     self.has(
                         identifier,
                         m,

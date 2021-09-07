@@ -178,7 +178,7 @@ def construct_statistical_model(
     random_effects_candidates: Set[RandomEffect],
     family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]],
 ):
-    print("read through {filename}")
+    print(f"read through {filename}")
     assert filename.endswith(".json")
     dir = os.getcwd()
     path = Path(dir, filename)
@@ -276,7 +276,6 @@ def construct_statistical_model(
                         ):  # May be correlated/uncorrelated
                             assert "correlated" in rs_dict.keys()
                             correlated = rs_dict["correlated"]
-                            # import pdb; pdb.set_trace()
 
                             if correlated:
                                 # Create correlated RS and RI

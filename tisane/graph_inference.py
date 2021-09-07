@@ -626,7 +626,7 @@ def construct_random_effects_for_nests(
 # factor...." - Barr et al. 2013
 def construct_random_effects_for_composed_measures(
     gr: Graph, variables: List[AbstractVariable]
-) -> Set[RandomIntercept]:
+) -> Set[RandomEffect]:
     random_effects = set()
 
     # Go through the selected main effects, looking only for Measures
@@ -634,30 +634,28 @@ def construct_random_effects_for_composed_measures(
         if isinstance(v, Measure):
             for r in v.relationships:
                 if isinstance(r, Has):
-                    # Does this measure have/consist of units?
-                    if v == r.variable and isinstance(r.measure, Unit):
-                        v_unit = gr.get_identifier_for_variable(v)
-                        (n0, n1, edge_data) = gr.get_edge(
-                            start=v_unit, end=v, edge_type="has"
-                        )
-                        v_unit_has_obj = edge_data["edge_obj"]
-                        assert isinstance(v_unit_has_obj.repetitions, NumberValue)
-                        # Is variable v within-subjects?
-                        if v_unit_has_obj.repetitions.is_greater_than_one():
-                            # Does variable v have multiple instances of the unit r.measure?
-                            if r.repetitions.is_greater_than_one():
-                                # If so, for each instance of v_unit account for clusters in r.measure observations within each instance of v.
-                                rs = RandomSlope(iv=v, groups=v_unit)
-                                random_effects.add(rs)
-                            # There is only one observation of r.measure per
-                            # each v. This is like saying r.measure and v are
-                            # 1:1, meaning they are redundant measures of each
-                            # other. By transitive property, v_unit has multiple
-                            # r.measure instances.
-                            else:
-                                assert v_unit_has_obj.repetitions.is_equal_to_one()
-                                ri = RandomIntercept(groups=v_unit)
-                                random_effects.add(ri)
+                    v_unit = gr.get_identifier_for_variable(v)
+                    (n0, n1, edge_data) = gr.get_edge(
+                        start=v_unit, end=v, edge_type="has"
+                    )
+                    v_unit_has_obj = edge_data["edge_obj"]
+                    assert isinstance(v_unit_has_obj.repetitions, NumberValue)
+                    # Is variable v within-subjects?
+                    if v_unit_has_obj.repetitions.is_greater_than_one():
+                        # Does variable v have multiple instances of the unit r.measure?
+                        if r.repetitions.is_greater_than_one():
+                            # If so, for each instance of v_unit account for clusters in r.measure observations within each instance of v.
+                            rs = RandomSlope(iv=v, groups=v_unit)
+                            random_effects.add(rs)
+                        # There is only one observation of r.measure per
+                        # each v. This is like saying r.measure and v are
+                        # 1:1, meaning they are redundant measures of each
+                        # other. By transitive property, v_unit has multiple
+                        # r.measure instances.
+                        else:
+                            assert v_unit_has_obj.repetitions.is_equal_to_one()
+                            ri = RandomIntercept(groups=v_unit)
+                            random_effects.add(ri)
 
     return random_effects
 
@@ -745,10 +743,6 @@ def find_largest_subset_of_variables_that_vary_within_unit(
         else:
             assert gr.has_variable(variable=v)
             v_unit = gr.get_identifier_for_variable(variable=v)
-            if v_unit is None:
-                import pdb
-
-                pdb.set_trace()
             (n0, n1, edge_data) = gr.get_edge(start=v_unit, end=v, edge_type="has")
             edge_obj = edge_data["edge_obj"]
             # Is v is within-subjects?

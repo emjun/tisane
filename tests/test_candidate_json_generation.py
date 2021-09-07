@@ -321,7 +321,7 @@ class CandidateJSONGenerationTest(unittest.TestCase):
             random_effects_candidates=random_effects,
             family_link_paired_candidates=family_link_paired,
         )
-        self.assertEqual(len(random_effects), 1)
+        self.assertEqual(len(random_effects), 3)
         input = combined_dict["input"]
         input_keys = input.keys()
         self.assertIsInstance(input, dict)
@@ -344,11 +344,28 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         rs_dict = input["generated random effects"][u.name]
         self.assertIsInstance(rs_dict, dict)
         self.assertIn("random slope", rs_dict.keys())
-        random_slope = rs_dict["random slope"][0]
-        self.assertIsInstance(random_slope, dict)
-        self.assertEqual(u.name, random_slope["groups"])
+        random_slope = rs_dict["random slope"]
+        self.assertEqual(len(random_slope), 3)
+        self.assertIsInstance(random_slope, list)
+        rs_unit = random_slope[0]["groups"]
+        self.assertEqual(u.name, rs_unit)
         ixn = interaction_effects.pop()
-        self.assertEqual(ixn.name, random_slope["iv"])
+        has_rs_a = False
+        has_rs_b = False
+        has_rs_a_b = False
+        for rs in random_slope:
+            if rs["iv"] == a.name:
+                has_rs_a = True
+                self.assertEqual(rs["groups"], rs_unit)
+            elif rs["iv"] == b.name:
+                has_rs_b = True
+                self.assertEqual(rs["groups"], rs_unit)
+            elif rs["iv"] == ixn.name:
+                has_rs_c = True
+                self.assertEqual(rs["groups"], rs_unit)
+        self.assertTrue(has_rs_a)
+        self.assertTrue(has_rs_b)
+        self.assertTrue(has_rs_c)
         self.assertIsInstance(input["generated family, link functions"], dict)
         self.assertIsInstance(input["measures to units"], dict)
         gr = design.graph
@@ -361,7 +378,11 @@ class CandidateJSONGenerationTest(unittest.TestCase):
         word = ts.Unit("Word", cardinality=4)
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
-        condition.has(word, number_of_instances=2)
+
+        subject = ts.Unit("Subject")
+        condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
+        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         condition.causes(reaction_time)
 

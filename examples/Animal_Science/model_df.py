@@ -14,7 +14,7 @@ def fit_model():
     df = pd.read_csv('/Users/emjun/Git/tisane/data.csv') # Make sure that the data path is correct
 
 
-    model = Lmer(formula='Weight ~ Time + (1|Pig) + (1|Time) + (1|Litter)', family="gaussian", data=df)
+    model = Lmer(formula='Weight ~ Time + (1|Litter) + (1|Pig) + (1|Time)', family="gaussian", data=df)
     print(model.fit())
     return model
 

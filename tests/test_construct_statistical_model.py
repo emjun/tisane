@@ -126,11 +126,10 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         self.assertIn(link, family_link_paired[family])
 
     def test_construct_main_uncorrelated_random_slope_intercept(self):
-        subject = ts.Unit("Subject", cardinality=12)
-        word = ts.Unit("Word", cardinality=4)
+        subject = ts.Unit("Subject")
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        reaction_time = subject.numeric("Time", number_of_instances=word)
-        condition.has(word, number_of_instances=2)
+        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         condition.causes(reaction_time)
 
@@ -145,6 +144,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
             main_effects=main_effects,
             interaction_effects=interaction_effects,
         )
+        # import pdb; pdb.set_trace()
         family_link_paired = get_family_link_paired_candidates(design=design)
 
         output_filename = "main_random_slope_random_intercept_uncorrelated.json"
@@ -157,6 +157,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
             random_effects_candidates=random_effects,
             family_link_paired_candidates=family_link_paired,
         )
+        # import pdb; pdb.set_trace()
         self.assertIsNotNone(sm)
         self.assertEqual(design.dv, sm.dependent_variable)
         self.assertEqual(main_effects, sm.main_effects)
@@ -178,6 +179,7 @@ class ConstructStatisticalModelTest(unittest.TestCase):
             elif isinstance(re, RandomSlope):
                 self.assertIn(re, random_effects)
             elif isinstance(re, RandomIntercept):
+                # import pdb; pdb.set_trace()
                 self.assertIn(re, random_effects)
                 has_ri = True
         self.assertTrue(has_ri)
@@ -189,11 +191,10 @@ class ConstructStatisticalModelTest(unittest.TestCase):
         self.assertIn(link, family_link_paired[family])
 
     def test_construct_main_correlated_random_slope_intercept(self):
-        subject = ts.Unit("Subject", cardinality=12)
-        word = ts.Unit("Word", cardinality=4)
+        subject = ts.Unit("Subject")
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        reaction_time = subject.numeric("Time", number_of_instances=word)
-        condition.has(word, number_of_instances=2)
+        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         condition.causes(reaction_time)
 

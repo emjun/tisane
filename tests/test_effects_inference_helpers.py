@@ -859,11 +859,9 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self,
     ):
         subject = ts.Unit("Subject")
-        word = ts.Unit("Word")
-
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
+        word = subject.nominal("Word", cardinality=4, number_of_instances=Exactly(2).per(number_of_instances=condition))
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
-        condition.has(word, number_of_instances=2)
 
         design = ts.Design(dv=reaction_time, ivs=[condition])
         gr = design.graph
@@ -882,11 +880,11 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         self,
     ):
         subject = ts.Unit("Subject")
-        word = ts.Unit("Word")
         # Each subject has a two values for condition, which is nominal.
         # Verbose: Each instance of subject has two instances of a nominal variable condition.
         # Informally: Each subjects sees two (both) conditions.
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
+        word = subject.nominal("Word", cardinality = 4, number_of_instances=Exactly(2).per(number_of_instances=condition))
         # Repeated measures
         # Each subject has a measure reaction time, which is numeric, for each instance of a word
         # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
@@ -894,7 +892,7 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         reaction_time = subject.numeric("Time", number_of_instances=word)
 
         # Each condition has/is comprised of two words.
-        condition.has(word, number_of_instances=2)
+        # condition.has(word, number_of_instances=2)
         # ALTERNATIVELY, we could do something like the below (not implemented). It is a bit more complicated to calculate the number of instances, but still doable I think.
         # Each word has one value for condition (already defined above as a measure of subject)
         # word.has(condition, number_of_instances=1) # Condition has two units
