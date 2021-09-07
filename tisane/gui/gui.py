@@ -162,7 +162,7 @@ class TisaneGUI:
             app.run_server(mode="inline", port=port)
             pass
         else:
-            app.run_server(debug=True, threaded=True, port=port)
+            app.run_server(host="127.0.0.1", debug=True, threaded=True, port=port)
 
     def model_tabs(self):
         # Many different ways to create tabs: https://dash-bootstrap-components.opensource.faculty.ai/docs/components/tabs/
