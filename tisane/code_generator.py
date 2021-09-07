@@ -85,6 +85,7 @@ statsmodels_model_template = """
 """
 
 pymer4_model_diagnostics = """
+    plt.axhline(y=0, color='r', linestyle='-')
     plt.scatter(model.fits, model.residuals)
     plt.title("Fitted values vs. Residuals")
     plt.xlabel("fitted values")
@@ -96,6 +97,7 @@ statsmodels_model_diagnostics = """
     res = model.fit()
     plt.clf()
     plt.grid(True)
+    plt.axhline(y=0, color='r', linestyle='-')
     plt.plot(res.predict(linear=True), res.resid_pearson, 'o')
     plt.xlabel("Linear predictor")
     plt.ylabel("Residual")
