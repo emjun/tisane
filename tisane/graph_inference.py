@@ -541,7 +541,9 @@ def construct_random_effects_for_repeated_measures(
         assert edge_obj.variable == dv_unit
         assert edge_obj.measure == dv
         # How many repeated measures are there?
-        assert isinstance(edge_obj.repetitions, NumberValue), "Unexpected type for repetitions: {}".format(type(edge_obj.repetitions))
+        assert isinstance(
+            edge_obj.repetitions, NumberValue
+        ), "Unexpected type for repetitions: {}".format(type(edge_obj.repetitions))
         # There is more than one observation of the DV for each unit
         # import pdb; pdb.set_trace()
         if edge_obj.repetitions.is_greater_than_one():

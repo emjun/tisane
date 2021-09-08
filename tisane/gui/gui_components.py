@@ -1325,13 +1325,15 @@ class GUIComponents:
                         [
                             html.Td("{:.5e}".format(shapiroStat)),
                             html.Td(
-                                "{:.5e}{}".format(shapiroPvalue, "*" if shapiroPvalue < 0.05 else "")
+                                "{:.5e}{}".format(
+                                    shapiroPvalue, "*" if shapiroPvalue < 0.05 else ""
+                                )
                             ),
                             html.Td("{:.5e}".format(normaltestStat)),
                             html.Td(
                                 "{:.5e}{}".format(
                                     normaltestPvalue,
-                                    "*" if normaltestPvalue < 0.05 else ""
+                                    "*" if normaltestPvalue < 0.05 else "",
                                 )
                             ),
                         ]
@@ -1340,19 +1342,7 @@ class GUIComponents:
             )
             normalityTestPortion = [
                 html.H5(["Normality Tests"]),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            dbc.Table(
-                                [
-                                    tableHeader,
-                                    tableBody
-                                ]
-                            )
-                        )
-
-                    ]
-                ),
+                dbc.Row([dbc.Col(dbc.Table([tableHeader, tableBody]))]),
                 dcc.Markdown(normalityTestExplanation["note"]),
                 html.H6(normalityTestExplanation["header"]),
                 dcc.Markdown(normalityTestExplanation["body"])
