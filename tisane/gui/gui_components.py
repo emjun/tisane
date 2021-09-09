@@ -1174,8 +1174,17 @@ class GUIComponents:
     def make_family_link_options(self):
         family_options = list()
 
-        fls = self.getFamilyLinkFunctions()
+        fls = self.getFamilyLinkFunctions().copy()
         # link_options =
+        if "PoissonFamily" in self.getGeneratedFamilyLinkFunctions() and "PoissonFamily" in fls and self.hasData():
+            dvData = self.dataDf[self.dv]
+            allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
+            if not allIntegers:
+                dvData = dvData.astype(float)
+                allIntegers = dvData.apply(float.is_integer).all()
+                if not allIntegers:
+                    fls.pop("PoissonFamily")
+
 
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
