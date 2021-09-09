@@ -56,11 +56,16 @@ explanations = {
     },
 }
 
+
 def is_intermediary_associative(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
     causes_edge = gr.get_edge(start=v, end=dv, edge_type="causes")
     associates_edge = gr.get_edge(start=v, end=dv, edge_type="associates")
-    assert causes_edge or associates_edge, "is_intermediary_associative called on an innapropriate variable: {}".format(v)
-    assert not causes_edge or not associates_edge, "is_intermediary_associative called on a strange variable that both causes and associates with the dv"
+    assert (
+        causes_edge or associates_edge
+    ), "is_intermediary_associative called on an innapropriate variable: {}".format(v)
+    assert (
+        not causes_edge or not associates_edge
+    ), "is_intermediary_associative called on a strange variable that both causes and associates with the dv"
 
     return causes_edge is None and associates_edge is not None
 

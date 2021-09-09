@@ -461,6 +461,7 @@ class Measure(AbstractVariable):
         # else
         return Exactly(0)
 
+
 """
 Class for Numeric measures
 """
@@ -489,6 +490,7 @@ class Numeric(Measure):
         else:
             return 1
 
+
 """
 Class for Nominal measures
 """
@@ -506,9 +508,15 @@ class Nominal(Measure):
         self.categories = None
 
         if "isInteraction" in kwargs and kwargs["isInteraction"]:
-            assert "moderators" in kwargs, "Must also specify the moderating variables for an interaction term: {}".format(name)
+            assert (
+                "moderators" in kwargs
+            ), "Must also specify the moderating variables for an interaction term: {}".format(
+                name
+            )
 
-        self.isInteraction = kwargs["isInteraction"] if "isInteraction" in kwargs else False
+        self.isInteraction = (
+            kwargs["isInteraction"] if "isInteraction" in kwargs else False
+        )
         self.moderators = kwargs["moderators"] if "moderators" in kwargs else []
 
         # for time being until incorporate DataVector class and methods
@@ -609,15 +617,25 @@ class Nominal(Measure):
     # Get the number of unique categorical values this nominal variable represents
     def calculate_categories_from_data(self, data: Dataset) -> List[Any]:
         assert data is not None
+
         def getUniqueValuesList(name):
             nameData = data.dataset[name]
             return map(lambda x: str(x), nameData.unique().tolist())
+
         if self.isInteraction and self.moderators:
-            categories = getUniqueValuesList(self.moderators[0].name) if not isinstance(self.moderators[0], Numeric) else [""]
+            categories = (
+                getUniqueValuesList(self.moderators[0].name)
+                if not isinstance(self.moderators[0], Numeric)
+                else [""]
+            )
             if len(self.moderators) > 1:
                 for mod in self.moderators[1:]:
                     if not isinstance(mod, Numeric):
-                        categories = ["{}.{}".format(cat1, cat2) for cat1 in categories for cat2 in getUniqueValuesList(mod.name)]
+                        categories = [
+                            "{}.{}".format(cat1, cat2)
+                            for cat1 in categories
+                            for cat2 in getUniqueValuesList(mod.name)
+                        ]
                     pass
             return categories
 
@@ -716,9 +734,6 @@ class Ordinal(Measure):
         unique_values = data.unique()
 
         return len(unique_values)
-
-
-
 
 
 ##### Conceptual relationships
