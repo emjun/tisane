@@ -92,6 +92,7 @@ class Design(object):
         for v in variables:
             if isinstance(v, Nominal):
                 # If cardinality was not specified previously, calculate it
+                # print("Cardinality: {}".format(v.cardinality))
                 if v.cardinality is None:
                     v.assign_cardinality_from_data(self.dataset)
 
@@ -116,12 +117,13 @@ class Design(object):
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
                 # Are there more categories than the user specified?
-                diff = set(calculated_categories) - set(v.categories)
-                if len(diff) > 0:
+                if not v.isInteraction:
+                    diff = set(calculated_categories) - set(v.categories)
+                    if len(diff) > 0:
 
-                    raise ValueError(
-                        f"Variable {v.name} is specified to have the following categories: {v.categories}. However, in the data provided, {v.name} has {calculated_categories} unique values. These are the categories that exist in the data but you may not have expected: {diff}"
-                    )
+                        raise ValueError(
+                            f"Variable {v.name} is specified to have the following categories: {v.categories}. However, in the data provided, {v.name} has {calculated_categories} unique values. These are the categories that exist in the data but you may not have expected: {diff}"
+                        )
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
             elif isinstance(v, Ordinal):

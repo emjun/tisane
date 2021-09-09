@@ -461,6 +461,33 @@ class Measure(AbstractVariable):
         # else
         return Exactly(0)
 
+"""
+Class for Numeric measures
+"""
+
+
+class Numeric(Measure):
+    def __init__(self, name: str, data=None):
+        super(Numeric, self).__init__(name=name, data=data)
+        self.data = data
+        self.properties = dict()
+        # self.assert_property(prop="dtype", val="numeric")
+
+        # # Associate self with unit by add variable relationship to self and to unit
+        # unit._has(measure=self, exactly=exactly, up_to=up_to)
+
+    def __str__(self):
+        description = (
+            f"Numeric variable:\n" + f"name: {self.name}" + f"data: {self.data}"
+        )
+        return description
+
+    def get_cardinality(self):
+        if self.data is not None:
+            # Return number of unique values
+            raise NotImplementedError
+        else:
+            return 1
 
 """
 Class for Nominal measures
@@ -470,11 +497,19 @@ Class for Nominal measures
 class Nominal(Measure):
     cardinality: int
     categories = list
+    isInteraction: bool
+    moderators: List[AbstractVariable]
 
     def __init__(self, name: str, data=None, **kwargs):
         super(Nominal, self).__init__(name=name, data=data)
         self.data = data
         self.categories = None
+
+        if "isInteraction" in kwargs and kwargs["isInteraction"]:
+            assert "moderators" in kwargs, "Must also specify the moderating variables for an interaction term: {}".format(name)
+
+        self.isInteraction = kwargs["isInteraction"] if "isInteraction" in kwargs else False
+        self.moderators = kwargs["moderators"] if "moderators" in kwargs else []
 
         # for time being until incorporate DataVector class and methods
         if "categories" in kwargs.keys():
@@ -558,6 +593,14 @@ class Nominal(Measure):
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
         assert data is not None
+        if self.isInteraction and self.moderators:
+            data_cardinality = 1
+            for m in self.moderators:
+                if not isinstance(m, Numeric):
+                    moderatorData = data.dataset[m.name]
+                    data_cardinality *= len(moderatorData.unique())
+                pass
+            return data_cardinality
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -566,6 +609,18 @@ class Nominal(Measure):
     # Get the number of unique categorical values this nominal variable represents
     def calculate_categories_from_data(self, data: Dataset) -> List[Any]:
         assert data is not None
+        def getUniqueValuesList(name):
+            nameData = data.dataset[name]
+            return map(lambda x: str(x), nameData.unique().tolist())
+        if self.isInteraction and self.moderators:
+            categories = getUniqueValuesList(self.moderators[0].name) if not isinstance(self.moderators[0], Numeric) else [""]
+            if len(self.moderators) > 1:
+                for mod in self.moderators[1:]:
+                    if not isinstance(mod, Numeric):
+                        categories = ["{}.{}".format(cat1, cat2) for cat1 in categories for cat2 in getUniqueValuesList(mod.name)]
+                    pass
+            return categories
+
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -663,33 +718,7 @@ class Ordinal(Measure):
         return len(unique_values)
 
 
-"""
-Class for Numeric measures
-"""
 
-
-class Numeric(Measure):
-    def __init__(self, name: str, data=None):
-        super(Numeric, self).__init__(name=name, data=data)
-        self.data = data
-        self.properties = dict()
-        # self.assert_property(prop="dtype", val="numeric")
-
-        # # Associate self with unit by add variable relationship to self and to unit
-        # unit._has(measure=self, exactly=exactly, up_to=up_to)
-
-    def __str__(self):
-        description = (
-            f"Numeric variable:\n" + f"name: {self.name}" + f"data: {self.data}"
-        )
-        return description
-
-    def get_cardinality(self):
-        if self.data is not None:
-            # Return number of unique values
-            raise NotImplementedError
-        else:
-            return 1
 
 
 ##### Conceptual relationships

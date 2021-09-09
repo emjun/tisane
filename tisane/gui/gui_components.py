@@ -326,6 +326,11 @@ class GUIComponents:
             pass
         return newOutput
 
+    def getAssociativeIntermediaries(self):
+        key = "associative intermediary main effects"
+        assert key in self.data["input"], "Could not find key \"{}\" in input:\n{}".format(key, json.dumps(self.data["input"], indent=4))
+        return self.data["input"][key]
+
     def getFamilyLinkFunctions(self):
         if self.hasRandomEffects():
             return self.familyLinkFunctions["with-mixed-effects"]
@@ -815,6 +820,7 @@ class GUIComponents:
 
     def getMainEffectsCard(self):
         ivs = self.getIndependentVariables()
+        intermediaries = self.getAssociativeIntermediaries()
         continueButtonPortion = [
             html.P(""),
             dbc.Button(
@@ -824,6 +830,19 @@ class GUIComponents:
                 n_clicks=0,
             ),
         ]
+        associativeWarning = self.strings("main-effects", "associative-warning")
+
+        def getIntermediaryWarning(mainEffect):
+            if mainEffect in intermediaries:
+                id = self.getNewComponentId()
+                popoverContents = [
+                    dbc.PopoverHeader(dcc.Markdown(associativeWarning["header"].format(var=mainEffect))),
+                    dbc.PopoverBody(dcc.Markdown(associativeWarning["body"].format(var=mainEffect, dv=self.getDependentVariable())))
+                ]
+                popover = dbc.Popover(popoverContents, target=id, trigger="hover")
+
+                return [" ", dbc.Badge("Warning", color="warning", id=id), popover]
+            return []
         if ivs:
             body = [
                 cardP(self.strings.getMainEffectsPageTitle()),
@@ -836,7 +855,7 @@ class GUIComponents:
                                 getInfoBubble(
                                     self.variables["main effects"][me]["info-id"]
                                 ),
-                            ]
+                            ] + getIntermediaryWarning(me)
                         )
                         for me in self.getGeneratedMainEffects()
                     },
