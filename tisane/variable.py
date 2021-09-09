@@ -265,6 +265,9 @@ class Unit(AbstractVariable):
     in your dataset, and each person has an eye color, height, age, etc., then
     you should make the person variable a `Unit`.
 
+    In statistics, a `Unit` can represent either an `observational
+    or experimental unit <https://en.wikipedia.org/wiki/Statistical_unit>`_.
+
     Parameters
     ----------
     name : str
@@ -324,7 +327,7 @@ class Unit(AbstractVariable):
             The number of unique values that the categorical variable can take.
             This should correspond to the number of "categories." If left
             unspecified, Tisane will infer this from the data.
-        number_of_instances : int, AbstractVariable, or AtMost, default=1
+        number_of_instances : int, AbstractVariable, or tisane.AtMost, default=1
             This should be the number of measurements of an attribute per
             unique instance of the associated :py:class:`Unit`. For example, if
             you asked how someone felt 5 different times, the
@@ -455,7 +458,7 @@ class Unit(AbstractVariable):
             The name of the variable. If you have data, this should correspond to the column's name.
         data : DataVector, optional
             For internal use only.
-        number_of_instances : int, AbstractVariable, or AtMost, default=1
+        number_of_instances : int, AbstractVariable, or tisane.AtMost, default=1
             This should be the number of measurements of an attribute per unique instance of the associated `Unit`. For example, if you measure the reaction time of each person in a study 10 times, then you should enter 10.
 
         Examples
@@ -628,7 +631,7 @@ class Nominal(Measure):
 
     See Also
     --------
-    Unit.nominal: create a categorical variable associated with a :py:class:`tisane.Unit`
+    tisane.Unit.nominal: create a categorical variable associated with a :py:class:`tisane.Unit`
 
     """
     cardinality: int
@@ -751,12 +754,6 @@ class Ordinal(Measure):
         Description of attribute `ordered_cat`.
     properties : type
         Description of attribute `properties`.
-    assert_property : type
-        Description of attribute `assert_property`.
-    self with : type
-        Description of attribute `self with`.
-    self and : type
-        Description of attribute `self and`.
     data : DataVector
         The data associated with this variable
     cardinality : int
@@ -764,7 +761,7 @@ class Ordinal(Measure):
 
     See Also
     --------
-    Unit.ordinal : create an ordinal measure attribute of a given `tisane.Unit`
+    tisane.Unit.ordinal : create an ordinal measure attribute of a given `tisane.Unit`
 
     """
     cardinality: int
@@ -840,13 +837,11 @@ class Numeric(Measure):
     ----------
     properties : dict
         Description of attribute `properties`.
-    assert_property : type
-        Description of attribute `assert_property`.
     data
 
     See Also
     --------
-    Unit.numeric : create a `Numeric` variable attributed to a given `Unit`
+    tisane.Unit.numeric : create a `Numeric` variable attributed to a given `tisane.Unit`
 
     """
     def __init__(self, name: str, data=None):
@@ -859,7 +854,7 @@ class Numeric(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        description = f"Numeric variable:\n" + f"name: {self.name}" + f"data: {self.data}"
+        description = f"Numeric variable:\n" + f"name: {self.name}, " + f"data: {self.data}"
         return description
 
     def get_cardinality(self):

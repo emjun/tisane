@@ -32,9 +32,9 @@ class Design(object):
     Parameters
     ----------
     dv : AbstractVariable
-        The *d*ependent *v*ariable.
+        The **d**\ ependent **v**\ ariable.
     ivs : List[AbstractVariable]
-        A list of the *i*ndependent *v*ariable(s).
+        A list of the **i**\ ndependent **v**\ ariable(s).
     source : os.PathLike or pd.DataFrame, optional
         For internal use only.
 
@@ -43,7 +43,7 @@ class Design(object):
     graph : Graph
         The underlying graph representation of the variables in the design.
     dataset : Dataset
-        The `Dataset`
+        The data for your study, if you have any.
     dv : AbstractVariable
         The dependent variable in the study design
     ivs : List[AbstractVariable]
@@ -183,6 +183,49 @@ class Design(object):
 
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
+        """Associate this study design with a dataset
+
+        Assigning data to the study design allows Tisane to perform
+        some additional checks on your study design and variables,
+        and ensures that everything makes sense.
+
+        It is optional to specify cardinality for variables, and
+        the `Design` will automatically calculate the cardinality
+        using the data.
+
+        When cardinality is specified, the `Design` will check
+        to make sure that the cardinality of the variable and the
+        cardinality in the data make sense.
+
+        Parameters
+        ----------
+        source : os.PathLike or pandas.DataFrame
+            How to get the data. This can be a string containing
+            a path, such as "path/to/my/data.csv", or some kind of path object, or simply a `Pandas DataFrame <https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html>`_.
+            If it is a path, it must be a csv file.
+
+        Returns
+        -------
+        Design
+            A reference to the object this was called on
+
+        Examples
+        --------
+
+        Our data is in a csv file called "rats_data.csv".
+
+        >>> import tisane as ts
+        >>> rat = ts.Unit("rat_id")
+        >>> week = ts.SetUp("week_number")
+        >>> weight = rat.numeric("rat_weight", number_of_instances=week)
+        >>> exercise_condition = rat.nominal("exercise_condition")
+        >>> design = ts.Design(ivs=[exercise_condition], dv=weight).assign_data("rats_data.csv")
+
+        Suppose instead we have a pandas `DataFrame` called `rats_df`.
+
+        >>> design = ts.Design(ivs=[exercise_condition], dv=weight).assign_data(rats_df)
+
+        """
         self.dataset = Dataset(source)
 
         self.check_variable_cardinality()

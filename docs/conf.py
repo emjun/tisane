@@ -15,16 +15,35 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import os
 import sys
+import toml
+import re
 sys.path.insert(0, os.path.abspath("../tisane"))
+
+dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # -- Project information -----------------------------------------------------
 
+with open(os.path.join(dir, "pyproject.toml"), "r") as f:
+    pyproject = toml.loads(f.read())
+    pass
+
 project = 'tisane'
-copyright = '2021, Eunice Jun'
-author = 'Eunice Jun'
+
+
+authorNameRegex = r"(\w+(?: \w+)*)\s*<[^>]*>"
+
+authors = pyproject["tool"]["poetry"]["authors"]
+
+authors = [re.sub(authorNameRegex, r"\1", author) for author in authors]
+
+author = " & ".join(authors)
+copyright = '2021, {}'.format(author)
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.3'
+
+# print(pyproject)
+
+release = pyproject["tool"]["poetry"]["version"]
 
 
 # -- General configuration ---------------------------------------------------
@@ -35,6 +54,7 @@ release = '0.0.3'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
     'numpydoc'
 ]
 

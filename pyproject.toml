@@ -30,6 +30,7 @@ Sphinx = "^4.1.2"
 pydata-sphinx-theme = "^0.6.3"
 sphinx-autoapi = "^1.8.4"
 numpydoc = "^1.1.0"
+toml = "^0.10.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"
