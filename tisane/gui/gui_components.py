@@ -1447,6 +1447,7 @@ class GUIComponents:
     def getFamilyLinkFunctionsCard(self):
         ##### Collect all elements
         # Create family and link title
+        familyExplanation = self.getDefaultExplanation("distribution-families")
         family_link_title = html.Div(
             [
                 html.H5(self.strings.getFamilyLinksPageTitle()),
@@ -1455,6 +1456,7 @@ class GUIComponents:
                         "family-link-functions", "titles", "page-sub-title"
                     ).format(self.getDependentVariable())
                 ),
+                dcc.Markdown(familyExplanation["caution"])
             ]
         )
 
