@@ -329,6 +329,8 @@ def construct_statistical_model(
 
     return sm
 
+def infer_model(design: Design, jupyter: bool = False):
+    return infer_statistical_model_from_design(design=design, jupyter=jupyter)
 
 # @returns statistical model that reflects the study design
 def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
