@@ -328,7 +328,11 @@ class GUIComponents:
 
     def getAssociativeIntermediaries(self):
         key = "associative intermediary main effects"
-        assert key in self.data["input"], "Could not find key \"{}\" in input:\n{}".format(key, json.dumps(self.data["input"], indent=4))
+        assert (
+            key in self.data["input"]
+        ), 'Could not find key "{}" in input:\n{}'.format(
+            key, json.dumps(self.data["input"], indent=4)
+        )
         return self.data["input"][key]
 
     def getFamilyLinkFunctions(self):
@@ -836,13 +840,24 @@ class GUIComponents:
             if mainEffect in intermediaries:
                 id = self.getNewComponentId()
                 popoverContents = [
-                    dbc.PopoverHeader(dcc.Markdown(associativeWarning["header"].format(var=mainEffect))),
-                    dbc.PopoverBody(dcc.Markdown(associativeWarning["body"].format(var=mainEffect, dv=self.getDependentVariable())))
+                    dbc.PopoverHeader(
+                        dcc.Markdown(
+                            associativeWarning["header"].format(var=mainEffect)
+                        )
+                    ),
+                    dbc.PopoverBody(
+                        dcc.Markdown(
+                            associativeWarning["body"].format(
+                                var=mainEffect, dv=self.getDependentVariable()
+                            )
+                        )
+                    ),
                 ]
                 popover = dbc.Popover(popoverContents, target=id, trigger="hover")
 
                 return [" ", dbc.Badge("Warning", color="warning", id=id), popover]
             return []
+
         if ivs:
             body = [
                 cardP(self.strings.getMainEffectsPageTitle()),
@@ -855,7 +870,8 @@ class GUIComponents:
                                 getInfoBubble(
                                     self.variables["main effects"][me]["info-id"]
                                 ),
-                            ] + getIntermediaryWarning(me)
+                            ]
+                            + getIntermediaryWarning(me)
                         )
                         for me in self.getGeneratedMainEffects()
                     },
@@ -1171,20 +1187,39 @@ class GUIComponents:
             className="mt-3",
         )
 
-    def make_family_link_options(self):
-        family_options = list()
-
-        fls = self.getFamilyLinkFunctions().copy()
-        # link_options =
-        if "PoissonFamily" in self.getGeneratedFamilyLinkFunctions() and "PoissonFamily" in fls and self.hasData():
+    def isDVDataAllNonNegativeIntegers(self):
+        if self.hasData():
             dvData = self.dataDf[self.dv]
             allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
             if not allIntegers:
                 dvData = dvData.astype(float)
                 allIntegers = dvData.apply(float.is_integer).all()
-                if not allIntegers:
-                    fls.pop("PoissonFamily")
+                pass
+            allIntegers = allIntegers and dvData.apply(lambda x: x >= 0).all()
+            return allIntegers
+        return None
 
+    def make_family_link_options(self):
+        family_options = list()
+
+        fls = self.getFamilyLinkFunctions().copy()
+        isAllIntegers = self.isDVDataAllNonNegativeIntegers()
+        removePoisson = (
+            "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
+            and "PoissonFamily" in fls
+            and isAllIntegers
+        )
+        # link_options =
+        if removePoisson:
+            fls.pop("PoissonFamily")
+            # dvData = self.dataDf[self.dv]
+            # allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
+            # if not allIntegers:
+            #     dvData = dvData.astype(float)
+            #     allIntegers = dvData.apply(float.is_integer).all()
+            #     if not allIntegers:
+            #         fls.pop("PoissonFamily")
+            pass
 
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
@@ -1237,7 +1272,18 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(familyExplanation["header"]),
-                        dbc.PopoverBody(dcc.Markdown(familyExplanation["body"])),
+                        dbc.PopoverBody(
+                            dcc.Markdown(
+                                familyExplanation["body"]
+                                + familyExplanation["note-begin"]
+                                + (
+                                    (familyExplanation["no-poisson"] + "\n")
+                                    if removePoisson
+                                    else ""
+                                )
+                                + familyExplanation["missing-families-note"]
+                            )
+                        ),
                     ],
                     target="family-label-info",
                     trigger="hover",
@@ -1401,6 +1447,7 @@ class GUIComponents:
     def getFamilyLinkFunctionsCard(self):
         ##### Collect all elements
         # Create family and link title
+        familyExplanation = self.getDefaultExplanation("distribution-families")
         family_link_title = html.Div(
             [
                 html.H5(self.strings.getFamilyLinksPageTitle()),
@@ -1409,6 +1456,7 @@ class GUIComponents:
                         "family-link-functions", "titles", "page-sub-title"
                     ).format(self.getDependentVariable())
                 ),
+                dcc.Markdown(familyExplanation["caution"])
             ]
         )
 

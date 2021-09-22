@@ -370,9 +370,18 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
-    intermediaries, variable_to_intermediaries = find_all_associates_that_causes_or_associates_another(design.ivs, design.dv, gr)
-    intermediary_to_variable = {intermediary: gr.get_variable(intermediary) for intermediary in intermediaries}
-    associative_intermediaries = [intermediary for intermediary, intermediary_variable in intermediary_to_variable.items() if is_intermediary_associative(intermediary_variable, design.dv, gr)]
+    (
+        intermediaries,
+        variable_to_intermediaries,
+    ) = find_all_associates_that_causes_or_associates_another(design.ivs, design.dv, gr)
+    intermediary_to_variable = {
+        intermediary: gr.get_variable(intermediary) for intermediary in intermediaries
+    }
+    associative_intermediaries = [
+        intermediary
+        for intermediary, intermediary_variable in intermediary_to_variable.items()
+        if is_intermediary_associative(intermediary_variable, design.dv, gr)
+    ]
     # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
@@ -390,7 +399,9 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
 
     # Add explanations
     combined_dict["input"]["explanations"] = explanations
-    combined_dict["input"]["associative intermediary main effects"] = associative_intermediaries
+    combined_dict["input"][
+        "associative intermediary main effects"
+    ] = associative_intermediaries
 
     # Add data
     data = design.get_data()
