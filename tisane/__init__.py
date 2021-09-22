@@ -1,4 +1,5 @@
 from tisane.main import (
+    infer_model,
     infer_statistical_model_from_design,
 )
 
