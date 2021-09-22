@@ -326,6 +326,15 @@ class GUIComponents:
             pass
         return newOutput
 
+    def getAssociativeIntermediaries(self):
+        key = "associative intermediary main effects"
+        assert (
+            key in self.data["input"]
+        ), 'Could not find key "{}" in input:\n{}'.format(
+            key, json.dumps(self.data["input"], indent=4)
+        )
+        return self.data["input"][key]
+
     def getFamilyLinkFunctions(self):
         if self.hasRandomEffects():
             return self.familyLinkFunctions["with-mixed-effects"]
@@ -815,6 +824,7 @@ class GUIComponents:
 
     def getMainEffectsCard(self):
         ivs = self.getIndependentVariables()
+        intermediaries = self.getAssociativeIntermediaries()
         continueButtonPortion = [
             html.P(""),
             dbc.Button(
@@ -824,6 +834,30 @@ class GUIComponents:
                 n_clicks=0,
             ),
         ]
+        associativeWarning = self.strings("main-effects", "associative-warning")
+
+        def getIntermediaryWarning(mainEffect):
+            if mainEffect in intermediaries:
+                id = self.getNewComponentId()
+                popoverContents = [
+                    dbc.PopoverHeader(
+                        dcc.Markdown(
+                            associativeWarning["header"].format(var=mainEffect)
+                        )
+                    ),
+                    dbc.PopoverBody(
+                        dcc.Markdown(
+                            associativeWarning["body"].format(
+                                var=mainEffect, dv=self.getDependentVariable()
+                            )
+                        )
+                    ),
+                ]
+                popover = dbc.Popover(popoverContents, target=id, trigger="hover")
+
+                return [" ", dbc.Badge("Warning", color="warning", id=id), popover]
+            return []
+
         if ivs:
             body = [
                 cardP(self.strings.getMainEffectsPageTitle()),
@@ -837,6 +871,7 @@ class GUIComponents:
                                     self.variables["main effects"][me]["info-id"]
                                 ),
                             ]
+                            + getIntermediaryWarning(me)
                         )
                         for me in self.getGeneratedMainEffects()
                     },
@@ -1057,7 +1092,7 @@ class GUIComponents:
                             correlationCheckbox = (
                                 [
                                     html.Td(
-                                        self.getFancyCheckbox(
+                                        self.makeFancyCheckbox(
                                             id=self.getCorrelatedIdForRandomSlope(
                                                 group, iv
                                             ),
@@ -1152,11 +1187,39 @@ class GUIComponents:
             className="mt-3",
         )
 
+    def isDVDataAllNonNegativeIntegers(self):
+        if self.hasData():
+            dvData = self.dataDf[self.dv]
+            allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
+            if not allIntegers:
+                dvData = dvData.astype(float)
+                allIntegers = dvData.apply(float.is_integer).all()
+                pass
+            allIntegers = allIntegers and dvData.apply(lambda x: x >= 0).all()
+            return allIntegers
+        return None
+
     def make_family_link_options(self):
         family_options = list()
 
-        fls = self.getFamilyLinkFunctions()
+        fls = self.getFamilyLinkFunctions().copy()
+        isAllIntegers = self.isDVDataAllNonNegativeIntegers()
+        removePoisson = (
+            "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
+            and "PoissonFamily" in fls
+            and isAllIntegers
+        )
         # link_options =
+        if removePoisson:
+            fls.pop("PoissonFamily")
+            # dvData = self.dataDf[self.dv]
+            # allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
+            # if not allIntegers:
+            #     dvData = dvData.astype(float)
+            #     allIntegers = dvData.apply(float.is_integer).all()
+            #     if not allIntegers:
+            #         fls.pop("PoissonFamily")
+            pass
 
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
@@ -1209,7 +1272,18 @@ class GUIComponents:
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(familyExplanation["header"]),
-                        dbc.PopoverBody(dcc.Markdown(familyExplanation["body"])),
+                        dbc.PopoverBody(
+                            dcc.Markdown(
+                                familyExplanation["body"]
+                                + familyExplanation["note-begin"]
+                                + (
+                                    (familyExplanation["no-poisson"] + "\n")
+                                    if removePoisson
+                                    else ""
+                                )
+                                + familyExplanation["missing-families-note"]
+                            )
+                        ),
                     ],
                     target="family-label-info",
                     trigger="hover",
@@ -1290,7 +1364,7 @@ class GUIComponents:
         ]
         if self.hasData():
             normalityTestExplanation = self.getDefaultExplanation("normality-tests")
-            dvData = self.dataDf[self.dv]
+            dvData = self.dataDf[self.dv].dropna()
             shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
             normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
 
@@ -1325,13 +1399,15 @@ class GUIComponents:
                         [
                             html.Td("{:.5e}".format(shapiroStat)),
                             html.Td(
-                                "{:.5e}{}".format(shapiroPvalue, "*" if shapiroPvalue < 0.05 else "")
+                                "{:.5e}{}".format(
+                                    shapiroPvalue, "*" if shapiroPvalue < 0.05 else ""
+                                )
                             ),
                             html.Td("{:.5e}".format(normaltestStat)),
                             html.Td(
                                 "{:.5e}{}".format(
                                     normaltestPvalue,
-                                    "*" if normaltestPvalue < 0.05 else ""
+                                    "*" if normaltestPvalue < 0.05 else "",
                                 )
                             ),
                         ]
@@ -1340,19 +1416,7 @@ class GUIComponents:
             )
             normalityTestPortion = [
                 html.H5(["Normality Tests"]),
-                dbc.Row(
-                    [
-                        dbc.Col(
-                            dbc.Table(
-                                [
-                                    tableHeader,
-                                    tableBody
-                                ]
-                            )
-                        )
-
-                    ]
-                ),
+                dbc.Row([dbc.Col(dbc.Table([tableHeader, tableBody]))]),
                 dcc.Markdown(normalityTestExplanation["note"]),
                 html.H6(normalityTestExplanation["header"]),
                 dcc.Markdown(normalityTestExplanation["body"])
@@ -1383,6 +1447,7 @@ class GUIComponents:
     def getFamilyLinkFunctionsCard(self):
         ##### Collect all elements
         # Create family and link title
+        familyExplanation = self.getDefaultExplanation("distribution-families")
         family_link_title = html.Div(
             [
                 html.H5(self.strings.getFamilyLinksPageTitle()),
@@ -1391,6 +1456,7 @@ class GUIComponents:
                         "family-link-functions", "titles", "page-sub-title"
                     ).format(self.getDependentVariable())
                 ),
+                dcc.Markdown(familyExplanation["caution"])
             ]
         )
 

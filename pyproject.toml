@@ -1,7 +1,8 @@
 [tool.poetry]
 name = "tisane"
-version = "0.0.5"
+version = "0.0.7"
 description = ""
+readme = "README.md"
 authors = ["Eunice Jun <eunice.m.jun@gmail.com>", "Audrey Seo <audreyleeseo@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -31,6 +32,8 @@ pydata-sphinx-theme = "^0.6.3"
 sphinx-autoapi = "^1.8.4"
 numpydoc = "^1.1.0"
 toml = "^0.10.2"
+ipykernel = "^6.3.1"
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.3"

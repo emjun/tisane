@@ -4,11 +4,6 @@ from typing import Any, List
 import typing  # for typing.Unit
 import re
 
-# """
-# Abstract super class for all variables.
-# Distinguish between Unit and Measures (Nominal, Ordinal, Numeric).
-# TODO: Added Time variable, not sure if we should include it?
-# """
 
 # for decorating class methods and extending docstrings
 # from: https://stackoverflow.com/questions/60000179/sphinx-insert-argument-documentation-from-parent-method/60012943#60012943
@@ -25,6 +20,19 @@ class extend_docstring:
             if doc is not None:
                 function.__doc__ += doc
         return function
+
+def splitTable(mystr: str):
+    assert (
+        mystr.count("</tbody></table>") > 0
+    ), 'Expected to find "</tbody></table>" in {}'.format(mystr)
+
+    index = mystr.find("</tbody></table>")
+    assert index > -1
+
+    firstPart = mystr[:index]
+    secondPart = mystr[index:]
+    return firstPart, secondPart
+
 
 class AbstractVariable:
     """Super class for all variables, containing basic common attributes.
@@ -47,6 +55,7 @@ class AbstractVariable:
         The data for this variable, in long format.
 
     """
+
     name: str
     data: DataVector
     relationships: List[typing.Union["Has", "Repeats", "Nests"]]
@@ -166,6 +175,22 @@ class AbstractVariable:
         # Add relationship to @param on
         on.relationships.append(moderate_relat)
 
+    def _repr_html_(self):
+        rowFormat = """<tr><th scope="row" style="text-align:left">{}</th><td style="text-align:left">{}</td></tr>"""
+
+        tableBody = """<table style="text-align:left"><tbody>{}</tbody></table>"""
+        nameRow = rowFormat.format("Name", self.name)
+        typeRow = rowFormat.format(
+            "Type",
+            "<code>{}</code>".format(
+                re.sub(r"^[^']*'([^']+)'[^']*$", r"\1", str(type(self)))
+            ),
+        )
+        dataRow = """<tr><th scope="row" style="text-align:left">Data</th><td style="text-align:left">{}</td></tr>""".format(
+            self.data if self.data else "No data available"
+        )
+        return tableBody.format(nameRow + typeRow + dataRow)
+
 
 
 
@@ -238,12 +263,27 @@ class SetUp(AbstractVariable):
             else:
                 self.variable = Numeric(name, data)
 
+    def _repr_html_(self):
+        superHtml = super(SetUp, self)._repr_html_()
+        tableBegin, tableEnd = splitTable(superHtml)
+
+        rowFormat = """<tr><th scope="row" style="text-align:left">{}</th><td style="text-align:left">{}</td></tr>"""
+        cardinality = self.get_cardinality()
+        cardinalityRow = (
+            rowFormat.format("Cardinality", cardinality) if cardinality else ""
+        )
+        order = (
+            self.variable.ordered_cat if isinstance(self.variable, Ordinal) else None
+        )
+        orderRow = rowFormat.format("Order", ", ".join(order)) if order else ""
+        return tableBegin + cardinalityRow + orderRow + tableEnd
+
     def get_cardinality(self):
         return self.variable.get_cardinality()
 
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -251,7 +291,7 @@ class SetUp(AbstractVariable):
 
     # Assign cardinalty from data
     def assign_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         self.cardinality = self.calculate_cardinality_from_data(data)
 
 
@@ -306,12 +346,23 @@ class Unit(AbstractVariable):
         super(Unit, self).__init__(name, data)
         self.cardinality = cardinality
 
+    def _repr_html_(self):
+        superHtml = super(Unit, self)._repr_html_()
+        tableBegin, tableEnd = splitTable(superHtml)
+
+        rowFormat = """<tr><th scope="row" style="text-align:left">{}</th><td style="text-align:left">{}</td></tr>"""
+        cardinality = self.get_cardinality()
+        cardinalityRow = (
+            rowFormat.format("Cardinality", cardinality) if cardinality else ""
+        )
+        return tableBegin + cardinalityRow + tableEnd
+
     def nominal(
         self,
         name: str,
         data=None,
         cardinality=None,
-        number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
+        number_of_instances: typing.Union[int, AbstractVariable, "AtMost", "Per"] = 1,
         **kwargs,
     ):
         """Creates a categorical data variable that is an attribute of a :py:class:`Unit`
@@ -377,7 +428,7 @@ class Unit(AbstractVariable):
         order: list,
         cardinality: int = None,
         data=None,
-        number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
+        number_of_instances: typing.Union[int, AbstractVariable, "AtMost", "Per"] = 1,
     ):
         """Creates a categorical data variable whose categories are ordered.
 
@@ -446,7 +497,7 @@ class Unit(AbstractVariable):
         self,
         name: str,
         data=None,
-        number_of_instances: typing.Union[int, AbstractVariable, "AtMost"] = 1,
+        number_of_instances: typing.Union[int, AbstractVariable, "AtMost", "Per"] = 1,
     ):
         """Creates a variable that takes on integer or real number values
 
@@ -529,7 +580,7 @@ class Unit(AbstractVariable):
 
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -537,7 +588,7 @@ class Unit(AbstractVariable):
 
     # Assign cardinalty from data
     def assign_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         self.cardinality = self.calculate_cardinality_from_data(data)
 
 
@@ -594,7 +645,7 @@ class Measure(AbstractVariable):
 
         if unit_relat is not None:
             return unit_relat.repetitions
-        #else
+        # else
         return Exactly(0)
 
 
@@ -636,11 +687,25 @@ class Nominal(Measure):
     """
     cardinality: int
     categories = list
+    isInteraction: bool
+    moderators: List[AbstractVariable]
 
     def __init__(self, name: str, data=None, **kwargs):
         super(Nominal, self).__init__(name=name, data=data)
         self.data = data
         self.categories = None
+
+        if "isInteraction" in kwargs and kwargs["isInteraction"]:
+            assert (
+                "moderators" in kwargs
+            ), "Must also specify the moderating variables for an interaction term: {}".format(
+                name
+            )
+
+        self.isInteraction = (
+            kwargs["isInteraction"] if "isInteraction" in kwargs else False
+        )
+        self.moderators = kwargs["moderators"] if "moderators" in kwargs else []
 
         # for time being until incorporate DataVector class and methods
         if "categories" in kwargs.keys():
@@ -671,7 +736,6 @@ class Nominal(Measure):
                 self.cardinality = None
                 self.categories = None
 
-
         # has data
         if self.data is not None:
             num_categories = len(self.data.get_categories())
@@ -689,8 +753,30 @@ class Nominal(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        description = f"Nominal variable:\n" + f"name: {self.name}, cardinality: {self.cardinality}, categories: {self.categories}" + f"data: {self.data}"
+        description = (
+            f"Nominal variable:\n"
+            + f"name: {self.name}, cardinality: {self.cardinality}, categories: {self.categories}"
+            + f"data: {self.data}"
+        )
         return description
+
+    def _repr_html_(self):
+        superHtml = super(Ordinal, self)._repr_html_()
+        tableBegin, tableEnd = splitTable(superHtml)
+
+        rowFormat = """<tr><th scope="row" style="text-align:left">{}</th><td style="text-align:left">{}</td></tr>"""
+        cardinality = self.get_cardinality()
+        cardinalityRow = (
+            rowFormat.format("Cardinality", cardinality) if cardinality else ""
+        )
+        categoryRow = (
+            rowFormat.format(
+                "Categories", ", ".join(map(lambda x: str(x), self.categories))
+            )
+            if self.categories
+            else ""
+        )
+        return tableBegin + cardinalityRow + categoryRow + tableEnd
 
     # @returns cardinality
     def get_cardinality(self):
@@ -702,7 +788,15 @@ class Nominal(Measure):
 
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
+        if self.isInteraction and self.moderators:
+            data_cardinality = 1
+            for m in self.moderators:
+                if not isinstance(m, Numeric):
+                    moderatorData = data.dataset[m.name]
+                    data_cardinality *= len(moderatorData.unique())
+                pass
+            return data_cardinality
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -710,7 +804,29 @@ class Nominal(Measure):
 
     # Get the number of unique categorical values this nominal variable represents
     def calculate_categories_from_data(self, data: Dataset) -> List[Any]:
-        assert(data is not None)
+        assert data is not None
+
+        def getUniqueValuesList(name):
+            nameData = data.dataset[name]
+            return map(lambda x: str(x), nameData.unique().tolist())
+
+        if self.isInteraction and self.moderators:
+            categories = (
+                getUniqueValuesList(self.moderators[0].name)
+                if not isinstance(self.moderators[0], Numeric)
+                else [""]
+            )
+            if len(self.moderators) > 1:
+                for mod in self.moderators[1:]:
+                    if not isinstance(mod, Numeric):
+                        categories = [
+                            "{}.{}".format(cat1, cat2)
+                            for cat1 in categories
+                            for cat2 in getUniqueValuesList(mod.name)
+                        ]
+                    pass
+            return categories
+
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -718,12 +834,12 @@ class Nominal(Measure):
 
     # Assign cardinalty from data
     def assign_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         self.cardinality = self.calculate_cardinality_from_data(data)
 
     # Assign categories from data
     def assign_categories_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         self.categories = self.calculate_categories_from_data(data)
 
 
@@ -797,8 +913,30 @@ class Ordinal(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        description = f"Ordinal variable:\n" + f"name: {self.name}, cardinality: {self.cardinality}, ordered categories: {self.ordered_cat}" + f"data: {self.data}"
+        description = (
+            f"Ordinal variable:\n"
+            + f"name: {self.name}, cardinality: {self.cardinality}, ordered categories: {self.ordered_cat}"
+            + f"data: {self.data}"
+        )
         return description
+
+    def _repr_html_(self):
+        superHtml = super(Ordinal, self)._repr_html_()
+        tableBegin, tableEnd = splitTable(superHtml)
+
+        rowFormat = """<tr><th scope="row" style="text-align:left">{}</th><td style="text-align:left">{}</td></tr>"""
+        cardinality = self.get_cardinality()
+        cardinalityRow = (
+            rowFormat.format("Cardinality", cardinality) if cardinality else ""
+        )
+        orderRow = (
+            rowFormat.format(
+                "Order", ", ".join(map(lambda x: str(x), self.ordered_cat))
+            )
+            if self.ordered_cat
+            else ""
+        )
+        return tableBegin + cardinalityRow + orderRow + tableEnd
 
     # @returns cardinality
     def get_cardinality(self):
@@ -810,7 +948,7 @@ class Ordinal(Measure):
 
     # Estimate the cardinality of a variable by counting the number of unique values in the column of data representing this variable
     def calculate_cardinality_from_data(self, data: Dataset):
-        assert(data is not None)
+        assert data is not None
         data = data.dataset[self.name]  # Get data corresponding to this variable
         unique_values = data.unique()
 
@@ -916,7 +1054,7 @@ class Moderates(object):
 
 class Has:
     # TODO: Finish
-    """ Class for Has relationships
+    """Class for Has relationships
 
     Parameters
     ----------
@@ -958,10 +1096,9 @@ class Has:
         self.according_to = according_to
 
 
-
 class Repeats:
     # TODO: finish
-    """ Class for expressing repeated measures
+    """Class for expressing repeated measures
 
     Parameters
     ----------
@@ -989,11 +1126,9 @@ class Repeats:
         self.according_to = according_to
 
 
-
-
 class Nests:
     # TODO: Finish
-    """ Class for expressing nesting relationship between units
+    """Class for expressing nesting relationship between units
 
     Parameters
     ----------
@@ -1016,10 +1151,9 @@ class Nests:
         self.group = group
 
 
-
 class NumberValue:
     # TODO: Finish
-    """ Wrapper class for expressing values for the number of repetitions of a condition, etc.
+    """Wrapper class for expressing values for the number of repetitions of a condition, etc.
 
     Parameters
     ----------
@@ -1186,6 +1320,8 @@ class AtMost(NumberValue):
 """
 Class for expressing Per relationships
 """
+
+
 class Per(NumberValue):
     """ Represents a "per" relationship, such as "2 per participant"
 
@@ -1234,22 +1370,27 @@ class Per(NumberValue):
     number_of_instances: bool
     value: int
 
-    def __init__(self, number: NumberValue, cardinality: AbstractVariable=None, number_of_instances: Measure=None):
+    def __init__(
+        self,
+        number: NumberValue,
+        cardinality: AbstractVariable = None,
+        number_of_instances: Measure = None,
+    ):
         self.number = number
         if number_of_instances is not None:
-            assert(cardinality is None)
+            assert cardinality is None
 
             self.variable = number_of_instances
             self.cardinality = False
             self.number_of_instances = True
 
             # Only measures have number_of_instances
-            assert(self.variable, Measure)
+            assert (self.variable, Measure)
             self.value = number.value * self.variable.get_number_of_instances().value
 
         else:
-            assert(number_of_instances is None)
-            assert(cardinality is not None)
+            assert number_of_instances is None
+            assert cardinality is not None
 
             self.variable = cardinality
             self.cardinality = True

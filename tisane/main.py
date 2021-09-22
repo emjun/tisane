@@ -11,6 +11,8 @@ from tisane.graph_inference import (
     infer_main_effects_with_explanations,
     infer_interaction_effects_with_explanations,
     infer_random_effects_with_explanations,
+    is_intermediary_associative,
+    find_all_associates_that_causes_or_associates_another,
 )
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 from tisane.design import Design
@@ -327,6 +329,8 @@ def construct_statistical_model(
 
     return sm
 
+def infer_model(design: Design, jupyter: bool = False):
+    return infer_statistical_model_from_design(design=design, jupyter=jupyter)
 
 # @returns statistical model that reflects the study design
 
@@ -397,6 +401,18 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
+    (
+        intermediaries,
+        variable_to_intermediaries,
+    ) = find_all_associates_that_causes_or_associates_another(design.ivs, design.dv, gr)
+    intermediary_to_variable = {
+        intermediary: gr.get_variable(intermediary) for intermediary in intermediaries
+    }
+    associative_intermediaries = [
+        intermediary
+        for intermediary, intermediary_variable in intermediary_to_variable.items()
+        if is_intermediary_associative(intermediary_variable, design.dv, gr)
+    ]
     # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
@@ -414,6 +430,9 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
 
     # Add explanations
     combined_dict["input"]["explanations"] = explanations
+    combined_dict["input"][
+        "associative intermediary main effects"
+    ] = associative_intermediaries
 
     # Add data
     data = design.get_data()

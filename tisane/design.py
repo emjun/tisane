@@ -82,6 +82,8 @@ class Design(object):
 
         if source is not None:
             self.dataset = Dataset(source)
+            # Check and update cardinality for variables in this design
+            self.check_variable_cardinality()
         else:
             self.dataset = None
 
@@ -92,7 +94,13 @@ class Design(object):
         ivs_descriptions_str = "\n".join(ivs_descriptions)
 
         dv_description = str(self.dv)
-        description = f"dependent variable: {dv_description}" + "\n" + f"independent variables: {ivs_descriptions_str}" + "\n" + f"data: {self.data}"
+        description = (
+            f"dependent variable: {dv_description}"
+            + "\n"
+            + f"independent variables: {ivs_descriptions_str}"
+            + "\n"
+            + f"data: {self.data}"
+        )
 
         return description
 
@@ -118,8 +126,10 @@ class Design(object):
                 calculated_cardinality = v.calculate_cardinality_from_data(
                     data=self.dataset
                 )
-                calculated_categories = v.calculate_categories_from_data(data=self.dataset)
-                assert(calculated_cardinality == len(calculated_categories))
+                calculated_categories = v.calculate_categories_from_data(
+                    data=self.dataset
+                )
+                assert calculated_cardinality == len(calculated_categories)
 
                 if calculated_cardinality > v.cardinality:
                     diff = calculated_cardinality - v.cardinality
@@ -129,12 +139,13 @@ class Design(object):
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
                 # Are there more categories than the user specified?
-                diff = set(calculated_categories) - set(v.categories)
-                if len(diff) > 0:
+                if not v.isInteraction:
+                    diff = set(calculated_categories) - set(v.categories)
+                    if len(diff) > 0:
 
-                    raise ValueError(
-                        f"Variable {v.name} is specified to have the following categories: {v.categories}. However, in the data provided, {v.name} has {calculated_categories} unique values. These are the categories that exist in the data but you may not have expected: {diff}"
-                    )
+                        raise ValueError(
+                            f"Variable {v.name} is specified to have the following categories: {v.categories}. However, in the data provided, {v.name} has {calculated_categories} unique values. These are the categories that exist in the data but you may not have expected: {diff}"
+                        )
                 # It is ok for there to be fewer categories (not all categories may be represented in the data) than the user expected
 
             elif isinstance(v, Ordinal):
@@ -154,7 +165,9 @@ class Design(object):
                 if v.cardinality is None:
                     v.assign_cardinality_from_data(self.dataset)
 
-                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+                calculated_cardinality = v.calculate_cardinality_from_data(
+                    data=self.dataset
+                )
 
                 if calculated_cardinality != v.cardinality:
                     diff = calculated_cardinality - v.cardinality
@@ -167,7 +180,9 @@ class Design(object):
                 if v_cardinality is None:
                     v.assign_cardinality_from_data(self.dataset)
 
-                calculated_cardinality = v.calculate_cardinality_from_data(data=self.dataset)
+                calculated_cardinality = v.calculate_cardinality_from_data(
+                    data=self.dataset
+                )
 
                 if calculated_cardinality != v_cardinality:
                     diff = calculated_cardinality - v_cardinality
@@ -176,10 +191,12 @@ class Design(object):
                             f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} more instances of the setting in the data than you expect."
                         )
                     else:
-                        assert(diff < 0)
+                        assert diff < 0
                         raise ValueError(
                             f"SetUp {v.name} is specified to have cardinality = {v_cardinality}. However, in the data provided, {v.name} has {calculated_cardinality} unique values. There appear to be {diff} fewer instances of the setting in the data than you expect."
                         )
+            # else:
+            # import pdb; pdb.set_trace()
 
     # Associate this Study Design with a Dataset
     def assign_data(self, source: typing.Union[os.PathLike, pd.DataFrame]):
