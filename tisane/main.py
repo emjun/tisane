@@ -11,6 +11,8 @@ from tisane.graph_inference import (
     infer_main_effects_with_explanations,
     infer_interaction_effects_with_explanations,
     infer_random_effects_with_explanations,
+    is_intermediary_associative,
+    find_all_associates_that_causes_or_associates_another,
 )
 from tisane.family_link_inference import infer_family_functions, infer_link_functions
 from tisane.design import Design
@@ -327,9 +329,42 @@ def construct_statistical_model(
 
     return sm
 
+def infer_model(design: Design, jupyter: bool = False):
+    return infer_statistical_model_from_design(design=design, jupyter=jupyter)
 
 # @returns statistical model that reflects the study design
+
 def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
+    """Infer a stats model from design and launch the Tisane GUI.
+
+    The Tisane GUI will walk you through making additional
+    choices for your statistical model, all inferred from your
+    original design. After selecting any additional variables as
+    well as a family and link functions, the Tisane GUI will
+    generate code.
+
+    Parameters
+    ----------
+    design : Design
+        The study design to infer a statistical model from
+    jupyter : bool, default=False
+        Whether to run the GUI in a plain server or as the output
+        of a jupyter notebook cell.
+
+    Examples
+    --------
+
+    >>> import tisane as ts
+    >>> participant = ts.Unit("participant", cardinality=20)
+    >>> input_device = ts.Unit("input_device", cardinality=2) # The two within-subjects conditions
+    >>> reaction_time = participant.numeric("reaction_time", number_of_instances=input_device)
+    >>> design = ts.Design(dv=reaction_time, ivs=[reaction_time])
+    >>> ts.infer_statistical_model_from_design(design)
+
+    If you want to run the GUI inside of a jupyter notebook, you use:
+
+    >>> ts.infer_statistical_model_from_design(design, jupyter=True)
+    """
     gr = design.graph
 
     ### Step 1: Initial conceptual checks
@@ -366,6 +401,18 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         assert f not in family_link_paired.keys()
         family_link_paired[f] = l
 
+    (
+        intermediaries,
+        variable_to_intermediaries,
+    ) = find_all_associates_that_causes_or_associates_another(design.ivs, design.dv, gr)
+    intermediary_to_variable = {
+        intermediary: gr.get_variable(intermediary) for intermediary in intermediaries
+    }
+    associative_intermediaries = [
+        intermediary
+        for intermediary, intermediary_variable in intermediary_to_variable.items()
+        if is_intermediary_associative(intermediary_variable, design.dv, gr)
+    ]
     # Combine explanations
     explanations = dict()
     explanations.update(main_explanations)
@@ -383,6 +430,9 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
 
     # Add explanations
     combined_dict["input"]["explanations"] = explanations
+    combined_dict["input"][
+        "associative intermediary main effects"
+    ] = associative_intermediaries
 
     # Add data
     data = design.get_data()

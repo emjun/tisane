@@ -57,6 +57,19 @@ explanations = {
 }
 
 
+def is_intermediary_associative(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
+    causes_edge = gr.get_edge(start=v, end=dv, edge_type="causes")
+    associates_edge = gr.get_edge(start=v, end=dv, edge_type="associates")
+    assert (
+        causes_edge or associates_edge
+    ), "is_intermediary_associative called on an innapropriate variable: {}".format(v)
+    assert (
+        not causes_edge or not associates_edge
+    ), "is_intermediary_associative called on a strange variable that both causes and associates with the dv"
+
+    return causes_edge is None and associates_edge is not None
+
+
 def get_conceptual_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
     causes_expl = "You specified that {cause} causes {effect}."
     associates_expl = "You specified that {var1} is associated with {var2}."
@@ -541,7 +554,9 @@ def construct_random_effects_for_repeated_measures(
         assert edge_obj.variable == dv_unit
         assert edge_obj.measure == dv
         # How many repeated measures are there?
-        assert isinstance(edge_obj.repetitions, NumberValue), "Unexpected type for repetitions: {}".format(type(edge_obj.repetitions))
+        assert isinstance(
+            edge_obj.repetitions, NumberValue
+        ), "Unexpected type for repetitions: {}".format(type(edge_obj.repetitions))
         # There is more than one observation of the DV for each unit
         # import pdb; pdb.set_trace()
         if edge_obj.repetitions.is_greater_than_one():

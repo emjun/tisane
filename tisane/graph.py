@@ -668,13 +668,16 @@ class Graph(object):
         m_names = [m.name for m in moderator]
         name = "*".join(m_names)
 
-        m_cardinality = 1
-        for m in moderator:
-            if m.get_cardinality() is not None:
+        m_cardinality = None
+        if all(m.get_cardinality() is not None for m in moderator):
+            # only specify cardinality if all of them are specified
+            # print("Cardinalities: {}".format(",".join(map(lambda x: str(x), [m.get_cardinality() for m in moderator]))))
+            m_cardinality = 1
+            for m in moderator:
                 m_cardinality *= m.get_cardinality()
 
         var = Nominal(
-            name, cardinality=m_cardinality
+            name, cardinality=m_cardinality, isInteraction=True, moderators=moderator
         )  # Interaction variables are cast as nominal variables
 
         # Add associate edges between interaction and @param on variable

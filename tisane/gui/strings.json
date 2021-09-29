@@ -12,6 +12,10 @@
         "id": "",
         "comment": "these headers sections don't actually do anything at the moment, just an idea"
       }
+    },
+    "associative-warning": {
+      "header": "Warning: `{var}` suggested due to associative relationship",
+      "body": "If `{var}` may actually be **caused by** the dependent variable, `{dv}`, adding this variable could invalidate your results.\n\nProceed with caution!"
     }
   },
   "interaction-effects": {
