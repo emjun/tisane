@@ -63,6 +63,14 @@ class Dataset(object):
 
         return self.data_path is not None
 
+    # # Outputs data to a CSV file
+    # # @returns the CSV file's path
+    # def to_csv(self): 
+    #     output_path = "data.csv"
+    #     self.dataset.to_csv(output_path)
+
+    #     reutrn output_path
+
 
 class DataVector(object):
     name: str

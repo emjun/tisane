@@ -485,7 +485,16 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
 
     gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
 
+# Infer a multiverse from the specification
+def infer_multiverse(design: Design, jupyter: bool = False):
+    return infer_all_models(design=design, jupyter=jupyter)
+
+# Infer a multiverse from the specification
 def infer_all_models(design: Design, jupyter: bool = False):
+    return infer_all_statistical_models_from_design(design=design, jupyter=jupyter)
+
+# Infer a multiverse from the specification
+def infer_all_statistical_models_from_design(design: Design, jupyter: bool = False):
     gr = design.graph
 
     ### Step 1: Initial conceptual checks
@@ -555,66 +564,23 @@ def infer_all_models(design: Design, jupyter: bool = False):
         "associative intermediary main effects"
     ] = associative_intermediaries
 
-    # Add data
-    data = design.get_data()
-    if data is not None:
-        combined_dict["input"]["data"] = data.to_dict("list")
-    else:  # There is no data
-        combined_dict["input"]["data"] = dict()
-
-    # Write out to JSON in order to pass data to Tisane GUI for disambiguation
-    input_file = "input.json"
-
-    # Note: Because the input to the GUI is a JSON file, everything is
-    # stringified. This means that we need to match up the variable names with
-    # the actual variable objects in the next step.
-    # write_to_json returns the Path of the input.json file
-    path = write_to_json(combined_dict, "./", input_file)
-
-    ### Step 3: Output all the possible models
-    construct_all_statistical_models(model_options=combined_dict)
-
-    # Output the combined dict to JSON
-    # Iterate through the JSON, and for each call construct_statistical_model() (as it is currenty implemented)
-
-    # Maybe output all the combinations into separate JSONs, all different files. --> call generateCode for each
     
-    ### Step 3: Disambiguation loop (GUI)
-    gui = TisaneGUI()
+    ### Step 3: Generate multiverse code 
+    # Generate the dicitonary representing the multiverse
+    decisions_file = "decisions.json"
+    construct_multiverse_decisions(combined_dict, decisions_file)
 
-    ### Step 4: GUI generates code
-    def generateCode(
-        destinationDir: str = None, modelSpecJson: str = "model_spec.json"
-    ):
-        destinationDir = destinationDir or os.getcwd()
-        output_filename = os.path.join(
-            destinationDir, modelSpecJson
-        )  # or whatever path/file that the GUI outputs
+    # Output data somewhere to read in from template.py
+    data = design.get_data()
+    data_file = "data.csv"
+    data.to_csv(data_file)
 
-        ### Step 4: Code generation
-        # Construct StatisticalModel from JSON spec
-        # model_json = f.read()
-        sm = construct_statistical_model(
-            filename=output_filename,
-            query=design,
-            main_effects_candidates=main_effects_candidates,
-            interaction_effects_candidates=interaction_effects_candidates,
-            random_effects_candidates=random_effects_candidates,
-            family_link_paired_candidates=family_link_paired,
-        )
+    # Generate template file for the multiverse 
+    # There is only one template file generated because Tisane enforces the inclusion of mixed effects if they are inferred. 
+    template_file = "template.py"
+    generate_template_code(template_file, decisions_file, data_file) # Need to inject decisions into template file to use boba
 
-        if design.has_data():
-            # Assign statistical model data from @parm design
-            sm.assign_data(design.dataset)
-        # Generate code from SM
-        code = generate_code(sm)
-        # Write generated code out
-
-        path = write_to_script(code, destinationDir, "model.py")
-        return path
-
-    # gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
-
+    ### TODO: Step 4: Generate bash script/output for how to execute Boba? 
 
 # TODO: Should this output a Boba script?
 def infer_multiverse():
