@@ -11,7 +11,7 @@ def fit_model():
     df = pd.read_csv('examples/Animal_Science/pigs.csv')
 
 
-    model = Lmer(formula='Weight ~ Time + (1|Litter) + (1|Pig) + (1|Time)', family="gaussian", data=df)
+    model = Lmer(formula='Weight ~ Time + (1|Litter) + (1|Time) + (1|Pig)', family="gaussian", data=df)
     print(model.fit())
     return model
 
@@ -21,6 +21,7 @@ def fit_model():
 # Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
 def show_model_diagnostics(model): 
 
+    plt.axhline(y=0, color='r', linestyle='-')
     plt.scatter(model.fits, model.residuals)
     plt.title("Fitted values vs. Residuals")
     plt.xlabel("fitted values")
