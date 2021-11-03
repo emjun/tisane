@@ -333,7 +333,6 @@ def infer_model(design: Design, jupyter: bool = False):
     return infer_statistical_model_from_design(design=design, jupyter=jupyter)
 
 # @returns statistical model that reflects the study design
-
 def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
     """Infer a stats model from design and launch the Tisane GUI.
 
@@ -485,3 +484,138 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         return path
 
     gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
+
+def infer_all_models(design: Design, jupyter: bool = False):
+    gr = design.graph
+
+    ### Step 1: Initial conceptual checks
+    # Check that the IVs have a conceptual relationship (direct or transitive) with DV
+    check_design_ivs(design)
+    # Check that the DV does not cause one or more IVs
+    check_design_dv(design)
+
+    ### Step 2: Candidate statistical model inference/generation
+    (main_effects_candidates, main_explanations) = infer_main_effects_with_explanations(
+        gr=gr, query=design
+    )
+    (
+        interaction_effects_candidates,
+        interaction_explanations,
+    ) = infer_interaction_effects_with_explanations(
+        gr=gr, query=design, main_effects=main_effects_candidates
+    )
+    (
+        random_effects_candidates,
+        random_explanations,
+    ) = infer_random_effects_with_explanations(
+        gr=gr,
+        query=design,
+        main_effects=main_effects_candidates,
+        interaction_effects=interaction_effects_candidates,
+    )
+    family_candidates = infer_family_functions(query=design)
+    link_candidates = set()
+    family_link_paired = dict()
+    for f in family_candidates:
+        l = infer_link_functions(query=design, family=f)
+        # Add Family: Link options
+        assert f not in family_link_paired.keys()
+        family_link_paired[f] = l
+
+    (
+        intermediaries,
+        variable_to_intermediaries,
+    ) = find_all_associates_that_causes_or_associates_another(design.ivs, design.dv, gr)
+    intermediary_to_variable = {
+        intermediary: gr.get_variable(intermediary) for intermediary in intermediaries
+    }
+    associative_intermediaries = [
+        intermediary
+        for intermediary, intermediary_variable in intermediary_to_variable.items()
+        if is_intermediary_associative(intermediary_variable, design.dv, gr)
+    ]
+    # Combine explanations
+    explanations = dict()
+    explanations.update(main_explanations)
+    explanations.update(interaction_explanations)
+    explanations.update(random_explanations)
+
+    # Get combined dict
+    combined_dict = collect_model_candidates(
+        query=design,
+        main_effects_candidates=main_effects_candidates,
+        interaction_effects_candidates=interaction_effects_candidates,
+        random_effects_candidates=random_effects_candidates,
+        family_link_paired_candidates=family_link_paired,
+    )
+
+    # Add explanations
+    combined_dict["input"]["explanations"] = explanations
+    combined_dict["input"][
+        "associative intermediary main effects"
+    ] = associative_intermediaries
+
+    # Add data
+    data = design.get_data()
+    if data is not None:
+        combined_dict["input"]["data"] = data.to_dict("list")
+    else:  # There is no data
+        combined_dict["input"]["data"] = dict()
+
+    # Write out to JSON in order to pass data to Tisane GUI for disambiguation
+    input_file = "input.json"
+
+    # Note: Because the input to the GUI is a JSON file, everything is
+    # stringified. This means that we need to match up the variable names with
+    # the actual variable objects in the next step.
+    # write_to_json returns the Path of the input.json file
+    path = write_to_json(combined_dict, "./", input_file)
+
+    ### Step 3: Output all the possible models
+    construct_all_statistical_models(model_options=combined_dict)
+
+    # Output the combined dict to JSON
+    # Iterate through the JSON, and for each call construct_statistical_model() (as it is currenty implemented)
+
+    # Maybe output all the combinations into separate JSONs, all different files. --> call generateCode for each
+    
+    ### Step 3: Disambiguation loop (GUI)
+    gui = TisaneGUI()
+
+    ### Step 4: GUI generates code
+    def generateCode(
+        destinationDir: str = None, modelSpecJson: str = "model_spec.json"
+    ):
+        destinationDir = destinationDir or os.getcwd()
+        output_filename = os.path.join(
+            destinationDir, modelSpecJson
+        )  # or whatever path/file that the GUI outputs
+
+        ### Step 4: Code generation
+        # Construct StatisticalModel from JSON spec
+        # model_json = f.read()
+        sm = construct_statistical_model(
+            filename=output_filename,
+            query=design,
+            main_effects_candidates=main_effects_candidates,
+            interaction_effects_candidates=interaction_effects_candidates,
+            random_effects_candidates=random_effects_candidates,
+            family_link_paired_candidates=family_link_paired,
+        )
+
+        if design.has_data():
+            # Assign statistical model data from @parm design
+            sm.assign_data(design.dataset)
+        # Generate code from SM
+        code = generate_code(sm)
+        # Write generated code out
+
+        path = write_to_script(code, destinationDir, "model.py")
+        return path
+
+    # gui.start_app(input=path, jupyter=jupyter, generateCode=generateCode)
+
+
+# TODO: Should this output a Boba script?
+def infer_multiverse():
+    pass

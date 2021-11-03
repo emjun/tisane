@@ -208,7 +208,7 @@ def generate_python_code(statistical_model: StatisticalModel):
         return generate_statsmodels_code(statistical_model=statistical_model)
 
 
-def generate_pymer4_code(statistical_model: StatisticalModel):
+def generate_pymer4_code(statistical_model: StatisticalModel, boba_template: bool = False):
     global pymer4_code_templates
 
     ### Specify preamble
@@ -260,15 +260,22 @@ def generate_pymer4_code(statistical_model: StatisticalModel):
     )
 
 
-def generate_pymer4_model(statistical_model: StatisticalModel):
+def generate_pymer4_model(statistical_model: StatisticalModel, boba_template: bool =False):
     global pymer4_code_templates
 
-    formula_code = generate_pymer4_formula(statistical_model=statistical_model)
-    family_code = generate_pymer4_family(statistical_model=statistical_model)
-    # link_code = generate_pymer4_link(statistical_model=statistical_model)
-    model_code = pymer4_code_templates["model_template"].format(
-        formula=formula_code, family_name=family_code
-    )
+    if boba_template: 
+        formula_code = "{{FORMULA}}"
+        family_code = "{{FAMILY}}"
+        model_code = pymer4_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code
+        )
+    else: 
+        formula_code = generate_pymer4_formula(statistical_model=statistical_model)
+        family_code = generate_pymer4_family(statistical_model=statistical_model)
+        # link_code = generate_pymer4_link(statistical_model=statistical_model)
+        model_code = pymer4_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code
+        )
 
     return model_code
 
@@ -361,7 +368,7 @@ def generate_pymer4_family(statistical_model: StatisticalModel) -> str:
 #     return str()
 
 
-def generate_statsmodels_code(statistical_model: StatisticalModel):
+def generate_statsmodels_code(statistical_model: StatisticalModel, boba_template: bool = False):
     global statsmodels_code_templates
 
     ### Specify preamble
@@ -384,12 +391,7 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
             ].format(path=data_path)
 
     ### Generate model code
-    formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
-    family_code = generate_statsmodels_family(statistical_model=statistical_model)
-    link_code = generate_statsmodels_link(statistical_model=statistical_model)
-    model_code = statsmodels_code_templates["model_template"].format(
-        formula=formula_code, family_name=family_code, link_obj=link_code
-    )
+    model_code = generate_statsmodels_model(statistical_model=statistical_model, boba_template=boba_template)
     model_diagnostics_code = statsmodels_code_templates["model_diagnostics"]
 
     ### Put everything together
@@ -416,18 +418,26 @@ def generate_statsmodels_code(statistical_model: StatisticalModel):
     )
 
 
-def generate_statsmodels_model(statistical_model: StatisticalModel):
+def generate_statsmodels_model(statistical_model: StatisticalModel, boba_template: bool = False):
     global statsmodels_code_templates
 
-    formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
-    family_code = generate_statsmodels_family(statistical_model=statistical_model)
-    link_code = generate_statsmodels_link(statistical_model=statistical_model)
-    model_code = statsmodels_code_templates["model_template"].format(
-        formula=formula_code, family_name=family_code, link_obj=link_code
-    )
+    if boba_template: 
+        formula_code = "{{FORMULA}}"
+        family_code = "{{FAMILY}}"
+        link_code = "{{LINK}}"
+        model_code = statsmodels_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code, link_obj=link_code
+        )
+    else:
+        formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
+        family_code = generate_statsmodels_family(statistical_model=statistical_model)
+        link_code = generate_statsmodels_link(statistical_model=statistical_model)
+        model_code = statsmodels_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code, link_obj=link_code
+        ) 
+
 
     return model_code
-
 
 def generate_statsmodels_formula(statistical_model: StatisticalModel):
     dv_code = "{dv} ~ "
@@ -714,19 +724,3 @@ def generate_statsmodels_glmm_code(statistical_model: StatisticalModel, **kwargs
     )
 
     return model_code
-
-
-# def generate_statsmodels_model_code(statistical_model: StatisticalModel, **kwargs):
-#     model_code = str()
-
-#     has_fixed = len(statistical_model.fixed_ivs) > 0
-#     has_interactions = len(statistical_model.interactions) > 0
-#     has_random = len(statistical_model.random_ivs) > 0
-#     has_data = statistical_model.data is not None  # May not have data
-
-#     # Does the statistical model have random effects (slope or intercept) that we should take into consideration?
-#     if has_random:
-#         return generate_statsmodels_glmm_code(statistical_model=statistical_model)
-#     else:
-#         # GLM: Fixed, interactions, no random; Other family
-#         return generate_statsmodels_glm_code(statistical_model=statistical_model)
