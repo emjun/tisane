@@ -578,6 +578,10 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
     # Generate template file for the multiverse 
     # There is only one template file generated because Tisane enforces the inclusion of mixed effects if they are inferred. 
     template_file = "template.py"
+    # TODO: Don't call generate_code (like would for a single model) because 
+    # (i) we are using boba to generate the combinatorial set and 
+    # (ii) therefore are not constructing complete StatisticalModels, which is the input for generate_code/functions in code_generator.py
+    # Could imagine feeding a partial spec into code_generator and having it fill the rest out, but that seems like a different use case to design for...
     generate_template_code(template_file, decisions_file, data_file) # Need to inject decisions into template file to use boba
 
     ### TODO: Step 4: Generate bash script/output for how to execute Boba? 
