@@ -55,7 +55,6 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pytest tests/
           pytest tests/ --ignore-glob='test_graph_vis.py' .--cov=./ --cov-report=xml
       - name: Upload coverage data to coveralls.io
         run: |
