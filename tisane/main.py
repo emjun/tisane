@@ -564,8 +564,12 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
         "associative intermediary main effects"
     ] = associative_intermediaries
 
-    
     ### Step 3: Generate multiverse code 
+    has_random_effects = False
+    # Are there any random effects? If so, update has_random_effects. 
+    if len(random_effects_candidates) > 0:
+        has_random_effects = True
+        
     # Generate the dicitonary representing the multiverse
     decisions_file = "decisions.json"
     construct_multiverse_decisions(combined_dict, decisions_file)
@@ -582,10 +586,6 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
     # (i) we are using boba to generate the combinatorial set and 
     # (ii) therefore are not constructing complete StatisticalModels, which is the input for generate_code/functions in code_generator.py
     # Could imagine feeding a partial spec into code_generator and having it fill the rest out, but that seems like a different use case to design for...
-    generate_template_code(template_file, decisions_file, data_file) # Need to inject decisions into template file to use boba
+    generate_template_code(template_file, decisions_file, data_file, has_random_effedcts=False) # Need to inject decisions into template file to use boba
 
     ### TODO: Step 4: Generate bash script/output for how to execute Boba? 
-
-# TODO: Should this output a Boba script?
-def infer_multiverse():
-    pass
