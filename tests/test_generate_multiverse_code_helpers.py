@@ -1,12 +1,16 @@
-from tisane.multiverse_code_generator import construct_all_main_options, construct_all_interaction_options, construct_all_random_options
+## TODO: Check that the Family - link pairs make sense (this might be covered earlier in the pipeline)
+
+from tisane.multiverse_code_generator import construct_all_main_options, construct_all_interaction_options, construct_all_random_options, construct_all_family_link_options, generate_multiverse_decisions
 
 import os
 import unittest
 import json
 
 test_input_repo_name = "input_json_files/"
+test_output_decision_repo_name = "output_decision_json_files/"
 dir = os.path.dirname(__file__)
-dir = os.path.join(dir, test_input_repo_name)
+input_dir = os.path.join(dir, test_input_repo_name)
+output_dir = os.path.join(dir, test_output_decision_repo_name)
 
 class MultiverseCodeHelpers(unittest.TestCase): 
     
@@ -14,7 +18,7 @@ class MultiverseCodeHelpers(unittest.TestCase):
         main_only_file = "main_only.json"
 
         input_filename = "main_only.json"
-        input_path = os.path.join(dir, input_filename)
+        input_path = os.path.join(input_dir, input_filename)
         
         # Read in JSON file as a dict
         with open(input_path, "r") as f:
@@ -24,7 +28,7 @@ class MultiverseCodeHelpers(unittest.TestCase):
 
     def test_construct_all_main_options_main_only(self):
         input_filename = "main_only.json"
-        input_path = os.path.join(dir, input_filename)
+        input_path = os.path.join(input_dir, input_filename)
         
         # Read in JSON file as a dict
         with open(input_path, "r") as f:
@@ -41,7 +45,7 @@ class MultiverseCodeHelpers(unittest.TestCase):
 
     def test_construct_all_interaction_options_main_only(self):
         input_filename = "main_only.json"
-        input_path = os.path.join(dir, input_filename)
+        input_path = os.path.join(input_dir, input_filename)
         
         # Read in JSON file as a dict
         with open(input_path, "r") as f:
@@ -55,7 +59,7 @@ class MultiverseCodeHelpers(unittest.TestCase):
 
     def test_construct_all_random_options_main_only(self):
         input_filename = "main_only.json"
-        input_path = os.path.join(dir, input_filename)
+        input_path = os.path.join(input_dir, input_filename)
         
         # Read in JSON file as a dict
         with open(input_path, "r") as f:
@@ -66,7 +70,58 @@ class MultiverseCodeHelpers(unittest.TestCase):
         self.assertEqual(len(random_options), 1)
         for o in random_options: 
             self.assertLessEqual(len(o), 0)
+    
+    def test_construct_family_link_pairs(self):
+        input_filename = "main_only.json"
+        input_path = os.path.join(input_dir, input_filename)
         
+        # Read in JSON file as a dict
+        with open(input_path, "r") as f:
+            file_data = f.read()
+        combined_dict = json.loads(file_data) 
+
+        family_link_options = list(construct_all_family_link_options(combined_dict=combined_dict))
+        for o in family_link_options:
+            self.assertEqual(len(o), 2)
+
+            family = o[0]
+            link = o[1]
+            self.assertIn("Family", family)
+            self.assertIn("Link", link)
+
+    def test_generate_multiverse_decisions_main_only(self):
+        input_filename = "main_only.json"
+        input_path = os.path.join(input_dir, input_filename)
+        
+        # Read in JSON file as a dict
+        with open(input_path, "r") as f:
+            file_data = f.read()
+        input_dict = json.loads(file_data) 
+
+        output_filename = "decisions_main_only.json"
+        output_path = generate_multiverse_decisions(combined_dict=input_dict, decisions_path=output_dir, decisions_file=output_filename)
+
+        # Read in JSON file as a dict
+        with open(output_path, "r") as f:
+            file_data = f.read()
+        output_dict = json.loads(file_data) 
+        decisions = output_dict["decisions"]
+
+        # Do we need a more extensive test here?
+        # for dec in decisions: 
+        #     var = dec["var"]
+        #     if var == "main_effects":
+        #         options = dec["options"]
+        #         input_dict["input"]["generated main effects"]
+        #     elif var == "interaction_effects":
+        #         pass
+        #     elif var == "random_effects":
+        #         pass
+        #     elif var == "family, link pairs":
+        #         pass
+
+            
+    # TODO: Add more tests
     def test_construct_all_formulae_interaction_only(self): 
         combined_dict = dict()
         pass

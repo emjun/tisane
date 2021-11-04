@@ -20,6 +20,11 @@ dv_formula = "{{dependent_variable}} ~ "
 formula = dv_formula + ivs_formula
 """
 
+family_link_specification = """
+family = {{family_link_pair}}[0]
+link = {{family_link_pair}}[1]
+"""
+
 ### Helper functions
 def powerset(iterable, min_length=0, max_length=None):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
@@ -39,7 +44,6 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
 
     return path
 
-
 # TODO: Borrow functions from code_generator functions 9e.g., generate_pymer4_code...
 def generate_all_formulae(combined_dict: Dict[str, Any]) -> List[str]: 
     formulae = list() 
@@ -51,35 +55,33 @@ def construct_all_main_options(combined_dict: Dict[str, Any]) -> List[str]:
     main_effects = input["generated main effects"]
     main_options = powerset(main_effects)
 
-    return main_options
+    return list(main_options)
 
 def construct_all_interaction_options(combined_dict: Dict[str, Any]) -> List[str]:
     input = combined_dict["input"]
     interaction_effects = input["generated interaction effects"]
     interaction_options = powerset(interaction_effects)
 
-    return interaction_options
+    return list(interaction_options)
 
 def construct_all_random_options(combined_dict: Dict[str, Any]) -> List[str]:
     input = combined_dict["input"]
     random_effects = input["generated random effects"]
     random_options = powerset(random_effects)
 
-    return random_options 
+    return list(random_options)
 
-def construct_all_family(combined_dict: Dict[str, Any]) -> List[str]: 
-    family = list() 
+def construct_all_family_link_options(combined_dict: Dict[str, Any]) -> List[List[str]]: 
+    input = combined_dict["input"]
 
-    return family
-
-def construct_all_link(combined_dict: Dict[str, Any]) -> List[str]: 
-    link = list() 
-
-    return link
+    family_link_options = list()
+    for family, links in input["generated family, link functions"].items(): 
+        for l in links: 
+            family_link_options.append([family, l])
     
+    return family_link_options
 
 def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> os.PathLike: 
-    
     # Generate formulae decisions modularly
     # Construct main options
     main_options = construct_all_main_options(combined_dict=combined_dict)
@@ -99,25 +101,20 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path:
     random_dict["var"] = "random_effects"
     random_dict["options"] = random_options
 
-    # Construct family decisions
-    family_options = construct_all_family(combined_dict)
-    family_dict = dict() 
-    family_dict["var"] = "family" 
-    family_dict["options"] = family_options
-
-    # Construct link decisions
-    link_options = construct_all_link(combined_dict)
-    link_dict = dict() 
-    link_dict["var"] = "link" 
-    link_dict["options"] = link_options
+    # Construct family and link pair decisions
+    family_link_options = construct_all_family_link_options(combined_dict)
+    family_link_dict = dict() 
+    family_link_dict["var"] = "family, link pairs" 
+    family_link_dict["options"] = family_link_options
 
     # Combine all the decisions
     decisions_dict = dict()
     decisions_dict["graph"] = list()
     decisions_dict["decisions"] = list()
-    decisions_dict["decisions"].append(formulae_dict)
-    decisions_dict["decisions"].append(family_dict)
-    decisions_dict["decisions"].append(link_dict)
+    decisions_dict["decisions"].append(main_dict)
+    decisions_dict["decisions"].append(interaction_dict)
+    decisions_dict["decisions"].append(random_dict)
+    decisions_dict["decisions"].append(family_link_dict)
     # TODO: Add any bash commands?
     # decisions_dict["before_execute"] = "cp ./code/" 
 
@@ -125,7 +122,6 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path:
     path = write_to_json(data=decisions_dict, output_path=decisions_path, output_filename=decisions_file)
     
     return path 
-
 
 # @param template_file is the output file where the code will be output
 def generate_template_code(template_file: os.PathLike, decisions_file: os.PathLike, data_file: os.PathLike, target: str = "PYTHON", has_random_effects: bool = False):
