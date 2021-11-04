@@ -41,7 +41,7 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
 
 
 # TODO: Borrow functions from code_generator functions 9e.g., generate_pymer4_code...
-def construct_all_formulae(combined_dict: Dict[str, Any]) -> List[str]: 
+def generate_all_formulae(combined_dict: Dict[str, Any]) -> List[str]: 
     formulae = list() 
     
     return formulae
@@ -54,7 +54,18 @@ def construct_all_main_options(combined_dict: Dict[str, Any]) -> List[str]:
     return main_options
 
 def construct_all_interaction_options(combined_dict: Dict[str, Any]) -> List[str]:
-    pass 
+    input = combined_dict["input"]
+    interaction_effects = input["generated interaction effects"]
+    interaction_options = powerset(interaction_effects)
+
+    return interaction_options
+
+def construct_all_random_options(combined_dict: Dict[str, Any]) -> List[str]:
+    input = combined_dict["input"]
+    random_effects = input["generated random effects"]
+    random_options = powerset(random_effects)
+
+    return random_options 
 
 def construct_all_family(combined_dict: Dict[str, Any]) -> List[str]: 
     family = list() 
@@ -69,19 +80,32 @@ def construct_all_link(combined_dict: Dict[str, Any]) -> List[str]:
 
 def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> os.PathLike: 
     
-    # Generate formulae decisions
-    formulae_options = construct_all_formulae(combined_dict=combined_dict)
-    formulae_dict = dict() 
-    formulae_dict["var"] = "formula"
-    formulae_dict["options"] = formulae_options
+    # Generate formulae decisions modularly
+    # Construct main options
+    main_options = construct_all_main_options(combined_dict=combined_dict)
+    main_dict = dict() 
+    main_dict["var"] = "main_effects"
+    main_dict["options"] = main_options
 
-    # Generate family decisions
+    # Construct interaction options
+    interaction_options = construct_all_interaction_options(combined_dict=combined_dict)
+    interaction_dict = dict() 
+    interaction_dict["var"] = "interaction_effects"
+    interaction_dict["options"] = interaction_options
+
+    # Construct random options
+    random_options = construct_all_random_options(combined_dict=combined_dict)
+    random_dict = dict() 
+    random_dict["var"] = "random_effects"
+    random_dict["options"] = random_options
+
+    # Construct family decisions
     family_options = construct_all_family(combined_dict)
     family_dict = dict() 
     family_dict["var"] = "family" 
     family_dict["options"] = family_options
 
-    # Generate link decisions
+    # Construct link decisions
     link_options = construct_all_link(combined_dict)
     link_dict = dict() 
     link_dict["var"] = "link" 
