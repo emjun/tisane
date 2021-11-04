@@ -564,6 +564,7 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
         "associative intermediary main effects"
     ] = associative_intermediaries
 
+    import pdb; pdb.set_trace()
     ### Step 3: Generate multiverse code 
     has_random_effects = False
     # Are there any random effects? If so, update has_random_effects. 
@@ -572,7 +573,7 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
         
     # Generate the dicitonary representing the multiverse
     decisions_file = "decisions.json"
-    construct_multiverse_decisions(combined_dict, decisions_file)
+    generate_multiverse_decisions(combined_dict,  "./", decisions_file)
 
     # Output data somewhere to read in from template.py
     data = design.get_data()
