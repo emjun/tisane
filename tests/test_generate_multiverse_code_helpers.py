@@ -119,7 +119,6 @@ class MultiverseCodeHelpers(unittest.TestCase):
         #         pass
         #     elif var == "family, link pairs":
         #         pass
-
             
     # TODO: Add more tests
     def test_construct_all_formulae_interaction_only(self): 

@@ -1,0 +1,42 @@
+{
+    "input": {
+        "generated family, link functions": {
+            "GammaFamily": [
+                "LogLink",
+                "InverseLink",
+                "IdentityLink"
+            ],
+            "GaussianFamily": [
+                "LogitLink",
+                "InverseLink",
+                "ProbitLink",
+                "PowerLink",
+                "IdentityLink",
+                "LogLink",
+                "NegativeBinomialLink",
+                "CLogLogLink"
+            ],
+            "InverseGaussianFamily": [
+                "LogLink",
+                "InverseLink",
+                "InverseSquaredLink",
+                "IdentityLink"
+            ],
+            "PoissonFamily": [
+                "SquarerootLink",
+                "LogLink",
+                "IdentityLink"
+            ],
+            "TweedieFamily": [
+                "PowerLink",
+                "LogLink"
+            ]
+        },
+        "generated interaction effects": [],
+        "generated main effects": [
+            "Time",
+            "Species"
+        ],
+        "generated random effects": {}
+        }
+}

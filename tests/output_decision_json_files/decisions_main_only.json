@@ -1,0 +1,111 @@
+{
+    "decisions": [
+        {
+            "options": [
+                [],
+                [
+                    "Time"
+                ]
+            ],
+            "var": "main_effects"
+        },
+        {
+            "options": [
+                []
+            ],
+            "var": "interaction_effects"
+        },
+        {
+            "options": [
+                []
+            ],
+            "var": "random_effects"
+        },
+        {
+            "options": [
+                [
+                    "GammaFamily",
+                    "LogLink"
+                ],
+                [
+                    "GammaFamily",
+                    "InverseLink"
+                ],
+                [
+                    "GammaFamily",
+                    "IdentityLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "LogitLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "InverseLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "ProbitLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "PowerLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "IdentityLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "LogLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "NegativeBinomialLink"
+                ],
+                [
+                    "GaussianFamily",
+                    "CLogLogLink"
+                ],
+                [
+                    "InverseGaussianFamily",
+                    "LogLink"
+                ],
+                [
+                    "InverseGaussianFamily",
+                    "InverseLink"
+                ],
+                [
+                    "InverseGaussianFamily",
+                    "InverseSquaredLink"
+                ],
+                [
+                    "InverseGaussianFamily",
+                    "IdentityLink"
+                ],
+                [
+                    "PoissonFamily",
+                    "SquarerootLink"
+                ],
+                [
+                    "PoissonFamily",
+                    "LogLink"
+                ],
+                [
+                    "PoissonFamily",
+                    "IdentityLink"
+                ],
+                [
+                    "TweedieFamily",
+                    "PowerLink"
+                ],
+                [
+                    "TweedieFamily",
+                    "LogLink"
+                ]
+            ],
+            "var": "family, link pairs"
+        }
+    ],
+    "graph": []
+}
