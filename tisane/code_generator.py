@@ -203,9 +203,9 @@ def generate_python_code(statistical_model: StatisticalModel):
 
     if statistical_model.has_random_effects():
         return generate_pymer4_code(statistical_model=statistical_model)
-    else:
-        assert not statistical_model.has_random_effects()
-        return generate_statsmodels_code(statistical_model=statistical_model)
+    # else
+    assert not statistical_model.has_random_effects()
+    return generate_statsmodels_code(statistical_model=statistical_model)
 
 
 def generate_pymer4_code(statistical_model: StatisticalModel, boba_template: bool = False):
@@ -272,13 +272,12 @@ def generate_pymer4_model(statistical_model: StatisticalModel, boba_template: bo
     else: 
         formula_code = generate_pymer4_formula(statistical_model=statistical_model)
         family_code = generate_pymer4_family(statistical_model=statistical_model)
-        # link_code = generate_pymer4_link(statistical_model=statistical_model)
+        # family_code = "\"" + generate_pymer4_family(statistical_model=statistical_model) + "\""
         model_code = pymer4_code_templates["model_template"].format(
             formula=formula_code, family_name=family_code
         )
 
     return model_code
-
 
 def generate_pymer4_formula(statistical_model: StatisticalModel):
     global pymer4_code_templates

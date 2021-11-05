@@ -1,16 +1,16 @@
-from tisane.code_generator import generate_python_code
+from tisane.code_generator import *
 
 import os
 from pathlib import Path
 from itertools import chain, combinations
-from typing import List, Any, Tuple, Dict
+from typing import List, Any, Tuple, Dict, Union
 import json 
 import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
 ### GLOBALs
-formula_generation = """
+formula_generation_code = """
 ivs = list()
 ivs.append({{main_effects}})
 ivs.append({{interaction_effects}})
@@ -20,7 +20,7 @@ dv_formula = "{{dependent_variable}} ~ "
 formula = dv_formula + ivs_formula
 """
 
-family_link_specification = """
+family_link_specification_code = """
 family = {{family_link_pair}}[0]
 link = {{family_link_pair}}[1]
 """
@@ -44,11 +44,18 @@ def write_to_json(data: Dict, output_path: str, output_filename: str):
 
     return path
 
-# TODO: Borrow functions from code_generator functions 9e.g., generate_pymer4_code...
-def generate_all_formulae(combined_dict: Dict[str, Any]) -> List[str]: 
-    formulae = list() 
+def write_to_path(code: str, output_path: os.PathLike):
+    # Output @param code to .py script
+    with open(output_path, "w+", encoding="utf-8") as f:
+        f.write(code)
+    print("Writing out path")
+    return output_path
+
+
+# def generate_all_formulae(combined_dict: Dict[str, Any]) -> List[str]: 
+#     formulae = list() 
     
-    return formulae
+#     return formulae
 
 def construct_all_main_options(combined_dict: Dict[str, Any]) -> List[str]:
     input = combined_dict["input"]
@@ -71,13 +78,25 @@ def construct_all_random_options(combined_dict: Dict[str, Any]) -> List[str]:
 
     return list(random_options)
 
-def construct_all_family_link_options(combined_dict: Dict[str, Any]) -> List[List[str]]: 
+def construct_all_family_link_options(combined_dict: Dict[str, Any], has_random_effects: bool = False) -> List[List[str]]: 
+    global pymer4_family_name_to_functions
+
     input = combined_dict["input"]
 
     family_link_options = list()
     for family, links in input["generated family, link functions"].items(): 
         for l in links: 
-            family_link_options.append([family, l])
+            if has_random_effects: 
+                # Use pymer4
+                family_func = pymer4_family_name_to_functions[family]
+                
+                link_func = l
+            else:
+                # Use statsmodels
+                family_func = statsmodels_family_name_to_functions[family]
+                link_func = statsmodels_link_name_to_functions[l]
+            
+            family_link_options.append([family_func, link_func])
     
     return family_link_options
 
@@ -124,19 +143,80 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path:
     return path 
 
 # @param template_file is the output file where the code will be output
-def generate_template_code(template_file: os.PathLike, decisions_file: os.PathLike, data_file: os.PathLike, target: str = "PYTHON", has_random_effects: bool = False):
+def generate_template_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
     if target.upper() == "PYTHON": 
-        return generate_template_python_code(template_file, decisions_file, data_file)
-
+        code = generate_template_python_code(template_path, decisions_path, data_path, has_random_effects)
     #else
     assert(target.upper() == "R")
-    return generate_template_r_code(template_file, decisions_file, data_file)
+    code =  generate_template_r_code(template_path, decisions_path, data_path, has_random_effects)
+    
+    # Write generated code out
+    path = write_to_path(code, template_path)
+    return path
 
 # TODO: Need to inject decisions into template file to use boba
-def generate_template_python_code():
-    # IF THERE ARE RANDOM EFFECTS USE....
-    pass
+def generate_template_python_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
+    if has_random_effects:
+        return generate_template_pymer4_code(template_path, decisions_path, data_path)
+    #else: 
+    return generate_template_statsmodels_code(template_path, decisions_path, data_path)
         
-def generate_template_r_code(): 
+def generate_template_r_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
     # Output file is an R file
+    raise NotImplementedError
+
+def generate_template_pymer4_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None]):
+    global pymer4_code_templates
+
+    ### Specify preamble
+    preamble = pymer4_code_templates["preamble"]
+
+    ### Generate data code
+    if not data_path: 
+        data_code = pymer4_code_templates["load_data_no_data_source"]
+    else:
+        data_code = pymer4_code_templates["load_data_from_csv_template"]
+        data_code = data_code.format(path=str(data_path))
+
+    ### Generate model code
+    model_code = generate_template_pymer4_model(statistical_model=statistical_model)
+
+    ### Generate model diagnostics code for plotting residuals vs. fitted
+    model_diagnostics_code = pymer4_code_templates["model_diagnostics"]
+
+    ### Put everything together
+    model_function_wrapper = pymer4_code_templates["model_function_wrapper"]
+    model_diagnostics_function_wrapper = pymer4_code_templates[
+        "model_diagnostics_function_wrapper"
+    ]
+    main_function = pymer4_code_templates["main_function"]
+
+    assert data_code is not None
+    # Return string to write out to script
+    return (
+        preamble
+        + "\n"
+        + model_function_wrapper
+        + data_code
+        + "\n"
+        + model_code
+        + "\n"
+        + model_diagnostics_function_wrapper
+        + model_diagnostics_code
+        + "\n"
+        + main_function
+    )
+
+def generate_template_statsmodels_code(): 
     pass
+
+def generate_template_pymer4_model(): 
+    global pymer4_code_templates, formula_generation_code, family_link_specification_code
+
+    formula_code = "formula"
+    family_code = "{family}"
+    
+    model_code = formula_generation_code + pymer4_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code
+    )
+    return model_code

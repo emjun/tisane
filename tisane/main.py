@@ -170,7 +170,6 @@ def write_to_script(code: str, output_dir: str, output_filename: str):
     print("Writing out path")
     return path
 
-
 # @param file is the path to the JSON file from which to construct the statistical model
 def construct_statistical_model(
     filename: typing.Union[Path],
@@ -478,8 +477,8 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
             sm.assign_data(design.dataset)
         # Generate code from SM
         code = generate_code(sm)
+        
         # Write generated code out
-
         path = write_to_script(code, destinationDir, "model.py")
         return path
 
@@ -587,6 +586,6 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
     # (i) we are using boba to generate the combinatorial set and 
     # (ii) therefore are not constructing complete StatisticalModels, which is the input for generate_code/functions in code_generator.py
     # Could imagine feeding a partial spec into code_generator and having it fill the rest out, but that seems like a different use case to design for...
-    generate_template_code(template_file, decisions_file, data_file, has_random_effedcts=False) # Need to inject decisions into template file to use boba
+    generate_template_code(template_file, decisions_file, data_file, has_random_effedcts=has_random_effects) # Need to inject decisions into template file to use boba
 
     ### TODO: Step 4: Generate bash script/output for how to execute Boba? 
