@@ -340,7 +340,7 @@ class EffectsInferenceTest(unittest.TestCase):
     # Barr et al. 2013 example
     def test_composed_measures_with_repeats(self):
         subject = ts.Unit("Subject", cardinality=12)
-        
+
         # Each subject has a two values for condition, which is nominal.
         # Verbose: Each instance of subject has two instances of a nominal variable condition.
         # Informally: Each subjects sees two (both) conditions.
@@ -350,10 +350,13 @@ class EffectsInferenceTest(unittest.TestCase):
         # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.
         # Informally: Each subject has a reaction time for each word.
         # Implies: Each condition has/is comprised of two words.
-        word = subject.nominal("Word", cardinality=4, number_of_instances=Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=Exactly(2).per(number_of_instances=condition),
+        )
         reaction_time = subject.numeric("Time", number_of_instances=word)
 
-        
         # ALTERNATIVELY, we could do something like the below (not implemented). It is a bit more complicated to calculate the number of instances, but still doable I think.
         # Each word has one value for condition (already defined above as a measure of subject)
         # word.has(condition, number_of_instances=1) # Condition has two units
@@ -375,7 +378,7 @@ class EffectsInferenceTest(unittest.TestCase):
                 self.assertIsInstance(re, RandomIntercept)
                 if re.groups != subject:
                     self.assertIs(re.groups, word)
-        
+
     # Barr 2013 time * group interaction example:
     # "For example, consider a design with two independent groups of subjects,
     # where there are observations at multiple time points for each subject.

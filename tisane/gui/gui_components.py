@@ -1456,7 +1456,7 @@ class GUIComponents:
                         "family-link-functions", "titles", "page-sub-title"
                     ).format(self.getDependentVariable())
                 ),
-                dcc.Markdown(familyExplanation["caution"])
+                dcc.Markdown(familyExplanation["caution"]),
             ]
         )
 
