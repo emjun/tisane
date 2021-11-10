@@ -33,8 +33,8 @@ def show_model_diagnostics(model):
     plt.clf()
     plt.grid(True)
 
-    plt.axhline(y=0, color='r', linestyle='-')
-    plt.plot(res.predict(linear=True), res.resid_pearson, 'o')
+    plt.axhline(y=0, color="r", linestyle="-")
+    plt.plot(res.predict(linear=True), res.resid_pearson, "o")
     plt.xlabel("Linear predictor")
     plt.ylabel("Residual")
     plt.show()
