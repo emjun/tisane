@@ -1334,10 +1334,9 @@ class AtMost(NumberValue):
 
 
         """
-        super(AtMost, self).per(
+        return super(AtMost, self).per(
             cardinality=cardinality, number_of_instances=number_of_instances
         )
-
 
 """
 Class for expressing Per relationships
