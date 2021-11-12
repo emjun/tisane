@@ -24,84 +24,84 @@
         {
             "options": [
                 [
-                    "GammaFamily",
-                    "LogLink"
+                    "Gamma",
+                    "log()"
                 ],
                 [
-                    "GammaFamily",
-                    "InverseLink"
+                    "Gamma",
+                    "inverse_power()"
                 ],
                 [
-                    "GammaFamily",
-                    "IdentityLink"
+                    "Gamma",
+                    "identity()"
                 ],
                 [
-                    "GaussianFamily",
-                    "LogitLink"
+                    "Gaussian",
+                    "logit()"
                 ],
                 [
-                    "GaussianFamily",
-                    "InverseLink"
+                    "Gaussian",
+                    "inverse_power()"
                 ],
                 [
-                    "GaussianFamily",
-                    "ProbitLink"
+                    "Gaussian",
+                    "probit()"
                 ],
                 [
-                    "GaussianFamily",
-                    "PowerLink"
+                    "Gaussian",
+                    "Power()"
                 ],
                 [
-                    "GaussianFamily",
-                    "IdentityLink"
+                    "Gaussian",
+                    "identity()"
                 ],
                 [
-                    "GaussianFamily",
-                    "LogLink"
+                    "Gaussian",
+                    "log()"
                 ],
                 [
-                    "GaussianFamily",
-                    "NegativeBinomialLink"
+                    "Gaussian",
+                    "NegativeBinomial()"
                 ],
                 [
-                    "GaussianFamily",
-                    "CLogLogLink"
+                    "Gaussian",
+                    "cloglog()"
                 ],
                 [
-                    "InverseGaussianFamily",
-                    "LogLink"
+                    "InverseGaussian",
+                    "log()"
                 ],
                 [
-                    "InverseGaussianFamily",
-                    "InverseLink"
+                    "InverseGaussian",
+                    "inverse_power()"
                 ],
                 [
-                    "InverseGaussianFamily",
-                    "InverseSquaredLink"
+                    "InverseGaussian",
+                    "inverse_squared()"
                 ],
                 [
-                    "InverseGaussianFamily",
-                    "IdentityLink"
+                    "InverseGaussian",
+                    "identity()"
                 ],
                 [
-                    "PoissonFamily",
-                    "SquarerootLink"
+                    "Poisson",
+                    "Power(power=.5)"
                 ],
                 [
-                    "PoissonFamily",
-                    "LogLink"
+                    "Poisson",
+                    "log()"
                 ],
                 [
-                    "PoissonFamily",
-                    "IdentityLink"
+                    "Poisson",
+                    "identity()"
                 ],
                 [
-                    "TweedieFamily",
-                    "PowerLink"
+                    "Tweedie",
+                    "Power()"
                 ],
                 [
-                    "TweedieFamily",
-                    "LogLink"
+                    "Tweedie",
+                    "log()"
                 ]
             ],
             "var": "family, link pairs"

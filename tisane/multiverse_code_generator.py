@@ -11,18 +11,18 @@ import statsmodels.formula.api as smf
 
 ### GLOBALs
 formula_generation_code = """
-ivs = list()
-ivs.append({{main_effects}})
-ivs.append({{interaction_effects}})
-ivs.append({{random_effects}})
-ivs_formula = "+".join(ivs)
-dv_formula = "{{dependent_variable}} ~ "
-formula = dv_formula + ivs_formula
+    ivs = list()
+    ivs.append({{main_effects}})
+    ivs.append({{interaction_effects}})
+    ivs.append({{random_effects}})
+    ivs_formula = "+".join(ivs)
+    dv_formula = "{{dependent_variable}} ~ "
+    formula = dv_formula + ivs_formula
 """
 
 family_link_specification_code = """
-family = {{family_link_pair}}[0]
-link = {{family_link_pair}}[1]
+    family = {{family_link_pair}}[0]
+    link = {{family_link_pair}}[1]
 """
 
 ### Helper functions
@@ -146,9 +146,9 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path:
 def generate_template_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
     if target.upper() == "PYTHON": 
         code = generate_template_python_code(template_path, decisions_path, data_path, has_random_effects)
-    #else
-    assert(target.upper() == "R")
-    code =  generate_template_r_code(template_path, decisions_path, data_path, has_random_effects)
+    else: 
+        assert(target.upper() == "R")
+        code =  generate_template_r_code(template_path, decisions_path, data_path, has_random_effects)
     
     # Write generated code out
     path = write_to_path(code, template_path)
@@ -179,7 +179,7 @@ def generate_template_pymer4_code(template_path: os.PathLike, decisions_path: os
         data_code = data_code.format(path=str(data_path))
 
     ### Generate model code
-    model_code = generate_template_pymer4_model(statistical_model=statistical_model)
+    model_code = generate_template_pymer4_model()
 
     ### Generate model diagnostics code for plotting residuals vs. fitted
     model_diagnostics_code = pymer4_code_templates["model_diagnostics"]
@@ -207,8 +207,48 @@ def generate_template_pymer4_code(template_path: os.PathLike, decisions_path: os
         + main_function
     )
 
-def generate_template_statsmodels_code(): 
-    pass
+def generate_template_statsmodels_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None]):
+    global statsmodels_code_templates
+
+    ### Specify preamble
+    preamble = statsmodels_code_templates["preamble"]
+
+    ### Generate data code
+    if not data_path: 
+        data_code = statsmodels_code_templates["load_data_no_data_source"]
+    else:
+        data_code = statsmodels_code_templates["load_data_from_csv_template"]
+        data_code = data_code.format(path=str(data_path))
+
+    ### Generate model code
+    model_code = generate_template_statsmodels_model()
+
+    ### Generate model diagnostics code for plotting residuals vs. fitted
+    model_diagnostics_code = statsmodels_code_templates["model_diagnostics"]
+
+    ### Put everything together
+    model_function_wrapper = statsmodels_code_templates["model_function_wrapper"]
+    model_diagnostics_function_wrapper = statsmodels_code_templates[
+        "model_diagnostics_function_wrapper"
+    ]
+    main_function = statsmodels_code_templates["main_function"]
+
+    assert data_code is not None
+    # Return string to write out to script
+    return (
+        preamble
+        + "\n"
+        + model_function_wrapper
+        + data_code
+        + "\n"
+        + model_code
+        + "\n"
+        + model_diagnostics_function_wrapper
+        + model_diagnostics_code
+        + "\n"
+        + main_function
+    )
+
 
 def generate_template_pymer4_model(): 
     global pymer4_code_templates, formula_generation_code, family_link_specification_code
@@ -218,5 +258,18 @@ def generate_template_pymer4_model():
     
     model_code = formula_generation_code + pymer4_code_templates["model_template"].format(
         formula=formula_code, family_name=family_code
-    )
+    ) + family_link_specification_code
+    return model_code
+
+
+def generate_template_statsmodels_model(): 
+    global statsmodels_code_templates, formula_generation_code, family_link_specification_code
+
+    formula_code = "formula"
+    family_code = "{family}"
+    link_code = "{link}"
+    
+    model_code = formula_generation_code + statsmodels_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code, link_obj=link_code
+    ) + family_link_specification_code
     return model_code

@@ -127,8 +127,8 @@ class MultiverseCodeHelpers(unittest.TestCase):
         decisions_filename = "decisions_main_only.json"
         decisions_path = os.path.join(output_decision_dir, decisions_filename)
         
-        output_filename = "template_main_only.py"
-        output_path = os.path.join(output_template_dir, decisions_filename)
+        template_filename = "template_main_only.py"
+        output_path = os.path.join(output_template_dir, template_filename)
         output_path = generate_template_code(template_path=output_path, decisions_path=decisions_path, data_path="data.csv", target="PYTHON", has_random_effects=False)
 
         # Open output template file
