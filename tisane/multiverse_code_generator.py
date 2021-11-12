@@ -25,6 +25,9 @@ family_link_specification_code = """
     link = {{family_link_pair}}[1]
 """
 
+boba_config_start = "# --- (BOBA_CONFIG)"
+boba_config_end = "# --- (END)"
+
 ### Helper functions
 def powerset(iterable, min_length=0, max_length=None):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
@@ -100,7 +103,7 @@ def construct_all_family_link_options(combined_dict: Dict[str, Any], has_random_
     
     return family_link_options
 
-def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> os.PathLike: 
+def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> Dict[str, Any]: 
     # Generate formulae decisions modularly
     # Construct main options
     main_options = construct_all_main_options(combined_dict=combined_dict)
@@ -136,6 +139,11 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path:
     decisions_dict["decisions"].append(family_link_dict)
     # TODO: Add any bash commands?
     # decisions_dict["before_execute"] = "cp ./code/" 
+
+    return decisions_dict
+    
+def generate_multiverse_decisions_to_json(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> os.PathLike: 
+    decisions_dict = generate_multiverse_decisions(combined_dict=combined_dict, decisions_path=decisions_path, decisions_file=decisions_file)
 
     # Write out JSON
     path = write_to_json(data=decisions_dict, output_path=decisions_path, output_filename=decisions_file)
@@ -207,11 +215,25 @@ def generate_template_pymer4_code(template_path: os.PathLike, decisions_path: os
         + main_function
     )
 
+def generate_boba_config_from_decisions(decisions: Dict[str, Any]) -> str: 
+    global boba_config_start, boba_config_end
+
+    return (
+        boba_config_start
+        + "\n"
+        + json.dumps(decisions)
+        + "\n"
+        + boba_config_end
+    )
+
 def generate_template_statsmodels_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None]):
     global statsmodels_code_templates
 
     ### Specify preamble
     preamble = statsmodels_code_templates["preamble"]
+
+    ### Generate Boba config with decisions from decisions_path file 
+    # boba_config = generate_boba_config_from_decisions(decisions=decisions)
 
     ### Generate data code
     if not data_path: 

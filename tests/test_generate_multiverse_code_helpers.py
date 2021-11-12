@@ -1,6 +1,6 @@
 ## TODO: Check that the Family - link pairs make sense (this might be covered earlier in the pipeline)
 
-from tisane.multiverse_code_generator import construct_all_main_options, construct_all_interaction_options, construct_all_random_options, construct_all_family_link_options, generate_multiverse_decisions, generate_template_code
+from tisane.multiverse_code_generator import construct_all_main_options, construct_all_interaction_options, construct_all_random_options, construct_all_family_link_options, generate_boba_config_from_decisions, generate_multiverse_decisions, generate_multiverse_decisions_to_json, generate_template_code, boba_config_start, boba_config_end
 
 import os
 import unittest
@@ -100,7 +100,7 @@ class MultiverseCodeHelpers(unittest.TestCase):
         input_dict = json.loads(file_data) 
 
         output_filename = "decisions_main_only.json"
-        output_path = generate_multiverse_decisions(combined_dict=input_dict, decisions_path=output_decision_dir, decisions_file=output_filename)
+        output_path = generate_multiverse_decisions_to_json(combined_dict=input_dict, decisions_path=output_decision_dir, decisions_file=output_filename)
 
         # Read in JSON file as a dict
         with open(output_path, "r") as f:
@@ -131,12 +131,28 @@ class MultiverseCodeHelpers(unittest.TestCase):
         output_path = os.path.join(output_template_dir, template_filename)
         output_path = generate_template_code(template_path=output_path, decisions_path=decisions_path, data_path="data.csv", target="PYTHON", has_random_effects=False)
 
-        # Open output template file
-        # START HERE: Check template generation... 
-        # First, run to see if tests fail?
-        # IDEA: maybe have a reference and then compare that the generated and reference are identical/equal?
+    def test_boba_config_from_decisions_main_only(self): 
+        decisions_filename = "decisions_main_only.json"
+        decisions_path = os.path.join(output_decision_dir, decisions_filename)
 
+        # Read in JSON file as a dict
+        with open(decisions_path, "r") as f:
+            file_data = f.read()
+        decisions_dict = json.loads(file_data) 
 
+        boba_config_decisions = generate_boba_config_from_decisions(decisions_dict)
+        self.assertIsInstance(boba_config_decisions, str)
+        self.assertIn(boba_config_start, boba_config_decisions)
+        self.assertIn(boba_config_end, boba_config_decisions)
+        decisions = boba_config_decisions.split(boba_config_start)[1]
+        decisions = decisions.split(boba_config_end)[0]
+        decisions = decisions.rstrip() # remove trailing white space 
+        decisions = decisions.lstrip() # remove leading white space 
+        self.assertEqual(decisions, json.dumps(decisions_dict))
+    
+    # TODO: After test generate_boba_config_from_decisions()
+    def test_generate_combined_decisions_template_main_only(self): 
+        pass 
 
     def test_construct_all_formulae_interaction_only(self): 
         combined_dict = dict()
