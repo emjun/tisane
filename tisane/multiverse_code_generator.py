@@ -233,6 +233,8 @@ def generate_template_statsmodels_code(template_path: os.PathLike, decisions_pat
     preamble = statsmodels_code_templates["preamble"]
 
     ### Generate Boba config with decisions from decisions_path file 
+    # TODO: START HERE: Update so that templates contain boba config 
+    # 2. Run boba with template ...    
     # boba_config = generate_boba_config_from_decisions(decisions=decisions)
 
     ### Generate data code
