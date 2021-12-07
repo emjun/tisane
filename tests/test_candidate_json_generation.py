@@ -381,7 +381,11 @@ class CandidateJSONGenerationTest(unittest.TestCase):
 
         subject = ts.Unit("Subject")
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=ts.Exactly(2).per(number_of_instances=condition),
+        )
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         condition.causes(reaction_time)

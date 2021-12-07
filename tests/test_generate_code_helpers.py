@@ -275,7 +275,11 @@ class GenerateCodeHelpersTest(unittest.TestCase):
     def test_generate_statsmodels_formula_main_correlated_random_slope_intercept(self):
         subject = ts.Unit("Subject")
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=ts.Exactly(2).per(number_of_instances=condition),
+        )
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         condition.causes(reaction_time)
@@ -325,7 +329,11 @@ class GenerateCodeHelpersTest(unittest.TestCase):
     ):
         subject = ts.Unit("Subject", cardinality=12)
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=ts.Exactly(2).per(number_of_instances=condition),
+        )
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         condition.causes(reaction_time)

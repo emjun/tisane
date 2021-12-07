@@ -860,7 +860,11 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
     ):
         subject = ts.Unit("Subject")
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        word = subject.nominal("Word", cardinality=4, number_of_instances=Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=Exactly(2).per(number_of_instances=condition),
+        )
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         design = ts.Design(dv=reaction_time, ivs=[condition])
@@ -884,7 +888,11 @@ class EffectsInferenceHelpersTest(unittest.TestCase):
         # Verbose: Each instance of subject has two instances of a nominal variable condition.
         # Informally: Each subjects sees two (both) conditions.
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        word = subject.nominal("Word", cardinality = 4, number_of_instances=Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=Exactly(2).per(number_of_instances=condition),
+        )
         # Repeated measures
         # Each subject has a measure reaction time, which is numeric, for each instance of a word
         # Verbose: Each instance of subject has one instance of a numeric variable weight for each value of word.

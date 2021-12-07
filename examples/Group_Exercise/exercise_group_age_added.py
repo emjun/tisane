@@ -21,7 +21,9 @@ lost.
 """
 
 # Load data
-data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exercise_group_age_added.csv")
+data_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "exercise_group_age_added.csv"
+)
 
 # Variable declarations
 adult = ts.Unit("member", cardinality=386)
