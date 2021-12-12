@@ -1260,7 +1260,7 @@ class Exactly(NumberValue):
         ...                           number_of_instances=Exactly(3).per(cardinality=days))
 
         """
-        super(Exactly, self).per(
+        return super(Exactly, self).per(
             cardinality=cardinality, number_of_instances=number_of_instances
         )
 
