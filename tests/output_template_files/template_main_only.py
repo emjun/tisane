@@ -6,6 +6,9 @@ import statsmodels.api as sm
 import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt # for visualizing residual plots to diagnose model fit
 
+# --- (BOBA_CONFIG)
+{"decisions": [{"options": [[], ["Time"]], "var": "main_effects"}, {"options": [[]], "var": "interaction_effects"}, {"options": [[]], "var": "random_effects"}, {"options": [["Gamma", "log()"], ["Gamma", "inverse_power()"], ["Gamma", "identity()"], ["Gaussian", "logit()"], ["Gaussian", "inverse_power()"], ["Gaussian", "probit()"], ["Gaussian", "Power()"], ["Gaussian", "identity()"], ["Gaussian", "log()"], ["Gaussian", "NegativeBinomial()"], ["Gaussian", "cloglog()"], ["InverseGaussian", "log()"], ["InverseGaussian", "inverse_power()"], ["InverseGaussian", "inverse_squared()"], ["InverseGaussian", "identity()"], ["Poisson", "Power(power=.5)"], ["Poisson", "log()"], ["Poisson", "identity()"], ["Tweedie", "Power()"], ["Tweedie", "log()"]], "var": "family, link pairs"}], "graph": []}
+# --- (END)
  
 def fit_model(): 
 

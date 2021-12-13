@@ -18,6 +18,7 @@ from tisane.family_link_inference import infer_family_functions, infer_link_func
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.code_generator import *
+from tisane.multiverse_code_generator import generate_multiverse_decisions, generate_template_code
 from tisane.gui.gui import TisaneGUI
 
 from enum import Enum
@@ -563,7 +564,6 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
         "associative intermediary main effects"
     ] = associative_intermediaries
 
-    import pdb; pdb.set_trace()
     ### Step 3: Generate multiverse code 
     has_random_effects = False
     # Are there any random effects? If so, update has_random_effects. 
@@ -571,8 +571,8 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
         has_random_effects = True
         
     # Generate the dicitonary representing the multiverse
-    decisions_file = "decisions.json"
-    generate_multiverse_decisions(combined_dict,  "./", decisions_file)
+    # decisions_file = "decisions.json"
+    decisions = generate_multiverse_decisions(combined_dict)
 
     # Output data somewhere to read in from template.py
     data = design.get_data()
@@ -586,6 +586,6 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
     # (i) we are using boba to generate the combinatorial set and 
     # (ii) therefore are not constructing complete StatisticalModels, which is the input for generate_code/functions in code_generator.py
     # Could imagine feeding a partial spec into code_generator and having it fill the rest out, but that seems like a different use case to design for...
-    generate_template_code(template_file, decisions_file, data_file, has_random_effedcts=has_random_effects) # Need to inject decisions into template file to use boba
+    generate_template_code(template_file, decisions, data_file, has_random_effects=has_random_effects) # Need to inject decisions into template file to use boba
 
     ### TODO: Step 4: Generate bash script/output for how to execute Boba? 

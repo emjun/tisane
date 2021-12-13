@@ -100,15 +100,9 @@ class MultiverseCodeHelpers(unittest.TestCase):
         input_dict = json.loads(file_data) 
 
         output_filename = "decisions_main_only.json"
-        output_path = generate_multiverse_decisions_to_json(combined_dict=input_dict, decisions_path=output_decision_dir, decisions_file=output_filename)
-
-        # Read in JSON file as a dict
-        with open(output_path, "r") as f:
-            file_data = f.read()
-        output_dict = json.loads(file_data) 
-        decisions = output_dict["decisions"]
-
-        # Do we need a more extensive test here?
+        decisions = generate_multiverse_decisions(combined_dict=input_dict)
+    
+        # TODO: Do we need a more extensive test here?
         # for dec in decisions: 
         #     var = dec["var"]
         #     if var == "main_effects":
@@ -126,10 +120,14 @@ class MultiverseCodeHelpers(unittest.TestCase):
     def test_generate_multiverse_template_main_only(self):
         decisions_filename = "decisions_main_only.json"
         decisions_path = os.path.join(output_decision_dir, decisions_filename)
+        decisions = dict()
+        with open(decisions_path, "r") as f:
+            decisions = f.read()
+            decisions = json.loads(decisions)
         
         template_filename = "template_main_only.py"
         output_path = os.path.join(output_template_dir, template_filename)
-        output_path = generate_template_code(template_path=output_path, decisions_path=decisions_path, data_path="data.csv", target="PYTHON", has_random_effects=False)
+        output_path = generate_template_code(template_path=output_path, decisions=decisions, data_path="data.csv", target="PYTHON", has_random_effects=False)
 
     def test_boba_config_from_decisions_main_only(self): 
         decisions_filename = "decisions_main_only.json"
@@ -149,8 +147,7 @@ class MultiverseCodeHelpers(unittest.TestCase):
         decisions = decisions.rstrip() # remove trailing white space 
         decisions = decisions.lstrip() # remove leading white space 
         self.assertEqual(decisions, json.dumps(decisions_dict))
-    
-    # TODO: After test generate_boba_config_from_decisions()
+
     def test_generate_combined_decisions_template_main_only(self): 
         pass 
 

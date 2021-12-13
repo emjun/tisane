@@ -54,12 +54,6 @@ def write_to_path(code: str, output_path: os.PathLike):
     print("Writing out path")
     return output_path
 
-
-# def generate_all_formulae(combined_dict: Dict[str, Any]) -> List[str]: 
-#     formulae = list() 
-    
-#     return formulae
-
 def construct_all_main_options(combined_dict: Dict[str, Any]) -> List[str]:
     input = combined_dict["input"]
     main_effects = input["generated main effects"]
@@ -103,7 +97,7 @@ def construct_all_family_link_options(combined_dict: Dict[str, Any], has_random_
     
     return family_link_options
 
-def generate_multiverse_decisions(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> Dict[str, Any]: 
+def generate_multiverse_decisions(combined_dict: Dict[str, Any]) -> Dict[str, Any]: 
     # Generate formulae decisions modularly
     # Construct main options
     main_options = construct_all_main_options(combined_dict=combined_dict)
@@ -151,34 +145,37 @@ def generate_multiverse_decisions_to_json(combined_dict: Dict[str, Any], decisio
     return path 
 
 # @param template_file is the output file where the code will be output
-def generate_template_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
+def generate_template_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
     if target.upper() == "PYTHON": 
-        code = generate_template_python_code(template_path, decisions_path, data_path, has_random_effects)
+        code = generate_template_python_code(template_path, decisions, data_path, has_random_effects)
     else: 
         assert(target.upper() == "R")
-        code =  generate_template_r_code(template_path, decisions_path, data_path, has_random_effects)
+        code =  generate_template_r_code(template_path, decisions, data_path, has_random_effects)
     
     # Write generated code out
     path = write_to_path(code, template_path)
     return path
 
-# TODO: Need to inject decisions into template file to use boba
-def generate_template_python_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
+# Model template after examples, such as https://github.com/uwdata/boba/blob/master/example/fertility/template.py
+def generate_template_python_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
     if has_random_effects:
-        return generate_template_pymer4_code(template_path, decisions_path, data_path)
+        return generate_template_pymer4_code(template_path, decisions, data_path)
     #else: 
-    return generate_template_statsmodels_code(template_path, decisions_path, data_path)
+    return generate_template_statsmodels_code(template_path, decisions, data_path)
         
-def generate_template_r_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
+def generate_template_r_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
     # Output file is an R file
     raise NotImplementedError
 
-def generate_template_pymer4_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None]):
+def generate_template_pymer4_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None]):
     global pymer4_code_templates
 
     ### Specify preamble
     preamble = pymer4_code_templates["preamble"]
 
+    ### Generate Boba config from @param decisions dict
+    boba_config = generate_boba_config_from_decisions(decisions=decisions)
+    
     ### Generate data code
     if not data_path: 
         data_code = pymer4_code_templates["load_data_no_data_source"]
@@ -204,6 +201,8 @@ def generate_template_pymer4_code(template_path: os.PathLike, decisions_path: os
     return (
         preamble
         + "\n"
+        + boba_config
+        + "\n"
         + model_function_wrapper
         + data_code
         + "\n"
@@ -226,16 +225,19 @@ def generate_boba_config_from_decisions(decisions: Dict[str, Any]) -> str:
         + boba_config_end
     )
 
-def generate_template_statsmodels_code(template_path: os.PathLike, decisions_path: os.PathLike, data_path: Union[os.PathLike, None]):
+### Generate Boba config with decisions from decisions_path file 
+    # [x] 1. Update so that templates contain boba config 
+    # 2. Run boba with template ...    
+    # boba_config = generate_boba_config_from_decisions(decisions=decisions)
+
+def generate_template_statsmodels_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None]):
     global statsmodels_code_templates
 
     ### Specify preamble
     preamble = statsmodels_code_templates["preamble"]
 
-    ### Generate Boba config with decisions from decisions_path file 
-    # TODO: START HERE: Update so that templates contain boba config 
-    # 2. Run boba with template ...    
-    # boba_config = generate_boba_config_from_decisions(decisions=decisions)
+    ### Generate Boba config from @param decisions dict
+    boba_config = generate_boba_config_from_decisions(decisions=decisions)
 
     ### Generate data code
     if not data_path: 
@@ -261,6 +263,8 @@ def generate_template_statsmodels_code(template_path: os.PathLike, decisions_pat
     # Return string to write out to script
     return (
         preamble
+        + "\n"
+        + boba_config
         + "\n"
         + model_function_wrapper
         + data_code

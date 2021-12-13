@@ -363,10 +363,6 @@ def generate_pymer4_family(statistical_model: StatisticalModel) -> str:
     return pymer4_family_name_to_functions[sm_family_name]
 
 
-# def generate_pymer4_link(statistical_model=StatisticalModel) -> str:
-#     return str()
-
-
 def generate_statsmodels_code(statistical_model: StatisticalModel, boba_template: bool = False):
     global statsmodels_code_templates
 
