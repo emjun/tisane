@@ -17,6 +17,7 @@ import os
 import sys
 import toml
 import re
+
 sys.path.insert(0, os.path.abspath("../tisane"))
 
 dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +28,7 @@ with open(os.path.join(dir, "pyproject.toml"), "r") as f:
     pyproject = toml.loads(f.read())
     pass
 
-project = 'tisane'
+project = "tisane"
 
 
 authorNameRegex = r"(\w+(?: \w+)*)\s*<[^>]*>"
@@ -37,7 +38,7 @@ authors = pyproject["tool"]["poetry"]["authors"]
 authors = [re.sub(authorNameRegex, r"\1", author) for author in authors]
 
 author = " & ".join(authors)
-copyright = '2021, {}'.format(author)
+copyright = "2021, {}".format(author)
 
 # The full version, including alpha/beta/rc tags
 
@@ -52,22 +53,22 @@ release = pyproject["tool"]["poetry"]["version"]
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.todo',
-    'numpydoc'
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.todo",
+    "numpydoc",
 ]
 
 autoapi_type = "python"
 autoapi_dirs = [os.path.abspath("../tisane")]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'autodoc']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "autodoc"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -75,21 +76,21 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'autodoc']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'pydata_sphinx_theme'
+html_theme = "pydata_sphinx_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
 autodoc_default_options = {
-    'members': None,
-    'member-order': 'alphabetical',
+    "members": None,
+    "member-order": "alphabetical",
 }
 
 
 autoapi_options = ["members", "show-inheritance"]
 
 autoapi_member_order = "groupwise"
-autodoc_typehints = 'description'
+autodoc_typehints = "description"

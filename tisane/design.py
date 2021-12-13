@@ -50,6 +50,7 @@ class Design(object):
         The independent variable(s), if any, in your study design
 
     """
+
     dv: AbstractVariable
     ivs: List[AbstractVariable]
     graph: Graph  # IR

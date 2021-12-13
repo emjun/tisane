@@ -21,6 +21,7 @@ class extend_docstring:
                 function.__doc__ += doc
         return function
 
+
 def splitTable(mystr: str):
     assert (
         mystr.count("</tbody></table>") > 0
@@ -99,7 +100,7 @@ class AbstractVariable:
 
     # @param variable associated with self
     def associates_with(self, variable: "AbstractVariable"):
-        """ Adds a correlation relationship to a data variable.
+        """Adds a correlation relationship to a data variable.
 
         Parameters
         ----------
@@ -192,8 +193,6 @@ class AbstractVariable:
         return tableBody.format(nameRow + typeRow + dataRow)
 
 
-
-
 class SetUp(AbstractVariable):
     """Class for experiment's environment settings and variables
 
@@ -237,6 +236,7 @@ class SetUp(AbstractVariable):
     >>> temperature = sensor.numeric("temperature", number_of_instances=timestamp)
 
     """
+
     variable: "Measure"
 
     def __init__(
@@ -293,9 +293,6 @@ class SetUp(AbstractVariable):
     def assign_cardinality_from_data(self, data: Dataset):
         assert data is not None
         self.cardinality = self.calculate_cardinality_from_data(data)
-
-
-
 
 
 class Unit(AbstractVariable):
@@ -596,6 +593,7 @@ class Measure(AbstractVariable):
     """
     Super class for Measures
     """
+
     def __init__(self, name: str, data: None, **kwargs):
         super(Measure, self).__init__(name, data)
 
@@ -649,9 +647,8 @@ class Measure(AbstractVariable):
         return Exactly(0)
 
 
-
 class Nominal(Measure):
-    """ Class for nominal (a.k.a. categorical) measures
+    """Class for nominal (a.k.a. categorical) measures
 
     Represents a categorical variable. You never
     instantiate this class directly, and instead you should
@@ -685,6 +682,7 @@ class Nominal(Measure):
     tisane.Unit.nominal: create a categorical variable associated with a :py:class:`tisane.Unit`
 
     """
+
     cardinality: int
     categories = list
     isInteraction: bool
@@ -843,7 +841,6 @@ class Nominal(Measure):
         self.categories = self.calculate_categories_from_data(data)
 
 
-
 class Ordinal(Measure):
     """Represents ordinal measures
 
@@ -880,6 +877,7 @@ class Ordinal(Measure):
     tisane.Unit.ordinal : create an ordinal measure attribute of a given `tisane.Unit`
 
     """
+
     cardinality: int
     ordered_cat: list
 
@@ -955,7 +953,6 @@ class Ordinal(Measure):
         return len(unique_values)
 
 
-
 class Numeric(Measure):
     """Represents numeric variables
 
@@ -982,6 +979,7 @@ class Numeric(Measure):
     tisane.Unit.numeric : create a `Numeric` variable attributed to a given `tisane.Unit`
 
     """
+
     def __init__(self, name: str, data=None):
         super(Numeric, self).__init__(name=name, data=data)
         self.data = data
@@ -992,7 +990,9 @@ class Numeric(Measure):
         # unit._has(measure=self, exactly=exactly, up_to=up_to)
 
     def __str__(self):
-        description = f"Numeric variable:\n" + f"name: {self.name}, " + f"data: {self.data}"
+        description = (
+            f"Numeric variable:\n" + f"name: {self.name}, " + f"data: {self.data}"
+        )
         return description
 
     def get_cardinality(self):
@@ -1179,7 +1179,11 @@ class NumberValue:
     def get_value(self):
         return self.value
 
-    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+    def per(
+        self,
+        cardinality: AbstractVariable = None,
+        number_of_instances: AbstractVariable = None,
+    ):
         """Express a `per` relationship on a given `NumberValue`
 
         Even though `cardinality` and `number_of_instances` are both
@@ -1200,13 +1204,17 @@ class NumberValue:
             An object representing a "_ per _" relationship.
 
         """
-        assert number_of_instances or cardinality, "Exactly one of the parameters `number_of_instances` and `cardinality` must be not `None`"
-        assert not (number_of_instances and cardinality), "Cannot have both `number_of_instances` and `cardinality` specified as non-`None` values"
-        return Per(number=self, cardinality=cardinality, number_of_instances=number_of_instances)
-
-
-
-
+        assert (
+            number_of_instances or cardinality
+        ), "Exactly one of the parameters `number_of_instances` and `cardinality` must be not `None`"
+        assert not (
+            number_of_instances and cardinality
+        ), "Cannot have both `number_of_instances` and `cardinality` specified as non-`None` values"
+        return Per(
+            number=self,
+            cardinality=cardinality,
+            number_of_instances=number_of_instances,
+        )
 
 
 class Exactly(NumberValue):
@@ -1221,11 +1229,16 @@ class Exactly(NumberValue):
     value: int
         the exact value to be used.
     """
+
     def __init__(self, value: int):
         super(Exactly, self).__init__(value)
 
     @extend_docstring(NumberValue.per, "`NumberValue`", "`Exactly`")
-    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+    def per(
+        self,
+        cardinality: AbstractVariable = None,
+        number_of_instances: AbstractVariable = None,
+    ):
         """
         See Also
         --------
@@ -1247,7 +1260,9 @@ class Exactly(NumberValue):
         ...                           number_of_instances=Exactly(3).per(cardinality=days))
 
         """
-        super(Exactly, self).per(cardinality=cardinality, number_of_instances=number_of_instances)
+        return super(Exactly, self).per(
+            cardinality=cardinality, number_of_instances=number_of_instances
+        )
 
 
 class AtMost(NumberValue):
@@ -1283,7 +1298,11 @@ class AtMost(NumberValue):
             super(AtMost, self).__init__(value.get_cardinality())
 
     @extend_docstring(NumberValue.per, "`NumberValue`", "`AtMost`")
-    def per(self, cardinality: AbstractVariable=None, number_of_instances: AbstractVariable=None):
+    def per(
+        self,
+        cardinality: AbstractVariable = None,
+        number_of_instances: AbstractVariable = None,
+    ):
         """
         See Also
         --------
@@ -1315,7 +1334,10 @@ class AtMost(NumberValue):
 
 
         """
-        super(AtMost, self).per(cardinality=cardinality, number_of_instances=number_of_instances)
+        return super(AtMost, self).per(
+            cardinality=cardinality, number_of_instances=number_of_instances
+        )
+
 
 """
 Class for expressing Per relationships
@@ -1323,7 +1345,7 @@ Class for expressing Per relationships
 
 
 class Per(NumberValue):
-    """ Represents a "per" relationship, such as "2 per participant"
+    """Represents a "per" relationship, such as "2 per participant"
 
     Enables complex number of instances where the number of instances is
     a multiple of the number of instances or cardinality of another variable.
@@ -1364,6 +1386,7 @@ class Per(NumberValue):
         :py:attr:`variable`
 
     """
+
     number: NumberValue
     variable: AbstractVariable
     cardinality: bool
@@ -1400,6 +1423,9 @@ class Per(NumberValue):
             #     import pdb; pdb.set_trace()
             self.value = number.value * self.variable.get_cardinality()
 
-        assert(self.cardinality or self.number_of_instances, "Must specify either cardinality or number_of_instances (exclusive or) for Per")
-        assert(not self.cardinality if self.number_of_instances else True)
-        assert(not self.number_of_instances if self.cardinality else True)
+        assert (
+            self.cardinality or self.number_of_instances,
+            "Must specify either cardinality or number_of_instances (exclusive or) for Per",
+        )
+        assert not self.cardinality if self.number_of_instances else True
+        assert not self.number_of_instances if self.cardinality else True

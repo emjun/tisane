@@ -67,10 +67,12 @@ def infer_family_functions(query: Design) -> Set[AbstractFamily]:
         family_candidates.add(TweedieFamily(dv))
         family_candidates.add(PoissonFamily(dv))
         # Treats ordinal data as discrete
-        family_candidates.add(BinomialFamily(dv))
-        family_candidates.add(NegativeBinomialFamily(dv))
-        # Not implemented in statsmodels or pymer4
-        # family_candidates.add(MultinomialFamily(dv))
+        if dv.get_cardinality() == 2:
+            family_candidates.add(BinomialFamily(dv))
+        else: 
+            family_candidates.add(NegativeBinomialFamily(dv))
+            # Not implemented in statsmodels or pymer4
+            # family_candidates.add(MultinomialFamily(dv))
     else:
         assert isinstance(dv, Nominal)
 
@@ -158,3 +160,43 @@ def infer_link_functions(query: Design, family: AbstractFamily) -> Set[AbstractL
         link_candidates.add(ProbitLink(dv))
 
     return link_candidates
+
+def generate_family_selection_questions_options(dv: AbstractVariable): 
+    choices = dict()
+
+    if isinstance(dv, Numeric): 
+        choices["treat as continuous"] = dict()
+        choices["treat as continuous"]["has positive skew"] = dict()
+        # choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = dict() 
+        choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = [TweedieFamily.__name__]
+        choices["treat as continuous"]["has positive skew"]["false"] = [InverseGaussianFamily.__name__, GammaFamily.__name__, TweedieFamily.__name__]
+        choices["treat as continuous"]["false"] = [GaussianFamily.__name__]
+
+        choices["treat as counts"] = dict()
+        choices["treat as counts"]["has lots of zeros"] = [TweedieFamily.__name__]
+        choices["treat as counts"]["false"] = [PoissonFamily.__name__]
+        
+    elif isinstance(dv, Ordinal): 
+        choices["treat as continuous"] = dict()
+        choices["treat as continuous"]["has positive skew"] = dict()
+        # choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = dict() 
+        choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = [TweedieFamily.__name__]
+        choices["treat as continuous"]["has positive skew"]["false"] = [InverseGaussianFamily.__name__, GammaFamily.__name__, TweedieFamily.__name__]
+        choices["treat as continuous"]["false"] = [GaussianFamily.__name__]
+        
+        choices["treat as counts"] = dict()
+        choices["treat as counts"]["has lots of zeros"] = [TweedieFamily.__name__]
+        choices["treat as counts"]["false"] = [PoissonFamily.__name__]
+
+        choices["treat as categories"] = list()
+        if dv.get_cardinality() == 2: 
+            choices["treat as categories"] = [BinomialFamily.__name__]
+        else: 
+            assert(dv.get_cardinality() > 2) 
+            choices["treat as categories"] = [NegativeBinomialFamily.__name__]
+    else: 
+        assert(isinstance(dv, Nominal))
+        # Add nothing 
+
+    return choices
+

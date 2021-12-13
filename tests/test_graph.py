@@ -344,7 +344,11 @@ class GraphTest(unittest.TestCase):
     def test_specify_non_nesting_relationship(self):
         subject = ts.Unit("Subject")
         condition = subject.nominal("Word_type", cardinality=2, number_of_instances=2)
-        word = subject.nominal("Word", cardinality=4, number_of_instances=ts.Exactly(2).per(number_of_instances=condition))
+        word = subject.nominal(
+            "Word",
+            cardinality=4,
+            number_of_instances=ts.Exactly(2).per(number_of_instances=condition),
+        )
         reaction_time = subject.numeric("Time", number_of_instances=word)  # repeats
 
         design = ts.Design(dv=reaction_time, ivs=[condition])

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tisane"
-version = "0.0.7"
+version = "0.0.8"
 description = ""
 readme = "README.md"
 authors = ["Eunice Jun <eunice.m.jun@gmail.com>", "Audrey Seo <audreyleeseo@gmail.com>"]
