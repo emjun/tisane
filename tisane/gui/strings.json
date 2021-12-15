@@ -65,5 +65,24 @@
     "interaction-effects": "Review IVs: Interactions",
     "random-effects": "Review data clustering",
     "family-link-functions": "Pick data distributions"
+  },
+  "types-of-data": {
+    "follow-ups": {
+      "default": "(First answer the question above)",
+      "has positive skew": "Does the data have a positive skew?",
+      "has lots of zeros": "Does the data have lots of zeros?"
+    },
+    "display-types": {
+      "treat as continuous": "Continuous",
+      "treat as counts": "Counts",
+      "treat as categories": "Categories",
+      "continuous": "Continuous",
+      "counts": "Counts",
+      "categories": "Categories",
+      "true": "Yes",
+      "false": "No",
+      "yes": "Yes",
+      "no": "No"
+    }
   }
 }

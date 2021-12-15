@@ -1,3 +1,4 @@
+from tisane.gui.gui_helpers import simulate_data_dist
 import json
 import os
 import logging
@@ -16,8 +17,6 @@ from tisane.gui.gui_strings import GUIStrings
 log = logging.getLogger("")
 log.setLevel(logging.ERROR)
 
-from tisane.gui.gui_helpers import simulate_data_dist
-
 
 def cardP(text):
     return html.H5(text, className="card-text")
@@ -28,7 +27,7 @@ def checklist(labelList, id):
         options=[{"label": "{}".format(g), "value": g} for g in labelList],
         labelStyle={"display": "block"},
         id=id,
-    )
+        )
 
 
 def separateByUpperCamelCase(mystr):
@@ -44,19 +43,33 @@ def separateByUpperCamelCase(mystr):
             start = i
         elif i == len(mystr) - 1 and start != i:
             # we're at the end
-            words.append(mystr[start : i + 1])
+            words.append(mystr[start: i + 1])
     return words
 
 
 def getInfoBubble(id: str):
     return html.I(className="bi bi-info-circle text-info", id=id)
 
+def _hasLevelNFollowUp(flowTree, n):
+    assert isinstance(flowTree, dict)
+    if n == 0:
+        return "follow-up" in flowTree
+
+    if "answers" in flowTree:
+        for k in flowTree["answers"]:
+            if _hasLevelNFollowUp(flowTree["answers"][k], n - 1):
+                return True
+            pass
+        pass
+    return False
+
 
 class GUIComponents:
     def __init__(self, input_json: str, generateCode):
         self.strings = GUIStrings()
         dir = os.path.dirname(os.path.abspath(__file__))
-        defaultExplanationsPath = os.path.join(dir, "default_explanations.json")
+        defaultExplanationsPath = os.path.join(
+            dir, "default_explanations.json")
         if os.path.exists(defaultExplanationsPath):
             with open(defaultExplanationsPath, "r") as f:
                 self.defaultExplanations = json.loads(f.read())
@@ -71,7 +84,8 @@ class GUIComponents:
         self.generatedComponentIdToInteractionEffect = {}
         self.simulatedData = {}
         self.familyLinkFunctions = {}
-        familyLinkFunctionsPath = os.path.join(dir, "family_link_functions.json")
+        familyLinkFunctionsPath = os.path.join(
+            dir, "family_link_functions.json")
         if os.path.exists(familyLinkFunctionsPath):
             with open(familyLinkFunctionsPath, "r") as f:
                 self.familyLinkFunctions = json.loads(f.read())
@@ -85,7 +99,7 @@ class GUIComponents:
             "GammaFamily": "InverseLink",
             "NegativeBinomialFamily": "LogLink",
             "InverseGaussianFamily": "InverseSquaredLink",
-        }
+            }
         self.output = {
             "main effects": [],
             "dependent variable": "",
@@ -93,7 +107,7 @@ class GUIComponents:
             "random effects": {},
             "family": "",
             "link": "",
-        }
+            }
         self.highestActiveTab = -1
 
         self.variables = {"main effects": {}, "interaction effects": {}}
@@ -121,12 +135,13 @@ class GUIComponents:
         if self.hasData():
             self.dataDf = pd.DataFrame(self.getData())
         for me in self.getGeneratedMainEffects():
-            self.variables["main effects"][me] = {"info-id": self.getNewComponentId()}
+            self.variables["main effects"][me] = {
+                "info-id": self.getNewComponentId()}
             pass
         for ie in self.getGeneratedInteractionEffects():
             self.variables["interaction effects"][ie] = {
                 "info-id": self.getNewComponentId()
-            }
+                }
             pass
         randomEffects = self.getGeneratedRandomEffects()
         for unit, re in randomEffects.items():
@@ -134,7 +149,7 @@ class GUIComponents:
             if "random intercept" in re:
                 self.output["random effects"][unit]["random intercept"] = re[
                     "random intercept"
-                ]
+                    ]
                 pass
             if "random slope" in re:
                 self.output["random effects"][unit]["random slope"] = re["random slope"]
@@ -155,7 +170,7 @@ class GUIComponents:
                     "info-id": infoId,
                     "cell-id": cellId,
                     "group-id": groupId,
-                }
+                    }
                 self.randomInterceptIdToGroup[infoId] = unit
                 self.randomInterceptIdToGroup[cellId] = unit
                 self.randomInterceptIdToGroup[groupId] = unit
@@ -174,10 +189,12 @@ class GUIComponents:
                         "info-id": infoId,
                         "added-id": addedId,
                         "cell-id": cellId,
-                    }
+                        }
                     self.generatedCorrelatedIdToRandomSlope[newId] = rs
-                    self.generatedCorrelatedIdToGroupIv[newId] = (unit, rs["iv"])
-                    self.randomSlopeAddedIdToGroupIv[addedId] = (unit, rs["iv"])
+                    self.generatedCorrelatedIdToGroupIv[newId] = (
+                        unit, rs["iv"])
+                    self.randomSlopeAddedIdToGroupIv[addedId] = (
+                        unit, rs["iv"])
                     self.randomSlopeIdToGroupIv[cellId] = (unit, rs["iv"])
                     pass
                 pass
@@ -193,13 +210,18 @@ class GUIComponents:
                         "info-id": infoId,
                         "added-id": addedId,
                         "cell-id": cellId,
-                    }
-                    self.randomSlopeAddedIdToGroupIv[addedId] = (unit, rs["iv"])
+                        }
+                    self.randomSlopeAddedIdToGroupIv[addedId] = (
+                        unit, rs["iv"])
                     self.randomSlopeIdToGroupIv[cellId] = (unit, rs["iv"])
             pass
         # print(self.randomSlopes)
         self._init_helper()
         pass
+
+    def getTypesOfData(self):
+        if "types of data" in self.data["input"]:
+            return self.data["input"]["types of data"]
 
     def _init_helper(self):
         # Additional initialization code
@@ -234,10 +256,10 @@ class GUIComponents:
         self.unitsWithoutVariables = set()
         for unit in self.units:
             if (
-                unit != self.dv
-                and unit not in self.unitToMeasures
-                and unit not in self.getGeneratedMainEffects()
-            ):
+                    unit != self.dv
+                    and unit not in self.unitToMeasures
+                    and unit not in self.getGeneratedMainEffects()
+                    ):
                 self.unitsWithoutVariables.add(unit)
                 pass
             pass
@@ -249,13 +271,14 @@ class GUIComponents:
                 if randomEffect["random slope"]:
                     self.randomEffectsUnitToRandomSlopeAddedId[
                         group
-                    ] = self.getNewComponentId()
+                        ] = self.getNewComponentId()
                 for rs in randomEffect["random slope"]:
                     if "iv" in rs:
                         if group not in self.randomEffectsUnitToRandomSlopeIVs:
                             self.randomEffectsUnitToRandomSlopeIVs[group] = []
                             pass
-                        self.randomEffectsUnitToRandomSlopeIVs[group].append(rs["iv"])
+                        self.randomEffectsUnitToRandomSlopeIVs[group].append(
+                            rs["iv"])
                         pass
                     pass
                 pass
@@ -276,7 +299,7 @@ class GUIComponents:
             "family": self.output["family"],
             "link": self.output["link"],
             "random effects": {},
-        }
+            }
         if "random effects" in self.output:
             for group, randomEffects in self.output["random effects"].items():
                 groupDict = {}
@@ -288,7 +311,7 @@ class GUIComponents:
                                 key: value
                                 for key, value in randIntercept.items()
                                 if key != "unavailable"
-                            }
+                                }
                             pass
                         pass
                     else:
@@ -307,8 +330,8 @@ class GUIComponents:
                                         key: value
                                         for key, value in rs.items()
                                         if key != "unavailable"
-                                    }
-                                )
+                                        }
+                                    )
                                 pass
                             pass
                         else:
@@ -320,7 +343,7 @@ class GUIComponents:
                     if "random slope" in groupDict:
                         groupDict["random slope"] = sorted(
                             groupDict["random slope"], key=lambda rs: rs["iv"]
-                        )
+                            )
                     newOutput["random effects"][group] = groupDict
                 pass
             pass
@@ -330,9 +353,9 @@ class GUIComponents:
         key = "associative intermediary main effects"
         assert (
             key in self.data["input"]
-        ), 'Could not find key "{}" in input:\n{}'.format(
+            ), 'Could not find key "{}" in input:\n{}'.format(
             key, json.dumps(self.data["input"], indent=4)
-        )
+            )
         return self.data["input"][key]
 
     def getFamilyLinkFunctions(self):
@@ -350,7 +373,7 @@ class GUIComponents:
                 pass
             path = self.codeGenerator(
                 destinationDir=destinationDir, modelSpecJson=jsonFile
-            )
+                )
             return path
         return False
 
@@ -363,9 +386,10 @@ class GUIComponents:
     def getGroupFromRandomInterceptId(self, id):
         assert (
             id in self.randomInterceptIdToGroup
-        ), "Id {} not found in randomInterceptIdToGroup\n{}".format(
-            id, json.dumps(self.randomInterceptIdToGroup, sort_keys=True, indent=2)
-        )
+            ), "Id {} not found in randomInterceptIdToGroup\n{}".format(
+            id, json.dumps(self.randomInterceptIdToGroup,
+                           sort_keys=True, indent=2)
+            )
         return self.randomInterceptIdToGroup[id]
 
     def getRandomSlopesVariousIds(self, key):
@@ -436,7 +460,7 @@ class GUIComponents:
         measuresToUnits = self.getMeasuresToUnits()
         assert (
             measure in measuresToUnits
-        ), "Measure {} not in measuresToUnits {}".format(measure, measuresToUnits)
+            ), "Measure {} not in measuresToUnits {}".format(measure, measuresToUnits)
         return measuresToUnits[measure]
 
     def getUnitFromRowId(self, rowId):
@@ -446,9 +470,9 @@ class GUIComponents:
     def getUnitFromRowOrAddedRandomVariableId(self, id):
         assert (
             id in self.unitsByRowId or id in self.unitsByAddedRandomVariableId
-        ), "Id {} in neither {} nor {}".format(
+            ), "Id {} in neither {} nor {}".format(
             id, self.unitsByRowId, self.unitsByAddedRandomVariableId
-        )
+            )
         if id in self.unitsByRowId:
             return self.getUnitFromRowId(id)
         return self.getUnitFromAddedRandomVariableId(id)
@@ -476,7 +500,7 @@ class GUIComponents:
             "input" in self.data
             and "data" in self.data["input"]
             and self.data["input"]["data"]
-        )
+            )
 
     def getDefaultLinkForFamily(self, family):
         if family in self.defaultLinkForFamily:
@@ -489,12 +513,12 @@ class GUIComponents:
     def hasMainEffectForComponentId(self, componentId):
         return self.hasEffectForComponentId(
             componentId, self.generatedComponentIdToMainEffect
-        )
+            )
 
     def hasInteractionEffectForComponentId(self, componentId):
         return self.hasEffectForComponentId(
             componentId, self.generatedComponentIdToInteractionEffect
-        )
+            )
 
     def getRandomEffectCheckboxIds(self):
         return list(self.generatedComponentIdToRandomEffect.keys())
@@ -516,33 +540,33 @@ class GUIComponents:
     def getEffectFromComponentId(self, componentId, effectDict):
         assert componentId in effectDict, "Component id {} does not exist in {}".format(
             componentId, effectDict
-        )
+            )
         return effectDict[componentId]
 
     def getMainEffectFromComponentId(self, componentId):
         return self.getEffectFromComponentId(
             componentId, self.generatedComponentIdToMainEffect
-        )
+            )
 
     def getInteractionEffectFromComponentId(self, componentId):
         return self.getEffectFromComponentId(
             componentId, self.generatedComponentIdToInteractionEffect
-        )
+            )
 
     def getRandomEffectFromComponentId(self, componentId):
         assert (
             componentId in self.generatedComponentIdToRandomEffect
-        ), "Component id {} does not exist in {}".format(
+            ), "Component id {} does not exist in {}".format(
             componentId, self.generatedComponentIdToRandomEffect
-        )
+            )
         return self.generatedComponentIdToRandomEffect[componentId]
 
     def getRandomSlopeFromComponentId(self, componentId):
         assert (
             componentId in self.generatedCorrelatedIdToRandomSlope
-        ), "Component id {} does not exist in {}".format(
+            ), "Component id {} does not exist in {}".format(
             componentId, self.generatedCorrelatedIdToRandomSlope
-        )
+            )
         return self.generatedCorrelatedIdToRandomSlope[componentId]
 
     def markCheckedForCorrelatedId(self, correlatedId, checked: bool):
@@ -551,7 +575,7 @@ class GUIComponents:
             assert (
                 group in self.output["random effects"]
                 and "random slope" in self.output["random effects"][group]
-            )
+                )
             for slope in self.output["random effects"][group]["random slope"]:
                 if slope["iv"] == iv and "correlated" in slope:
                     slope["correlated"] = checked
@@ -561,31 +585,31 @@ class GUIComponents:
         pass
 
     def markUnavailableRandomEffect(
-        self, group: str, iv: str = None, unavailable: bool = False
-    ):
+            self, group: str, iv: str = None, unavailable: bool = False
+            ):
         assert (
             group in self.output["random effects"]
-        ), "Group {} not in output random effects: {}".format(
+            ), "Group {} not in output random effects: {}".format(
             group, self.output["random effects"]
-        )
+            )
         if iv is None:
             # iv is None, so this is a random intercept
             assert (
                 "random intercept" in self.output["random effects"][group]
-            ), "Could not find random intercept for group {} in output: {}".format(
+                ), "Could not find random intercept for group {} in output: {}".format(
                 group, self.output["random effects"][group]
-            )
+                )
             self.output["random effects"][group]["random intercept"][
                 "unavailable"
-            ] = unavailable
+                ] = unavailable
             pass
         elif iv:
             # iv needs to not be the empty string
             assert (
                 "random slope" in self.output["random effects"][group]
-            ), "Could not find random slopes for group {} in output: {}".format(
+                ), "Could not find random slopes for group {} in output: {}".format(
                 group, self.output["random effects"][group]
-            )
+                )
             for slope in self.output["random effects"][group]["random slope"]:
                 if slope["iv"] == iv:
                     slope["unavailable"] = unavailable
@@ -600,9 +624,9 @@ class GUIComponents:
     def getGroupAndIvFromCorrelatedId(self, componentId):
         assert (
             componentId in self.generatedCorrelatedIdToGroupIv
-        ), "Component id {} does not exist in {}".format(
+            ), "Component id {} does not exist in {}".format(
             componentId, self.generatedCorrelatedIdToGroupIv
-        )
+            )
         return self.generatedCorrelatedIdToGroupIv[componentId]
 
     def hasRandomSlopeForComponentId(self, componentId):
@@ -613,7 +637,7 @@ class GUIComponents:
             group in self.randomSlopes
             and iv in self.randomSlopes[group]
             and "correlated-id" in self.randomSlopes[group][iv]
-        )
+            )
 
     def getCorrelatedIdForRandomSlope(self, group, iv):
         assert self.hasCorrelatedIdForRandomSlope(group, iv)
@@ -629,7 +653,7 @@ class GUIComponents:
     def hasComponentIdForEffect(self, effect: str, effectsDict):
         assert effect in effectsDict, "Group {} not found in effects: {}".format(
             effect, effectsDict
-        )
+            )
         return "component-id" in effectsDict[effect]
 
     def hasComponentIdForMainEffect(self, mainEffect: str):
@@ -638,12 +662,12 @@ class GUIComponents:
     def hasComponentIdForInteractionEffect(self, interactionEffect: str):
         return self.hasComponentIdForEffect(
             interactionEffect, self.variables["interaciton effects"]
-        )
+            )
 
     def setComponentIdForEffect(self, effect, effectsDict, componentIdToEffect):
         assert effect in effectsDict, "{} not found in effects dict {}".format(
             effect, effectsDict
-        )
+            )
         if not self.hasComponentIdForEffect(effect, effectsDict):
             newId = self.getNewComponentId()
             componentIdToEffect[newId] = effect
@@ -656,31 +680,31 @@ class GUIComponents:
             mainEffect,
             self.variables["main effects"],
             self.generatedComponentIdToMainEffect,
-        )
+            )
 
     def setComponentIdForInteractionEffect(self, interactionEffect):
         return self.setComponentIdForEffect(
             interactionEffect,
             self.variables["interaction effects"],
             self.generatedComponentIdToInteractionEffect,
-        )
+            )
 
     def hasComponentIdForRandomEffect(self, randomEffectGroup: str):
         randomEffects = self.getGeneratedRandomEffects()
         assert (
             randomEffectGroup in self.getGeneratedRandomEffects()
-        ), "Group {} not found in generated random effects: {}".format(
+            ), "Group {} not found in generated random effects: {}".format(
             randomEffectGroup, randomEffects
-        )
+            )
         return "component-id" in randomEffects[randomEffectGroup]
 
     def setComponentIdForRandomEffect(self, randomEffectGroup: str):
         randomEffects = self.getGeneratedRandomEffects()
         assert (
             randomEffectGroup in randomEffects
-        ), "Group {} not found in generated random effects: {}".format(
+            ), "Group {} not found in generated random effects: {}".format(
             randomEffectGroup, randomEffects
-        )
+            )
         if not self.hasComponentIdForRandomEffect(randomEffectGroup):
             newId = self.getNewComponentId()
             self.generatedComponentIdToRandomEffect[newId] = randomEffectGroup
@@ -714,13 +738,13 @@ class GUIComponents:
             return [
                 html.H6(self.strings("overview", "interaction-effects-added")),
                 html.Ul(id="added-interaction-effects"),
-            ]
+                ]
         return [
             html.H6(
                 html.I(self.strings("overview", "interaction-effects-no-add")),
                 id="added-interaction-effects",
-            )
-        ]
+                )
+            ]
 
     def getRandomEffectsAddedSection(self):
 
@@ -736,9 +760,9 @@ class GUIComponents:
                         " (with random intercept)"
                         if "random intercept" in randomEffect
                         else ""
-                    ),
+                        ),
                     id=titleId,
-                )
+                    )
 
                 if "random slope" in randomEffect:
                     randomSlopes = []
@@ -746,7 +770,7 @@ class GUIComponents:
                         iv = rs["iv"]
                         listItemId = self.randomSlopes[group][iv][
                             "added-id"
-                        ]  # self.getNewComponentId()
+                            ]  # self.getNewComponentId()
                         self.unitsByAddedRandomVariableId[listItemId] = group
                         randomSlopes.append(
                             html.Li(
@@ -757,16 +781,16 @@ class GUIComponents:
                                             " (correlated)",
                                             id=self.getCorrelatedIdForRandomSlope(
                                                 group, iv
-                                            )
+                                                )
                                             + "-span",
-                                        )
-                                    ]
+                                            )
+                                        ]
                                     if "correlated" in randomEffect
                                     else []
-                                ),
+                                    ),
                                 id=listItemId,
+                                )
                             )
-                        )
                         pass
                     if randomEffect["random slope"]:
                         info.append(
@@ -777,40 +801,40 @@ class GUIComponents:
                                         "Random slopes",
                                         id=self.randomEffectsUnitToRandomSlopeAddedId[
                                             group
-                                        ],
-                                    ),
+                                            ],
+                                        ),
                                     html.Ul(randomSlopes),
-                                ],
+                                    ],
                                 id=self.randomIntercepts[group]["group-id"],
+                                )
                             )
-                        )
                         pass
                     else:
                         info.append(
                             html.Li(
                                 [titleElement],
                                 id=self.randomIntercepts[group]["group-id"],
+                                )
                             )
-                        )
                     pass
                 else:
                     info.append(
                         html.Li(
                             titleElement, id=self.randomIntercepts[group]["group-id"]
+                            )
                         )
-                    )
 
             return [
                 html.H5(self.strings("overview", "random-effects-added")),
                 html.Ul(id="added-random-effects"),
                 html.Ul(info),
-            ]
+                ]
         return [
             html.H6(
                 html.I(self.strings("overview", "random-effects-no-add")),
                 id="added-random-effects",
-            )
-        ]
+                )
+            ]
 
     def hasRandomEffects(self):
         if self.getGeneratedRandomEffects():
@@ -832,9 +856,10 @@ class GUIComponents:
                 color="success",
                 id="continue-to-interaction-effects",
                 n_clicks=0,
-            ),
-        ]
-        associativeWarning = self.strings("main-effects", "associative-warning")
+                ),
+            ]
+        associativeWarning = self.strings(
+            "main-effects", "associative-warning")
 
         def getIntermediaryWarning(mainEffect):
             if mainEffect in intermediaries:
@@ -843,17 +868,18 @@ class GUIComponents:
                     dbc.PopoverHeader(
                         dcc.Markdown(
                             associativeWarning["header"].format(var=mainEffect)
-                        )
-                    ),
+                            )
+                        ),
                     dbc.PopoverBody(
                         dcc.Markdown(
                             associativeWarning["body"].format(
                                 var=mainEffect, dv=self.getDependentVariable()
+                                )
                             )
-                        )
-                    ),
-                ]
-                popover = dbc.Popover(popoverContents, target=id, trigger="hover")
+                        ),
+                    ]
+                popover = dbc.Popover(
+                    popoverContents, target=id, trigger="hover")
 
                 return [" ", dbc.Badge("Warning", color="warning", id=id), popover]
             return []
@@ -869,16 +895,16 @@ class GUIComponents:
                                 me + " ",
                                 getInfoBubble(
                                     self.variables["main effects"][me]["info-id"]
-                                ),
-                            ]
+                                    ),
+                                ]
                             + getIntermediaryWarning(me)
-                        )
+                            )
                         for me in self.getGeneratedMainEffects()
-                    },
+                        },
                     self.setComponentIdForMainEffect,
                     {me: me in ivs for me in self.getGeneratedMainEffects()},
-                ),
-            ]
+                    ),
+                ]
         else:
             body = [cardP(html.I(self.strings.getMainEffectsNoPageTitle()))]
         return dbc.Card(dbc.CardBody(body + continueButtonPortion), className="mt-3")
@@ -887,34 +913,35 @@ class GUIComponents:
         interactions = self.getGeneratedInteractionEffects()
         continueButton = dbc.Button(
             "Continue", color="success", id="continue-to-random-effects", n_clicks=0
-        )
+            )
         assert self.hasDefaultExplanation(
             "no-interaction-effects"
-        ), "Could not find interaction effect explanation in defaults: {}".format(
+            ), "Could not find interaction effect explanation in defaults: {}".format(
             self.defaultExplanations
-        )
+            )
         if not interactions:
             # interactions is empty
             return dbc.Card(
                 dbc.CardBody(
                     [
-                        cardP(html.I(self.strings.getInteractionEffectsNoPageTitle())),
+                        cardP(
+                            html.I(self.strings.getInteractionEffectsNoPageTitle())),
                         dcc.Markdown(
                             self.getNoInteractionEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
-                        ),
+                            ),
                         continueButton,
-                    ]
-                ),
+                        ]
+                    ),
                 className="mt-3",
-            )
+                )
         return dbc.Card(
             dbc.CardBody(
                 [
                     cardP(self.strings.getInteractionEffectsPageTitle()),
                     dcc.Markdown(
                         self.defaultExplanations["overall-interaction-effects"]
-                    ),
+                        ),
                     self.layoutFancyChecklist(
                         {
                             me: html.Span(
@@ -924,21 +951,21 @@ class GUIComponents:
                                         className="bi bi-info-circle",
                                         id=self.variables["interaction effects"][me][
                                             "info-id"
-                                        ],
-                                    ),
-                                ]
-                            )
+                                            ],
+                                        ),
+                                    ]
+                                )
                             for me in self.getGeneratedInteractionEffects()
-                        },
+                            },
                         self.setComponentIdForInteractionEffect,
                         {ie: False for ie in interactions},
-                    ),
+                        ),
                     html.P(""),
                     continueButton,
-                ]
-            ),
+                    ]
+                ),
             className="mt-3",
-        )
+            )
 
     def layoutFancyChecklist(self, labelDict, componentIdSetter, checkedDict):
         options = []
@@ -950,16 +977,16 @@ class GUIComponents:
                             id=componentIdSetter(name),
                             className="form-check-input",
                             checked=checkedDict[name],
-                        ),
+                            ),
                         dbc.Label(
                             label,
                             html_for=componentIdSetter(name),
                             className="form-check-label",
-                        ),
-                    ],
+                            ),
+                        ],
                     check=True,
+                    )
                 )
-            )
             pass
         return html.Div(options)
 
@@ -971,29 +998,30 @@ class GUIComponents:
                         id=id,
                         className="form-check-input",
                         checked=checked,
-                    ),
-                    dbc.Label(label, html_for=id, className="form-check-label"),
-                ],
+                        ),
+                    dbc.Label(label, html_for=id,
+                              className="form-check-label"),
+                    ],
                 check=True,
-            )
+                )
         return dbc.FormGroup(
             dbc.Checkbox(
                 id=id,
                 checked=checked,
+                )
             )
-        )
 
     def layoutRandomEffectsTable(self):
         randomEffects = self.getGeneratedRandomEffects()
         hasRandomSlope = any(
             "random slope" in randomEffects[group] for group in randomEffects
-        )
+            )
         hasRandomIntercept = any(
             "random intercept" in randomEffects[group] for group in randomEffects
-        )
+            )
         hasCorrelation = any(
             "correlated" in randomEffects[group] for group in randomEffects
-        )
+            )
         centeredStyle = {"text-align": "center"}
         booleans = [True, hasRandomIntercept, hasRandomSlope, hasCorrelation]
         # These are headers that just need to be wrapped in html.Th
@@ -1004,19 +1032,21 @@ class GUIComponents:
         headers += [html.Th("Correlated", style=centeredStyle)]
         assert len(booleans) == len(
             headers
-        ), "Number of booleans and headers does not match!\nNumber of booleans: {}\nNumber of headers: {}".format(
+            ), "Number of booleans and headers does not match!\nNumber of booleans: {}\nNumber of headers: {}".format(
             len(booleans), len(headers)
-        )
+            )
         # Use the `booleans` list to filter the headers
-        headersLayout = [headers[i] for i in range(len(headers)) if booleans[i]]
+        headersLayout = [headers[i]
+                         for i in range(len(headers)) if booleans[i]]
         tableHeader = [html.Thead(html.Tr(headersLayout))]
 
         tableRows = []
         for group in sorted(list(randomEffects.keys())):
             groupDict = randomEffects[group]
             rowsToSpan = (
-                len(groupDict["random slope"]) if "random slope" in groupDict else 1
-            )
+                len(groupDict["random slope"]
+                    ) if "random slope" in groupDict else 1
+                )
             row = [html.Td(group, rowSpan=rowsToSpan)]
             thisGroupHasCorrelation = "correlated" in groupDict
 
@@ -1025,12 +1055,13 @@ class GUIComponents:
                     html.Td(
                         [
                             "Yes ",
-                            getInfoBubble(self.randomIntercepts[group]["info-id"]),
-                        ],
+                            getInfoBubble(
+                                self.randomIntercepts[group]["info-id"]),
+                            ],
                         rowSpan=rowsToSpan,
                         id=self.randomIntercepts[group]["cell-id"],
+                        )
                     )
-                )
 
             elif hasRandomIntercept:
                 row.append(html.Td(rowSpan=rowsToSpan, className="bg-light"))
@@ -1050,28 +1081,30 @@ class GUIComponents:
                     iv = randomSlopes[0]["iv"]
                     assert (
                         group in self.randomSlopes
-                    ), "Random slopes does not contain {}:\n{}".format(
+                        ), "Random slopes does not contain {}:\n{}".format(
                         group, self.randomSlopes
-                    )
+                        )
                     row.append(
                         html.Td(
                             [
                                 "IV: {} ".format(randomSlopes[0]["iv"]),
-                                getInfoBubble(self.randomSlopes[group][iv]["info-id"]),
-                            ],
+                                getInfoBubble(
+                                    self.randomSlopes[group][iv]["info-id"]),
+                                ],
                             id=self.randomSlopes[group][iv]["cell-id"],
+                            )
                         )
-                    )
                     if thisGroupHasCorrelation:
                         row.append(
                             html.Td(
                                 self.makeFancyCheckbox(
-                                    id=self.getCorrelatedIdForRandomSlope(group, iv),
+                                    id=self.getCorrelatedIdForRandomSlope(
+                                        group, iv),
                                     checked=True,
-                                ),
+                                    ),
                                 style=centeredStyle,
+                                )
                             )
-                        )
                         pass
                     elif hasCorrelation:
                         row.append(html.Td(className="bg-light"))
@@ -1095,19 +1128,19 @@ class GUIComponents:
                                         self.makeFancyCheckbox(
                                             id=self.getCorrelatedIdForRandomSlope(
                                                 group, iv
-                                            ),
+                                                ),
                                             checked=True,
-                                        ),
+                                            ),
                                         style=centeredStyle,
-                                    )
-                                ]
+                                        )
+                                    ]
                                 if hasCorrelation and thisGroupHasCorrelation
                                 else (
                                     [html.Td(className="bg-light")]
                                     if hasCorrelation
                                     else []
+                                    )
                                 )
-                            )
                             tableRows.append(
                                 html.Tr(
                                     [
@@ -1117,16 +1150,16 @@ class GUIComponents:
                                                 getInfoBubble(
                                                     self.randomSlopes[group][iv][
                                                         "info-id"
-                                                    ]
-                                                ),
-                                            ],
+                                                        ]
+                                                    ),
+                                                ],
                                             id=self.randomSlopes[group][iv]["cell-id"],
-                                        )
-                                    ]
+                                            )
+                                        ]
                                     + correlationCheckbox,
                                     id=rowId,
+                                    )
                                 )
-                            )
                             self.rowIdsByUnit[group].append(rowId)
                             self.unitsByRowId[rowId] = group
                             pass
@@ -1150,16 +1183,16 @@ class GUIComponents:
     def getRandomEffectsCard(self):
         assert self.hasDefaultExplanation(
             "no-random-effects"
-        ), "Could not find default explanation for no random effects: {}".format(
+            ), "Could not find default explanation for no random effects: {}".format(
             self.defaultExplanations
-        )
+            )
         randomeffects = self.getGeneratedRandomEffects()
         continueButton = dbc.Button(
             "Continue",
             color="success",
             id="continue-to-family-link-functions",
             n_clicks=0,
-        )
+            )
         if not randomeffects:
             return dbc.Card(
                 dbc.CardBody(
@@ -1168,24 +1201,26 @@ class GUIComponents:
                         html.P(
                             self.getNoRandomEffectsExplanation()
                             or "Placeholder text for where an explanation would go"
-                        ),
+                            ),
                         continueButton,
-                    ]
-                ),
+                        ]
+                    ),
                 className="mt-3",
-            )
+                )
         return dbc.Card(
             dbc.CardBody(
                 [
                     cardP(self.strings.getRandomEffectsPageTitle()),
-                    dcc.Markdown(self.defaultExplanations["overall-random-effects"]),
+                    dcc.Markdown(
+                        self.defaultExplanations["overall-random-effects"]),
                     self.layoutRandomEffectsTable(),
-                    dcc.Markdown(id="random-effects-not-available-explanation"),
+                    dcc.Markdown(
+                        id="random-effects-not-available-explanation"),
                     continueButton,
-                ]
-            ),
+                    ]
+                ),
             className="mt-3",
-        )
+            )
 
     def isDVDataAllNonNegativeIntegers(self):
         if self.hasData():
@@ -1199,16 +1234,167 @@ class GUIComponents:
             return allIntegers
         return None
 
-    def make_family_link_options(self):
-        family_options = list()
+    def shouldEnableTypesOfDataControls(self):
+        typesOfData = self.getTypesOfData()
+        return typesOfData and "question" in typesOfData and "answers" in typesOfData and isinstance(typesOfData["answers"], dict)
 
+    def shouldEnableFollowUp(self):
+        typesOfData = self.getTypesOfData()
+        return typesOfData and isinstance(typesOfData, dict) and "answers" in typesOfData and any(isinstance(v, dict) and "follow-up" in v for _, v in typesOfData["answers"].items())
+
+
+
+
+    def addTypesOfDataControls(self, forms):
+        typesOfData = self.getTypesOfData()
+
+        assert "answers" in typesOfData, f"Could not find key \"answers\" in {typesOfData}"
+
+        continuousType = "treat as continuous"
+        countsType = "treat as counts"
+        categoriesType = "treat as categories"
+
+        typesToDisplayTypes = {
+            "continuous": "Continuous",
+            "treat as counts": "Counts",
+            "treat as categories": "Categories"
+        }
+
+        def typeOfDataControls(types):
+            # print(options)
+            return dbc.FormGroup(
+                [
+                    dbc.Label(
+                        typesOfData["question"]),
+                    dcc.Dropdown(
+                        id="question-options",
+                        options=[{"disabled": False,
+                                  "label": v,
+                                  "value": k} for k, v in types.items()],
+                        value="",
+                        optionHeight=45,
+                        ),
+                    ]
+                )
+        if self.shouldEnableTypesOfDataControls():
+            forms.append(
+                typeOfDataControls(
+                    {k: self.strings("types-of-data", "display-types", k) for k in typesOfData["answers"]}))
+            forms.append(dcc.Store(
+                id="uses-types-of-data",
+                data=True
+            ))
+
+            print("Should enable follow-up and has level 1 follow-up: {}, {}".format(self.shouldEnableFollowUp(), _hasLevelNFollowUp(typesOfData, 1)))
+
+            if self.shouldEnableFollowUp():
+                followUp = dbc.FormGroup(
+                    [
+                        dbc.Label(self.strings("types-of-data", "follow-ups", "default"), id="follow-up-label"),
+                        dcc.Dropdown(
+                            id="follow-up-options",
+                            options=[],
+                            disabled=True,
+                            value="",
+                            optionHeight=45,
+                        )
+                    ]
+                )
+                followUpLabelStore1 = dcc.Store(
+                    id="follow-up-label-store-1",
+                    data=self.strings("types-of-data", "follow-ups", "default")
+                )
+                followUpLabelStore2 = dcc.Store(
+                    id="follow-up-label-store-2",
+                    data=self.strings("types-of-data", "follow-ups", "default")
+                )
+                forms.append(followUp)
+                forms.append(followUpLabelStore1)
+                forms.append(followUpLabelStore2)
+                pass
+            followUp2 = dbc.FormGroup(
+                [
+                    dbc.Label("",
+                              id="follow-up-label-1"),
+                    dcc.Dropdown(
+                        id="follow-up-options-1",
+                        options=[],
+                        value="",
+                        optionHeight=45
+                    )
+                ]
+            )
+            followUpDiv = html.Div(followUp2,
+                                   hidden=True,
+                                   id="follow-up-1-div")
+            forms.append(followUpDiv)
+
+            familyOptionsStores = []
+            familyOptionsStores.append(
+                dcc.Store(
+                    id="family-options-store-1",
+                    data={}
+                )
+            )
+            familyOptionsStores.append(
+                dcc.Store(
+                    id="family-options-store-2",
+                    data={}
+                )
+            )
+
+            forms.extend(familyOptionsStores)
+
+            pass
+        else:
+            forms.append(dcc.Store(
+                id="uses-types-of-data",
+                data=False
+            ))
+            pass
+        pass
+
+
+    def createFamilyOptionsFromValues(self, vals):
+        family_options = []
         fls = self.getFamilyLinkFunctions().copy()
         isAllIntegers = self.isDVDataAllNonNegativeIntegers()
         removePoisson = (
             "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
             and "PoissonFamily" in fls
             and isAllIntegers
-        )
+            )
+        # link_options =
+        if removePoisson:
+            fls.pop("PoissonFamily")
+            # dvData = self.dataDf[self.dv]
+            # allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
+            # if not allIntegers:
+            #     dvData = dvData.astype(float)
+            #     allIntegers = dvData.apply(float.is_integer).all()
+            #     if not allIntegers:
+            #         fls.pop("PoissonFamily")
+            pass
+        for f in vals:
+            label = " ".join(separateByUpperCamelCase(f)[:-1])
+
+            family_options.append(
+                {"label": label, "value": f, "disabled": f not in fls}
+                )
+            pass
+        return family_options
+
+
+
+    def filterFamilyLinkOptions(self):
+        family_options = []
+        fls = self.getFamilyLinkFunctions().copy()
+        isAllIntegers = self.isDVDataAllNonNegativeIntegers()
+        removePoisson = (
+            "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
+            and "PoissonFamily" in fls
+            and isAllIntegers
+            )
         # link_options =
         if removePoisson:
             fls.pop("PoissonFamily")
@@ -1221,54 +1407,89 @@ class GUIComponents:
             #         fls.pop("PoissonFamily")
             pass
 
+        if not self.shouldEnableTypesOfDataControls():
+            for f in self.getGeneratedFamilyLinkFunctions():
+                label = " ".join(separateByUpperCamelCase(f)[:-1])
+
+                family_options.append(
+                    {"label": label, "value": f, "disabled": f not in fls}
+                    )
+                pass
+            pass
+
+        return dbc.FormGroup(
+            [
+                dbc.Label(
+                    ["Family ", getInfoBubble("family-label-info")]),
+                dcc.Dropdown(
+                    id="family-options",
+                    options=family_options,
+                    value="",
+                    optionHeight=45,
+                    disabled=self.shouldEnableTypesOfDataControls()
+                    ),
+                ]
+            )
+
+    def make_family_link_options(self):
+        family_options = list()
+        forms = []
+
+        self.addTypesOfDataControls(forms)
+
+
+        fls = self.getFamilyLinkFunctions().copy()
+        isAllIntegers = self.isDVDataAllNonNegativeIntegers()
+        removePoisson = (
+            "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
+            and "PoissonFamily" in fls
+            and isAllIntegers
+            )
+        # link_options =
+        if removePoisson:
+            fls.pop("PoissonFamily")
+            pass
+
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
 
             family_options.append(
                 {"label": label, "value": f, "disabled": f not in fls}
-            )
+                )
             pass
 
         linkExplanation = self.getDefaultExplanation("link-functions")
         familyExplanation = self.getDefaultExplanation("distribution-families")
 
+        forms.append(self.filterFamilyLinkOptions())
+
         controls = dbc.Card(
-            [
-                dbc.FormGroup(
-                    [
-                        dbc.Label(["Family ", getInfoBubble("family-label-info")]),
-                        dcc.Dropdown(
-                            id="family-options",
-                            options=family_options,
-                            value="",
-                            optionHeight=45,
-                        ),
-                    ]
-                ),
+            forms + [
                 dbc.FormGroup(
                     [
                         dbc.Label(
                             [
                                 "Link function ",
                                 getInfoBubble("link-function-label-info"),
-                            ]
-                        ),
+                                ]
+                            ),
                         dcc.Dropdown(
                             id="link-options",
                             options=[],
                             value="",
                             optionHeight=45,
-                        ),
-                    ]
-                ),
+                            disabled=True,
+                            ),
+                        ]
+                    ),
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(linkExplanation["header"]),
                         dbc.PopoverBody(dcc.Markdown(linkExplanation["body"])),
-                    ],
+                        ],
                     target="link-function-label-info",
                     trigger="hover",
-                ),
+                    ),
                 dbc.Popover(
                     [
                         dbc.PopoverHeader(familyExplanation["header"]),
@@ -1280,18 +1501,18 @@ class GUIComponents:
                                     (familyExplanation["no-poisson"] + "\n")
                                     if removePoisson
                                     else ""
-                                )
+                                    )
                                 + familyExplanation["missing-families-note"]
-                            )
-                        ),
-                    ],
+                                )
+                            ),
+                        ],
                     target="family-label-info",
                     trigger="hover",
-                ),
-            ],
+                    ),
+                ],
             body=True,
             id={"type": "family_link_options", "index": "family_link_options"},
-        )
+            )
 
         return controls
 
@@ -1300,8 +1521,9 @@ class GUIComponents:
         fig = go.Figure()
         if self.hasData():
             fig.add_trace(
-                go.Histogram(x=self.dataDf[self.dv], name=f"{self.dv}", showlegend=True)
-            )
+                go.Histogram(x=self.dataDf[self.dv],
+                             name=f"{self.dv}", showlegend=True)
+                )
         if family:
             key = f"{family}_data"
 
@@ -1317,7 +1539,7 @@ class GUIComponents:
                         dataMean=dvData.mean(),
                         dataStdDev=dvData.std(),
                         dataSize=dvData.count(),
-                    )
+                        )
                     pass
                 else:
                     family_data = simulate_data_dist(family)
@@ -1330,15 +1552,15 @@ class GUIComponents:
                     x=family_data,
                     name=f"Simulated {family} distribution.",
                     showlegend=True,
+                    )
                 )
-            )
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
             legend=dict(
                 orientation="h", yanchor="bottom", y=1.09, xanchor="left", x=-0.1
+                )
             )
-        )
         fig.update_layout(margin=dict(b=25, l=25, r=25, t=25))
         fig.update_layout(autosize=True)
         fig.update_layout(height=400)
@@ -1351,19 +1573,21 @@ class GUIComponents:
                 [
                     html.I("No Normality Tests "),
                     getInfoBubble("no-normality-tests-info"),
-                ]
-            ),
+                    ]
+                ),
             dbc.Popover(
                 [
                     dbc.PopoverHeader("Why?"),
-                    dbc.PopoverBody("No data included to run the normality tests."),
-                ],
+                    dbc.PopoverBody(
+                        "No data included to run the normality tests."),
+                    ],
                 target="no-normality-tests-info",
                 trigger="hover",
-            ),
-        ]
+                ),
+            ]
         if self.hasData():
-            normalityTestExplanation = self.getDefaultExplanation("normality-tests")
+            normalityTestExplanation = self.getDefaultExplanation(
+                "normality-tests")
             dvData = self.dataDf[self.dv].dropna()
             shapiroStat, shapiroPvalue = stats.shapiro(dvData.values)
             normaltestStat, normaltestPvalue = stats.normaltest(dvData.values)
@@ -1372,27 +1596,27 @@ class GUIComponents:
                 html.A(
                     "Shapiro-Wilk Test",
                     href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.shapiro.html",
-                ),
+                    ),
                 colSpan=2,
-            )
+                )
             dagostinoAndPearsonsHeader = html.Th(
                 html.A(
                     "D'Agostino and Pearson's Test",
                     href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.normaltest.html",
-                ),
+                    ),
                 colSpan=2,
-            )
+                )
             testHeader = [
                 html.Th("Test Statistic"),
                 html.Th("P-Value"),
-            ]
+                ]
 
             tableHeader = html.Thead(
                 [
                     html.Tr([shapiroHeader, dagostinoAndPearsonsHeader]),
                     html.Tr(testHeader + testHeader),
-                ]
-            )
+                    ]
+                )
             tableBody = html.Tbody(
                 [
                     html.Tr(
@@ -1401,19 +1625,19 @@ class GUIComponents:
                             html.Td(
                                 "{:.5e}{}".format(
                                     shapiroPvalue, "*" if shapiroPvalue < 0.05 else ""
-                                )
-                            ),
+                                    )
+                                ),
                             html.Td("{:.5e}".format(normaltestStat)),
                             html.Td(
                                 "{:.5e}{}".format(
                                     normaltestPvalue,
                                     "*" if normaltestPvalue < 0.05 else "",
-                                )
-                            ),
-                        ]
-                    )
-                ]
-            )
+                                    )
+                                ),
+                            ]
+                        )
+                    ]
+                )
             normalityTestPortion = [
                 html.H5(["Normality Tests"]),
                 dbc.Row([dbc.Col(dbc.Table([tableHeader, tableBody]))]),
@@ -1428,7 +1652,7 @@ class GUIComponents:
                 #     target="normality-tests-info",
                 #     trigger="hover",
                 # ),
-            ]
+                ]
             pass
         return normalityTestPortion
 
@@ -1441,7 +1665,7 @@ class GUIComponents:
             figure=fig,
             config={"responsive": True},
             style={"height": "inherit"},
-        )
+            )
         return family_link_chart
 
     def getFamilyLinkFunctionsCard(self):
@@ -1454,11 +1678,11 @@ class GUIComponents:
                 dcc.Markdown(
                     self.strings(
                         "family-link-functions", "titles", "page-sub-title"
-                    ).format(self.getDependentVariable())
-                ),
-                dcc.Markdown(familyExplanation["caution"]),
-            ]
-        )
+                        ).format(self.getDependentVariable())
+                    ),
+                # dcc.Markdown(familyExplanation["caution"]),
+                ]
+            )
 
         fig = self.createFigure("GaussianFamily")
 
@@ -1469,9 +1693,9 @@ class GUIComponents:
                 figure=fig,
                 config={"responsive": True},
                 style={"height": "inherit"},
-            ),
+                ),
             id="family-link-chart-div",
-        )
+            )
         family_link_controls = self.make_family_link_options()
 
         normalityTestPortion = self.createNormalityTestSection()
@@ -1483,13 +1707,13 @@ class GUIComponents:
                     family_link_title,
                     dbc.Row(
                         [
-                            dbc.Col(family_link_chart, sm=6, md=7, lg=8),
+                            # dbc.Col(family_link_chart, sm=6, md=7, lg=8),
                             dbc.Col(family_link_controls, sm=6, md=5, lg=4),
-                        ],
+                            ],
                         align="center",
                         no_gutters=True,
-                    ),
-                ]
+                        ),
+                    ]
                 + normalityTestPortion
                 + [
                     html.Span(
@@ -1499,21 +1723,21 @@ class GUIComponents:
                             id="generate-code",
                             disabled=True,
                             style={"pointer-events": "none"},
-                        ),
+                            ),
                         id="generate-code-button-div",
                         tabIndex="0",
                         className="d-inline-block",
-                    ),
+                        ),
                     html.Div(id="generated-code-div", hidden=True),
                     dbc.Tooltip(
                         "You still need to choose family and link functions before you can generate code.",
                         target="generate-code-button-div",
                         id="generate-code-tooltip",
-                    ),
-                ]
-            ),
+                        ),
+                    ]
+                ),
             className="mt-3",
-        )
+            )
 
         ##### Return div
         return family_and_link_div
@@ -1526,38 +1750,39 @@ class GUIComponents:
         popovers = []
         for me in mainEffects:
             if (
-                me in explanations
-                and me in self.variables["main effects"]
-                and "info-id" in self.variables["main effects"][me]
-            ):
+                    me in explanations
+                    and me in self.variables["main effects"]
+                    and "info-id" in self.variables["main effects"][me]
+                    ):
                 popovers.append(
                     dbc.Popover(
                         [
                             dbc.PopoverHeader("Main Effect: {}".format(me)),
                             dbc.PopoverBody(explanations[me]),
-                        ],
+                            ],
                         target=self.variables["main effects"][me]["info-id"],
                         trigger="hover",
+                        )
                     )
-                )
                 pass
             pass
         for ie in interactionEffects:
             if (
-                ie in explanations
-                and ie in self.variables["interaction effects"]
-                and "info-id" in self.variables["interaction effects"][ie]
-            ):
+                    ie in explanations
+                    and ie in self.variables["interaction effects"]
+                    and "info-id" in self.variables["interaction effects"][ie]
+                    ):
                 popovers.append(
                     dbc.Popover(
                         [
-                            dbc.PopoverHeader("Interaction Effect: {}".format(ie)),
+                            dbc.PopoverHeader(
+                                "Interaction Effect: {}".format(ie)),
                             dbc.PopoverBody(explanations[ie]),
-                        ],
+                            ],
                         target=self.variables["interaction effects"][ie]["info-id"],
                         trigger="hover",
+                        )
                     )
-                )
                 pass
             pass
         for group, data in self.randomIntercepts.items():
@@ -1566,15 +1791,17 @@ class GUIComponents:
                 popovers.append(
                     dbc.Popover(
                         [
-                            dbc.PopoverHeader("Random Intercept: {}".format(group)),
+                            dbc.PopoverHeader(
+                                "Random Intercept: {}".format(group)),
                             dbc.PopoverBody(
-                                html.Ul([html.Li(expl) for expl in explanations[key]])
-                            ),
-                        ],
+                                html.Ul([html.Li(expl)
+                                         for expl in explanations[key]])
+                                ),
+                            ],
                         target=data["info-id"],
                         trigger="hover",
+                        )
                     )
-                )
                 pass
             pass
         for group, rsData in self.randomSlopes.items():
@@ -1584,23 +1811,26 @@ class GUIComponents:
                     popovers.append(
                         dbc.Popover(
                             [
-                                dbc.PopoverHeader("Random Slope: {}".format(iv)),
+                                dbc.PopoverHeader(
+                                    "Random Slope: {}".format(iv)),
                                 dbc.PopoverBody(
                                     html.Ul(
-                                        [html.Li(expl) for expl in explanations[key]]
-                                    )
-                                ),
-                            ],
+                                        [html.Li(expl)
+                                         for expl in explanations[key]]
+                                        )
+                                    ),
+                                ],
                             target=ivData["info-id"],
                             trigger="hover",
+                            )
                         )
-                    )
         return popovers
 
     def createCodeGenerationModal(self):
         modal = dbc.Modal(
             [
-                dbc.ModalHeader("Code Generated!", id="code-generated-modal-header"),
+                dbc.ModalHeader("Code Generated!",
+                                id="code-generated-modal-header"),
                 dbc.ModalBody("Placeholder", id="code-generated-modal-body"),
                 dbc.ModalFooter(
                     dbc.Button(
@@ -1608,11 +1838,11 @@ class GUIComponents:
                         id="close-code-generated-modal",
                         className="ml-auto",
                         n_clicks=0,
-                    )
-                ),
-            ],
+                        )
+                    ),
+                ],
             id="code-generated-modal",
             is_open=False,
-        )
+            )
         store = dcc.Store(id="modal-data-store")
         return [modal, store]
