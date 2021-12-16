@@ -41,8 +41,8 @@
   "family-link-functions": {
     "titles": {
       "tab": "Data Distributions",
-      "page": "Choose a data distribution: family and link functions.",
-      "page-sub-title": "_Which distribution best matches your dependent variable `{}`'s distribution?_"
+      "page": "Choose a distribution of the errors: family and link functions.",
+      "page-sub-title": "_Your dependent variable `{}` has a `{}` data type. Tell us more about the distribution of the variable, which Tisane will use to narrow down the options for family and link functions._"
     },
     "headers": {
     }

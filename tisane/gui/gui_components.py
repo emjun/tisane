@@ -1,4 +1,4 @@
-from tisane.gui.gui_helpers import simulate_data_dist
+from tisane.gui.gui_helpers import simulate_data_dist, onlyAllowSupportedFamilyDistributions
 import json
 import os
 import logging
@@ -77,6 +77,8 @@ class GUIComponents:
             pass
         else:
             self.defaultExplanations = {}
+
+        self.alteredInputDataTypes = None
         self.numGeneratedComponentIds = 0
         self.codeGenerator = generateCode
         self.generatedComponentIdToRandomEffect = {}
@@ -220,8 +222,15 @@ class GUIComponents:
         pass
 
     def getTypesOfData(self):
-        if "types of data" in self.data["input"]:
-            return self.data["input"]["types of data"]
+        if "types of data" in self.data["input"] and self.alteredInputDataTypes is None:
+            print("Supported family and link functions: {}".format(self.getFamilyLinkFunctions()))
+            print("Types of data: {}".format(self.data["input"]["types of data"]))
+            self.alteredInputDataTypes = onlyAllowSupportedFamilyDistributions(self.getFamilyLinkFunctions(), self.data["input"]["types of data"])
+            print("Altered data: {}".format(self.alteredInputDataTypes))
+            pass
+        assert self.alteredInputDataTypes is not None
+        return self.alteredInputDataTypes
+
 
     def _init_helper(self):
         # Additional initialization code
@@ -1342,6 +1351,12 @@ class GUIComponents:
                     data={}
                 )
             )
+            familyOptionsStores.append(
+                dcc.Store(
+                    id="family-options-store-3",
+                    data={}
+                )
+            )
 
             forms.extend(familyOptionsStores)
 
@@ -1524,36 +1539,36 @@ class GUIComponents:
                 go.Histogram(x=self.dataDf[self.dv],
                              name=f"{self.dv}", showlegend=True)
                 )
-        if family:
-            key = f"{family}_data"
-
-            if key in self.simulatedData:
-                family_data = self.simulatedData[key]
-            else:
-                # Do we need to generate data?
-                if self.hasData():
-                    # dvData = np.log(self.dataDf[self.dv])
-                    dvData = self.dataDf[self.dv]
-                    family_data = simulate_data_dist(
-                        family,
-                        dataMean=dvData.mean(),
-                        dataStdDev=dvData.std(),
-                        dataSize=dvData.count(),
-                        )
-                    pass
-                else:
-                    family_data = simulate_data_dist(family)
-                    pass
-                self.simulatedData[key] = family_data
-                pass
-
-            fig.add_trace(
-                go.Histogram(
-                    x=family_data,
-                    name=f"Simulated {family} distribution.",
-                    showlegend=True,
-                    )
-                )
+        # if family:
+        #     key = f"{family}_data"
+        #
+        #     if key in self.simulatedData:
+        #         family_data = self.simulatedData[key]
+        #     else:
+        #         # Do we need to generate data?
+        #         if self.hasData():
+        #             # dvData = np.log(self.dataDf[self.dv])
+        #             dvData = self.dataDf[self.dv]
+        #             family_data = simulate_data_dist(
+        #                 family,
+        #                 dataMean=dvData.mean(),
+        #                 dataStdDev=dvData.std(),
+        #                 dataSize=dvData.count(),
+        #                 )
+        #             pass
+        #         else:
+        #             family_data = simulate_data_dist(family)
+        #             pass
+        #         self.simulatedData[key] = family_data
+        #         pass
+        #
+        #     fig.add_trace(
+        #         go.Histogram(
+        #             x=family_data,
+        #             name=f"Simulated {family} distribution.",
+        #             showlegend=True,
+        #             )
+        #         )
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
@@ -1668,6 +1683,14 @@ class GUIComponents:
             )
         return family_link_chart
 
+    def getDependentVariableType(self):
+        dataInput = self.data["input"]
+        typeKey = "dv type"
+        assert typeKey in dataInput, f"Could not find type key {typeKey} in data input {dataInput}"
+        return dataInput[typeKey]
+
+
+
     def getFamilyLinkFunctionsCard(self):
         ##### Collect all elements
         # Create family and link title
@@ -1678,7 +1701,7 @@ class GUIComponents:
                 dcc.Markdown(
                     self.strings(
                         "family-link-functions", "titles", "page-sub-title"
-                        ).format(self.getDependentVariable())
+                        ).format(self.getDependentVariable(), self.getDependentVariableType())
                     ),
                 # dcc.Markdown(familyExplanation["caution"]),
                 ]
@@ -1707,14 +1730,14 @@ class GUIComponents:
                     family_link_title,
                     dbc.Row(
                         [
-                            # dbc.Col(family_link_chart, sm=6, md=7, lg=8),
+                            dbc.Col(family_link_chart, sm=6, md=7, lg=8),
                             dbc.Col(family_link_controls, sm=6, md=5, lg=4),
                             ],
                         align="center",
                         no_gutters=True,
                         ),
                     ]
-                + normalityTestPortion
+                # + normalityTestPortion
                 + [
                     html.Span(
                         dbc.Button(
