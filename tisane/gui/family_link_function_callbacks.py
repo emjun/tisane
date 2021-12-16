@@ -54,7 +54,7 @@ def createQuestionCallback(app, comp: GUIComponents = None):
 
     def questionWithFollowUpCallback(questionDropdownValue, followUpLabel):
         if not questionDropdownValue:
-            return ([], True, followUpLabel, {})
+            return ([], True, followUpLabel, {"options": [], "disabled": True, "value": ""}, True)
         assert comp is not None, "comp none in createQuestionCallback"
         typesOfData = comp.getTypesOfData()
         assert typesOfData is not None
@@ -75,7 +75,7 @@ def createQuestionCallback(app, comp: GUIComponents = None):
                 "value": familyValue
             }
             return (
-                [], True, followUpLabel, family
+                [], True, followUpLabel, family, True
             )
         assertHasKey("follow-up", typesOfData["answers"][questionDropdownValue])
         followUps = typesOfData["answers"][questionDropdownValue]["follow-up"]
@@ -91,7 +91,7 @@ def createQuestionCallback(app, comp: GUIComponents = None):
         return (followUpOptions,
                 False,
                 followUpTitle + " ",
-                {})
+                {}, False)
 
     def followUpCallback(followUpQuestionValue, questionValue, followUpLabel):
         assert comp is not None, "comp none in createQuestionCallback"
@@ -268,6 +268,7 @@ def createQuestionCallback(app, comp: GUIComponents = None):
                 Output("follow-up-options", "disabled"),
                 Output("follow-up-label-store-1", "data"),
                 Output("family-options-store-3", "data"),
+                Output("follow-up-div", "hidden"),
                 Input("question-options", "value"),
                 State("follow-up-label", "children")
                 )(questionWithFollowUpCallback)

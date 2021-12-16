@@ -1259,16 +1259,6 @@ class GUIComponents:
 
         assert "answers" in typesOfData, f"Could not find key \"answers\" in {typesOfData}"
 
-        continuousType = "treat as continuous"
-        countsType = "treat as counts"
-        categoriesType = "treat as categories"
-
-        typesToDisplayTypes = {
-            "continuous": "Continuous",
-            "treat as counts": "Counts",
-            "treat as categories": "Categories"
-        }
-
         def typeOfDataControls(types):
             # print(options)
             return dbc.FormGroup(
@@ -1308,6 +1298,11 @@ class GUIComponents:
                             optionHeight=45,
                         )
                     ]
+                )
+                followUp = html.Div(
+                    followUp,
+                    id="follow-up-div",
+                    hidden=True
                 )
                 followUpLabelStore1 = dcc.Store(
                     id="follow-up-label-store-1",
