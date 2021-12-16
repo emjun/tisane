@@ -7,7 +7,7 @@ import statsmodels.formula.api as smf
 import matplotlib.pyplot as plt # for visualizing residual plots to diagnose model fit
 
 # --- (BOBA_CONFIG)
-{"decisions": [{"options": [[], ["Time"]], "var": "main_effects"}, {"options": [[]], "var": "interaction_effects"}, {"options": [[]], "var": "random_effects"}, {"options": [["Gamma", "log()"], ["Gamma", "inverse_power()"], ["Gamma", "identity()"], ["Gaussian", "logit()"], ["Gaussian", "inverse_power()"], ["Gaussian", "probit()"], ["Gaussian", "Power()"], ["Gaussian", "identity()"], ["Gaussian", "log()"], ["Gaussian", "NegativeBinomial()"], ["Gaussian", "cloglog()"], ["InverseGaussian", "log()"], ["InverseGaussian", "inverse_power()"], ["InverseGaussian", "inverse_squared()"], ["InverseGaussian", "identity()"], ["Poisson", "Power(power=.5)"], ["Poisson", "log()"], ["Poisson", "identity()"], ["Tweedie", "Power()"], ["Tweedie", "log()"]], "var": "family, link pairs"}], "graph": []}
+{"decisions": [{"options": ["Weight"], "var": "dependent_variable"}, {"options": [[], ["Time"]], "var": "main_effects"}, {"options": [[]], "var": "interaction_effects"}, {"options": [[]], "var": "random_effects"}, {"options": [["Gamma", "log()"], ["Gamma", "inverse_power()"], ["Gamma", "identity()"], ["Gaussian", "logit()"], ["Gaussian", "inverse_power()"], ["Gaussian", "probit()"], ["Gaussian", "Power()"], ["Gaussian", "identity()"], ["Gaussian", "log()"], ["Gaussian", "NegativeBinomial()"], ["Gaussian", "cloglog()"], ["InverseGaussian", "log()"], ["InverseGaussian", "inverse_power()"], ["InverseGaussian", "inverse_squared()"], ["InverseGaussian", "identity()"], ["Poisson", "Power(power=.5)"], ["Poisson", "log()"], ["Poisson", "identity()"], ["Tweedie", "Power()"], ["Tweedie", "log()"]], "var": "family_link_pair"}], "graph": []}
 # --- (END)
  
 def fit_model(): 
@@ -23,13 +23,12 @@ def fit_model():
     dv_formula = "{{dependent_variable}} ~ "
     formula = dv_formula + ivs_formula
 
-    model = smf.glm(formula=formula, data=df, family=sm.families.{family}(sm.families.links.{link}))
+    family = {{family_link_pair}}[0]
+    link = {{family_link_pair}}[1]
+    eval(f"model = smf.glm(formula=formula, data=df, family=sm.families.{family}(sm.families.links.{link}))")
     res = model.fit()
     print(res.summary())
     return model
-
-    family = {{family_link_pair}}[0]
-    link = {{family_link_pair}}[1]
 
 
 # What should you look for in the plot? 

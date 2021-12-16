@@ -39,8 +39,6 @@ class TestDriver(unittest.TestCase):
         ## Specify and execute query
         design = ts.Design(dv=weight, ivs=[week]).assign_data(df)
 
-        # ts.infer_statistical_model_from_design(design=design)
-
         ts.infer_all_models(design=design)
 
 

@@ -571,7 +571,6 @@ def infer_all_statistical_models_from_design(design: Design, jupyter: bool = Fal
         has_random_effects = True
         
     # Generate the dicitonary representing the multiverse
-    # decisions_file = "decisions.json"
     decisions = generate_multiverse_decisions(combined_dict)
 
     # Output data somewhere to read in from template.py

@@ -54,6 +54,13 @@ def write_to_path(code: str, output_path: os.PathLike):
     print("Writing out path")
     return output_path
 
+def extract_dependent_variable(combined_dict: Dict[str, Any]) -> List[str]: 
+    input = combined_dict["input"]
+    query = input["query"]
+    dv = query["DV"]
+    
+    return [dv]
+
 def construct_all_main_options(combined_dict: Dict[str, Any]) -> List[str]:
     input = combined_dict["input"]
     main_effects = input["generated main effects"]
@@ -99,6 +106,12 @@ def construct_all_family_link_options(combined_dict: Dict[str, Any], has_random_
 
 def generate_multiverse_decisions(combined_dict: Dict[str, Any]) -> Dict[str, Any]: 
     # Generate formulae decisions modularly
+    # Add dependent variable 
+    dv_options = extract_dependent_variable(combined_dict=combined_dict)
+    dv_dict = dict()
+    dv_dict["var"] = "dependent_variable"
+    dv_dict["options"] = dv_options
+
     # Construct main options
     main_options = construct_all_main_options(combined_dict=combined_dict)
     main_dict = dict() 
@@ -120,13 +133,14 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any]) -> Dict[str, An
     # Construct family and link pair decisions
     family_link_options = construct_all_family_link_options(combined_dict)
     family_link_dict = dict() 
-    family_link_dict["var"] = "family, link pairs" 
+    family_link_dict["var"] = "family_link_pair" 
     family_link_dict["options"] = family_link_options
 
     # Combine all the decisions
     decisions_dict = dict()
     decisions_dict["graph"] = list()
     decisions_dict["decisions"] = list()
+    decisions_dict["decisions"].append(dv_dict)
     decisions_dict["decisions"].append(main_dict)
     decisions_dict["decisions"].append(interaction_dict)
     decisions_dict["decisions"].append(random_dict)
@@ -136,13 +150,13 @@ def generate_multiverse_decisions(combined_dict: Dict[str, Any]) -> Dict[str, An
 
     return decisions_dict
     
-def generate_multiverse_decisions_to_json(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> os.PathLike: 
-    decisions_dict = generate_multiverse_decisions(combined_dict=combined_dict, decisions_path=decisions_path, decisions_file=decisions_file)
+# def generate_multiverse_decisions_to_json(combined_dict: Dict[str, Any], decisions_path: os.PathLike, decisions_file: os.PathLike) -> os.PathLike: 
+#     decisions_dict = generate_multiverse_decisions(combined_dict=combined_dict, decisions_path=decisions_path, decisions_file=decisions_file)
 
-    # Write out JSON
-    path = write_to_json(data=decisions_dict, output_path=decisions_path, output_filename=decisions_file)
+#     # Write out JSON
+#     path = write_to_json(data=decisions_dict, output_path=decisions_path, output_filename=decisions_file)
     
-    return path 
+#     return path 
 
 # @param template_file is the output file where the code will be output
 def generate_template_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None], target: str = "PYTHON", has_random_effects: bool = False):
@@ -225,11 +239,7 @@ def generate_boba_config_from_decisions(decisions: Dict[str, Any]) -> str:
         + boba_config_end
     )
 
-### Generate Boba config with decisions from decisions_path file 
-    # [x] 1. Update so that templates contain boba config 
-    # 2. Run boba with template ...    
-    # boba_config = generate_boba_config_from_decisions(decisions=decisions)
-
+# @returns template code with Boba cnofig, modeling, and plotting residuals
 def generate_template_statsmodels_code(template_path: os.PathLike, decisions: Dict[str, Any], data_path: Union[os.PathLike, None]):
     global statsmodels_code_templates
 
@@ -277,16 +287,31 @@ def generate_template_statsmodels_code(template_path: os.PathLike, decisions: Di
         + main_function
     )
 
+# Add "eval" wrapper to execute model as a function while using Boba multiverse
+def wrap_model_template(model_template: str) -> str: 
+    wrapped_code = (
+        "    " # for within-method spacing
+        + "eval(f\"" 
+        + model_template.strip()
+        + "\")")
+
+    return wrapped_code
 
 def generate_template_pymer4_model(): 
     global pymer4_code_templates, formula_generation_code, family_link_specification_code
 
     formula_code = "formula"
-    family_code = "{family}"
+    family_code = "{family}" 
     
-    model_code = formula_generation_code + pymer4_code_templates["model_template"].format(
-        formula=formula_code, family_name=family_code
-    ) + family_link_specification_code
+    model_code = (
+    formula_generation_code 
+    + family_link_specification_code 
+    + "\n" # for nice formatting
+    + wrap_model_template(pymer4_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code))
+    + pymer4_code_templates["model_fit_template"]
+    )
+
     return model_code
 
 
@@ -297,7 +322,12 @@ def generate_template_statsmodels_model():
     family_code = "{family}"
     link_code = "{link}"
     
-    model_code = formula_generation_code + statsmodels_code_templates["model_template"].format(
-        formula=formula_code, family_name=family_code, link_obj=link_code
-    ) + family_link_specification_code
+    model_code = (
+    formula_generation_code 
+    + family_link_specification_code 
+    + wrap_model_template(statsmodels_code_templates["model_template"].format(
+        formula=formula_code, family_name=family_code, link_obj=link_code))
+    + statsmodels_code_templates["model_fit_template"]
+    )
+
     return model_code

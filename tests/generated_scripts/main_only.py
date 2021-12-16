@@ -17,6 +17,7 @@ def fit_model():
 
 
     model = smf.glm(formula='Dependent_variable ~ Measure_0 + Measure_1', data=df, family=sm.families.Gaussian(sm.families.links.identity()))
+
     res = model.fit()
     print(res.summary())
     return model

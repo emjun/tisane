@@ -1,5 +1,8 @@
 {
     "input": {
+        "query": {
+            "DV": "Weight", "IVs": ["Time"]
+        },
         "generated family, link functions": {
             "GammaFamily": [
                 "LogLink",

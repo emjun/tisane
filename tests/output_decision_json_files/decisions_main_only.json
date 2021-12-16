@@ -1,6 +1,10 @@
 {
     "decisions": [
         {
+            "options": ["Weight"],
+            "var": "dependent_variable"
+        },
+        {
             "options": [
                 [],
                 [
@@ -104,7 +108,7 @@
                     "log()"
                 ]
             ],
-            "var": "family, link pairs"
+            "var": "family_link_pair"
         }
     ],
     "graph": []

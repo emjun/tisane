@@ -73,12 +73,18 @@ load_data_no_data_source = """
 
 pymer4_model_template = """
     model = Lmer(formula={formula}, family=\"{family_name}\", data=df)
+"""
+
+pymer4_model_fit_template = """
     print(model.fit())
     return model
 """
 
 statsmodels_model_template = """
     model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
+"""
+
+statsmodels_model_fit_template = """
     res = model.fit()
     print(res.summary())
     return model
@@ -111,6 +117,7 @@ pymer4_code_templates = {
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": pymer4_model_template,
+    "model_fit_template": pymer4_model_fit_template,
     "model_diagnostics_function_wrapper": model_diagnostics_function_wrapper,
     "model_diagnostics": pymer4_model_diagnostics,
     "main_function": main_function,
@@ -123,6 +130,7 @@ statsmodels_code_templates = {
     "load_data_from_dataframe_template": load_data_from_dataframe_template,
     "load_data_no_data_source": load_data_no_data_source,
     "model_template": statsmodels_model_template,
+    "model_fit_template": statsmodels_model_fit_template,
     "model_diagnostics_function_wrapper": model_diagnostics_function_wrapper,
     "model_diagnostics": statsmodels_model_diagnostics,
     "main_function": main_function,
@@ -266,15 +274,19 @@ def generate_pymer4_model(statistical_model: StatisticalModel, boba_template: bo
     if boba_template: 
         formula_code = "{{FORMULA}}"
         family_code = "{{FAMILY}}"
-        model_code = pymer4_code_templates["model_template"].format(
-            formula=formula_code, family_name=family_code
+        model_code = (
+            pymer4_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code)
+            + pymer4_code_templates["model_fit_template"]
         )
     else: 
         formula_code = generate_pymer4_formula(statistical_model=statistical_model)
         family_code = generate_pymer4_family(statistical_model=statistical_model)
         # family_code = "\"" + generate_pymer4_family(statistical_model=statistical_model) + "\""
-        model_code = pymer4_code_templates["model_template"].format(
-            formula=formula_code, family_name=family_code
+        model_code = (
+            pymer4_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code)
+            + pymer4_code_templates["model_fit_template"]
         )
 
     return model_code
@@ -420,17 +432,20 @@ def generate_statsmodels_model(statistical_model: StatisticalModel, boba_templat
         formula_code = "{{FORMULA}}"
         family_code = "{{FAMILY}}"
         link_code = "{{LINK}}"
-        model_code = statsmodels_code_templates["model_template"].format(
-            formula=formula_code, family_name=family_code, link_obj=link_code
+        model_code = (
+            statsmodels_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code, link_obj=link_code)
+            + statsmodels_code_templates["model_fit_template"]
         )
     else:
         formula_code = generate_statsmodels_formula(statistical_model=statistical_model)
         family_code = generate_statsmodels_family(statistical_model=statistical_model)
         link_code = generate_statsmodels_link(statistical_model=statistical_model)
-        model_code = statsmodels_code_templates["model_template"].format(
-            formula=formula_code, family_name=family_code, link_obj=link_code
-        ) 
-
+        model_code = (
+            statsmodels_code_templates["model_template"].format(
+            formula=formula_code, family_name=family_code, link_obj=link_code)
+            + statsmodels_code_templates["model_fit_template"]
+        )
 
     return model_code
 

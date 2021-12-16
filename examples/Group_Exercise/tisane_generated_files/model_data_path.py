@@ -12,6 +12,7 @@ def fit_model():
 
 
     model = Lmer(formula='pounds_lost ~ motivation + treatment + (1|group)', family="gaussian", data=df)
+
     print(model.fit())
     return model
 
@@ -21,6 +22,7 @@ def fit_model():
 # Read more here: https://sscc.wisc.edu/sscc/pubs/RegressionDiagnostics.html
 def show_model_diagnostics(model): 
 
+    plt.axhline(y=0, color='r', linestyle='-')
     plt.scatter(model.fits, model.residuals)
     plt.title("Fitted values vs. Residuals")
     plt.xlabel("fitted values")

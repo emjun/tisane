@@ -1,6 +1,6 @@
 ## TODO: Check that the Family - link pairs make sense (this might be covered earlier in the pipeline)
 
-from tisane.multiverse_code_generator import construct_all_main_options, construct_all_interaction_options, construct_all_random_options, construct_all_family_link_options, generate_boba_config_from_decisions, generate_multiverse_decisions, generate_multiverse_decisions_to_json, generate_template_code, boba_config_start, boba_config_end
+from tisane.multiverse_code_generator import construct_all_main_options, construct_all_interaction_options, construct_all_random_options, construct_all_family_link_options, generate_boba_config_from_decisions, generate_multiverse_decisions, generate_template_code, boba_config_start, boba_config_end
 
 import os
 import unittest

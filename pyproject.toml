@@ -22,7 +22,7 @@ patsy = "^0.5.1"
 coverage = "^5.5"
 pytest-cov = "^2.11.1"
 h5 = "^0.4.1"
-h5py = "^3.3.0"
+h5py = "3.3.0"
 pymer4 = "^0.7.5"
 pytest = "^6.2.4"
 jupyter-dash = "^0.4.0"
@@ -33,6 +33,8 @@ sphinx-autoapi = "^1.8.4"
 numpydoc = "^1.1.0"
 toml = "^0.10.2"
 ipykernel = "^6.3.1"
+boba = "^1.1.2"
+boba-visualizer = "^1.1.1"
 
 
 [tool.poetry.dev-dependencies]

@@ -35,11 +35,13 @@ script_dir = os.path.join(dir, test_script_repo_name)
 ### HELPERS to reduce redundancy across test cases
 model_template = """
     model = smf.glm(formula={formula}, data=df, family=sm.families.{family_name}(sm.families.links.{link_obj}))
+"""
+
+model_fit_template = """
     res = model.fit()
     print(res.summary())
     return model
 """
-
 
 def absolute_path(p: str) -> str:
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), p)
@@ -613,7 +615,8 @@ class GenerateCodeHelpersTest(unittest.TestCase):
         link_obj = "Power(power=.5)"
         reference_code = model_template.format(
             formula=formula, family_name=family_name, link_obj=link_obj
-        )
+        ) + model_fit_template
+        
         self.assertEqual(code, reference_code)
 
     # def test_generate_statsmodels_code(self):

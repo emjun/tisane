@@ -13,6 +13,7 @@ def fit_model():
 
 
     model = smf.glm(formula='endurance ~ age + exercise', data=df, family=sm.families.Gaussian(sm.families.links.identity()))
+
     res = model.fit()
     print(res.summary())
     return model
@@ -26,6 +27,7 @@ def show_model_diagnostics(model):
     res = model.fit()
     plt.clf()
     plt.grid(True)
+    plt.axhline(y=0, color='r', linestyle='-')
     plt.plot(res.predict(linear=True), res.resid_pearson, 'o')
     plt.xlabel("Linear predictor")
     plt.ylabel("Residual")
