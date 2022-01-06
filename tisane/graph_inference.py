@@ -101,13 +101,13 @@ def get_query_explanation(v: AbstractVariable, dv: AbstractVariable, gr: Graph):
     # There must be a causes or associates edge between @param v and @param dv
     if causes_edge is None:
         assert associates_edge is not None
-        expl = main_explanations["query"]["causes"].format(cause=v.name, effect=dv.name)
-    else:
-        assert causes_edge is not None
-        assert associates_edge is None
         expl = main_explanations["query"]["associates"].format(
             var1=v.name, var2=dv.name
         )
+    else:
+        assert causes_edge is not None
+        assert associates_edge is None
+        expl = main_explanations["query"]["causes"].format(cause=v.name, effect=dv.name)
 
     return expl
 
