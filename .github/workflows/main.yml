@@ -1,8 +1,8 @@
 # Adapted from https://github.com/snok/install-poetry#mtesting
 
 name: CI
-on: 
-  push: 
+on:
+  push:
     branches:
       - main
   pull_request:
@@ -13,16 +13,18 @@ jobs:
       runs-on: ubuntu-latest
       steps:
       #----------------------------------------------
-      #       check-out repo and set-up python     
+      #       check-out repo and set-up python
       #----------------------------------------------
       - name: Check out repository
         uses: actions/checkout@v2
-      - name: Set up python 
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
+      - name: Set up python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
       #----------------------------------------------
-      #  -----  install & configure poetry  -----      
+      #  -----  install & configure poetry  -----
       #----------------------------------------------
       - name: Install Poetry
         uses: snok/install-poetry@v1.1.2
@@ -30,7 +32,7 @@ jobs:
           virtualenvs-create: true
           virtualenvs-in-project: true
       #----------------------------------------------
-      #       load cached venv if cache exists      
+      #       load cached venv if cache exists
       #----------------------------------------------
       - name: Load cached venv
         id: cached-poetry-dependencies
@@ -39,23 +41,23 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
       #----------------------------------------------
-      # install dependencies if cache does not exist 
+      # install dependencies if cache does not exist
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
       #----------------------------------------------
-      # install your root project, if required 
-      #----------------------------------------------      
+      # install your root project, if required
+      #----------------------------------------------
       - name: Install library
         run: poetry install --no-interaction
       #----------------------------------------------
-      #              run test suite   
+      #              run test suite
       #----------------------------------------------
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pytest tests/ --ignore=tests/test_graph_vis.py --cov-report=xml
+          pytest tests/ --cov-report=xml
       - name: Upload coverage data to coveralls.io
         run: |
           python -m pip install coveralls==2.2
