@@ -161,6 +161,7 @@ def infer_link_functions(query: Design, family: AbstractFamily) -> Set[AbstractL
 
     return link_candidates
 
+
 def generate_family_selection_questions_options(dv: AbstractVariable):
     choices = dict()
 
@@ -179,15 +180,17 @@ def generate_family_selection_questions_options(dv: AbstractVariable):
                                         "family-options": [TweedieFamily.__name__],
                                     },
                                     "no": {
-                                        "family-options": [InverseGaussianFamily.__name__, GammaFamily.__name__, TweedieFamily.__name__]
-                                    }
-                                }
+                                        "family-options": [
+                                            InverseGaussianFamily.__name__,
+                                            GammaFamily.__name__,
+                                            TweedieFamily.__name__,
+                                        ]
+                                    },
+                                },
                             }
                         },
-                        "no": {
-                            "family-options": [GaussianFamily.__name__]
-                        }
-                    }
+                        "no": {"family-options": [GaussianFamily.__name__]},
+                    },
                 }
             },
             "counts": {
@@ -197,12 +200,10 @@ def generate_family_selection_questions_options(dv: AbstractVariable):
                         "yes": {
                             "family-options": [TweedieFamily.__name__],
                         },
-                        "no": {
-                            "family-options": [PoissonFamily.__name__]
-                        }
-                    }
+                        "no": {"family-options": [PoissonFamily.__name__]},
+                    },
                 }
-            }
+            },
         }
 
     # if isinstance(dv, Numeric):
@@ -247,12 +248,12 @@ def generate_family_selection_questions_options(dv: AbstractVariable):
                 "family-options": [BinomialFamily.__name__]
             }
         else:
-            assert(dv.get_cardinality() > 2)
+            assert dv.get_cardinality() > 2
             choices["answers"]["categories"] = {
                 "family-options": [NegativeBinomialFamily.__name__]
             }
     else:
-        assert(isinstance(dv, Nominal))
+        assert isinstance(dv, Nominal)
         # Add nothing
 
     return choices

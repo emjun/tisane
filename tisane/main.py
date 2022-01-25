@@ -14,7 +14,11 @@ from tisane.graph_inference import (
     is_intermediary_associative,
     find_all_associates_that_causes_or_associates_another,
 )
-from tisane.family_link_inference import infer_family_functions, infer_link_functions, generate_family_selection_questions_options
+from tisane.family_link_inference import (
+    infer_family_functions,
+    infer_link_functions,
+    generate_family_selection_questions_options,
+)
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.code_generator import *
@@ -328,6 +332,7 @@ def construct_statistical_model(
     )
 
     return sm
+
 
 def infer_model(design: Design, jupyter: bool = False):
     return infer_statistical_model_from_design(design=design, jupyter=jupyter)

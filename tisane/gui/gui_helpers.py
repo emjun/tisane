@@ -1,6 +1,8 @@
 import numpy as np
+
 # import plotly.graph_objects as go
 import tweedie
+
 # from scipy.special import logit
 # from scipy import stats
 # import pandas as pd
@@ -64,7 +66,6 @@ def getTriggeredFromContext(ctx):
 
 
 def onlyAllowSupportedFamilyDistributions(supportedDistributions, inputDataTypes):
-
     def filterPred(v):
         return not ("family-options" in v and len(v["family-options"]) == 0)
 
@@ -73,11 +74,15 @@ def onlyAllowSupportedFamilyDistributions(supportedDistributions, inputDataTypes
         alteredAnswers = {k: recCall(v) for k, v in oldAnswers.items()}
 
         print("Altered answers: {}".format(alteredAnswers))
-        alteredAnswers = {k: v for k,v  in alteredAnswers.items() if filterPred(v)}
+        alteredAnswers = {k: v for k, v in alteredAnswers.items() if filterPred(v)}
         return alteredAnswers
 
     def recCall(inputTypes):
-        if "follow-up" in inputTypes and "answers" in inputTypes["follow-up"] and "question" in inputTypes["follow-up"]:
+        if (
+            "follow-up" in inputTypes
+            and "answers" in inputTypes["follow-up"]
+            and "question" in inputTypes["follow-up"]
+        ):
             alteredAnswers = alterAnswers(inputTypes["follow-up"]["answers"])
 
             if len(alteredAnswers) == 1:
@@ -85,15 +90,17 @@ def onlyAllowSupportedFamilyDistributions(supportedDistributions, inputDataTypes
             return {
                 "follow-up": {
                     "answers": alteredAnswers,
-                    "question": inputTypes["follow-up"]["question"]
+                    "question": inputTypes["follow-up"]["question"],
                 }
             }
             pass
         elif "family-options" in inputTypes:
-            familyOptions = [fo for fo in inputTypes["family-options"] if fo in supportedDistributions]
-            return {
-                "family-options": familyOptions
-            }
+            familyOptions = [
+                fo
+                for fo in inputTypes["family-options"]
+                if fo in supportedDistributions
+            ]
+            return {"family-options": familyOptions}
         elif "answers" in inputTypes and "question" in inputTypes:
             # Top-level
             alteredAnswers = alterAnswers(inputTypes["answers"])
@@ -101,10 +108,7 @@ def onlyAllowSupportedFamilyDistributions(supportedDistributions, inputDataTypes
             if len(alteredAnswers) == 1:
                 # In this case, return nothing
                 return {}
-            return {
-                "answers": alteredAnswers,
-                "question": inputTypes["question"]
-            }
+            return {"answers": alteredAnswers, "question": inputTypes["question"]}
         return inputTypes
 
     return recCall(inputDataTypes)
