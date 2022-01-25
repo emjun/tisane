@@ -1,3 +1,7 @@
+from tisane.gui.gui_helpers import (
+    simulate_data_dist,
+    onlyAllowSupportedFamilyDistributions,
+)
 import json
 import os
 import logging
@@ -15,8 +19,6 @@ from tisane.gui.gui_strings import GUIStrings
 
 log = logging.getLogger("")
 log.setLevel(logging.ERROR)
-
-from tisane.gui.gui_helpers import simulate_data_dist
 
 
 def cardP(text):
@@ -52,6 +54,20 @@ def getInfoBubble(id: str):
     return html.I(className="bi bi-info-circle text-info", id=id)
 
 
+def _hasLevelNFollowUp(flowTree, n):
+    assert isinstance(flowTree, dict)
+    if n == 0:
+        return "follow-up" in flowTree
+
+    if "answers" in flowTree:
+        for k in flowTree["answers"]:
+            if _hasLevelNFollowUp(flowTree["answers"][k], n - 1):
+                return True
+            pass
+        pass
+    return False
+
+
 class GUIComponents:
     def __init__(self, input_json: str, generateCode):
         self.strings = GUIStrings()
@@ -64,6 +80,8 @@ class GUIComponents:
             pass
         else:
             self.defaultExplanations = {}
+
+        self.alteredInputDataTypes = None
         self.numGeneratedComponentIds = 0
         self.codeGenerator = generateCode
         self.generatedComponentIdToRandomEffect = {}
@@ -200,6 +218,22 @@ class GUIComponents:
         # print(self.randomSlopes)
         self._init_helper()
         pass
+
+    def getTypesOfData(self):
+        if "types of data" in self.data["input"] and self.alteredInputDataTypes is None:
+            print(
+                "Supported family and link functions: {}".format(
+                    self.getFamilyLinkFunctions()
+                )
+            )
+            print("Types of data: {}".format(self.data["input"]["types of data"]))
+            self.alteredInputDataTypes = onlyAllowSupportedFamilyDistributions(
+                self.getFamilyLinkFunctions(), self.data["input"]["types of data"]
+            )
+            print("Altered data: {}".format(self.alteredInputDataTypes))
+            pass
+        assert self.alteredInputDataTypes is not None
+        return self.alteredInputDataTypes
 
     def _init_helper(self):
         # Additional initialization code
@@ -1199,9 +1233,152 @@ class GUIComponents:
             return allIntegers
         return None
 
-    def make_family_link_options(self):
-        family_options = list()
+    def shouldEnableTypesOfDataControls(self):
+        typesOfData = self.getTypesOfData()
+        return (
+            typesOfData
+            and "question" in typesOfData
+            and "answers" in typesOfData
+            and isinstance(typesOfData["answers"], dict)
+        )
 
+    def shouldEnableFollowUp(self):
+        typesOfData = self.getTypesOfData()
+        return (
+            typesOfData
+            and isinstance(typesOfData, dict)
+            and "answers" in typesOfData
+            and any(
+                isinstance(v, dict) and "follow-up" in v
+                for _, v in typesOfData["answers"].items()
+            )
+        )
+
+    def addTypesOfDataControls(self, forms):
+        typesOfData = self.getTypesOfData()
+
+        assert (
+            "answers" in typesOfData
+        ), f'Could not find key "answers" in {typesOfData}'
+
+        def typeOfDataControls(types):
+            # print(options)
+            return dbc.FormGroup(
+                [
+                    dbc.Label(typesOfData["question"]),
+                    dcc.Dropdown(
+                        id="question-options",
+                        options=[
+                            {"disabled": False, "label": v, "value": k}
+                            for k, v in types.items()
+                        ],
+                        value="",
+                        optionHeight=45,
+                    ),
+                ]
+            )
+
+        if self.shouldEnableTypesOfDataControls():
+            forms.append(
+                typeOfDataControls(
+                    {
+                        k: self.strings("types-of-data", "display-types", k)
+                        for k in typesOfData["answers"]
+                    }
+                )
+            )
+            forms.append(dcc.Store(id="uses-types-of-data", data=True))
+
+            print(
+                "Should enable follow-up and has level 1 follow-up: {}, {}".format(
+                    self.shouldEnableFollowUp(), _hasLevelNFollowUp(typesOfData, 1)
+                )
+            )
+
+            if self.shouldEnableFollowUp():
+                followUp = dbc.FormGroup(
+                    [
+                        dbc.Label(
+                            self.strings("types-of-data", "follow-ups", "default"),
+                            id="follow-up-label",
+                        ),
+                        dcc.Dropdown(
+                            id="follow-up-options",
+                            options=[],
+                            disabled=True,
+                            value="",
+                            optionHeight=45,
+                        ),
+                    ]
+                )
+                followUp = html.Div(followUp, id="follow-up-div", hidden=True)
+                followUpLabelStore1 = dcc.Store(
+                    id="follow-up-label-store-1",
+                    data=self.strings("types-of-data", "follow-ups", "default"),
+                )
+                followUpLabelStore2 = dcc.Store(
+                    id="follow-up-label-store-2",
+                    data=self.strings("types-of-data", "follow-ups", "default"),
+                )
+                forms.append(followUp)
+                forms.append(followUpLabelStore1)
+                forms.append(followUpLabelStore2)
+                pass
+            followUp2 = dbc.FormGroup(
+                [
+                    dbc.Label("", id="follow-up-label-1"),
+                    dcc.Dropdown(
+                        id="follow-up-options-1", options=[], value="", optionHeight=45
+                    ),
+                ]
+            )
+            followUpDiv = html.Div(followUp2, hidden=True, id="follow-up-1-div")
+            forms.append(followUpDiv)
+
+            familyOptionsStores = []
+            familyOptionsStores.append(dcc.Store(id="family-options-store-1", data={}))
+            familyOptionsStores.append(dcc.Store(id="family-options-store-2", data={}))
+            familyOptionsStores.append(dcc.Store(id="family-options-store-3", data={}))
+
+            forms.extend(familyOptionsStores)
+
+            pass
+        else:
+            forms.append(dcc.Store(id="uses-types-of-data", data=False))
+            pass
+        pass
+
+    def createFamilyOptionsFromValues(self, vals):
+        family_options = []
+        fls = self.getFamilyLinkFunctions().copy()
+        isAllIntegers = self.isDVDataAllNonNegativeIntegers()
+        removePoisson = (
+            "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
+            and "PoissonFamily" in fls
+            and isAllIntegers
+        )
+        # link_options =
+        if removePoisson:
+            fls.pop("PoissonFamily")
+            # dvData = self.dataDf[self.dv]
+            # allIntegers = dvData.dtype.kind == "i" or dvData.dtype.kind == "u"
+            # if not allIntegers:
+            #     dvData = dvData.astype(float)
+            #     allIntegers = dvData.apply(float.is_integer).all()
+            #     if not allIntegers:
+            #         fls.pop("PoissonFamily")
+            pass
+        for f in vals:
+            label = " ".join(separateByUpperCamelCase(f)[:-1])
+
+            family_options.append(
+                {"label": label, "value": f, "disabled": f not in fls}
+            )
+            pass
+        return family_options
+
+    def filterFamilyLinkOptions(self):
+        family_options = []
         fls = self.getFamilyLinkFunctions().copy()
         isAllIntegers = self.isDVDataAllNonNegativeIntegers()
         removePoisson = (
@@ -1221,6 +1398,47 @@ class GUIComponents:
             #         fls.pop("PoissonFamily")
             pass
 
+        if not self.shouldEnableTypesOfDataControls():
+            for f in self.getGeneratedFamilyLinkFunctions():
+                label = " ".join(separateByUpperCamelCase(f)[:-1])
+
+                family_options.append(
+                    {"label": label, "value": f, "disabled": f not in fls}
+                )
+                pass
+            pass
+
+        return dbc.FormGroup(
+            [
+                dbc.Label(["Family ", getInfoBubble("family-label-info")]),
+                dcc.Dropdown(
+                    id="family-options",
+                    options=family_options,
+                    value="",
+                    optionHeight=45,
+                    disabled=self.shouldEnableTypesOfDataControls(),
+                ),
+            ]
+        )
+
+    def make_family_link_options(self):
+        family_options = list()
+        forms = []
+
+        self.addTypesOfDataControls(forms)
+
+        fls = self.getFamilyLinkFunctions().copy()
+        isAllIntegers = self.isDVDataAllNonNegativeIntegers()
+        removePoisson = (
+            "PoissonFamily" in self.getGeneratedFamilyLinkFunctions()
+            and "PoissonFamily" in fls
+            and isAllIntegers
+        )
+        # link_options =
+        if removePoisson:
+            fls.pop("PoissonFamily")
+            pass
+
         for f in self.getGeneratedFamilyLinkFunctions():
             label = " ".join(separateByUpperCamelCase(f)[:-1])
 
@@ -1232,19 +1450,11 @@ class GUIComponents:
         linkExplanation = self.getDefaultExplanation("link-functions")
         familyExplanation = self.getDefaultExplanation("distribution-families")
 
+        forms.append(self.filterFamilyLinkOptions())
+
         controls = dbc.Card(
-            [
-                dbc.FormGroup(
-                    [
-                        dbc.Label(["Family ", getInfoBubble("family-label-info")]),
-                        dcc.Dropdown(
-                            id="family-options",
-                            options=family_options,
-                            value="",
-                            optionHeight=45,
-                        ),
-                    ]
-                ),
+            forms
+            + [
                 dbc.FormGroup(
                     [
                         dbc.Label(
@@ -1258,6 +1468,7 @@ class GUIComponents:
                             options=[],
                             value="",
                             optionHeight=45,
+                            disabled=True,
                         ),
                     ]
                 ),
@@ -1302,36 +1513,36 @@ class GUIComponents:
             fig.add_trace(
                 go.Histogram(x=self.dataDf[self.dv], name=f"{self.dv}", showlegend=True)
             )
-        if family:
-            key = f"{family}_data"
-
-            if key in self.simulatedData:
-                family_data = self.simulatedData[key]
-            else:
-                # Do we need to generate data?
-                if self.hasData():
-                    # dvData = np.log(self.dataDf[self.dv])
-                    dvData = self.dataDf[self.dv]
-                    family_data = simulate_data_dist(
-                        family,
-                        dataMean=dvData.mean(),
-                        dataStdDev=dvData.std(),
-                        dataSize=dvData.count(),
-                    )
-                    pass
-                else:
-                    family_data = simulate_data_dist(family)
-                    pass
-                self.simulatedData[key] = family_data
-                pass
-
-            fig.add_trace(
-                go.Histogram(
-                    x=family_data,
-                    name=f"Simulated {family} distribution.",
-                    showlegend=True,
-                )
-            )
+        # if family:
+        #     key = f"{family}_data"
+        #
+        #     if key in self.simulatedData:
+        #         family_data = self.simulatedData[key]
+        #     else:
+        #         # Do we need to generate data?
+        #         if self.hasData():
+        #             # dvData = np.log(self.dataDf[self.dv])
+        #             dvData = self.dataDf[self.dv]
+        #             family_data = simulate_data_dist(
+        #                 family,
+        #                 dataMean=dvData.mean(),
+        #                 dataStdDev=dvData.std(),
+        #                 dataSize=dvData.count(),
+        #                 )
+        #             pass
+        #         else:
+        #             family_data = simulate_data_dist(family)
+        #             pass
+        #         self.simulatedData[key] = family_data
+        #         pass
+        #
+        #     fig.add_trace(
+        #         go.Histogram(
+        #             x=family_data,
+        #             name=f"Simulated {family} distribution.",
+        #             showlegend=True,
+        #             )
+        #         )
         fig.update_layout(barmode="overlay")
         fig.update_traces(opacity=0.75)
         fig.update_layout(
@@ -1444,6 +1655,14 @@ class GUIComponents:
         )
         return family_link_chart
 
+    def getDependentVariableType(self):
+        dataInput = self.data["input"]
+        typeKey = "dv type"
+        assert (
+            typeKey in dataInput
+        ), f"Could not find type key {typeKey} in data input {dataInput}"
+        return dataInput[typeKey]
+
     def getFamilyLinkFunctionsCard(self):
         ##### Collect all elements
         # Create family and link title
@@ -1454,9 +1673,11 @@ class GUIComponents:
                 dcc.Markdown(
                     self.strings(
                         "family-link-functions", "titles", "page-sub-title"
-                    ).format(self.getDependentVariable())
+                    ).format(
+                        self.getDependentVariable(), self.getDependentVariableType()
+                    )
                 ),
-                dcc.Markdown(familyExplanation["caution"]),
+                # dcc.Markdown(familyExplanation["caution"]),
             ]
         )
 
@@ -1490,7 +1711,7 @@ class GUIComponents:
                         no_gutters=True,
                     ),
                 ]
-                + normalityTestPortion
+                # + normalityTestPortion
                 + [
                     html.Span(
                         dbc.Button(

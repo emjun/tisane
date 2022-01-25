@@ -41,8 +41,8 @@
   "family-link-functions": {
     "titles": {
       "tab": "Data Distributions",
-      "page": "Choose a data distribution: family and link functions.",
-      "page-sub-title": "_Which distribution best matches your dependent variable `{}`'s distribution?_"
+      "page": "Choose a distribution of the errors: family and link functions.",
+      "page-sub-title": "_Your dependent variable `{}` has a `{}` data type. Tell us more about it, which Tisane will use to narrow down the options for family and link functions._"
     },
     "headers": {
     }
@@ -65,5 +65,24 @@
     "interaction-effects": "Review IVs: Interactions",
     "random-effects": "Review data clustering",
     "family-link-functions": "Pick data distributions"
+  },
+  "types-of-data": {
+    "follow-ups": {
+      "default": "(First answer the question above)",
+      "has positive skew": "Does the data have a positive skew?",
+      "has lots of zeros": "Does the data have lots of zeros?"
+    },
+    "display-types": {
+      "treat as continuous": "Continuous",
+      "treat as counts": "Counts",
+      "treat as categories": "Categories",
+      "continuous": "Continuous",
+      "counts": "Counts",
+      "categories": "Categories",
+      "true": "Yes",
+      "false": "No",
+      "yes": "Yes",
+      "no": "No"
+    }
   }
 }
