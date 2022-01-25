@@ -6,7 +6,7 @@ readme = "README.md"
 authors = ["Eunice Jun <eunice.m.jun@gmail.com>", "Audrey Seo <audreyleeseo@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.7.11"
+python = ">=3.7.11, <4.0.0"
 pandas = "^1.1.0"
 networkx = "^2.5.1"
 statsmodels = "^0.12.2"
@@ -22,7 +22,7 @@ patsy = "^0.5.1"
 coverage = "^5.5"
 pytest-cov = "^2.11.1"
 h5 = "^0.4.1"
-h5py = "^3.3.0"
+h5py = "3.3.0"
 pymer4 = "^0.7.5"
 pytest = "^6.2.4"
 jupyter-dash = "^0.4.0"
