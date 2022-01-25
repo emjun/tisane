@@ -8,6 +8,10 @@ import tweedie
 # import pandas as pd
 import json
 import argparse
+import logging
+
+log = logging.getLogger("")
+log.setLevel(logging.ERROR)
 
 
 def simulate_data_dist(
@@ -70,10 +74,10 @@ def onlyAllowSupportedFamilyDistributions(supportedDistributions, inputDataTypes
         return not ("family-options" in v and len(v["family-options"]) == 0)
 
     def alterAnswers(oldAnswers):
-        print("Answers: {}".format(oldAnswers))
+        log.info("Answers: {}".format(oldAnswers))
         alteredAnswers = {k: recCall(v) for k, v in oldAnswers.items()}
 
-        print("Altered answers: {}".format(alteredAnswers))
+        log.info("Altered answers: {}".format(alteredAnswers))
         alteredAnswers = {k: v for k, v in alteredAnswers.items() if filterPred(v)}
         return alteredAnswers
 

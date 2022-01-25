@@ -131,7 +131,7 @@ class GUIComponents:
             log.error("Cannot find input json file {}".format(input_json))
             exit(1)
             pass
-        # print(self.data)
+        # log(self.data)
 
         query = self.getQuery()
         self.output["dependent variable"] = query["DV"]
@@ -215,22 +215,22 @@ class GUIComponents:
                     self.randomSlopeAddedIdToGroupIv[addedId] = (unit, rs["iv"])
                     self.randomSlopeIdToGroupIv[cellId] = (unit, rs["iv"])
             pass
-        # print(self.randomSlopes)
+        # log(self.randomSlopes)
         self._init_helper()
         pass
 
     def getTypesOfData(self):
         if "types of data" in self.data["input"] and self.alteredInputDataTypes is None:
-            print(
+            log.info(
                 "Supported family and link functions: {}".format(
                     self.getFamilyLinkFunctions()
                 )
             )
-            print("Types of data: {}".format(self.data["input"]["types of data"]))
+            log.info("Types of data: {}".format(self.data["input"]["types of data"]))
             self.alteredInputDataTypes = onlyAllowSupportedFamilyDistributions(
                 self.getFamilyLinkFunctions(), self.data["input"]["types of data"]
             )
-            print("Altered data: {}".format(self.alteredInputDataTypes))
+            log.info("Altered data: {}".format(self.alteredInputDataTypes))
             pass
         assert self.alteredInputDataTypes is not None
         return self.alteredInputDataTypes
@@ -1122,7 +1122,7 @@ class GUIComponents:
                         for r in randomSlopes[1:]:
                             iv = r["iv"]
                             rowId = self.getNewComponentId()
-                            # print("Adding row for iv {}".format(iv))
+                            # log("Adding row for iv {}".format(iv))
                             correlationCheckbox = (
                                 [
                                     html.Td(
@@ -1262,7 +1262,7 @@ class GUIComponents:
         ), f'Could not find key "answers" in {typesOfData}'
 
         def typeOfDataControls(types):
-            # print(options)
+            # log(options)
             return dbc.FormGroup(
                 [
                     dbc.Label(typesOfData["question"]),
@@ -1289,7 +1289,7 @@ class GUIComponents:
             )
             forms.append(dcc.Store(id="uses-types-of-data", data=True))
 
-            print(
+            log.info(
                 "Should enable follow-up and has level 1 follow-up: {}, {}".format(
                     self.shouldEnableFollowUp(), _hasLevelNFollowUp(typesOfData, 1)
                 )

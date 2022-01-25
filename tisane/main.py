@@ -33,6 +33,10 @@ from itertools import chain, combinations
 import pandas as pd
 import networkx as nx
 import json
+import logging
+
+log = logging.getLogger("")
+log.setLevel(logging.ERROR)
 
 # Checks that the IVS for @param design have a conceptual relationship with the DV
 # Issues a warning if an independent variable does not cause or associate with the DV
@@ -171,7 +175,7 @@ def write_to_script(code: str, output_dir: str, output_filename: str):
     # Output @param code to .py script
     with open(path, "w+", encoding="utf-8") as f:
         f.write(code)
-    print("Writing out path")
+    log.info("Writing out path")
     return path
 
 
@@ -184,7 +188,7 @@ def construct_statistical_model(
     random_effects_candidates: Set[RandomEffect],
     family_link_paired_candidates: Dict[AbstractFamily, Set[AbstractLink]],
 ):
-    print(f"read through {filename}")
+    log.info(f"read through {filename}")
     assert filename.endswith(".json")
     dir = os.getcwd()
     path = Path(dir, filename)

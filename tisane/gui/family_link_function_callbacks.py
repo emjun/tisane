@@ -17,6 +17,7 @@ import os
 import logging
 
 
+
 def assertHasKey(k, d, formatter="Could not find {k} in {d}"):
     assert k in d, formatter.format(k=k, d=d)
 
@@ -108,6 +109,8 @@ def createQuestionCallback(app, comp: GUIComponents = None):
         return (followUpOptions, False, followUpTitle + " ", {}, False)
 
     def followUpCallback(followUpQuestionValue, questionValue, followUpLabel):
+        log = logging.getLogger("werkzeug")
+
         assert comp is not None, "comp none in createQuestionCallback"
         if followUpQuestionValue == "":
             return (
@@ -145,7 +148,7 @@ def createQuestionCallback(app, comp: GUIComponents = None):
 
         for k in ["question", "answers"]:
             assertHasKey(k, typesOfData["answers"][questionValue]["follow-up"])
-        print(current)
+        log.info(current)
 
         current = current[followUpQuestionValue]
 
@@ -191,8 +194,10 @@ def createQuestionCallback(app, comp: GUIComponents = None):
     def followUpCallback2(
         followUpQuestionValue2, questionValue, followUpQuestionValue, followUpLabel
     ):
+        log = logging.getLogger("werkzeug")
+
         assert comp is not None, "comp none in createQuestionCallback"
-        print(f"followUpQuestionValue2: {followUpQuestionValue2}")
+        log.info(f"followUpQuestionValue2: {followUpQuestionValue2}")
         if followUpQuestionValue2 == "":
             return {"options": [], "disabled": True, "value": ""}
         typesOfData = comp.getTypesOfData()
@@ -220,7 +225,7 @@ def createQuestionCallback(app, comp: GUIComponents = None):
 
         assertHasKey("family-options", current)
 
-        print(current)
+        log.info(current)
 
         families = current["family-options"]
         familyOptions = comp.createFamilyOptionsFromValues(families)
@@ -272,6 +277,8 @@ def createQuestionCallback(app, comp: GUIComponents = None):
         return store2
 
     def updateFamilyOptions(store1, store2, store3, options, disabled, value):
+        log = logging.getLogger("werkzeug")
+
         def storeHasAllKeys(store):
             return "options" in store and "disabled" in store and "value" in store
 
@@ -301,9 +308,9 @@ def createQuestionCallback(app, comp: GUIComponents = None):
 
         # first = storeTriggers[0]
         # id = first["prop_id"].split(".")[0]
-        print("Store triggers")
-        print(storeTriggers)
-        print("ids: {}".format(ids))
+        log.info("Store triggers")
+        log.info(storeTriggers)
+        log.info("ids: {}".format(ids))
         if any(id.endswith("1") for id in ids) and storeHasAllKeys(store1):
             return (store1["options"], store1["disabled"], store1["value"])
         elif any(id.endswith("2") for id in ids) and storeHasAllKeys(store2):
@@ -443,7 +450,7 @@ def createGenerateCodeCallback(app, comp: GUIComponents = None):
 
 
 def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
-    logger = logging.getLogger("werkzeug")
+    log = logging.getLogger("werkzeug")
 
     @app.callback(
         Output("link-options", "options"),
@@ -457,7 +464,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
     )
     def updateLinkOptions(value):
         if not comp:
-            logger.warning("Cannot update")
+            log.warning("Cannot update")
             raise PreventUpdate
         oldFamily = comp.output["family"]
         comp.output["family"] = value
@@ -466,10 +473,10 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
         if oldFamily and not value:
             return [], "", True, "", True, buttonDisabledStyle, ""
         familyLinks = comp.getGeneratedFamilyLinkFunctions()
-        logger.debug("{}: {}".format(value, type(value)))
+        log.debug("{}: {}".format(value, type(value)))
         if value and isinstance(value, str):
-            # print("Updating...")
-            logger.debug(familyLinks)
+            # log.info("Updating...")
+            log.debug(familyLinks)
             if value in familyLinks:
                 defaultLink = comp.getDefaultLinkForFamily(value)
                 comp.output["link"] = defaultLink
@@ -494,7 +501,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                     "tooltip-hide",
                 )
             pass
-        logger.warning("Cannot update for some reason")
+        log.warning("Cannot update for some reason")
         raise PreventUpdate
 
     @app.callback(Output("overview-link", "children"), Input("link-options", "value"))
