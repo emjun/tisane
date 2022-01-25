@@ -46,7 +46,7 @@ from tisane.variable import (
 from tisane.family_link_inference import (
     infer_family_functions,
     infer_link_functions,
-    generate_family_selection_questions_options
+    generate_family_selection_questions_options,
 )
 import unittest
 
@@ -75,7 +75,9 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         gr = design.graph
 
         families = infer_family_functions(query=design)
-        self.assertEqual(len(families), len(DataForTests.binomial_ordinal_families_types))
+        self.assertEqual(
+            len(families), len(DataForTests.binomial_ordinal_families_types)
+        )
         for f in families:
             f_type = type(f)
             self.assertIn(f_type, DataForTests.binomial_ordinal_families_types)
@@ -89,7 +91,9 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         gr = design.graph
 
         families = infer_family_functions(query=design)
-        self.assertEqual(len(families), len(DataForTests.multinomial_ordinal_families_types))
+        self.assertEqual(
+            len(families), len(DataForTests.multinomial_ordinal_families_types)
+        )
         for f in families:
             f_type = type(f)
             self.assertIn(f_type, DataForTests.multinomial_ordinal_families_types)
@@ -398,10 +402,10 @@ class FamilyLinkInferenceTest(unittest.TestCase):
             l_type = type(l)
             self.assertIn(l_type, DataForTests.multinomial_links)
 
-    def test_generate_family_questions_options_numeric_dv(self): 
+    def test_generate_family_questions_options_numeric_dv(self):
         u0 = ts.Unit("Unit 0")
         dv = u0.numeric("Dependent_variable")
-        
+
         choices = generate_family_selection_questions_options(dv)
         self.assertIsInstance(choices, dict)
         self.assertEqual(len(choices.keys()), 2)
@@ -414,24 +418,42 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIn("false", choices["treat as continuous"].keys())
         self.assertIn(GaussianFamily.__name__, choices["treat as continuous"]["false"])
         self.assertIsInstance(choices["treat as continuous"]["has positive skew"], dict)
-        self.assertEqual(len(choices["treat as continuous"]["has positive skew"].keys()), 2)
-        self.assertIn("has lots of zeros",choices["treat as continuous"]["has positive skew"].keys())
-        self.assertIn(TweedieFamily.__name__, choices["treat as continuous"]["has positive skew"]["has lots of zeros"])
-        self.assertIn("false",choices["treat as continuous"]["has positive skew"].keys())
-        self.assertIn(InverseGaussianFamily.__name__, choices["treat as continuous"]["has positive skew"]["false"])
-        self.assertIn(GammaFamily.__name__, choices["treat as continuous"]["has positive skew"]["false"])
+        self.assertEqual(
+            len(choices["treat as continuous"]["has positive skew"].keys()), 2
+        )
+        self.assertIn(
+            "has lots of zeros",
+            choices["treat as continuous"]["has positive skew"].keys(),
+        )
+        self.assertIn(
+            TweedieFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["has lots of zeros"],
+        )
+        self.assertIn(
+            "false", choices["treat as continuous"]["has positive skew"].keys()
+        )
+        self.assertIn(
+            InverseGaussianFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["false"],
+        )
+        self.assertIn(
+            GammaFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["false"],
+        )
 
         self.assertIn("has lots of zeros", choices["treat as counts"].keys())
         self.assertIn("false", choices["treat as counts"].keys())
         self.assertEqual(len(choices["treat as counts"]["false"]), 1)
         self.assertIn(PoissonFamily.__name__, choices["treat as counts"]["false"])
         self.assertEqual(len(choices["treat as counts"]["has lots of zeros"]), 1)
-        self.assertIn(TweedieFamily.__name__, choices["treat as counts"]["has lots of zeros"])
+        self.assertIn(
+            TweedieFamily.__name__, choices["treat as counts"]["has lots of zeros"]
+        )
 
-    def test_generate_family_questions_options_binomial_ordinal_dv(self): 
+    def test_generate_family_questions_options_binomial_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
         dv = u0.ordinal("Dependent_variable", order=[1, 2])
-        
+
         choices = generate_family_selection_questions_options(dv)
         self.assertIsInstance(choices, dict)
         self.assertEqual(len(choices.keys()), 3)
@@ -445,13 +467,29 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIn("false", choices["treat as continuous"].keys())
         self.assertIn(GaussianFamily.__name__, choices["treat as continuous"]["false"])
         self.assertIsInstance(choices["treat as continuous"]["has positive skew"], dict)
-        self.assertEqual(len(choices["treat as continuous"]["has positive skew"].keys()), 2)
-        self.assertIn("has lots of zeros",choices["treat as continuous"]["has positive skew"].keys())
-        self.assertIn(TweedieFamily.__name__, choices["treat as continuous"]["has positive skew"]["has lots of zeros"])
-        self.assertIn("false",choices["treat as continuous"]["has positive skew"].keys())
-        self.assertIn(InverseGaussianFamily.__name__, choices["treat as continuous"]["has positive skew"]["false"])
-        self.assertIn(GammaFamily.__name__, choices["treat as continuous"]["has positive skew"]["false"])
-        
+        self.assertEqual(
+            len(choices["treat as continuous"]["has positive skew"].keys()), 2
+        )
+        self.assertIn(
+            "has lots of zeros",
+            choices["treat as continuous"]["has positive skew"].keys(),
+        )
+        self.assertIn(
+            TweedieFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["has lots of zeros"],
+        )
+        self.assertIn(
+            "false", choices["treat as continuous"]["has positive skew"].keys()
+        )
+        self.assertIn(
+            InverseGaussianFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["false"],
+        )
+        self.assertIn(
+            GammaFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["false"],
+        )
+
         self.assertIsInstance(choices["treat as counts"], dict)
         self.assertEqual(len(choices["treat as counts"].keys()), 2)
         self.assertIn("has lots of zeros", choices["treat as counts"].keys())
@@ -460,16 +498,18 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertEqual(len(choices["treat as counts"]["false"]), 1)
         self.assertIn(PoissonFamily.__name__, choices["treat as counts"]["false"])
         self.assertEqual(len(choices["treat as counts"]["has lots of zeros"]), 1)
-        self.assertIn(TweedieFamily.__name__, choices["treat as counts"]["has lots of zeros"])
+        self.assertIn(
+            TweedieFamily.__name__, choices["treat as counts"]["has lots of zeros"]
+        )
 
         self.assertIsInstance(choices["treat as categories"], list)
         self.assertEqual(len(choices["treat as categories"]), 1)
         self.assertIn(BinomialFamily.__name__, choices["treat as categories"])
 
-    def test_generate_family_questions_options_multinomial_ordinal_dv(self): 
+    def test_generate_family_questions_options_multinomial_ordinal_dv(self):
         u0 = ts.Unit("Unit 0")
         dv = u0.ordinal("Dependent_variable", order=[1, 2, 3, 4, 5])
-        
+
         choices = generate_family_selection_questions_options(dv)
         self.assertIsInstance(choices, dict)
         self.assertEqual(len(choices.keys()), 3)
@@ -483,13 +523,29 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertIn("false", choices["treat as continuous"].keys())
         self.assertIn(GaussianFamily.__name__, choices["treat as continuous"]["false"])
         self.assertIsInstance(choices["treat as continuous"]["has positive skew"], dict)
-        self.assertEqual(len(choices["treat as continuous"]["has positive skew"].keys()), 2)
-        self.assertIn("has lots of zeros",choices["treat as continuous"]["has positive skew"].keys())
-        self.assertIn(TweedieFamily.__name__, choices["treat as continuous"]["has positive skew"]["has lots of zeros"])
-        self.assertIn("false",choices["treat as continuous"]["has positive skew"].keys())
-        self.assertIn(InverseGaussianFamily.__name__, choices["treat as continuous"]["has positive skew"]["false"])
-        self.assertIn(GammaFamily.__name__, choices["treat as continuous"]["has positive skew"]["false"])
-        
+        self.assertEqual(
+            len(choices["treat as continuous"]["has positive skew"].keys()), 2
+        )
+        self.assertIn(
+            "has lots of zeros",
+            choices["treat as continuous"]["has positive skew"].keys(),
+        )
+        self.assertIn(
+            TweedieFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["has lots of zeros"],
+        )
+        self.assertIn(
+            "false", choices["treat as continuous"]["has positive skew"].keys()
+        )
+        self.assertIn(
+            InverseGaussianFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["false"],
+        )
+        self.assertIn(
+            GammaFamily.__name__,
+            choices["treat as continuous"]["has positive skew"]["false"],
+        )
+
         self.assertIsInstance(choices["treat as counts"], dict)
         self.assertEqual(len(choices["treat as counts"].keys()), 2)
         self.assertIn("has lots of zeros", choices["treat as counts"].keys())
@@ -498,19 +554,22 @@ class FamilyLinkInferenceTest(unittest.TestCase):
         self.assertEqual(len(choices["treat as counts"]["false"]), 1)
         self.assertIn(PoissonFamily.__name__, choices["treat as counts"]["false"])
         self.assertEqual(len(choices["treat as counts"]["has lots of zeros"]), 1)
-        self.assertIn(TweedieFamily.__name__, choices["treat as counts"]["has lots of zeros"])
+        self.assertIn(
+            TweedieFamily.__name__, choices["treat as counts"]["has lots of zeros"]
+        )
 
         self.assertIsInstance(choices["treat as categories"], list)
         self.assertEqual(len(choices["treat as categories"]), 1)
         self.assertIn(NegativeBinomialFamily.__name__, choices["treat as categories"])
 
-    def test_generate_family_questions_options_nominal_dv(self): 
+    def test_generate_family_questions_options_nominal_dv(self):
         u0 = ts.Unit("Unit 0")
         dv = u0.nominal("Dependent_variable", cardinality=2)
 
         choices = generate_family_selection_questions_options(dv)
         self.assertIsInstance(choices, dict)
-        self.assertEqual(len(choices.keys()), 0)    
+        self.assertEqual(len(choices.keys()), 0)
+
 
 class DataForTests:
     numeric_families_types = [

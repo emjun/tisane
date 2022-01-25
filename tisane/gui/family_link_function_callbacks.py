@@ -17,11 +17,360 @@ import os
 import logging
 
 
+def assertHasKey(k, d, formatter="Could not find {k} in {d}"):
+    assert k in d, formatter.format(k=k, d=d)
+
+
+def assertHasKeys(d, *keys):
+    if keys:
+        assertHasKey(keys[0], d)
+        current = d[keys[0]]
+        for i in range(1, len(keys)):
+            assertHasKey(
+                keys[i], current, formatter="Could not find {k} in {d} for " + str(d)
+            )
+            current = current[keys[i]]
+
+
 def createFamilyLinkFunctionCallbacks(app, comp: GUIComponents = None):
     createLinkFunctionCallbacks(app, comp)
     createChartCallbacks(app, comp)
     createGenerateCodeCallback(app, comp)
+    createQuestionCallback(app, comp)
     pass
+
+
+def createQuestionCallback(app, comp: GUIComponents = None):
+    def questionWithoutFollowUpCallback(questionDropdownValue):
+        if not questionDropdownValue:
+            return ([], True, "")
+        assert comp is not None, "comp none in createQuestionCallback"
+        typesOfData = comp.getTypesOfData()
+        assert typesOfData is not None
+        assertHasKey("answers", typesOfData)
+        assertHasKey(questionDropdownValue, typesOfData["answers"])
+        # assert questionDropdownValue in typesOfData["answers"], f"Could not find {questionDropdownValue} in {typesOfData}"
+        assertHasKey("family-options", typesOfData["answers"][questionDropdownValue])
+
+        familyOptionsOptions = comp.createFamilyOptionsFromValues(
+            typesOfData["answers"][questionDropdownValue]["family-options"]
+        )
+
+        return (familyOptionsOptions, False, "")
+
+        pass
+
+    def questionWithFollowUpCallback(questionDropdownValue, followUpLabel):
+        if not questionDropdownValue:
+            return (
+                [],
+                True,
+                followUpLabel,
+                {"options": [], "disabled": True, "value": ""},
+                True,
+            )
+        assert comp is not None, "comp none in createQuestionCallback"
+        typesOfData = comp.getTypesOfData()
+        assert typesOfData is not None
+        assert "answers" in typesOfData
+        assertHasKey(questionDropdownValue, typesOfData["answers"])
+        # assert questionDropdownValue in typesOfData["answers"], f"Could not find {questionDropdownValue} in {typesOfData}"
+        if "follow-up" not in typesOfData["answers"][questionDropdownValue]:
+            questionDropdown = typesOfData["answers"][questionDropdownValue]
+            assert "family-options" in questionDropdown
+
+            families = questionDropdown["family-options"]
+            familyOptions = comp.createFamilyOptionsFromValues(families)
+            familyDisabled = False
+            familyValue = "" if len(families) != 1 else families[0]
+            family = {
+                "options": familyOptions,
+                "disabled": familyDisabled,
+                "value": familyValue,
+            }
+            return ([], True, followUpLabel, family, True)
+        assertHasKey("follow-up", typesOfData["answers"][questionDropdownValue])
+        followUps = typesOfData["answers"][questionDropdownValue]["follow-up"]
+
+        # nonFalse = [k for k in followUps if k != "false"]
+        # assert len(nonFalse) == 1, f"Expected exactly one non-false option, but found {nonFalse}"
+        # followUpTitle = comp.strings("types-of-data", "follow-ups", nonFalse)
+        followUpTitle = followUps["question"]
+        followUpOptions = [
+            dict(
+                disabled=False,
+                label=comp.strings("types-of-data", "display-types", k),
+                value=k,
+            )
+            for k in followUps["answers"]
+        ]
+
+        return (followUpOptions, False, followUpTitle + " ", {}, False)
+
+    def followUpCallback(followUpQuestionValue, questionValue, followUpLabel):
+        assert comp is not None, "comp none in createQuestionCallback"
+        if followUpQuestionValue == "":
+            return (
+                # [],
+                # True,
+                # "",
+                # comp.strings("types-of-data", "follow-ups", "default"),
+                followUpLabel,
+                True,
+                "",
+                [],
+                {},
+            )
+        typesOfData = comp.getTypesOfData()
+        assert (
+            typesOfData
+        ), f"Expected typesOfData to be non-none/non-empty, but got {typesOfData}"
+        assertHasKey("answers", typesOfData)
+        current = typesOfData["answers"]
+        assert (
+            questionValue in current
+        ), f"Expected questionValue to be in typesOfData, but got {questionValue}, {current}"
+        current = current[questionValue]
+        assertHasKey("follow-up", current)
+        current = current["follow-up"]
+        assertHasKey("answers", current)
+
+        current = current["answers"]
+
+        assert (
+            followUpQuestionValue in current
+        ), "Expected followUpQuestionValue to be in typesOfData[answers][questionValue][follow-up][answers], but got {}, {}".format(
+            followUpQuestionValue, current
+        )
+
+        for k in ["question", "answers"]:
+            assertHasKey(k, typesOfData["answers"][questionValue]["follow-up"])
+        print(current)
+
+        current = current[followUpQuestionValue]
+
+        if "follow-up" in current:
+            return (
+                # [], True, "",
+                followUpLabel,
+                False,
+                current["follow-up"]["question"],
+                [
+                    dict(
+                        value=k, label=comp.strings("types-of-data", "display-types", k)
+                    )
+                    for k in current["follow-up"]["answers"]
+                ],
+                {},
+            )
+
+        assertHasKey("family-options", current)
+
+        families = current["family-options"]
+        familyOptions = comp.createFamilyOptionsFromValues(families)
+        familyDisabled = False
+        familyValue = "" if len(families) != 1 else families[0]
+
+        hideFollowUpDiv = True
+
+        storeUpdate = {
+            "options": familyOptions,
+            "disabled": familyDisabled,
+            "value": familyValue,
+        }
+
+        return (
+            # familyOptions, familyDisabled, familyValue,
+            followUpLabel,
+            hideFollowUpDiv,
+            "",
+            [],
+            storeUpdate,
+        )
+
+    def followUpCallback2(
+        followUpQuestionValue2, questionValue, followUpQuestionValue, followUpLabel
+    ):
+        assert comp is not None, "comp none in createQuestionCallback"
+        print(f"followUpQuestionValue2: {followUpQuestionValue2}")
+        if followUpQuestionValue2 == "":
+            return {"options": [], "disabled": True, "value": ""}
+        typesOfData = comp.getTypesOfData()
+        assert (
+            typesOfData
+        ), f"Expected typesOfData to be non-none/non-empty, but got {typesOfData}"
+
+        assertHasKeys(
+            typesOfData,
+            "answers",
+            questionValue,
+            "follow-up",
+            "answers",
+            followUpQuestionValue,
+            "follow-up",
+            "answers",
+            followUpQuestionValue2,
+        )
+
+        fu = "follow-up"
+        a = "answers"
+        current = typesOfData[a][questionValue][fu][a][followUpQuestionValue][fu][a][
+            followUpQuestionValue2
+        ]
+
+        assertHasKey("family-options", current)
+
+        print(current)
+
+        families = current["family-options"]
+        familyOptions = comp.createFamilyOptionsFromValues(families)
+        familyDisabled = False
+        familyValue = "" if len(families) != 1 else families[0]
+
+        # hideFollowUpDiv = True
+
+        storeUpdate = {
+            "options": familyOptions,
+            "disabled": familyDisabled,
+            "value": familyValue,
+        }
+
+        return storeUpdate
+
+    def updateFollowUpLabel(store1, store2, currentLabel):
+        context = dash.callback_context
+
+        if not context.triggered:
+            return currentLabel
+
+        triggerers = ["follow-up-label-store-1", "follow-up-label-store-2"]
+
+        storeTriggers = [
+            t
+            for t in context.triggered
+            if any(t["prop_id"].startswith(tr) for tr in triggerers)
+        ]
+
+        assert (
+            len(storeTriggers) >= 1
+        ), f"Expected at least one triggering store for context {context}"
+
+        first = storeTriggers[0]
+
+        if not all(s["value"] == first["value"] for s in storeTriggers):
+            assert (
+                len(storeTriggers) == 1
+            ), f"Expected only one triggering store, but got {storeTriggers}"
+
+        triggered = storeTriggers[0]
+        assert triggered["prop_id"].find(".") != -1, 'Could not find "." in {}'.format(
+            triggered["prop_id"]
+        )
+        storeId = triggered["prop_id"].split(".")[0]
+        if storeId.endswith("1"):
+            return store1
+        return store2
+
+    def updateFamilyOptions(store1, store2, store3, options, disabled, value):
+        def storeHasAllKeys(store):
+            return "options" in store and "disabled" in store and "value" in store
+
+        def getReturnValue(store):
+            return (store["options"], store["disabled"], store["value"])
+
+        context = dash.callback_context
+        if not context.triggered or (not store1 and not store2):
+            return (options, disabled, value)
+        triggerIds = [
+            "family-options-store-1",
+            "family-options-store-2",
+            "family-options-store-3",
+        ]
+
+        storeTriggers = [
+            t
+            for t in context.triggered
+            if any(t["prop_id"].startswith(tr) for tr in triggerIds)
+        ]
+
+        assert (
+            len(storeTriggers) >= 1
+        ), f"Expected at least one triggering store for context {context}"
+
+        ids = [s["prop_id"].split(".")[0] for s in storeTriggers]
+
+        # first = storeTriggers[0]
+        # id = first["prop_id"].split(".")[0]
+        print("Store triggers")
+        print(storeTriggers)
+        print("ids: {}".format(ids))
+        if any(id.endswith("1") for id in ids) and storeHasAllKeys(store1):
+            return (store1["options"], store1["disabled"], store1["value"])
+        elif any(id.endswith("2") for id in ids) and storeHasAllKeys(store2):
+            return (store2["options"], store2["disabled"], store2["value"])
+        elif any(id.endswith("3") for id in ids) and storeHasAllKeys(store3):
+            return getReturnValue(store3)
+        return (options, disabled, value)
+
+    if comp.shouldEnableTypesOfDataControls():
+        if comp.shouldEnableFollowUp():
+            app.callback(
+                Output("family-options", "options"),
+                Output("family-options", "disabled"),
+                Output("family-options", "value"),
+                Input("family-options-store-1", "data"),
+                Input("family-options-store-2", "data"),
+                Input("family-options-store-3", "data"),
+                State("family-options", "options"),
+                State("family-options", "disabled"),
+                State("family-options", "value"),
+            )(updateFamilyOptions)
+            app.callback(
+                Output("follow-up-options", "options"),
+                Output("follow-up-options", "disabled"),
+                Output("follow-up-label-store-1", "data"),
+                Output("family-options-store-3", "data"),
+                Output("follow-up-div", "hidden"),
+                Input("question-options", "value"),
+                State("follow-up-label", "children"),
+            )(questionWithFollowUpCallback)
+
+            app.callback(
+                # Output("family-options", "options"),
+                # Output("family-options", "disabled"),
+                # Output("family-options", "value"),
+                Output("follow-up-label-store-2", "data"),
+                Output("follow-up-1-div", "hidden"),
+                Output("follow-up-label-1", "children"),
+                Output("follow-up-options-1", "options"),
+                Output("family-options-store-1", "data"),
+                Input("follow-up-options", "value"),
+                State("question-options", "value"),
+                State("follow-up-label", "children"),
+            )(followUpCallback)
+
+            app.callback(
+                Output("family-options-store-2", "data"),
+                Input("follow-up-options-1", "value"),
+                State("question-options", "value"),
+                State("follow-up-options", "value"),
+                State("follow-up-label", "children"),
+            )(followUpCallback2)
+
+            app.callback(
+                Output("follow-up-label", "children"),
+                Input("follow-up-label-store-1", "data"),
+                Input("follow-up-label-store-2", "data"),
+                State("follow-up-label", "children"),
+            )(updateFollowUpLabel)
+            pass
+        else:
+            app.callback(
+                Output("family-options", "options"),
+                Output("family-options", "disabled"),
+                Output("family-options", "value"),
+                Input("question-options", "value"),
+            )(questionWithoutFollowUpCallback)
 
 
 def createGenerateCodeCallback(app, comp: GUIComponents = None):
@@ -99,6 +448,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
     @app.callback(
         Output("link-options", "options"),
         Output("link-options", "value"),
+        Output("link-options", "disabled"),
         Output("overview-family", "children"),
         Output("generate-code", "disabled"),
         Output("generate-code", "style"),
@@ -114,7 +464,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
         buttonDisabledStyle = {"pointer-events": "none"}
         buttonEnabledStyle = {}
         if oldFamily and not value:
-            return [], "", "", True, buttonDisabledStyle, ""
+            return [], "", True, "", True, buttonDisabledStyle, ""
         familyLinks = comp.getGeneratedFamilyLinkFunctions()
         logger.debug("{}: {}".format(value, type(value)))
         if value and isinstance(value, str):
@@ -137,6 +487,7 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
                         for l in familyLinks[value]
                     ],
                     defaultLink,
+                    False,
                     "Family: {}".format(familyName),
                     False,
                     buttonEnabledStyle,
@@ -156,17 +507,18 @@ def createLinkFunctionCallbacks(app, comp: GUIComponents = None):
 
 
 def createChartCallbacks(app, comp: GUIComponents = None):
-    @app.callback(
-        Output("family-link-chart", "figure"), Input("family-options", "value")
-    )
-    def update_chart_family(family):
-        if family is not None and comp:
-            assert isinstance(family, str)
-            # return comp.createGraph(family)
-            return comp.createFigure(family)
-
-        else:
-            raise PreventUpdate
+    # @app.callback(
+    #     Output("family-link-chart", "figure"), Input("family-options", "value")
+    # )
+    # def update_chart_family(family):
+    #     if family is not None and comp:
+    #         assert isinstance(family, str)
+    #         # return comp.createGraph(family)
+    #         return comp.createFigure(family)
+    #
+    #     else:
+    #         raise PreventUpdate
+    pass
 
 
 def transform_data_from_fact(data: np.ndarray, link_fact: str):

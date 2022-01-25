@@ -1,5 +1,5 @@
 from os import link
-from tisane.variable import AbstractVariable, Measure, Numeric, Unit
+from tisane.variable import AbstractVariable, Measure, Numeric, Unit, Ordinal, Nominal
 from tisane.family import AbstractFamily, AbstractLink
 from tisane.random_effects import (
     RandomEffect,
@@ -14,7 +14,11 @@ from tisane.graph_inference import (
     is_intermediary_associative,
     find_all_associates_that_causes_or_associates_another,
 )
-from tisane.family_link_inference import infer_family_functions, infer_link_functions, generate_family_selection_questions_options
+from tisane.family_link_inference import (
+    infer_family_functions,
+    infer_link_functions,
+    generate_family_selection_questions_options,
+)
 from tisane.design import Design
 from tisane.statistical_model import StatisticalModel
 from tisane.code_generator import *
@@ -329,6 +333,7 @@ def construct_statistical_model(
 
     return sm
 
+
 def infer_model(design: Design, jupyter: bool = False):
     return infer_statistical_model_from_design(design=design, jupyter=jupyter)
 
@@ -434,10 +439,19 @@ def infer_statistical_model_from_design(design: Design, jupyter: bool = False):
         "associative intermediary main effects"
     ] = associative_intermediaries
 
-    # Add questions for selecting family functions 
+    # Add questions for selecting family functions
     family_link_questions = generate_family_selection_questions_options(dv=design.dv)
     combined_dict["input"]["types of data"] = family_link_questions
-    
+
+    if isinstance(design.dv, Numeric):
+        combined_dict["input"]["dv type"] = Numeric.__name__
+        pass
+    elif isinstance(design.dv, Ordinal):
+        combined_dict["input"]["dv type"] = Ordinal.__name__
+        pass
+    elif isinstance(design.dv, Nominal):
+        combined_dict["input"]["dv type"] = Nominal.__name__
+
     # Add data
     data = design.get_data()
     if data is not None:
