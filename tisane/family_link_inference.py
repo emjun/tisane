@@ -167,6 +167,7 @@ def generate_family_selection_questions_options(dv: AbstractVariable):
 
     if isinstance(dv, Numeric) or isinstance(dv, Ordinal):
         choices["question"] = "What kind of data is your dependent variable?"
+        # These are the answers that these two types of variables have in common
         choices["answers"] = {
             "continuous": {
                 "follow-up": {
@@ -206,43 +207,8 @@ def generate_family_selection_questions_options(dv: AbstractVariable):
             },
         }
 
-    # if isinstance(dv, Numeric):
-    #     choices["question"] = "What "
-    #     choices["treat as continuous"] = dict()
-    #     choices["treat as continuous"]["has positive skew"] = dict()
-    #     # choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = dict()
-    #     choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = [TweedieFamily.__name__]
-    #     choices["treat as continuous"]["has positive skew"]["false"] = [InverseGaussianFamily.__name__, GammaFamily.__name__, TweedieFamily.__name__]
-    #     choices["treat as continuous"]["false"] = [GaussianFamily.__name__]
-    #
-    #     choices["treat as counts"] = dict()
-    #     choices["treat as counts"]["has lots of zeros"] = [TweedieFamily.__name__]
-    #     choices["treat as counts"]["false"] = [PoissonFamily.__name__]
-
-    elif isinstance(dv, Ordinal):
-        # choices["treat as continuous"] = {
-        #     "has positive skew": {
-        #         "has lots of zeros": [TweedieFamily.__name__],
-        #         "false": [InverseGaussianFamily.__name__, GammaFamily.__name__, TweedieFamily.__name__]
-        #     },
-        #     "false": [GaussianFamily.__name__]
-        # }
-        # choices["treat as counts"] = {
-        #     "has lots of zeros": [TweedieFamily.__name__],
-        #     "false": [PoissonFamily.__name__]
-        # }
-        # choices["treat as continuous"] = dict()
-        # choices["treat as continuous"]["has positive skew"] = dict()
-        # # choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = dict()
-        # choices["treat as continuous"]["has positive skew"]["has lots of zeros"] = [TweedieFamily.__name__]
-        # choices["treat as continuous"]["has positive skew"]["false"] = [InverseGaussianFamily.__name__, GammaFamily.__name__, TweedieFamily.__name__]
-        # choices["treat as continuous"]["false"] = [GaussianFamily.__name__]
-        #
-        # choices["treat as counts"] = dict()
-        # choices["treat as counts"]["has lots of zeros"] = [TweedieFamily.__name__]
-        # choices["treat as counts"]["false"] = [PoissonFamily.__name__]
-
-        # choices["treat as categories"] = list()
+    if isinstance(dv, Ordinal):
+        # For the special case where the dependent variable is ordinal
         if dv.get_cardinality() == 2:
             choices["answers"]["categories"] = {
                 "family-options": [BinomialFamily.__name__]
