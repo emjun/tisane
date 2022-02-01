@@ -7,7 +7,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= sphinx-build
 BUILDER       = poetry run
 SOURCEDIR     = .
-BUILDDIR      = .
+BUILDDIR      = _build
 
 # Put it first so that "make" without argument is like "make html".
 html:
