@@ -16,6 +16,7 @@ import pandas as pd
 import scipy.stats as stats
 import numpy as np
 from tisane.gui.gui_strings import GUIStrings
+import re
 
 log = logging.getLogger("")
 log.setLevel(logging.ERROR)
@@ -1667,6 +1668,8 @@ class GUIComponents:
         ##### Collect all elements
         # Create family and link title
         familyExplanation = self.getDefaultExplanation("distribution-families")
+        dvType = self.getDependentVariableType()
+        indef_article = "n" if re.match(r"^[aeiouAEIOU]", dvType) else ""
         family_link_title = html.Div(
             [
                 html.H5(self.strings.getFamilyLinksPageTitle()),
@@ -1674,7 +1677,9 @@ class GUIComponents:
                     self.strings(
                         "family-link-functions", "titles", "page-sub-title"
                     ).format(
-                        self.getDependentVariable(), self.getDependentVariableType()
+                        dv=self.getDependentVariable(),
+                        indef_article=indef_article,
+                        dv_type=self.getDependentVariableType()
                     )
                 ),
                 # dcc.Markdown(familyExplanation["caution"]),

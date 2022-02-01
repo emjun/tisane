@@ -42,7 +42,7 @@
     "titles": {
       "tab": "Data Distributions",
       "page": "Choose a distribution of the errors: family and link functions.",
-      "page-sub-title": "_Your dependent variable `{}` has a `{}` data type. Tell us more about it, which Tisane will use to narrow down the options for family and link functions._"
+      "page-sub-title": "_Your dependent variable `{dv}` has a{indef_article} `{dv_type}` data type. Tell us more about it, which Tisane will use to narrow down the options for family and link functions._"
     },
     "headers": {
     }
