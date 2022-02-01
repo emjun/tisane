@@ -1,0 +1,633 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tisane.Exactly.per &#8212; tisane 0.1.0 documentation</title>
+    
+    <link href="../../_static/styles/theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=1999514e3f237ded88cf" rel="stylesheet">
+  
+    
+    <link rel="stylesheet"
+      href="../../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="../../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+  
+    
+      
+  
+    
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/pydata-sphinx-theme.css" />
+    
+    <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf">
+  
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tisane.AtMost" href="tisane.AtMost.html" />
+    <link rel="prev" title="tisane.Exactly" href="tisane.Exactly.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="None">
+    
+
+    <!-- Google Analytics -->
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../../index.html">
+<p class="title">tisane</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 current active nav-item">
+ <a class="reference internal nav-link" href="../index.html">
+  API reference
+ </a>
+</li>
+
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar">
+              <div class="sidebar-start-items"><form class="bd-search d-flex align-items-center" action="../../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    <ul class="current nav bd-sidenav">
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../variable.html">
+   tisane.variable module
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/>
+  <label for="toctree-checkbox-1">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../variable_summary/tisane.SetUp.html">
+     tisane.SetUp
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/>
+    <label for="toctree-checkbox-2">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.SetUp.assign_cardinality_from_data.html">
+       tisane.SetUp.assign_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.SetUp.associates_with.html">
+       tisane.SetUp.associates_with
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.SetUp.calculate_cardinality_from_data.html">
+       tisane.SetUp.calculate_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.SetUp.causes.html">
+       tisane.SetUp.causes
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.SetUp.moderates.html">
+       tisane.SetUp.moderates
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../variable_summary/tisane.Unit.html">
+     tisane.Unit
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/>
+    <label for="toctree-checkbox-3">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.assign_cardinality_from_data.html">
+       tisane.Unit.assign_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.associates_with.html">
+       tisane.Unit.associates_with
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.calculate_cardinality_from_data.html">
+       tisane.Unit.calculate_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.causes.html">
+       tisane.Unit.causes
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.moderates.html">
+       tisane.Unit.moderates
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.nominal.html">
+       tisane.Unit.nominal
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.numeric.html">
+       tisane.Unit.numeric
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.Unit.ordinal.html">
+       tisane.Unit.ordinal
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.html">
+     tisane.variable.Nominal
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/>
+    <label for="toctree-checkbox-4">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.assign_cardinality_from_data.html">
+       tisane.variable.Nominal.assign_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.assign_categories_from_data.html">
+       tisane.variable.Nominal.assign_categories_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.associates_with.html">
+       tisane.variable.Nominal.associates_with
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.calculate_cardinality_from_data.html">
+       tisane.variable.Nominal.calculate_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.calculate_categories_from_data.html">
+       tisane.variable.Nominal.calculate_categories_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.causes.html">
+       tisane.variable.Nominal.causes
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.get_cardinality.html">
+       tisane.variable.Nominal.get_cardinality
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.get_categories.html">
+       tisane.variable.Nominal.get_categories
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.get_unit.html">
+       tisane.variable.Nominal.get_unit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.get_unit_relationship.html">
+       tisane.variable.Nominal.get_unit_relationship
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Nominal.moderates.html">
+       tisane.variable.Nominal.moderates
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../variable_summary/tisane.variable.Numeric.html">
+     tisane.variable.Numeric
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/>
+    <label for="toctree-checkbox-5">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Numeric.associates_with.html">
+       tisane.variable.Numeric.associates_with
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Numeric.causes.html">
+       tisane.variable.Numeric.causes
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Numeric.get_unit.html">
+       tisane.variable.Numeric.get_unit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Numeric.get_unit_relationship.html">
+       tisane.variable.Numeric.get_unit_relationship
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Numeric.moderates.html">
+       tisane.variable.Numeric.moderates
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.html">
+     tisane.variable.Ordinal
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/>
+    <label for="toctree-checkbox-6">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.associates_with.html">
+       tisane.variable.Ordinal.associates_with
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.calculate_cardinality_from_data.html">
+       tisane.variable.Ordinal.calculate_cardinality_from_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.causes.html">
+       tisane.variable.Ordinal.causes
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.get_cardinality.html">
+       tisane.variable.Ordinal.get_cardinality
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.get_categories.html">
+       tisane.variable.Ordinal.get_categories
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.get_unit.html">
+       tisane.variable.Ordinal.get_unit
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.get_unit_relationship.html">
+       tisane.variable.Ordinal.get_unit_relationship
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../variable_summary/tisane.variable.Ordinal.moderates.html">
+       tisane.variable.Ordinal.moderates
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../design.html">
+   tisane.design module
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/>
+  <label for="toctree-checkbox-7">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="../design_summary/tisane.design.Design.html">
+     tisane.design.Design
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/>
+    <label for="toctree-checkbox-8">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.assign_data.html">
+       tisane.design.Design.assign_data
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.check_variable_cardinality.html">
+       tisane.design.Design.check_variable_cardinality
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.create_from.html">
+       tisane.design.Design.create_from
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.get_graph_ir.html">
+       tisane.design.Design.get_graph_ir
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.get_number_of_levels.html">
+       tisane.design.Design.get_number_of_levels
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.get_variables.html">
+       tisane.design.Design.get_variables
+      </a>
+     </li>
+     <li class="toctree-l3">
+      <a class="reference internal" href="../design_summary/tisane.design.Design.set_dv.html">
+       tisane.design.Design.set_dv
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 has-children">
+  <a class="reference internal" href="../main.html">
+   tisane.main module
+  </a>
+  <input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/>
+  <label for="toctree-checkbox-9">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../main_summary/tisane.main.infer_model.html">
+     tisane.main.infer_model
+    </a>
+   </li>
+   <li class="toctree-l2">
+    <a class="reference internal" href="../main_summary/tisane.main.infer_statistical_model_from_design.html">
+     tisane.main.infer_statistical_model_from_design
+    </a>
+   </li>
+  </ul>
+ </li>
+ <li class="toctree-l1 current active has-children">
+  <a class="reference internal" href="../number_of_instances.html">
+   Setting
+   <code class="docutils literal notranslate">
+    <span class="pre">
+     number_of_instances
+    </span>
+   </code>
+  </a>
+  <input checked="" class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/>
+  <label for="toctree-checkbox-10">
+   <i class="fas fa-chevron-down">
+   </i>
+  </label>
+  <ul class="current">
+   <li class="toctree-l2 current active has-children">
+    <a class="reference internal" href="tisane.Exactly.html">
+     tisane.Exactly
+    </a>
+    <input checked="" class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/>
+    <label for="toctree-checkbox-11">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul class="current">
+     <li class="toctree-l3 current active">
+      <a class="current reference internal" href="#">
+       tisane.Exactly.per
+      </a>
+     </li>
+    </ul>
+   </li>
+   <li class="toctree-l2 has-children">
+    <a class="reference internal" href="tisane.AtMost.html">
+     tisane.AtMost
+    </a>
+    <input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" type="checkbox"/>
+    <label for="toctree-checkbox-12">
+     <i class="fas fa-chevron-down">
+     </i>
+    </label>
+    <ul>
+     <li class="toctree-l3">
+      <a class="reference internal" href="tisane.AtMost.per.html">
+       tisane.AtMost.per
+      </a>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+  </div>
+</nav>
+              </div>
+              <div class="sidebar-end-items">
+              </div>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="tisane-exactly-per">
+<h1>tisane.Exactly.per<a class="headerlink" href="#tisane-exactly-per" title="Permalink to this headline">¶</a></h1>
+<p>method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tisane.Exactly.per">
+<span class="sig-prename descclassname"><span class="pre">Exactly.</span></span><span class="sig-name descname"><span class="pre">per</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cardinality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_instances</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tisane.Exactly.per" title="Permalink to this definition">¶</a></dt>
+<dd><p>Express a <cite>per</cite> relationship on a given <cite>Exactly</cite></p>
+<p>Even though <cite>cardinality</cite> and <cite>number_of_instances</cite> are both
+optional parameters, this method requires exactly one of them to be
+specified – you currently cannot specify both.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cardinality</strong> (<a class="reference internal" href="../variable_support_summary/tisane.variable.AbstractVariable.html#tisane.variable.AbstractVariable" title="tisane.variable.AbstractVariable"><em>AbstractVariable</em></a><em>, </em><em>optional</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractVariable</span></code> whose cardinality we want to use</p></li>
+<li><p><strong>number_of_instances</strong> (<a class="reference internal" href="../variable_support_summary/tisane.variable.AbstractVariable.html#tisane.variable.AbstractVariable" title="tisane.variable.AbstractVariable"><em>AbstractVariable</em></a><em>, </em><em>optional</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractVariable</span></code> whose number of instances we want
+to use</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An object representing a “_ per _” relationship.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tisane.variable.Per</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="tisane.AtMost.per.html#tisane.AtMost.per" title="tisane.AtMost.per"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tisane.AtMost.per</span></code></a></dt><dd><p>create a per relationship with an <a class="reference internal" href="tisane.AtMost.html#tisane.AtMost" title="tisane.AtMost"><code class="xref py py-class docutils literal notranslate"><span class="pre">AtMost</span></code></a> multiplier</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>Rats are either given a supplement or a placebo three times a day, so exactly 3 <em>per</em> day</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">tisane</span> <span class="k">as</span> <span class="nn">ts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">tisane</span> <span class="kn">import</span> <span class="n">Exactly</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rat</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">Unit</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;rat_id&quot;</span><span class="p">,</span> <span class="n">cardinality</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span> <span class="c1"># 30 rats in the study</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">days</span> <span class="o">=</span> <span class="n">rat</span><span class="o">.</span><span class="n">ordinal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;day_num&quot;</span><span class="p">,</span> <span class="n">cardinality</span><span class="o">=</span><span class="mi">28</span><span class="p">)</span> <span class="c1"># 4 weeks of data for each rat</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">memory_test_result</span> <span class="o">=</span> <span class="n">rat</span><span class="o">.</span><span class="n">numeric</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;memory_test_result&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                                 <span class="n">number_of_instances</span><span class="o">=</span><span class="n">days</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">supplements</span> <span class="o">=</span> <span class="n">rat</span><span class="o">.</span><span class="n">nominal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;supplement&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;placebo&quot;</span><span class="p">,</span> <span class="s2">&quot;supp&quot;</span><span class="p">],</span>
+<span class="gp">... </span>                          <span class="n">number_of_instances</span><span class="o">=</span><span class="n">Exactly</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">per</span><span class="p">(</span><span class="n">cardinality</span><span class="o">=</span><span class="n">days</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <!-- Previous / next buttons -->
+<div class='prev-next-area'>
+    <a class='left-prev' id="prev-link" href="tisane.Exactly.html" title="previous page">
+        <i class="fas fa-angle-left"></i>
+        <div class="prev-next-info">
+            <p class="prev-next-subtitle">previous</p>
+            <p class="prev-next-title">tisane.Exactly</p>
+        </div>
+    </a>
+    <a class='right-next' id="next-link" href="tisane.AtMost.html" title="next page">
+    <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">tisane.AtMost</p>
+    </div>
+    <i class="fas fa-angle-right"></i>
+    </a>
+</div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+    <script src="../../_static/scripts/pydata-sphinx-theme.js?digest=1999514e3f237ded88cf"></script>
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Eunice Jun &amp; Audrey Seo.<br>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 4.4.0.<br>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
