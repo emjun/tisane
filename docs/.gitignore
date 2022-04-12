@@ -1,2 +1,5 @@
 _build
 reference/*_summary
+src/html/_sources
+src/doctrees
+  
