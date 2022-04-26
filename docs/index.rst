@@ -11,6 +11,7 @@ Welcome to tisane's documentation!
    :caption: Contents:
 
    API reference <reference/index>
+   Tisane Home <https://tisane-stats.org>
 
 
 Indices and tables
