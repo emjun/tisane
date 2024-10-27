@@ -1,7 +1,7 @@
 from dash.dependencies import Output, Input, State, ALL, MATCH
 import dash
 from dash.exceptions import PreventUpdate
-import dash_html_components as html
+from dash import html
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import json
 import logging
