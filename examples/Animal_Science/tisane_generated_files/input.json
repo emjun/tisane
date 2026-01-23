@@ -7787,25 +7787,25 @@
         },
         "generated family, link functions": {
             "GammaFamily": [
-                "InverseLink",
                 "LogLink",
+                "InverseLink",
                 "IdentityLink"
             ],
             "GaussianFamily": [
-                "InverseLink",
-                "LogitLink",
-                "ProbitLink",
                 "CLogLogLink",
                 "PowerLink",
-                "IdentityLink",
                 "NegativeBinomialLink",
-                "LogLink"
+                "InverseLink",
+                "IdentityLink",
+                "LogLink",
+                "LogitLink",
+                "ProbitLink"
             ],
             "InverseGaussianFamily": [
                 "LogLink",
+                "InverseLink",
                 "IdentityLink",
-                "InverseSquaredLink",
-                "InverseLink"
+                "InverseSquaredLink"
             ],
             "PoissonFamily": [
                 "SquarerootLink",

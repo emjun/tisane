@@ -6,8 +6,7 @@ import plotly.express as px
 import dash
 import dash_daq as daq
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc, html
 from dash.dependencies import Output, Input, State, ALL, MATCH
 from dash.exceptions import PreventUpdate
 from jupyter_dash import JupyterDash
@@ -125,7 +124,6 @@ class TisaneGUI:
                             color="secondary",
                         ),
                     ],
-                    multi=True,
                     style={"height": "2rem"},
                 ),
                 width=12,
@@ -159,10 +157,10 @@ class TisaneGUI:
         createCallbacks(app, self.components)
         # open_browser()
         if jupyter:
-            app.run_server(mode="inline", port=port)
+            app.run(mode="inline", port=port)
             pass
         else:
-            app.run_server(host="127.0.0.1", debug=True, threaded=True, port=port)
+            app.run(host="127.0.0.1", debug=True, threaded=True, port=port)
 
     def model_tabs(self):
         # Many different ways to create tabs: https://dash-bootstrap-components.opensource.faculty.ai/docs/components/tabs/

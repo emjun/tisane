@@ -3121,34 +3121,34 @@
         },
         "generated family, link functions": {
             "GammaFamily": [
+                "InverseLink",
                 "LogLink",
-                "IdentityLink",
-                "InverseLink"
+                "IdentityLink"
             ],
             "GaussianFamily": [
-                "IdentityLink",
-                "NegativeBinomialLink",
-                "LogLink",
-                "InverseLink",
                 "LogitLink",
                 "ProbitLink",
                 "CLogLogLink",
-                "PowerLink"
+                "PowerLink",
+                "NegativeBinomialLink",
+                "InverseLink",
+                "IdentityLink",
+                "LogLink"
             ],
             "InverseGaussianFamily": [
+                "InverseLink",
                 "IdentityLink",
                 "InverseSquaredLink",
-                "InverseLink",
                 "LogLink"
             ],
             "PoissonFamily": [
-                "IdentityLink",
+                "LogLink",
                 "SquarerootLink",
-                "LogLink"
+                "IdentityLink"
             ],
             "TweedieFamily": [
-                "PowerLink",
-                "LogLink"
+                "LogLink",
+                "PowerLink"
             ]
         },
         "generated interaction effects": [],

@@ -1003,24 +1003,24 @@
         "generated family, link functions": {
             "GammaFamily": [
                 "LogLink",
-                "IdentityLink",
-                "InverseLink"
+                "InverseLink",
+                "IdentityLink"
             ],
             "GaussianFamily": [
+                "LogLink",
+                "LogitLink",
+                "ProbitLink",
                 "CLogLogLink",
                 "PowerLink",
-                "IdentityLink",
                 "NegativeBinomialLink",
-                "LogLink",
                 "InverseLink",
-                "LogitLink",
-                "ProbitLink"
+                "IdentityLink"
             ],
             "InverseGaussianFamily": [
                 "LogLink",
+                "InverseLink",
                 "IdentityLink",
-                "InverseSquaredLink",
-                "InverseLink"
+                "InverseSquaredLink"
             ],
             "PoissonFamily": [
                 "SquarerootLink",
@@ -1034,8 +1034,8 @@
         },
         "generated interaction effects": [],
         "generated main effects": [
-            "age",
-            "exercise"
+            "exercise",
+            "age"
         ],
         "generated random effects": {},
         "measures to units": {

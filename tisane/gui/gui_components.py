@@ -7,9 +7,8 @@ import os
 import logging
 from typing import Dict, List
 from tisane.variable import AbstractVariable
-import dash_html_components as html
+from dash import html, dcc
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
@@ -979,12 +978,12 @@ class GUIComponents:
         options = []
         for name, label in labelDict.items():
             options.append(
-                dbc.FormGroup(
+                html.Div(
                     [
                         dbc.Checkbox(
                             id=componentIdSetter(name),
                             className="form-check-input",
-                            checked=checkedDict[name],
+                            value=checkedDict[name],
                         ),
                         dbc.Label(
                             label,
@@ -992,7 +991,7 @@ class GUIComponents:
                             className="form-check-label",
                         ),
                     ],
-                    check=True,
+                    className="form-check",
                 )
             )
             pass
@@ -1000,21 +999,21 @@ class GUIComponents:
 
     def makeFancyCheckbox(self, checked=False, label=None, id=None):
         if label:
-            return dbc.FormGroup(
+            return html.Div(
                 [
                     dbc.Checkbox(
                         id=id,
                         className="form-check-input",
-                        checked=checked,
+                        value=checked,
                     ),
                     dbc.Label(label, html_for=id, className="form-check-label"),
                 ],
-                check=True,
+                className="form-check",
             )
-        return dbc.FormGroup(
+        return html.Div(
             dbc.Checkbox(
                 id=id,
-                checked=checked,
+                value=checked,
             )
         )
 
@@ -1264,7 +1263,7 @@ class GUIComponents:
 
         def typeOfDataControls(types):
             # log(options)
-            return dbc.FormGroup(
+            return html.Div(
                 [
                     dbc.Label(typesOfData["question"]),
                     dcc.Dropdown(
@@ -1297,7 +1296,7 @@ class GUIComponents:
             )
 
             if self.shouldEnableFollowUp():
-                followUp = dbc.FormGroup(
+                followUp = html.Div(
                     [
                         dbc.Label(
                             self.strings("types-of-data", "follow-ups", "default"),
@@ -1325,7 +1324,7 @@ class GUIComponents:
                 forms.append(followUpLabelStore1)
                 forms.append(followUpLabelStore2)
                 pass
-            followUp2 = dbc.FormGroup(
+            followUp2 = html.Div(
                 [
                     dbc.Label("", id="follow-up-label-1"),
                     dcc.Dropdown(
@@ -1409,7 +1408,7 @@ class GUIComponents:
                 pass
             pass
 
-        return dbc.FormGroup(
+        return html.Div(
             [
                 dbc.Label(["Family ", getInfoBubble("family-label-info")]),
                 dcc.Dropdown(
@@ -1456,7 +1455,7 @@ class GUIComponents:
         controls = dbc.Card(
             forms
             + [
-                dbc.FormGroup(
+                html.Div(
                     [
                         dbc.Label(
                             [
@@ -1713,7 +1712,7 @@ class GUIComponents:
                             dbc.Col(family_link_controls, sm=6, md=5, lg=4),
                         ],
                         align="center",
-                        no_gutters=True,
+                        className="g-0",
                     ),
                 ]
                 # + normalityTestPortion

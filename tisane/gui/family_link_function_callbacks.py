@@ -1,8 +1,7 @@
 from dash.dependencies import Output, Input, State, ALL, MATCH, ClientsideFunction
 import dash
+from dash import html, dcc
 from dash.exceptions import PreventUpdate
-import dash_html_components as html
-import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import numpy as np

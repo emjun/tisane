@@ -3522,25 +3522,25 @@
                 "InverseLink"
             ],
             "GaussianFamily": [
-                "IdentityLink",
-                "PowerLink",
-                "InverseLink",
-                "LogLink",
-                "NegativeBinomialLink",
                 "ProbitLink",
+                "CLogLogLink",
+                "PowerLink",
+                "IdentityLink",
+                "NegativeBinomialLink",
                 "LogitLink",
-                "CLogLogLink"
+                "InverseLink",
+                "LogLink"
             ],
             "InverseGaussianFamily": [
-                "InverseSquaredLink",
-                "LogLink",
+                "InverseLink",
                 "IdentityLink",
-                "InverseLink"
+                "InverseSquaredLink",
+                "LogLink"
             ],
             "PoissonFamily": [
-                "SquarerootLink",
+                "IdentityLink",
                 "LogLink",
-                "IdentityLink"
+                "SquarerootLink"
             ],
             "TweedieFamily": [
                 "LogLink",

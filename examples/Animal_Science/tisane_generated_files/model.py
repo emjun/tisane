@@ -11,10 +11,10 @@ def fit_model():
     # Dataframe is stored in local file: data.csv
     # You may want to replace the data path with an existing data file you already have.
     # You may also set df equal to a pandas dataframe you are already working with. 
-    df = pd.read_csv('/home/user/tisane/examples/Animal_Science/tisane_generated_files/data.csv') # Make sure that the data path is correct
+    df = pd.read_csv('/home/user/tisane/examples/Animal_Science/new/data.csv') # Make sure that the data path is correct
 
 
-    model = Lmer(formula='Weight ~ Time + (1|Time) + (1|Pig) + (1|Litter)', family="gaussian", data=df)
+    model = Lmer(formula='Weight ~ Time + (1|Pig) + (1|Litter) + (1|Time)', family="gaussian", data=df)
     print(model.fit())
     return model
 
