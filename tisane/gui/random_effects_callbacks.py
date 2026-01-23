@@ -1,7 +1,7 @@
 from dash.dependencies import Output, Input, State, ALL, MATCH
 import dash
+from dash import html
 from dash.exceptions import PreventUpdate
-import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents, separateByUpperCamelCase
 import json
 import logging
@@ -16,7 +16,7 @@ def createRandomEffectsCallbacks(app, comp: GUIComponents = None):
 
 def createRandomEffectsAddedCallbacks(app, comp: GUIComponents = None):
     logger = logging.getLogger("werkzeug")
-    inputs = [Input(id, "checked") for id in comp.getRandomEffectCheckboxIds()]
+    inputs = [Input(id, "value") for id in comp.getRandomEffectCheckboxIds()]
     states = [State(id, "id") for id in comp.getRandomEffectCheckboxIds()]
 
     @app.callback(Output("added-random-effects", "children"), inputs, states)
@@ -50,7 +50,7 @@ def createRandomEffectsCorrelationCallbacks(app, comp: GUIComponents = None):
     if comp:
         checkboxIds = comp.getRandomSlopeCheckboxIds()
         if checkboxIds:
-            inputs = [Input(id, "checked") for id in checkboxIds]
+            inputs = [Input(id, "value") for id in checkboxIds]
             states = [State(id, "id") for id in checkboxIds]
             outputs = [Output(id + "-span", "children") for id in checkboxIds]
 

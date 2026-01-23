@@ -4,8 +4,8 @@
     "interaction effects": [],
     "link": "IdentityLink",
     "main effects": [
-        "treatment",
-        "motivation"
+        "motivation",
+        "treatment"
     ],
     "random effects": {
         "group": {

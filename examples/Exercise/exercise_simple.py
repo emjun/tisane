@@ -17,7 +17,7 @@ df = pd.read_csv(os.path.join(dir, "exercise_simple.csv"))
 # df = pd.read_csv("./exercise_simple.csv")
 
 # Declare observed variables
-pid = ts.Unit("case", cardinality=50)  # 50 participants
+pid = ts.Unit("case", cardinality=245)  # 245 participants
 age = pid.numeric("age")  # participant age
 exercise = pid.numeric("exercise")  # years of vigorous physical exercise
 endurance = pid.numeric(

@@ -1,7 +1,7 @@
 from dash.dependencies import Output, Input, State, ALL, MATCH
 import dash
+from dash import html
 from dash.exceptions import PreventUpdate
-import dash_html_components as html
 from tisane.gui.gui_components import GUIComponents
 from tisane.gui.family_link_function_callbacks import createFamilyLinkFunctionCallbacks
 from tisane.gui.random_effects_callbacks import createRandomEffectsCallbacks
@@ -102,7 +102,7 @@ mytabs = ["tab-1", "tab-2", "tab-3", "tab-4"]
 def createMainEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     logger = logging.getLogger("werkzeug")
     mainEffectCompIds = comp.getMainEffectCheckboxIds()
-    inputs = [Input(id, "checked") for id in mainEffectCompIds]
+    inputs = [Input(id, "value") for id in mainEffectCompIds]
     states = [State(id, "id") for id in mainEffectCompIds]
 
     @app.callback(
@@ -151,7 +151,7 @@ def createInteractionEffectsChecklistCallbacks(app, comp: GUIComponents = None):
     logger = logging.getLogger("werkzeug")
     if comp and comp.hasInteractionEffects():
         interactionEffectCompIds = comp.getInteractionEffectCheckboxIds()
-        inputs = [Input(id, "checked") for id in interactionEffectCompIds]
+        inputs = [Input(id, "value") for id in interactionEffectCompIds]
         states = [State(id, "id") for id in interactionEffectCompIds]
 
         def addVariables(*args):
