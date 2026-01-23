@@ -218,8 +218,8 @@ def generate_family_selection_questions_options(dv: AbstractVariable):
             choices["answers"]["categories"] = {
                 "family-options": [NegativeBinomialFamily.__name__]
             }
-    else:
-        assert isinstance(dv, Nominal)
-        # Add nothing
+    elif isinstance(dv, Nominal):
+        # Nominal variables don't need additional options
+        pass
 
     return choices
